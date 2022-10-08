@@ -1,0 +1,4 @@
+fun rec() : Unit {
+	rec();
+	return;
+}

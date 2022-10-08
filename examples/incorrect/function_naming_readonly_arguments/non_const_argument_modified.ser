@@ -1,0 +1,4 @@
+fun function(argument : Int) : Unit {
+	// by default all arguments are const
+	argument = 2;
+}
