@@ -1,0 +1,6 @@
+fun nonDefaultCall(argOne: Bool): Bool {
+	argOne
+}
+
+// This should not compile, because 'argOne' has no default value
+nonDefaultCall();

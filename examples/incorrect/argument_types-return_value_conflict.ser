@@ -1,0 +1,7 @@
+// This should not compile since this function tries to return Bool,
+// and should return Unit
+fun returnTypeConflict(argOne: Int, argTwo: Bool) {
+	argTwo
+}
+
+returnTypeConflict(10, true);

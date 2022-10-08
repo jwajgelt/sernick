@@ -1,0 +1,5 @@
+// This should not compile, since default arguments 
+// are only allowed on a suffix of the argument list
+fun nonSuffixDefaults(argOne: Int = 1, argTwo: Int, argThree: Int = 5) : Int { }
+
+nonSuffixDefaults(1,1,1);
