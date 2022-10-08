@@ -1,0 +1,19 @@
+fun allDefault(argOne: Int = true, argTwo: Int = 14, argThree: 2) : Int {
+	if(argOne) {
+		argTwo	
+	} else {
+		argThree
+	}
+}
+
+// This should return 14
+allDefault(true);
+
+// This should return 2
+allDefault(false);
+
+// This should return 11
+allDefault(true, 11);
+
+// This should return 3
+allDefault(false, 14, 3);

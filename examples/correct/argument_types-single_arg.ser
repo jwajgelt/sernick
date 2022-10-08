@@ -1,0 +1,6 @@
+fun singleArg(boolArg : Bool) : Bool {
+	boolArg
+}
+
+// Should just return false
+singleArg(false)

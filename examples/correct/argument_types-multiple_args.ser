@@ -1,0 +1,6 @@
+fun multipleArgs(argOne: Bool, argTwo: Int, argThree: Int, argFour: Bool) : Int {
+	0
+}
+
+// Should just return 0
+multipleArgs(true, 20, 22, false);

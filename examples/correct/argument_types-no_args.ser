@@ -1,0 +1,4 @@
+fun argumentTypes() {}
+
+// Should just return Unit
+argumentTypes()
