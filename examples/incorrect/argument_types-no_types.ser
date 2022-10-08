@@ -1,4 +1,4 @@
-// This should not compile since we require argument type to be specified
+// This should not compile, since we require argument type to be specified
 fun noTypes(argOne, argTwo) {}
 
 noTypes();
