@@ -1,0 +1,5 @@
+var x: Bool;
+x = 10;
+
+var y: Int;
+y = true;

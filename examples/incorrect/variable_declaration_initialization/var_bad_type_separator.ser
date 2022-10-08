@@ -1,0 +1,5 @@
+// The correct syntax is
+// var x: Int;
+var x Int;
+var y -> Int;
+Int z;

@@ -1,0 +1,3 @@
+var x = 10;
+var y0 = false;
+var y1 = true;

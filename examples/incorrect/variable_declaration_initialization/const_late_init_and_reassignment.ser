@@ -1,0 +1,4 @@
+// const variables are allowed to be assigned to at most once
+const x: Int;
+x = 10;
+x = 20;

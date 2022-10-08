@@ -1,0 +1,5 @@
+// The correct syntax is
+// const x: ExistentType;
+var x;
+var y: NonExistentType;
+var z: smallLetterType;
