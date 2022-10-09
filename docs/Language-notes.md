@@ -20,12 +20,13 @@ Line separator is `;`
 
 ### Functions
 
+* Functions are declared using `fun` keyword
 * All arguments are readonly
-* Every function should declare its return type e.g. `function foo(): ReturnType {...}`
+* Every function should declare its return type e.g. `fun foo(): ReturnType {...}`
 * Every argument should declare its type (even if it has a default value)
 * It is possible to have a default value for a function's argument, however:
 	* Only const expr are permitted (no referencing other variables!)
-	* Set of arguments with a default value must be a suffix of function declaration (in other words, this is incorrect: `function bar(a: Int = 1, b, c:Int=4`)
+	* Set of arguments with a default value must be a suffix of function declaration (in other words, this is incorrect: `fun bar(a: Int = 1, b, c:Int=4`)
 
 
 ### Control flow
