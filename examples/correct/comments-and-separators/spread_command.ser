@@ -1,0 +1,7 @@
+const
+a
+=
+5
+;
+
+// This should be considered as a normal command
