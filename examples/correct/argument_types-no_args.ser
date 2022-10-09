@@ -1,4 +1,4 @@
-fun argumentTypes() {}
+fun noArgs() {}
 
 // Should just return Unit
-argumentTypes()
+noArgs();
