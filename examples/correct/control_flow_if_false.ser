@@ -1,0 +1,8 @@
+var condition: Bool = false;
+var y: Int = 0;
+
+if (condition) {
+    y = 1;
+}
+
+// `y` is now 0

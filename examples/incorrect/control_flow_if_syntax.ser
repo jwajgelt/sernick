@@ -1,0 +1,8 @@
+const condition = true;
+
+// syntax error: condition should be wrapped in parenthesis ()
+if condition { /* ... */ }
+
+// syntax error: `if-then-else` branches have to be wrapped
+// in brackets {}
+if (condition) /* code to execute... */;

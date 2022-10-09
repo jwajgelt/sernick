@@ -1,0 +1,9 @@
+const condition = true;
+
+const y: Int = if (condition) {
+    1
+} else {
+    2
+};
+
+// `y` is now 1

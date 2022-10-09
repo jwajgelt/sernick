@@ -1,0 +1,7 @@
+var y = 0;
+
+// syntax error: `else` has to follow an `if`
+
+else {
+    y = 1;
+}
