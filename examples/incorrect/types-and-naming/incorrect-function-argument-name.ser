@@ -1,0 +1,4 @@
+﻿// argument names should begin with a lowercase letter and contain only alphanumeric characters
+
+fun function(FirstArgument : Int) : Unit {} // begins with an uppercase character
+fun function(first-argument : Int) : Unit {} // contains a non-alphanumeric character

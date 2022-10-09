@@ -1,0 +1,4 @@
+﻿// type names start with an uppercase character
+
+var b: bool;
+var x: int;

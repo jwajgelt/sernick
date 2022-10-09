@@ -1,0 +1,3 @@
+﻿// variable names should begin with a lowercase letter and contain only alphanumeric characters
+
+var validVariableName12345: Int;
