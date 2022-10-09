@@ -1,0 +1,7 @@
+function foo(arg1: Int, arg2: Int): Int {
+    arg1
+}
+
+foo(const x: Int = 1, x);
+// Compilation should fail because x is already declared
+const x: Int = 2;

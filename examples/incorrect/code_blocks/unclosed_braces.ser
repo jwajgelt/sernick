@@ -1,0 +1,2 @@
+// Compilation should fail because braces aren't closed
+{const x: Int = 0;

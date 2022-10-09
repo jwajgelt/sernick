@@ -1,0 +1,2 @@
+// Compilation should fail because parentheses aren't closed
+(var x: Int = 0;

@@ -1,0 +1,7 @@
+(
+    const x: Int = 0; 
+    {
+        const y: Int = 0;
+    // Compilation should fail because of missing "("
+    )
+}

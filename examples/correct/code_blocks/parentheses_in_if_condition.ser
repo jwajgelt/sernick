@@ -1,0 +1,4 @@
+if (var x: Bool = true; x) {
+    // We can access variable declared in condition expression because declaration is in '()'
+    x = false;
+}

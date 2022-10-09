@@ -1,0 +1,5 @@
+{
+    var x: Int = 0;
+}
+// Compilation should fail because '{}' introduces new scope and x is undeclared
+x = x + 1;

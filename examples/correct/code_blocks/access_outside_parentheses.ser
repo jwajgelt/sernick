@@ -1,0 +1,5 @@
+(
+    var x: Int = 0;
+)
+// We can access x because '()' doesn't introduce new scope
+x = x + 1;
