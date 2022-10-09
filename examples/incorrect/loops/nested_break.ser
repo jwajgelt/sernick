@@ -1,0 +1,11 @@
+var x : Int = 0;
+loop {
+    var y : Int = 0;
+    loop {
+        y = y + 1;
+        if(y == 10) {
+            x = x + y;
+            break;
+        }
+    }
+}

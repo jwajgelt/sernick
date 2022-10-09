@@ -1,0 +1,7 @@
+var x : Int = 0;
+loop {
+    loop {
+        x = x + 1;
+    }
+    break;
+}

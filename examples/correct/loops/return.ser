@@ -1,0 +1,7 @@
+var x : Int = 0;
+loop {
+    x = x + 1;
+    if(x > 9) {
+        return x;
+    }
+}
