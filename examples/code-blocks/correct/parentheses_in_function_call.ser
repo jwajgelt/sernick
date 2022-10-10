@@ -1,0 +1,7 @@
+fun foo(arg1: Int, arg2: Int): Int {
+    arg1
+}
+
+foo((const x: Int = 1; x), x);
+// Can access variables declared in function call.
+const y: Int = x;

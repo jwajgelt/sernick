@@ -1,0 +1,4 @@
+if ({const x: Bool = true; x}) {
+    // We can re-declare x because `const x: Bool` is in different scope
+    const x: Int = 1;
+}

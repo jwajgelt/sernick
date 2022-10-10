@@ -1,0 +1,5 @@
+(
+    var x: Int = 0;
+)
+// Compilation should fail because x is already declared
+const x: Int = 1;

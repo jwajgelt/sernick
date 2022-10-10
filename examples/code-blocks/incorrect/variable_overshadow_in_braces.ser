@@ -1,0 +1,5 @@
+const x: Int = 0;
+(
+    // Compilation should fail, x can't be overshadowed because '()' doesn't create new scope
+    var x: Bool = false;
+)

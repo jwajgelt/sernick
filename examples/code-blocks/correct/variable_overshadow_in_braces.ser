@@ -1,0 +1,5 @@
+const x: Int = 0;
+{
+    // We can overshadow variable because `{}` introduces new scope
+    var x: Bool = false;
+}

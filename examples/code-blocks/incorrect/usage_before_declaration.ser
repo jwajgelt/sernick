@@ -1,0 +1,5 @@
+// Should fail because x hasn't yet been declared
+const y: Int = x;
+(
+    const x: Int = 1;
+)
