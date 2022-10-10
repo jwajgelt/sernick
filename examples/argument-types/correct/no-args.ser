@@ -1,0 +1,4 @@
+fun noArgs() {}
+
+// Should just return Unit
+noArgs();

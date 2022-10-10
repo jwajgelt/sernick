@@ -1,0 +1,7 @@
+fun callConflict(argOne: Int) {
+	argOne
+}
+
+// This should not compile, type of passed argument
+// does not match with argument type from method declaration
+callConflict(false);
