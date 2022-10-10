@@ -1,0 +1,3 @@
+// Grouping parenthesis don't introduce a new scope
+var x: Int;
+(var x: Int);

@@ -1,0 +1,27 @@
+{
+    var x: Int;
+}
+
+{
+    var x: Int;
+}
+
+//////////////////////
+
+var y: Bool;
+{
+    // This y shadows the previous one inside the first scope
+    var y: Bool;
+    {
+        // This y shadows the previous one inside the second scope
+        var y: Bool;
+    }
+}
+
+//////////////////////
+
+{
+    // This z disappears at the end of the enclosing scope
+    var z: Int;
+}
+var z: Int;

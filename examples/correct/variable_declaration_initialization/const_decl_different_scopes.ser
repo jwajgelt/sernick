@@ -1,0 +1,27 @@
+{
+    const x: Int;
+}
+
+{
+    const x: Int;
+}
+
+//////////////////////
+
+const y: Bool;
+{
+    // This y shadows the previous one inside the first scope
+    const y: Bool;
+    {
+        // This y shadows the previous one inside the second scope
+        const y: Bool;
+    }
+}
+
+//////////////////////
+
+{
+    // This z disappears at the end of the enclosing scope
+    const z: Int;
+}
+const z: Int;
