@@ -2,6 +2,6 @@ fun foo(arg1: Int, arg2: Int): Int {
     arg1
 }
 
-foo({const x: Int = 1}, 2);
+foo({const x: Int = 1; x}, 2);
 // Can re-declare because x is in different scope
 const x: Int = 2;
