@@ -1,0 +1,3 @@
+const a = 10;
+
+// This command should execute successfully

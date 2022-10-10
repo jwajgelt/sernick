@@ -1,0 +1,4 @@
+// Some comment ... /*
+another comment */
+
+// The opening of multi-line comment is commented, so it shouldn't count
