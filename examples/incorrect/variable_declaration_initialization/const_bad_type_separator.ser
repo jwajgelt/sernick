@@ -1,0 +1,4 @@
+// The correct syntax is
+// const x: Int;
+const x Int;
+const y -> Int;

@@ -1,0 +1,6 @@
+// The correct syntax is
+// var x: Type;
+// or
+// const x: Type;
+x: Int = 10;
+y: Bool = true;

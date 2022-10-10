@@ -1,0 +1,5 @@
+const x: Int;
+x = 10;
+
+const y: Bool;
+y = true;

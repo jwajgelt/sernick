@@ -1,0 +1,2 @@
+const x: Int;
+const y: Bool;
