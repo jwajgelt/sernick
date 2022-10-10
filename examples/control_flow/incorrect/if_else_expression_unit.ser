@@ -1,0 +1,10 @@
+const condition = true;
+
+// type error: branch `then` returns `Int`, but branch else returns `Unit`,
+// due to the semicolon;
+
+const y = if (condition) {
+    1
+} else {
+    2;
+};

@@ -1,0 +1,10 @@
+var condition: Bool = false;
+var y: Int;
+
+if (condition) {
+    y = 1;
+} else {
+    y = 2;
+}
+
+// `y` is now 2

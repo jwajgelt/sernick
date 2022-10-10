@@ -1,0 +1,9 @@
+const condition = true;
+
+// type error: branch `then` returns `Int`, but branch `else` returns `Bool`
+
+const y = if (condition) {
+    1
+} else {
+    false
+};
