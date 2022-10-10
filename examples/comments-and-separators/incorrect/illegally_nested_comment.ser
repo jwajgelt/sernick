@@ -1,0 +1,5 @@
+/* <- proper opening
+/* <- commented opening doesn't count
+The comments can't be nested, so the first closing closes the comment, while the second is invalid
+*/
+*/
