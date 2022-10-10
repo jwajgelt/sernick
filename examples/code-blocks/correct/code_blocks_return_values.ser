@@ -1,0 +1,11 @@
+fun foo(): Int {
+  const x: Int = 1;
+  // Without semicolon last expression defines the returned value
+  x
+}
+
+fun bar(): Unit {
+  const x: Int = 1;
+  // With semicolon function doesn't return anything and has type Unit.
+  x;
+}
