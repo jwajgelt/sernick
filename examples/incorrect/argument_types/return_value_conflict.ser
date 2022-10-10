@@ -3,5 +3,3 @@
 fun returnTypeConflict(argOne: Int, argTwo: Bool) {
 	argTwo
 }
-
-returnTypeConflict(10, true);

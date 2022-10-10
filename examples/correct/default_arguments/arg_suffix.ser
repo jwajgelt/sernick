@@ -5,7 +5,7 @@ fun defaultSuffix(argOne: Int, argTwo: Int = 1, argThree: Int = 1) : Int {
 // This should return 6
 defaultSuffix(2, 2, 2);
 
-// This should return 5
+// This should return 4
 defaultSuffix(1, 3);
 
 // This should return 2

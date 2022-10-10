@@ -1,5 +1,3 @@
 // This should not compile, because type of default argument of 'argTwo'
 // does not match with it's declared type
 fun defaultTypeConflict(argOne: Bool, argTwo: Int = true) {}
-
-defaultTypeConflict(false);
