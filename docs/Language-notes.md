@@ -1,11 +1,11 @@
 ### Sernick
 
 ### Types:
-`Boolean, Int`
+`Bool, Int`
 
 ### Entry point
 
-Entire program is executed as a script. There is no `int main()`
+Entire program is executed as a script. There is no `Int main()`
 
 ### How to name types/variables/functions
 
