@@ -1,0 +1,3 @@
+// function identifiers should start with a lower case letter
+fun FunctionName(argument : Int) : Unit {
+}

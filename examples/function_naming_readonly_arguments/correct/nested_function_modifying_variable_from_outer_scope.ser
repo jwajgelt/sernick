@@ -1,0 +1,16 @@
+var globalScoped : Int = 0;
+
+fun outer() : Unit {
+	var outerScoped : Int = 0;
+
+	fun inner() : Unit {
+		var innerScoped : Int = 0;
+		// should have access to all scopes
+		globalScoped = 1;
+		outerScoped = 1;
+		innerScoped = 1;
+		return;
+	}
+
+	return;
+}

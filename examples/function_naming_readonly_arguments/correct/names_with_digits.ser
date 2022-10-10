@@ -1,0 +1,3 @@
+// [a-z][a-zA-Z0-9]*
+fun function1(const argument1 : Int) : Unit {
+}

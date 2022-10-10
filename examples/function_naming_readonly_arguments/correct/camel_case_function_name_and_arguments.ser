@@ -1,0 +1,3 @@
+// function and variable identifiers should start with a lower case letter
+fun functionName(firstArgument : Int, secondArgument: Bool) : Unit {
+}

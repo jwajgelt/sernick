@@ -1,0 +1,11 @@
+
+fun outer() : Unit {
+	const outerScoped : Int = 0;
+	fun inner() : Unit {
+		// should not be able to modify outer scoped const
+		outerScoped = 1;
+		return;
+	}
+
+	return;
+}

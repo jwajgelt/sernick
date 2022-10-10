@@ -1,0 +1,7 @@
+fun outer(const argument : Int) : Int {
+	// inner functions are allowed
+	fun inner(const argument : Int) : Int {
+		return argument + 1;
+	}
+	return inner(argument + 1);
+}
