@@ -1,5 +1,0 @@
-const x: Int = 0;
-{
-    // Compilation should fail because x is already declared in outer scope
-    var x: Int = 1;
-}
