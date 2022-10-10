@@ -1,0 +1,11 @@
+const globalScoped : Int = 0;
+
+fun outer() : Unit {
+	fun inner() : Unit {
+		// should not be able to modify global const
+		globalScoped = 1;
+		return;
+	}
+
+	return;
+}
