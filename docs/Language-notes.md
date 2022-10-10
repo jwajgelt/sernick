@@ -45,13 +45,13 @@ if(condition){ ... }
 
 
 ### Loops
-We currently have only `Loop` instruction which behaves like `while(true)` loop
-Inside the `Loop`, there has to be `break` or `return`, otherwise the program is not syntactically correct
+We currently have only `loop` instruction which behaves like `while(true)` loop
+Inside the `loop`, there has to be `break` or `return`, otherwise the program is not syntactically correct
 
 **Example:**
 ```
 var x: Int = 0;
-Loop {
+loop {
  x = x + 1;
  if(x == 10){ break; }
 }
