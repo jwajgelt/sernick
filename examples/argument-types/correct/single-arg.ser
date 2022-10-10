@@ -3,4 +3,4 @@ fun singleArg(boolArg : Bool) : Bool {
 }
 
 // Should just return false
-singleArg(false)
+singleArg(false);
