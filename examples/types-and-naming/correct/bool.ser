@@ -1,0 +1,3 @@
+﻿// Bool is one of the supported types
+
+var b: Bool;

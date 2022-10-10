@@ -1,0 +1,4 @@
+﻿// variable names should begin with a lowercase letter and contain only alphanumeric characters
+
+fun InvalidFunctionName() : Unit {} // begins with an uppercase character
+fun invalid-function-name() : Unit {} // contains a non-alphanumeric character

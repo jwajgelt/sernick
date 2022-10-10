@@ -1,0 +1,3 @@
+﻿// Int is one of the supported types
+
+var x: Int;
