@@ -6,9 +6,9 @@ internal class StarRegex : Regex
     {
         Child = child;
     }
-    
+
     public Regex Child { get; }
-    
+
     public override bool ContainsEpsilon()
     {
         throw new NotImplementedException();

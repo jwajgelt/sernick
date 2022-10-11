@@ -5,12 +5,12 @@ using Dfa;
 
 public class Lexer<TCat, TState>
 {
-    public Lexer(IReadOnlyDictionary<TCat, IDfa<TState>> categoryDfas) 
+    public Lexer(IReadOnlyDictionary<TCat, IDfa<TState>> categoryDfas)
     {
         throw new NotImplementedException();
     }
 
-    public IEnumerable<Token<TCat>> Process(IInput input) 
+    public IEnumerable<Token<TCat>> Process(IInput input)
     {
         throw new NotImplementedException();
     }

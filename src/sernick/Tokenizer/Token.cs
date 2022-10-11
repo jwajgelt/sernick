@@ -2,7 +2,8 @@ namespace sernick.Tokenizer;
 
 public class Token<TCat>
 {
-    public Token(TCat category, String text) {
+    public Token(TCat category, String text)
+    {
         Category = category;
         Text = text;
     }

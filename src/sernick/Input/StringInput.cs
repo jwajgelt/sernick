@@ -2,7 +2,7 @@ using System.Collections;
 
 namespace sernick.Input;
 
-public class StringInput: IInput
+public class StringInput : IInput
 {
     public StringInput(string text)
     {

@@ -8,7 +8,7 @@ internal class UnionRegex : Regex
     }
 
     public IReadOnlySet<Regex> Children { get; }
-    
+
     public override bool ContainsEpsilon()
     {
         throw new NotImplementedException();
