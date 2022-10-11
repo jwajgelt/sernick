@@ -27,4 +27,9 @@ public abstract class Regex : IEquatable<Regex>
     public abstract bool Equals(Regex? other);
     public abstract bool ContainsEpsilon();
     public abstract Regex Derivative();
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Regex regex && Equals(regex);
+    }
 }
