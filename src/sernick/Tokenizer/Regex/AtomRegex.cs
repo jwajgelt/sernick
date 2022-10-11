@@ -18,12 +18,12 @@ internal class AtomRegex : Regex
         throw new NotImplementedException();
     }
 
-    public override bool Equals(Regex? x, Regex? y)
+    public override int GetHashCode(Regex obj)
     {
         throw new NotImplementedException();
     }
 
-    public override int GetHashCode(Regex obj)
+    public override bool Equals(Regex? other)
     {
         throw new NotImplementedException();
     }
