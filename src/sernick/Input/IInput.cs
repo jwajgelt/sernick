@@ -1,6 +1,6 @@
 namespace sernick.Input;
 
-public interface IInput: IEnumerable<Char>
+public interface IInput: IEnumerable<char>
 {
     void MoveTo(ILocation location);
     ILocation CurrentLocation{ get; }
