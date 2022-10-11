@@ -1,7 +1,7 @@
 using System.Collections;
 
 namespace sernick.Tokenizer.Regex;
-public abstract class Regex : IEquatable<Regex>, IEqualityComparer<Regex>
+public abstract class Regex : IEquatable<Regex>
 {
     public static Regex Atom(char character)
     {
@@ -23,13 +23,8 @@ public abstract class Regex : IEquatable<Regex>, IEqualityComparer<Regex>
         throw new NotImplementedException();
     }
 
-    public abstract int GetHashCode(Regex obj);
+    public abstract override int GetHashCode();
     public abstract bool Equals(Regex? other);
     public abstract bool ContainsEpsilon();
     public abstract Regex Derivative();
-
-    public bool Equals(Regex? x, Regex? y)
-    {
-        return x?.Equals(y) ?? y == null;
-    }
 }

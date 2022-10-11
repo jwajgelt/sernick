@@ -18,7 +18,7 @@ internal class AtomRegex : Regex
         throw new NotImplementedException();
     }
 
-    public override int GetHashCode(Regex obj)
+    public override int GetHashCode()
     {
         throw new NotImplementedException();
     }
