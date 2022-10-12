@@ -5,6 +5,6 @@ public class Lexer
     [Fact]
     public void LexerIsTruth()
     {
-        Assert.True(true);
+        Assert.True(false);
     }
 }
