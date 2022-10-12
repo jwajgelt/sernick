@@ -2,7 +2,7 @@ using sernick.Input;
 
 namespace sernick.Tokenizer;
 
-public class Token<TCat>
+public record Token<TCat>
 {
     public TCat Category { get; init; }
     public String Text { get; init; }
