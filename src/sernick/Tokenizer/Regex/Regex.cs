@@ -26,7 +26,7 @@ public abstract class Regex : IEquatable<Regex>
     public abstract override int GetHashCode();
     public abstract bool Equals(Regex? other);
     public abstract bool ContainsEpsilon();
-    public abstract Regex Derivative();
+    public abstract Regex Derivative(char atom);
 
     public override bool Equals(object? obj)
     {
