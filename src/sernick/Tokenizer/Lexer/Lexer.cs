@@ -3,7 +3,7 @@ namespace sernick.Tokenizer.Lexer;
 using Input;
 using Dfa;
 
-public class Lexer<TCat, TState>
+public class Lexer<TCat, TState>: ILexer<TCat>
 {
     public Lexer(IReadOnlyDictionary<TCat, IDfa<TState>> categoryDfas)
     {
