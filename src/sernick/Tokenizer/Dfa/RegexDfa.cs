@@ -2,7 +2,7 @@ namespace sernick.Tokenizer.Dfa;
 
 using Regex;
 
-public class RegexDfa : IDfa<Regex>
+public sealed class RegexDfa : IDfa<Regex>
 {
     public RegexDfa(Regex regex)
     {
