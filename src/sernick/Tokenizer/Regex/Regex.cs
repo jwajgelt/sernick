@@ -1,12 +1,11 @@
 using System.Collections;
 
 namespace sernick.Tokenizer.Regex;
-public 
-    abstract 
-class 
-Regex : IEquatable<Regex>
+
+public abstract class Regex : IEquatable<Regex>
 {
-    public static Regex Atom(char character) {
+    public static Regex Atom(char character)
+    {
         throw new NotImplementedException();
     }
 
