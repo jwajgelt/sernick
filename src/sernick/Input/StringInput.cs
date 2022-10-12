@@ -8,14 +8,20 @@ public class StringInput : IInput
     {
         throw new NotImplementedException();
     }
-    public IEnumerator<char> GetEnumerator()
+
+    public bool MoveNext()
     {
         throw new NotImplementedException();
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
+    public void Reset()
     {
-        return GetEnumerator();
+        throw new NotImplementedException();
+    }
+
+    public void Dispose()
+    {
+        throw new NotImplementedException();
     }
 
     public void MoveTo(ILocation location)
@@ -23,6 +29,8 @@ public class StringInput : IInput
         throw new NotImplementedException();
     }
 
+    public char Current { get; }
+    object IEnumerator.Current => Current;
     public ILocation CurrentLocation { get; }
     public ILocation Start { get; }
     public ILocation End { get; }
