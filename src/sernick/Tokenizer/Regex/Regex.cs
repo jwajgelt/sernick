@@ -6,6 +6,8 @@ public abstract partial class Regex : IEquatable<Regex>
     public static partial Regex Union(IEnumerable<Regex> children);
     public static partial Regex Concat(IEnumerable<Regex> children);
     public static partial Regex Star(Regex child);
+    
+    public static readonly Regex Empty = new UnionRegex(Enumerable.Empty<Regex>());
 
     public abstract override int GetHashCode();
     public abstract bool Equals(Regex? other);
