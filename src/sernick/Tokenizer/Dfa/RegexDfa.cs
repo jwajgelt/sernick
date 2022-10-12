@@ -4,7 +4,11 @@ using Regex;
 
 public class RegexDfa : IDfa<Regex>
 {
-    public Regex Start => throw new NotImplementedException();
+    public RegexDfa(Regex regex)
+    {
+        Start = regex;
+    }
+    public Regex Start { get; }
 
     public bool Accepts(Regex state)
     {
