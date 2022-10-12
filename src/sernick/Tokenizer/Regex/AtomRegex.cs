@@ -1,6 +1,6 @@
 namespace sernick.Tokenizer.Regex;
 
-internal class AtomRegex : Regex
+internal sealed class AtomRegex : Regex
 {
     public AtomRegex(char character)
     {
@@ -27,4 +27,9 @@ internal class AtomRegex : Regex
     {
         throw new NotImplementedException();
     }
+}
+
+partial class Regex
+{
+    public static partial Regex Atom(char character) => new AtomRegex(character);
 }
