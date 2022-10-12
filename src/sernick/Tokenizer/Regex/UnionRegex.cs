@@ -14,7 +14,7 @@ internal class UnionRegex : Regex
         throw new NotImplementedException();
     }
 
-    public override Regex Derivative()
+    public override Regex Derivative(char atom)
     {
         throw new NotImplementedException();
     }
