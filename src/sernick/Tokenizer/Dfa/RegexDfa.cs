@@ -6,7 +6,7 @@ public class RegexDfa : IDfa<Regex>
 {
     public Regex Start => throw new NotImplementedException();
 
-    public bool IsAccepting(Regex state)
+    public bool Accepts(Regex state)
     {
         throw new NotImplementedException();
     }
