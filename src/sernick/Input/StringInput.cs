@@ -56,7 +56,10 @@ public class StringInput : IInput
     private char CharAtLocation(ILocation location)
     {
         var position = UnpackLocation(location);
-        if (0 <= position && position <= _text.Length - 1) return _text[position];
+        if (0 <= position && position <= _text.Length - 1)
+        {
+            return _text[position];
+        }
 
         return (char)0;
     }
@@ -79,7 +82,10 @@ public class StringInput : IInput
     private static int UnpackLocation(ILocation location)
     {
         if (location is StringLocation stringLocation)
+        {
             return stringLocation.Index;
+        }
+
         throw new ArgumentException("Location provided did not originate in this Input");
     }
 
@@ -104,9 +110,21 @@ public class StringInput : IInput
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
             return Equals((StringLocation)obj);
         }
 
