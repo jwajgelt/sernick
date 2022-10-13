@@ -52,11 +52,14 @@ public partial class Regex
         // \empty \cup X == X
         childrenList = childrenList.Where(regex => !regex.Equals(Empty)).ToList();
 
-        return childrenList.Count switch
+        // X \cup X == X
+        IReadOnlyCollection<Regex> childrenSet = childrenList.ToHashSet();
+
+        return childrenSet.Count switch
         {
             0 => Empty,
-            1 => childrenList.First(),
-            _ => new UnionRegex(childrenList)
+            1 => childrenSet.First(),
+            _ => new UnionRegex(childrenSet)
         };
     }
 }

@@ -44,17 +44,12 @@ public class UnionRegex
             {
                 Regex.Atom('a'),
                 Regex.Star(Regex.Atom('b'))
-            }),
-            Regex.Atom('c')
+            })
         });
-        var normalizedRegex = Regex.Union(new List<Regex>
+        var normalizedRegex = Regex.Concat(new List<Regex>
         {
-            Regex.Concat(new List<Regex>
-            {
-                Regex.Atom('a'),
-                Regex.Star(Regex.Atom('b'))
-            }),
-            Regex.Atom('c')
+            Regex.Atom('a'),
+            Regex.Star(Regex.Atom('b'))
         });
 
         Assert.True(regex.Equals(normalizedRegex));
