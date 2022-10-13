@@ -1,7 +1,7 @@
 namespace sernick.Tokenizer.Lexer;
 
-using Input;
 using Dfa;
+using Input;
 
 public class Lexer<TCat, TState> : ILexer<TCat>
 {
