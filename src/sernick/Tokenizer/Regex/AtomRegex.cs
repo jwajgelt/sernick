@@ -29,7 +29,7 @@ internal sealed class AtomRegex : Regex
     }
 }
 
-partial class Regex
+public partial class Regex
 {
     public static partial Regex Atom(char character) => new AtomRegex(character);
 }

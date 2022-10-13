@@ -30,12 +30,12 @@ internal sealed class UnionRegex : Regex
     }
 }
 
-partial class Regex
+public partial class Regex
 {
     public static partial Regex Union(IEnumerable<Regex> children)
     {
         IReadOnlyCollection<Regex> childrenList = children.ToList();
-        
+
         // (X \cup Y) \cup Z == X \cup (Y \cup Z)
         childrenList = childrenList
             .SelectMany(regex =>
@@ -48,7 +48,7 @@ partial class Regex
                 return Enumerable.Repeat(regex, count: 1);
             })
             .ToList();
-        
+
         // \empty \cup X == X
         childrenList = childrenList.Where(regex => !regex.Equals(Empty)).ToList();
 

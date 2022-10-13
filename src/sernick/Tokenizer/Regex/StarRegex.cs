@@ -30,7 +30,7 @@ internal sealed class StarRegex : Regex
     }
 }
 
-partial class Regex
+public partial class Regex
 {
     public static partial Regex Star(Regex child)
     {
@@ -39,13 +39,13 @@ partial class Regex
         {
             return child;
         }
-        
+
         // \eps^ == \empty^ == \eps
         if (child.Equals(Epsilon) || child.Equals(Empty))
         {
             return Epsilon;
         }
-        
+
         return new StarRegex(child);
     }
 }

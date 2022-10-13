@@ -1,9 +1,8 @@
-﻿namespace sernickTest.Tokenizer.Regex;
+namespace sernickTest.Tokenizer.Regex;
 
 using sernick.Tokenizer.Regex;
-
-using UnionRegex_ = sernick.Tokenizer.Regex.UnionRegex;
 using StarRegex_ = sernick.Tokenizer.Regex.StarRegex;
+using UnionRegex_ = sernick.Tokenizer.Regex.UnionRegex;
 
 public class ConcatRegex
 {
@@ -11,9 +10,9 @@ public class ConcatRegex
     public void When_CreateEmptyConcatRegex_Then_ReturnsEpsilonRegex()
     {
         var regex = Regex.Concat(new List<Regex>());
-        
+
         // Assert.True(regex.Equals(Regex.Epsilon));
-        
+
         // NOTE: naive checks follow
         Assert.IsType<StarRegex_>(regex);
         var starRegex = regex as StarRegex_;
@@ -21,16 +20,16 @@ public class ConcatRegex
         var unionRegex = starRegex.Child as UnionRegex_;
         Assert.Empty(unionRegex.Children);
     }
-    
-    [Fact (Skip = "No Regex.Equals(Regex) implementation at the moment")]
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_CreateSingletonConcatRegex_Then_ReturnsItsContents()
     {
         var regex = Regex.Concat(new List<Regex> { Regex.Atom('a') });
-        
+
         Assert.True(regex.Equals(Regex.Atom('a')));
     }
-    
-    [Fact (Skip = "No Regex.Equals(Regex) implementation at the moment")]
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     /*
      * Rule 1: \empty * X == X * \empty == \empty
      */
@@ -46,11 +45,11 @@ public class ConcatRegex
             Regex.Empty,
             Regex.Atom('c')
         });
-        
+
         Assert.True(regex.Equals(Regex.Empty));
     }
-    
-    [Fact (Skip = "No Regex.Equals(Regex) implementation at the moment")]
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     /*
      * Rule 2: \eps * X == X * \eps == X
      */
@@ -75,11 +74,11 @@ public class ConcatRegex
             }),
             Regex.Atom('c')
         });
-        
+
         Assert.True(regex.Equals(normalizedRegex));
     }
-    
-    [Fact (Skip = "No Regex.Equals(Regex) implementation at the moment")]
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     /*
      * Rule 3: (X * Y) * Z == X * (Y * Z)
      */
@@ -103,11 +102,11 @@ public class ConcatRegex
                 Regex.Atom('c')
             }),
         });
-        
+
         Assert.True(regex1.Equals(regex2));
     }
-    
-    [Fact (Skip = "No Regex.Equals(Regex) implementation at the moment")]
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_CreateNestedConcatRegex_Then_NormalizesCorrectly()
     {
         var regex = Regex.Concat(new List<Regex>
@@ -121,7 +120,7 @@ public class ConcatRegex
             })
         });
         var normalizedRegex = Regex.Atom('a');
-        
+
         Assert.True(regex.Equals(normalizedRegex));
     }
 }

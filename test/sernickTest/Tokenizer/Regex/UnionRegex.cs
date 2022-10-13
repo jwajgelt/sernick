@@ -1,4 +1,4 @@
-﻿namespace sernickTest.Tokenizer.Regex;
+namespace sernickTest.Tokenizer.Regex;
 
 using sernick.Tokenizer.Regex;
 
@@ -10,24 +10,24 @@ public class UnionRegex
     public void When_CreateEmptyUnionRegex_Then_ReturnsEmptyRegex()
     {
         var regex = Regex.Union(new List<Regex>());
-        
+
         // Assert.True(regex.Equals(Regex.Empty));
-        
+
         // NOTE: naive checks follow
         Assert.IsType<UnionRegex_>(regex);
         var unionRegex = regex as UnionRegex_;
         Assert.Empty(unionRegex.Children);
     }
-    
-    [Fact (Skip = "No Regex.Equals(Regex) implementation at the moment")]
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_CreateSingletonUnionRegex_Then_ReturnsItsContents()
     {
         var regex = Regex.Union(new List<Regex> { Regex.Atom('a') });
-        
+
         Assert.True(regex.Equals(Regex.Atom('a')));
     }
-    
-    [Fact (Skip = "No Regex.Equals(Regex) implementation at the moment")]
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     /*
      * Rule 1: X \cup X == X
      */
@@ -56,11 +56,11 @@ public class UnionRegex
             }),
             Regex.Atom('c')
         });
-        
+
         Assert.True(regex.Equals(normalizedRegex));
     }
-    
-    [Fact (Skip = "No Regex.Equals(Regex) implementation at the moment")]
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     /*
      * Rule 2: \empty \cup X == X
      */
@@ -85,11 +85,11 @@ public class UnionRegex
             }),
             Regex.Atom('c')
         });
-        
+
         Assert.True(regex.Equals(normalizedRegex));
     }
-    
-    [Fact (Skip = "No Regex.Equals(Regex) implementation at the moment")]
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     /*
      * Rule 3: (X \cup Y) \cup Z == X \cup (Y \cup Z)
      */
@@ -113,11 +113,11 @@ public class UnionRegex
                 Regex.Atom('c')
             }),
         });
-        
+
         Assert.True(regex1.Equals(regex2));
     }
-    
-    [Fact (Skip = "No Regex.Equals(Regex) implementation at the moment")]
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_CreateNestedUnionRegex_Then_NormalizesCorrectly()
     {
         var regex = Regex.Union(new List<Regex>
@@ -131,7 +131,7 @@ public class UnionRegex
             })
         });
         var normalizedRegex = Regex.Atom('a');
-        
+
         Assert.True(regex.Equals(normalizedRegex));
     }
 }

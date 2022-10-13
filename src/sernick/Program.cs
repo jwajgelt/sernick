@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
 
-[assembly:InternalsVisibleTo("sernickTest")]
+[assembly: InternalsVisibleTo("sernickTest")]
 
 Console.WriteLine("Hello, World!");

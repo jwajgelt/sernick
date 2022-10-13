@@ -30,12 +30,12 @@ internal sealed class ConcatRegex : Regex
     }
 }
 
-partial class Regex
+public partial class Regex
 {
     public static partial Regex Concat(IEnumerable<Regex> children)
     {
         IReadOnlyCollection<Regex> childrenList = children.ToList();
-        
+
         // (X * Y) * Z == X * (Y * Z)
         childrenList = childrenList
             .SelectMany(regex =>
@@ -48,13 +48,13 @@ partial class Regex
                 return Enumerable.Repeat(regex, count: 1);
             })
             .ToList();
-        
+
         // \empty * X == X * \empty == \empty
         if (childrenList.Any(regex => regex.Equals(Empty)))
         {
             return Empty;
         }
-        
+
         // \eps * X == X * \eps == X
         childrenList = childrenList.Where(regex => !regex.Equals(Epsilon)).ToList();
 
