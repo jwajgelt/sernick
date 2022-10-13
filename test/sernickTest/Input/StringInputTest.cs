@@ -120,7 +120,7 @@ public class StringInputTest
         // Act & Assert
         Assert.Throws<ArgumentException>(() => stringInput.MoveTo(fakeLocation));
     }
-    
+
     [Fact]
     public void LocationToStringContainsIndex()
     {

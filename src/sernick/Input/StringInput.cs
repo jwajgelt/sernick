@@ -42,10 +42,7 @@ public class StringInput : IInput
         return successful;
     }
 
-    public void Reset()
-    {
-        MoveTo(Start);
-    }
+    public void Reset() => MoveTo(Start);
 
     public void MoveTo(ILocation location)
     {
@@ -64,20 +61,11 @@ public class StringInput : IInput
         return (char)0;
     }
 
-    private bool HasNext()
-    {
-        return UnpackLocation(CurrentLocation) < UnpackLocation(End);
-    }
+    private bool HasNext() => UnpackLocation(CurrentLocation) < UnpackLocation(End);
 
-    private static ILocation NextLocation(ILocation location)
-    {
-        return PackLocation(UnpackLocation(location) + 1);
-    }
+    private static ILocation NextLocation(ILocation location) => PackLocation(UnpackLocation(location) + 1);
 
-    private static ILocation PackLocation(int location)
-    {
-        return new StringLocation(location);
-    }
+    private static ILocation PackLocation(int location) => new StringLocation(location);
 
     private static int UnpackLocation(ILocation location)
     {
@@ -98,15 +86,9 @@ public class StringInput : IInput
 
         public int Index { get; }
 
-        public override string ToString()
-        {
-            return $"character index {Index}";
-        }
+        public override string ToString() => $"character index {Index}";
 
-        private bool Equals(StringLocation other)
-        {
-            return Index == other.Index;
-        }
+        private bool Equals(StringLocation other) => Index == other.Index;
 
         public override bool Equals(object? obj)
         {
@@ -128,9 +110,6 @@ public class StringInput : IInput
             return Equals((StringLocation)obj);
         }
 
-        public override int GetHashCode()
-        {
-            return Index.GetHashCode();
-        }
+        public override int GetHashCode() => Index.GetHashCode();
     }
 }
