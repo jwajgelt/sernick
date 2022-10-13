@@ -18,20 +18,16 @@ public class Lexer<TCat, TState> : ILexer<TCat>
     {
         input.MoveTo(input.Start);
 
-        var startingStates = new Dictionary<TCat, TState>(
-            categoryDfas.ToDictionary(
+        var startingStates = categoryDfas.ToDictionary(
                 kv => kv.Key,
                 kv => kv.Value.Start
-            )
-        );
+            );
 
         // holds the current states for all DFAs
-        var currentStates = new Dictionary<TCat, TState>(
-            startingStates.ToDictionary(
+        var currentStates = startingStates.ToDictionary(
                 kv => kv.Key,
                 kv => kv.Value
-            )
-        );
+            );
 
         Dictionary<TCat, TState>? lastAcceptingStates = null;
         var lastAcceptingStart = input.Start;
@@ -65,10 +61,10 @@ public class Lexer<TCat, TState> : ILexer<TCat>
                 // we just reset to.
                 // Otherwise, all DFAs failed to match on a substring,
                 // and we begin matching again from the current position
-                foreach (var category in currentStates.Keys)
-                {
-                    currentStates[category] = startingStates[category];
-                }
+                currentStates = startingStates.ToDictionary(
+                    kv => kv.Key,
+                    kv => kv.Value
+                );
 
                 lastAcceptingStart = input.CurrentLocation;
 

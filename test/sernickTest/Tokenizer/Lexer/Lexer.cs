@@ -3,7 +3,7 @@ using sernick.Tokenizer.Lexer;
 
 namespace sernickTest.Tokenizer.Lexer;
 
-public class LexerTest
+public class Lexer
 {
     [Fact]
     public void ReturnsMatching()
