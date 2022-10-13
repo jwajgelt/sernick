@@ -66,17 +66,17 @@ public class StringInput : IInput
         return UnpackLocation(CurrentLocation) < UnpackLocation(End);
     }
 
-    private ILocation NextLocation(ILocation location)
+    private static ILocation NextLocation(ILocation location)
     {
         return PackLocation(UnpackLocation(location) + 1);
     }
 
-    private ILocation PackLocation(int location)
+    private static ILocation PackLocation(int location)
     {
         return new StringLocation(location);
     }
 
-    private int UnpackLocation(ILocation location)
+    private static int UnpackLocation(ILocation location)
     {
         if (location is StringLocation stringLocation)
             return stringLocation.Index;
