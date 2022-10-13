@@ -11,12 +11,12 @@ internal sealed class StarRegex : Regex
 
     public override bool ContainsEpsilon()
     {
-        throw new NotImplementedException();
+        return true;
     }
 
     public override Regex Derivative(char atom)
     {
-        throw new NotImplementedException();
+        return Concat(new List<Regex> { Child.Derivative(atom), this });
     }
 
     public override int GetHashCode()

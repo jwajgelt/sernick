@@ -11,12 +11,27 @@ internal sealed class ConcatRegex : Regex
 
     public override bool ContainsEpsilon()
     {
-        throw new NotImplementedException();
+        return Children.All(c => c.ContainsEpsilon());
     }
 
     public override Regex Derivative(char atom)
     {
-        throw new NotImplementedException();
+        if (Children.Count == 0)
+        {
+            return Empty;
+        }
+
+        var firstRegex = Children[0];
+        var firstDerivative = firstRegex.Derivative(atom);
+        var epsilonLessDerivative = Concat(Children.Skip(1).Prepend(firstDerivative));
+
+        return firstRegex.ContainsEpsilon()
+            ? Union(new List<Regex>
+            {
+                epsilonLessDerivative,
+                Concat(Children.Skip(1)).Derivative(atom)
+            })
+            : epsilonLessDerivative;
     }
 
     public override int GetHashCode()

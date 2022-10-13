@@ -10,12 +10,12 @@ internal sealed class AtomRegex : Regex
 
     public override bool ContainsEpsilon()
     {
-        throw new NotImplementedException();
+        return false;
     }
 
     public override Regex Derivative(char atom)
     {
-        throw new NotImplementedException();
+        return Character == atom ? Regex.Epsilon : Regex.Empty;
     }
 
     public override int GetHashCode()

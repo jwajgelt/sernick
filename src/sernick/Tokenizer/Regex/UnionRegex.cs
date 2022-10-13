@@ -11,12 +11,17 @@ internal sealed class UnionRegex : Regex
 
     public override bool ContainsEpsilon()
     {
-        throw new NotImplementedException();
+        return Children.Any(c => c.ContainsEpsilon());
     }
 
     public override Regex Derivative(char atom)
     {
-        throw new NotImplementedException();
+        if (Children.Count == 0)
+        {
+            return Empty;
+        }
+
+        return Union(new List<Regex> { Children.First().Derivative(atom), Union(Children.Skip(1)).Derivative(atom) });
     }
 
     public override int GetHashCode()

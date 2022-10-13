@@ -123,4 +123,51 @@ public class ConcatRegex
 
         Assert.True(regex.Equals(normalizedRegex));
     }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_BothRegexesContainEpsilon_Then_ReturnTrue()
+    {
+        var regex = Regex.Concat(new List<Regex> { Regex.Epsilon, Regex.Epsilon });
+
+        Assert.True(regex.ContainsEpsilon());
+    }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_OneRegexContainsEpsilon_Then_ReturnFalse()
+    {
+        var regex = Regex.Concat(new List<Regex> { Regex.Epsilon, Regex.Empty });
+
+        Assert.False(regex.ContainsEpsilon());
+    }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_NoneRegexContainsEpsilon_Then_ReturnFalse()
+    {
+        var regex = Regex.Concat(new List<Regex> { Regex.Empty, Regex.Empty });
+
+        Assert.False(regex.ContainsEpsilon());
+    }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_Derivative_Then_ComputeCorrectly_Rule1()
+    {
+        var regex = Regex.Concat(new List<Regex> { Regex.Atom('a'), Regex.Atom('b') });
+
+        Assert.True(regex.Derivative('a').Equals(Regex.Atom('b')));
+    }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_Derivative_Then_ComputeCorrectly_Rule2()
+    {
+        var regex = Regex.Concat(new List<Regex>
+        {
+            Regex.Star(Regex.Atom('a')),
+            Regex.Atom('a'),
+            Regex.Atom('b')
+        });
+
+        var result = Regex.Union(new List<Regex> { regex, Regex.Atom('b') });
+
+        Assert.True(regex.Derivative('a').Equals(result));
+    }
 }

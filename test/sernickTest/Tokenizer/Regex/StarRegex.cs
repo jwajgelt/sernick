@@ -52,4 +52,44 @@ public class StarRegex
 
         Assert.True(regex.Equals(normalizedRegex));
     }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_ContainsEpsilon_Then_AlwaysReturnTrue()
+    {
+        var regex = Regex.Star(Regex.Empty);
+
+        Assert.True(regex.ContainsEpsilon());
+    }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_Derivative_Then_ComputeCorrectly_Case1()
+    {
+        var regex = Regex.Star(Regex.Atom('a'));
+
+        Assert.True(regex.Derivative('a').Equals(regex));
+    }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_Derivative_Then_ComputeCorrectly_Case2()
+    {
+        var regex = Regex.Star(Regex.Atom('a'));
+
+        Assert.True(regex.Derivative('b').Equals(Regex.Empty));
+    }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_Derivative_Then_ComputeCorrectly_Case3()
+    {
+        var regex = Regex.Star(
+            Regex.Concat(new List<Regex>
+            {
+                Regex.Atom('a'),
+                Regex.Atom('b')
+            })
+        );
+
+        var result = Regex.Union(new List<Regex> { Regex.Atom('b'), regex });
+
+        Assert.True(regex.Derivative('a').Equals(result));
+    }
 }
