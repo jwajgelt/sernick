@@ -1,5 +1,3 @@
-using System.Collections;
-
 namespace sernick.Tokenizer.Regex;
 public abstract class Regex : IEquatable<Regex>
 {

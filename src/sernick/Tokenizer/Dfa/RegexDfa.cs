@@ -20,7 +20,7 @@ public sealed class RegexDfa : IDfa<Regex>
         throw new NotImplementedException();
     }
 
-    public Regex Transition(Regex state, Char atom)
+    public Regex Transition(Regex state, char atom)
     {
         throw new NotImplementedException();
     }

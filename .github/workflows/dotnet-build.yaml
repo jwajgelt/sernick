@@ -37,7 +37,8 @@ jobs:
       with:
         dotnet-version: '6.0.x'
     - name: Run linter
-      run: dotnet format --verify-no-changes
+      working-directory: ./
+      run: dotnet format ./src/sernick --verify-no-changes
     - name: Run linter for tests
-      working-directory: test/sernickTest
-      run: dotnet format --verify-no-changes
+      working-directory: ./
+      run: dotnet format ./test/sernickTest --verify-no-changes
