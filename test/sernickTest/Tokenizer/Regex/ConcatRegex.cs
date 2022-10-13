@@ -123,7 +123,7 @@ public class ConcatRegex
 
         Assert.True(regex.Equals(normalizedRegex));
     }
-  
+
     [Fact]
     public void TestEqualsAndHashCode()
     {
