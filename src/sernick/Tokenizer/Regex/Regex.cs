@@ -1,25 +1,14 @@
 namespace sernick.Tokenizer.Regex;
-public abstract class Regex : IEquatable<Regex>
+
+public abstract partial class Regex : IEquatable<Regex>
 {
-    public static Regex Atom(char character)
-    {
-        throw new NotImplementedException();
-    }
+    public static partial Regex Atom(char character);
+    public static partial Regex Union(IEnumerable<Regex> children);
+    public static partial Regex Concat(IEnumerable<Regex> children);
+    public static partial Regex Star(Regex child);
 
-    public static Regex Union(IEnumerable<Regex> children)
-    {
-        throw new NotImplementedException();
-    }
-
-    public static Regex Concat(IEnumerable<Regex> children)
-    {
-        throw new NotImplementedException();
-    }
-
-    public static Regex Star(Regex child)
-    {
-        throw new NotImplementedException();
-    }
+    public static readonly Regex Empty = new UnionRegex(Enumerable.Empty<Regex>());
+    public static readonly Regex Epsilon = new StarRegex(Empty);
 
     public abstract override int GetHashCode();
     public abstract bool Equals(Regex? other);
