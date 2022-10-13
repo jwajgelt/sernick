@@ -4,7 +4,7 @@ using sernick.Tokenizer.Regex;
 
 public class StarRegex
 {
-    [Fact(Skip = "No Regex static methods implementation")]
+    [Fact]
     public void TestEqualsAndHashCode()
     {
         var regexA = Regex.Atom('a');
