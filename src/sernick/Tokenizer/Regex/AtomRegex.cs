@@ -20,11 +20,11 @@ internal class AtomRegex : Regex
 
     public override int GetHashCode()
     {
-        throw new NotImplementedException();
+        return Character.GetHashCode();
     }
 
     public override bool Equals(Regex? other)
     {
-        throw new NotImplementedException();
+        return other is AtomRegex atomRegex && Character.Equals(atomRegex.Character);
     }
 }

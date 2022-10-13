@@ -21,11 +21,17 @@ internal class UnionRegex : Regex
 
     public override int GetHashCode()
     {
-        throw new NotImplementedException();
+        var hashCode = Children.Count;
+        foreach (var child in Children)
+        {
+            hashCode = unchecked(hashCode + child.GetHashCode());
+        }
+
+        return hashCode;
     }
 
     public override bool Equals(Regex? other)
     {
-        throw new NotImplementedException();
+        return other is UnionRegex unionRegex && Children.SetEquals(unionRegex.Children);
     }
 }
