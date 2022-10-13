@@ -5,7 +5,6 @@ public abstract class Regex : IEquatable<Regex>
     {
         throw new NotImplementedException();
     }
-    
 
     public static Regex Union(IEnumerable<Regex> children)
     {
