@@ -8,6 +8,7 @@ public abstract partial class Regex : IEquatable<Regex>
     public static partial Regex Star(Regex child);
     
     public static readonly Regex Empty = new UnionRegex(Enumerable.Empty<Regex>());
+    public static readonly Regex Epsilon = new StarRegex(Empty);
 
     public abstract override int GetHashCode();
     public abstract bool Equals(Regex? other);
