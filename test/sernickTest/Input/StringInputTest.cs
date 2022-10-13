@@ -120,4 +120,20 @@ public class StringInputTest
         // Act & Assert
         Assert.Throws<ArgumentException>(() => stringInput.MoveTo(fakeLocation));
     }
+    
+    [Fact]
+    public void LocationToStringContainsIndex()
+    {
+        // Arrange
+        IInput stringInput = new StringInput("abcde");
+        stringInput.MoveNext();
+        stringInput.MoveNext();
+        stringInput.MoveNext();
+
+        // Act
+        var s = stringInput.CurrentLocation.ToString();
+
+        // Assert
+        Assert.Contains("2", s);
+    }
 }
