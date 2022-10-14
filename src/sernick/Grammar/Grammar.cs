@@ -5,7 +5,7 @@ using CategoryItems = Dictionary<string, string>;
 
 public class GrammarEntry
 {
-    public GrammarCategory Category { get; init; }
+    public IGrammarCategory Category { get; init; }
     public Regex Regex { get; init; }
 
 
@@ -15,7 +15,7 @@ public class GrammarEntry
         return StringToRegex.ToRegex(unionRegexAsString);
     }
 
-    public GrammarEntry(GrammarCategory category, CategoryItems rules)
+    public GrammarEntry(IGrammarCategory category, CategoryItems rules)
     {
         Category = category;
         Regex = createUnionRegex(rules);

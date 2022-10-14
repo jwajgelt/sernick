@@ -1,6 +1,6 @@
 namespace sernick.Grammar;
 
-public abstract class GrammarCategory
+public interface IGrammarCategory
 {
     // 1 -- lowest priority
     // Keep the priority high for categories which are more general
@@ -8,53 +8,54 @@ public abstract class GrammarCategory
     // should be LOWER than of a category which describes variable identifiers
     // because we want to say that "myvariableName" is a correct variable name,
     // and not a mistake in keyword
-    public Int16 Priority;
+    public Int16 Priority { get; }
 
 }
 
-public class BraceCategory : GrammarCategory
+public class BraceCategory : IGrammarCategory
 {
-    public new Int16 Priority = 1;
+    public Int16 Priority { get; } = 1;
 }
 
-public class LineDelimiterCategory : GrammarCategory
+
+public class LineDelimiterCategory : IGrammarCategory
 {
-    public new Int16 Priority = 2;
+    public Int16 Priority { get; } = 2;
 }
 
-public class ColonCategory : GrammarCategory
+public class ColonCategory : IGrammarCategory
 {
-    public new Int16 Priority = 3;
+    public Int16 Priority { get; } = 3;
 }
 
-public class WhitespaceCategory : GrammarCategory
+public class WhitespaceCategory : IGrammarCategory
 {
-    public new Int16 Priority = 4;
+    public Int16 Priority { get; } = 4;
 }
 
-public class LiteralsCategory : GrammarCategory
+public class LiteralsCategory : IGrammarCategory
 {
-    public new Int16 Priority = 5;
+    public Int16 Priority { get; } = 5;
 }
 
-public class OperatorCategory : GrammarCategory
+public class OperatorCategory : IGrammarCategory
 {
-    public new Int16 Priority = 6;
+    public Int16 Priority { get; } = 6;
 }
-public class KeywordCategory : GrammarCategory
+public class KeywordCategory : IGrammarCategory
 {
-    public new Int16 Priority = 7;
+    public Int16 Priority { get; } = 7;
 }
 
-public class TypeIdentifierCategory : GrammarCategory
+public class TypeIdentifierCategory : IGrammarCategory
 {
-    public new Int16 Priority = 8;
+    public Int16 Priority { get; } = 8;
 }
-public class VariableIdentifierCategory : GrammarCategory
+public class VariableIdentifierCategory : IGrammarCategory
 {
-    public new Int16 Priority = 9;
+    public Int16 Priority { get; } = 9;
 }
-public class CommentCategory : GrammarCategory
+public class CommentCategory : IGrammarCategory
 {
-    public new Int16 Priority = 10;
+    public Int16 Priority { get; } = 10;
 }
