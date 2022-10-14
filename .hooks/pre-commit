@@ -1,0 +1,15 @@
+#!/bin/sh
+
+SRC_FILES=$(git diff --cached --name-only --diff-filter=ACM "src/sernick/*.cs")
+if [ -n "$SRC_FILES" ]
+then
+	dotnet format ./src/sernick --include $SRC_FILES
+	echo "$SRC_FILES" | xargs git add
+fi
+
+TEST_FILES=$(git diff --cached --name-only --diff-filter=ACM "test/sernickTest/*.cs")
+if [ -n "$TEST_FILES" ]
+then
+	dotnet format ./test/sernickTest --include $TEST_FILES
+	echo "$TEST_FILES" | xargs git add
+fi
