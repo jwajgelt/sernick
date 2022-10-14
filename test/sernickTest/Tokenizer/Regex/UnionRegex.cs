@@ -114,4 +114,62 @@ public class UnionRegex
 
         Assert.True(regex.Equals(normalizedRegex));
     }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_AllRegexesContainEpsilon_Then_ReturnTrue()
+    {
+        var regex = Regex.Union(
+            Regex.Epsilon,
+            Regex.Star(Regex.Atom('a')),
+            Regex.Star(Regex.Atom('b'))
+        );
+
+        Assert.True(regex.ContainsEpsilon());
+    }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_OneRegexContainsEpsilon_Then_ReturnTrue()
+    {
+        var regex = Regex.Union(
+            Regex.Epsilon,
+            Regex.Atom('a'),
+            Regex.Atom('b')
+        );
+
+        Assert.True(regex.ContainsEpsilon());
+    }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_NoneRegexContainsEpsilon_Then_ReturnFalse()
+    {
+        var regex = Regex.Union(
+            Regex.Atom('a'),
+            Regex.Atom('b'),
+            Regex.Atom('c')
+            );
+
+        Assert.False(regex.ContainsEpsilon());
+    }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_Derivative_Then_ComputeCorrectly_Case1()
+    {
+        var regex = Regex.Union(
+            Regex.Atom('a'),
+            Regex.Atom('b')
+        );
+
+        Assert.True(regex.Derivative('a').Equals(Regex.Epsilon));
+    }
+
+    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    public void When_Derivative_Then_ComputeCorrectly_Case2()
+    {
+        var regex = Regex.Union(
+            Regex.Atom('a'),
+            Regex.Atom('b')
+        );
+
+        Assert.True(regex.Derivative('c').Equals(Regex.Empty));
+    }
 }
