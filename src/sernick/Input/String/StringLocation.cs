@@ -1,4 +1,4 @@
-﻿namespace sernick.Input.String;
+namespace sernick.Input.String;
 
 public class StringLocation : ILocation
 {
