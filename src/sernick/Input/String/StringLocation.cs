@@ -11,27 +11,9 @@ public class StringLocation : ILocation
 
     public override string ToString() => $"character index {Index}";
 
+    public override bool Equals(object? obj) => obj is StringLocation location && Equals(location);
+
     private bool Equals(StringLocation other) => Index == other.Index;
-
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(null, obj))
-        {
-            return false;
-        }
-
-        if (ReferenceEquals(this, obj))
-        {
-            return true;
-        }
-
-        if (obj.GetType() != GetType())
-        {
-            return false;
-        }
-
-        return Equals((StringLocation)obj);
-    }
-
+    
     public override int GetHashCode() => Index.GetHashCode();
 }
