@@ -10,14 +10,12 @@ public class StarRegex
      */
     public void When_CreateStarRegex_Then_NormalizesCorrectly_Rule1()
     {
-        var regex = Regex.Star(Regex.Star(Regex.Union(new List<Regex>
-        {
+        var regex = Regex.Star(Regex.Star(Regex.Union(
             Regex.Atom('a'), Regex.Atom('b')
-        })));
-        var normalizedRegex = Regex.Star(Regex.Union(new List<Regex>
-        {
+        )));
+        var normalizedRegex = Regex.Star(Regex.Union(
             Regex.Atom('a'), Regex.Atom('b')
-        }));
+        ));
 
         Assert.True(regex.Equals(normalizedRegex));
     }
