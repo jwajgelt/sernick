@@ -34,7 +34,7 @@ public class AtomRegex
         var regexA = Regex.Atom('a');
         var regexA2 = Regex.Atom('a');
         var regexB = Regex.Atom('b');
-        var regexAB = Regex.Concat(new Regex[] { regexA2, regexB });
+        var regexAB = Regex.Concat(regexA2, regexB);
 
         Assert.True(regexA.Equals(regexA2));
         Assert.False(regexA.Equals(regexB));
