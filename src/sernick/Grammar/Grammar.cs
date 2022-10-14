@@ -30,6 +30,8 @@ public class Grammar
     // make sure to only use POSIX-Extended Regular Expressions
     // as specified here: https://en.m.wikibooks.org/wiki/Regular_Expressions/POSIX-Extended_Regular_Expressions
     // Otherwise our StringToRegex might not be able to parse it
+    //
+    // You could use e.g. https://regex101.com to test if the given regex is OK
 
     private GrammarEntry bracesAndParentheses = new GrammarEntry(new BraceCategory(), new CategoryItems()
     {
@@ -65,31 +67,31 @@ public class Grammar
     {
         ["Int"] = "Int",
         ["Bool"] = "Bool",
-        ["typesNames"] = "[[:upper:]][:alnum:]*",
+        ["typeNames"] = "[[:upper:]][[:alnum:]]*",
     });
 
     private readonly GrammarEntry operators = new GrammarEntry(new OperatorCategory(), new CategoryItems()
     {
-        ["plus"] = "+",
+        ["plus"] = @"\+",
         ["minus"] = "-",
-        ["shortCircuitOr"] = "||",
+        ["shortCircuitOr"] = @"\|\|",
         ["shortCircuitAnd"] = "&&"
     });
 
     private readonly GrammarEntry whitespaces = new GrammarEntry(new WhitespaceCategory(), new CategoryItems()
     {
-        ["blankCharacter"] = ":space:"
+        ["blankCharacter"] = "[[:space:]]+"
     });
 
     private readonly GrammarEntry variableIdentifiers = new GrammarEntry(new VariableIdentifierCategory(), new CategoryItems()
     {
 
-        ["variableNames"] = "[[:upper:]|[:lower:]][:alnum:]*",
+        ["variableNames"] = "[[:lower:]][[:alnum:]]*",
     });
 
     private readonly GrammarEntry literals = new GrammarEntry(new LiteralsCategory(), new CategoryItems()
     {
-        ["integers"] = "[:digit:]+",
+        ["integers"] = "[[:digit:]]+",
         ["true"] = "true",
         ["false"] = "false",
     });
