@@ -24,7 +24,7 @@ public class ConcatRegex
     [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_CreateSingletonConcatRegex_Then_ReturnsItsContents()
     {
-        var regex = Regex.Concat(new List<Regex> { Regex.Atom('a') });
+        var regex = Regex.Concat(Regex.Atom('a'));
 
         Assert.True(regex.Equals(Regex.Atom('a')));
     }
@@ -35,16 +35,14 @@ public class ConcatRegex
      */
     public void When_CreateConcatRegex_Then_NormalizesCorrectly_Rule1()
     {
-        var regex = Regex.Concat(new List<Regex>
-        {
-            Regex.Concat(new List<Regex>
-            {
+        var regex = Regex.Concat(
+            Regex.Concat(
                 Regex.Atom('a'),
                 Regex.Star(Regex.Atom('b'))
-            }),
+            ),
             Regex.Empty,
             Regex.Atom('c')
-        });
+        );
 
         Assert.True(regex.Equals(Regex.Empty));
     }
@@ -55,25 +53,21 @@ public class ConcatRegex
      */
     public void When_CreateConcatRegex_Then_NormalizesCorrectly_Rule2()
     {
-        var regex = Regex.Concat(new List<Regex>
-        {
-            Regex.Concat(new List<Regex>
-            {
+        var regex = Regex.Concat(
+            Regex.Concat(
                 Regex.Atom('a'),
                 Regex.Star(Regex.Atom('b'))
-            }),
+            ),
             Regex.Epsilon,
             Regex.Atom('c')
-        });
-        var normalizedRegex = Regex.Union(new List<Regex>
-        {
-            Regex.Concat(new List<Regex>
-            {
+        );
+        var normalizedRegex = Regex.Union(
+            Regex.Concat(
                 Regex.Atom('a'),
                 Regex.Star(Regex.Atom('b'))
-            }),
+            ),
             Regex.Atom('c')
-        });
+        );
 
         Assert.True(regex.Equals(normalizedRegex));
     }
@@ -84,24 +78,20 @@ public class ConcatRegex
      */
     public void When_CreateConcatRegex_Then_NormalizesCorrectly_Rule3()
     {
-        var regex1 = Regex.Concat(new List<Regex>
-        {
-            Regex.Concat(new List<Regex>
-            {
+        var regex1 = Regex.Concat(
+            Regex.Concat(
                 Regex.Atom('a'),
                 Regex.Atom('b')
-            }),
+            ),
             Regex.Atom('c')
-        });
-        var regex2 = Regex.Concat(new List<Regex>
-        {
+        );
+        var regex2 = Regex.Concat(
             Regex.Atom('a'),
-            Regex.Concat(new List<Regex>
-            {
+            Regex.Concat(
                 Regex.Atom('b'),
                 Regex.Atom('c')
-            }),
-        });
+            )
+        );
 
         Assert.True(regex1.Equals(regex2));
     }
@@ -109,16 +99,13 @@ public class ConcatRegex
     [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_CreateNestedConcatRegex_Then_NormalizesCorrectly()
     {
-        var regex = Regex.Concat(new List<Regex>
-        {
-            Regex.Concat(new List<Regex>
-            {
-                Regex.Concat(new List<Regex>
-                {
+        var regex = Regex.Concat(
+            Regex.Concat(
+                Regex.Concat(
                     Regex.Atom('a')
-                })
-            })
-        });
+                )
+            )
+        );
         var normalizedRegex = Regex.Atom('a');
 
         Assert.True(regex.Equals(normalizedRegex));
