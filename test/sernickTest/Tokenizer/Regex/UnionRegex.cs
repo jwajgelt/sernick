@@ -179,10 +179,10 @@ public class UnionRegex
         var regexA2 = Regex.Atom('a');
         var regexB = Regex.Atom('b');
         var regexC = Regex.Atom('c');
-        var regexAB = Regex.Union(new Regex[] { regexA, regexB });
-        var regexAB2 = Regex.Union(new Regex[] { regexA2, regexB });
-        var regexBA = Regex.Union(new Regex[] { regexB, regexA });
-        var regexABC = Regex.Union(new Regex[] { regexA, regexB, regexC });
+        var regexAB = Regex.Union(regexA, regexB);
+        var regexAB2 = Regex.Union(regexA2, regexB);
+        var regexBA = Regex.Union(regexB, regexA);
+        var regexABC = Regex.Union(regexA, regexB, regexC);
 
         Assert.True(regexAB.Equals(regexAB2));
         Assert.True(regexAB.Equals(regexBA));

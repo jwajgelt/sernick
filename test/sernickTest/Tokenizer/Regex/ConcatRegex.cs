@@ -187,10 +187,10 @@ public class ConcatRegex
         var regexA = Regex.Atom('a');
         var regexA2 = Regex.Atom('a');
         var regexB = Regex.Atom('b');
-        var regexAB = Regex.Concat(new Regex[] { regexA, regexB });
-        var regexAB2 = Regex.Concat(new Regex[] { regexA2, regexB });
-        var regexABB = Regex.Concat(new Regex[] { regexA, regexB, regexB });
-        var regexBA = Regex.Concat(new Regex[] { regexB, regexA });
+        var regexAB = Regex.Concat(regexA, regexB);
+        var regexAB2 = Regex.Concat(regexA2, regexB);
+        var regexABB = Regex.Concat(regexA, regexB, regexB);
+        var regexBA = Regex.Concat(regexB, regexA);
 
         Assert.True(regexAB.Equals(regexAB2));
         Assert.False(regexAB.Equals(regexABB));
