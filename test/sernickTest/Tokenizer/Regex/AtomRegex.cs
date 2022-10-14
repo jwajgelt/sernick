@@ -12,7 +12,7 @@ public class AtomRegex
         Assert.False(regex.ContainsEpsilon());
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_DerivativeByTheSameCharacter_Then_ReturnEpsilon()
     {
         var regex = Regex.Atom('a');
@@ -20,7 +20,7 @@ public class AtomRegex
         Assert.True(regex.Derivative('a').Equals(Regex.Epsilon));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_DerivativeByOtherCharacter_Then_ReturnEmpty()
     {
         var regex = Regex.Atom('a');

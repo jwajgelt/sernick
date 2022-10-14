@@ -21,7 +21,7 @@ public class ConcatRegex
         Assert.Empty(unionRegex.Children);
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_CreateSingletonConcatRegex_Then_ReturnsItsContents()
     {
         var regex = Regex.Concat(Regex.Atom('a'));
@@ -29,7 +29,7 @@ public class ConcatRegex
         Assert.True(regex.Equals(Regex.Atom('a')));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     /*
      * Rule 1: \empty * X == X * \empty == \empty
      */
@@ -47,7 +47,7 @@ public class ConcatRegex
         Assert.True(regex.Equals(Regex.Empty));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     /*
      * Rule 2: \eps * X == X * \eps == X
      */
@@ -61,7 +61,7 @@ public class ConcatRegex
             Regex.Epsilon,
             Regex.Atom('c')
         );
-        var normalizedRegex = Regex.Union(
+        var normalizedRegex = Regex.Concat(
             Regex.Concat(
                 Regex.Atom('a'),
                 Regex.Star(Regex.Atom('b'))
@@ -72,7 +72,7 @@ public class ConcatRegex
         Assert.True(regex.Equals(normalizedRegex));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     /*
      * Rule 3: (X * Y) * Z == X * (Y * Z)
      */
@@ -96,7 +96,7 @@ public class ConcatRegex
         Assert.True(regex1.Equals(regex2));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_CreateNestedConcatRegex_Then_NormalizesCorrectly()
     {
         var regex = Regex.Concat(
@@ -111,7 +111,7 @@ public class ConcatRegex
         Assert.True(regex.Equals(normalizedRegex));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_AllRegexesContainEpsilon_Then_ReturnTrue()
     {
         var regex = Regex.Concat(
@@ -123,7 +123,7 @@ public class ConcatRegex
         Assert.True(regex.ContainsEpsilon());
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_OneRegexContainsEpsilon_Then_ReturnFalse()
     {
         var regex = Regex.Concat(
@@ -135,7 +135,7 @@ public class ConcatRegex
         Assert.False(regex.ContainsEpsilon());
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_NoneRegexContainsEpsilon_Then_ReturnFalse()
     {
         var regex = Regex.Concat(
@@ -148,10 +148,10 @@ public class ConcatRegex
     }
 
     /*
-     * Rule 1: When X hasn't epsilon than
+     * Rule 1: When X hasn't epsilon, then
      * (XY)' = X'Y
      */
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_Derivative_Then_ComputeCorrectly_Rule1()
     {
         var regex = Regex.Concat(
@@ -163,10 +163,10 @@ public class ConcatRegex
     }
 
     /*
-     * Rule 2: When X has epsilon than
+     * Rule 2: When X has epsilon, then
      * (XY)' = X'Y \cup Y'
      */
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_Derivative_Then_ComputeCorrectly_Rule2()
     {
         var regex = Regex.Concat(new List<Regex>
