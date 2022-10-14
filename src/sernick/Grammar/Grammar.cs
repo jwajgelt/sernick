@@ -111,6 +111,7 @@ public class Grammar
             whitespaces,
             variableIdentifiers,
             literals,
+            comments
         };
 
     }
