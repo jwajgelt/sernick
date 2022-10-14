@@ -8,10 +8,9 @@ public class GrammarEntry
     public IGrammarCategory Category { get; init; }
     public Regex Regex { get; init; }
 
-
     private static Regex createUnionRegex(CategoryItems categoryItems)
     {
-        string unionRegexAsString = String.Join("|", categoryItems.Values);
+        var unionRegexAsString = string.Join("|", categoryItems.Values);
         return StringToRegex.ToRegex(unionRegexAsString);
     }
 
@@ -22,8 +21,6 @@ public class GrammarEntry
     }
 }
 
-
-
 public class Grammar
 {
     // !!! IMPORTANT !!!
@@ -33,7 +30,7 @@ public class Grammar
     //
     // You could use e.g. https://regex101.com to test if the given regex is OK 
 
-    private GrammarEntry bracesAndParentheses = new GrammarEntry(new BraceCategory(), new CategoryItems()
+    private readonly GrammarEntry bracesAndParentheses = new GrammarEntry(new BraceCategory(), new CategoryItems()
     {
         ["leftBrace"] = "{",
         ["rightBrace"] = "}",
@@ -41,16 +38,15 @@ public class Grammar
         ["rightParentheses"] = @"\)",
     });
 
-    private GrammarEntry semicolon = new GrammarEntry(new LineDelimiterCategory(), new CategoryItems()
+    private readonly GrammarEntry semicolon = new GrammarEntry(new LineDelimiterCategory(), new CategoryItems()
     {
         ["semicolon"] = ";"
     });
 
-    private GrammarEntry colon = new GrammarEntry(new ColonCategory(), new CategoryItems()
+    private readonly GrammarEntry colon = new GrammarEntry(new ColonCategory(), new CategoryItems()
     {
         ["colon"] = ":"
     });
-
 
     private readonly GrammarEntry keywords = new GrammarEntry(new KeywordCategory(), new CategoryItems()
     {
@@ -102,7 +98,6 @@ public class Grammar
         ["multiLineComment"] = @"//\*.*\*/"
     });
 
-
     // TODO test that every category, returned from GenerateGrammar, has distinct priority
     public List<GrammarEntry> generateGrammar()
     {
@@ -117,7 +112,6 @@ public class Grammar
             variableIdentifiers,
             literals,
         };
-
 
     }
 }
