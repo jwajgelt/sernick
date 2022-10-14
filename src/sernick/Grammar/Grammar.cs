@@ -1,98 +1,116 @@
 namespace sernick.Grammar;
 using sernick.Tokenizer.Regex;
 
-using Rules = Dictionary<string, string>;
+using CategoryItems = Dictionary<string, string>;
+
+public class GrammarEntry
+{
+    public GrammarCategory Category;
+    public Regex Regex;
+
+
+    private static Regex createUnionRegex(CategoryItems categoryItems)
+    {
+        string unionRegexAsString = categoryItems.Values.Aggregate("", (partialResult, currentRegex) => partialResult + "|" + currentRegex);
+        return StringToRegex.ToRegex(unionRegexAsString);
+    }
+
+    public GrammarEntry(GrammarCategory category, CategoryItems rules)
+    {
+        Category = category;
+        Regex = createUnionRegex(rules);
+    }
+}
+
+
 
 public class Grammar
 {
-    // members of grammar, grouped by regions
     // !!! IMPORTANT !!!
     // make sure to only use POSIX-Extended Regular Expressions
     // as specified here: https://en.m.wikibooks.org/wiki/Regular_Expressions/POSIX-Extended_Regular_Expressions
     // Otherwise our StringToRegex might not be able to parse it
 
-    private Rules bracesAndParentheses = new Rules()
+    private GrammarEntry bracesAndParentheses = new GrammarEntry(new BraceCategory(), new CategoryItems()
     {
         ["leftBrace"] = "{",
         ["rightBrace"] = "}",
-        ["leftParentheses"] = "(",
-        ["rightParentheses"] = ")",
-    };
+        ["leftParentheses"] = @"\)",
+        ["rightParentheses"] = @"\)",
+    });
 
-    private Rules lineDelimiters = new Rules()
+    private GrammarEntry lineDelimiters = new GrammarEntry(new LineDelimiterCategory(), new CategoryItems()
     {
         ["semicolon"] = ";"
-    };
+    });
 
 
-    private readonly Rules keywords = new Rules()
+    private readonly GrammarEntry keywords = new GrammarEntry(new KeywordCategory(), new CategoryItems()
     {
         ["var"] = "var",
         ["const"] = "const",
-        ["function"] = "function",
+        ["function"] = "fun",
         ["loop"] = "loop",
         ["break"] = "break",
-        ["continue"] = "continue"
-    };
+        ["continue"] = "continue",
+        ["return"] = "return",
+    });
 
-    private readonly Rules types = new Rules()
+    private readonly GrammarEntry typeIdentifiers = new GrammarEntry(new TypeIdentifierCategory(), new CategoryItems()
     {
         ["Int"] = "Int",
         ["Bool"] = "Bool",
-    };
+        ["typesNames"] = "[[:upper:]][:alnum:]*",
+    });
 
-    private readonly Rules operators = new Rules()
+    private readonly GrammarEntry operators = new GrammarEntry(new OperatorCategory(), new CategoryItems()
     {
         ["plus"] = "+",
         ["minus"] = "-",
         ["shortCircuitOr"] = "||",
         ["shortCircuitAnd"] = "&&"
-    };
+    });
 
-    private readonly Rules whitespaces = new Rules()
+    private readonly GrammarEntry whitespaces = new GrammarEntry(new WhitespaceCategory(), new CategoryItems()
     {
         ["blankCharacter"] = ":space:"
-    };
+    });
 
-    private readonly Rules identifiers = new Rules()
+    private readonly GrammarEntry variableIdentifiers = new GrammarEntry(new VariableIdentifierCategory(), new CategoryItems()
     {
-        ["typesNames"] = "A-Z[A-Za-z0-9]*",
-        ["variableNames"] = "[A-Z|a-z][A-Za-z0-9]*",
-    };
 
-    private readonly Rules numbers = new Rules()
+        ["variableNames"] = "[[:upper:]|[:lower:]][:alnum:]*",
+    });
+
+    private readonly GrammarEntry literals = new GrammarEntry(new LiteralsCategory(), new CategoryItems()
     {
         ["integers"] = "[:digit:]+",
-    };
-
-    private readonly Rules booleans = new Rules()
-    {
         ["true"] = "true",
         ["false"] = "false",
-    };
+    });
 
-    public List<Regex> generateGrammar()
+    private readonly GrammarEntry comments = new GrammarEntry(new LiteralsCategory(), new CategoryItems()
     {
-        var allGrammarRegexes = new List<Dictionary<string, string>>() {
+        ["singleLineComment"] = "//.*$",
+        ["multiLineComment"] = @"//\*.*\*/"
+    });
+
+
+
+
+    public List<GrammarEntry> generateGrammar()
+    {
+        return new List<GrammarEntry>() {
             bracesAndParentheses,
             lineDelimiters,
             keywords,
-            types,
+            typeIdentifiers,
             operators,
             whitespaces,
-            identifiers,
-            numbers,
-            booleans
+            variableIdentifiers,
+            literals,
         };
 
-        var listOfListsOfRegexes = allGrammarRegexes.ConvertAll(
-            (rulesDictionary) => rulesDictionary.Values.ToList().ConvertAll(
-                (regexAsString) => StringToRegex.ToRegex(regexAsString)
-            )
-        );
 
-        List<Regex> result = listOfListsOfRegexes.SelectMany(x => x).ToList();
-        return result;
     }
-
 }
