@@ -1,7 +1,6 @@
 namespace sernickTest.Tokenizer.Regex;
 
 using sernick.Tokenizer.Regex;
-using UnionRegex_ = sernick.Tokenizer.Regex.UnionRegex;
 
 public class UnionRegex
 {
@@ -10,15 +9,10 @@ public class UnionRegex
     {
         var regex = Regex.Union(new List<Regex>());
 
-        // Assert.True(regex.Equals(Regex.Empty));
-
-        // NOTE: naive checks follow
-        Assert.IsType<UnionRegex_>(regex);
-        var unionRegex = regex as UnionRegex_;
-        Assert.Empty(unionRegex.Children);
+        Assert.True(regex.Equals(Regex.Empty));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_CreateSingletonUnionRegex_Then_ReturnsItsContents()
     {
         var regex = Regex.Union(Regex.Atom('a'));
@@ -26,7 +20,7 @@ public class UnionRegex
         Assert.True(regex.Equals(Regex.Atom('a')));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     /*
      * Rule 1: X \cup X == X
      */
@@ -50,7 +44,7 @@ public class UnionRegex
         Assert.True(regex.Equals(normalizedRegex));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     /*
      * Rule 2: \empty \cup X == X
      */
@@ -75,7 +69,7 @@ public class UnionRegex
         Assert.True(regex.Equals(normalizedRegex));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     /*
      * Rule 3: (X \cup Y) \cup Z == X \cup (Y \cup Z)
      */
@@ -99,7 +93,7 @@ public class UnionRegex
         Assert.True(regex1.Equals(regex2));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_CreateNestedUnionRegex_Then_NormalizesCorrectly()
     {
         var regex = Regex.Union(
@@ -114,7 +108,7 @@ public class UnionRegex
         Assert.True(regex.Equals(normalizedRegex));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_AllRegexesContainEpsilon_Then_ReturnTrue()
     {
         var regex = Regex.Union(
@@ -126,7 +120,7 @@ public class UnionRegex
         Assert.True(regex.ContainsEpsilon());
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_OneRegexContainsEpsilon_Then_ReturnTrue()
     {
         var regex = Regex.Union(
@@ -138,7 +132,7 @@ public class UnionRegex
         Assert.True(regex.ContainsEpsilon());
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_NoneRegexContainsEpsilon_Then_ReturnFalse()
     {
         var regex = Regex.Union(
@@ -150,7 +144,7 @@ public class UnionRegex
         Assert.False(regex.ContainsEpsilon());
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_Derivative_Then_ComputeCorrectly_Case1()
     {
         var regex = Regex.Union(
@@ -161,7 +155,7 @@ public class UnionRegex
         Assert.True(regex.Derivative('a').Equals(Regex.Epsilon));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_Derivative_Then_ComputeCorrectly_Case2()
     {
         var regex = Regex.Union(
