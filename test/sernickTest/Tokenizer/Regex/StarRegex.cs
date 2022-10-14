@@ -4,7 +4,7 @@ using sernick.Tokenizer.Regex;
 
 public class StarRegex
 {
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     /*
      * Rule 1: X^^ == X^
      */
@@ -20,7 +20,7 @@ public class StarRegex
         Assert.True(regex.Equals(normalizedRegex));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     /*
      * Rule 2: \eps^ == \eps
      */
@@ -31,7 +31,7 @@ public class StarRegex
         Assert.True(regex.Equals(Regex.Epsilon));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     /*
      * Rule 3: \empty^ == \eps
      */
@@ -42,16 +42,16 @@ public class StarRegex
         Assert.True(regex.Equals(Regex.Epsilon));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_CreateNestedStarRegex_Then_NormalizesCorrectly()
     {
         var regex = Regex.Star(Regex.Star(Regex.Star(Regex.Atom('a'))));
-        var normalizedRegex = Regex.Atom('a');
+        var normalizedRegex = Regex.Star(Regex.Atom('a'));
 
         Assert.True(regex.Equals(normalizedRegex));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_ContainsEpsilon_Then_AlwaysReturnTrue()
     {
         var regex = Regex.Star(Regex.Empty);
@@ -59,7 +59,7 @@ public class StarRegex
         Assert.True(regex.ContainsEpsilon());
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_Derivative_Then_ComputeCorrectly_Case1()
     {
         var regex = Regex.Star(Regex.Atom('a'));
@@ -67,7 +67,7 @@ public class StarRegex
         Assert.True(regex.Derivative('a').Equals(regex));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_Derivative_Then_ComputeCorrectly_Case2()
     {
         var regex = Regex.Star(Regex.Atom('a'));
@@ -75,7 +75,7 @@ public class StarRegex
         Assert.True(regex.Derivative('b').Equals(Regex.Empty));
     }
 
-    [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
+    [Fact]
     public void When_Derivative_Then_ComputeCorrectly_Case3()
     {
         var regex = Regex.Star(
@@ -85,7 +85,7 @@ public class StarRegex
             )
         );
 
-        var result = Regex.Union(Regex.Atom('b'), regex);
+        var result = Regex.Concat(Regex.Atom('b'), regex);
 
         Assert.True(regex.Derivative('a').Equals(result));
     }
