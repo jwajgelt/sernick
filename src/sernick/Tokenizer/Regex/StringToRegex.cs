@@ -1,45 +1,45 @@
 using System.Text;
 
 namespace sernick.Tokenizer.Regex;
-/// <summary>
-/// [[:lower]abc]*abc
-/// a$b$c*$d*
-/// abc*d*$$$
-/// (a+b)*(c+d)+(e*f)
-/// ab+cd+*ef*+
-/// </summary>
 public static class StringToRegex
 {
     private const char ConcatenationOperator = '\0';
     private const char UnionOperator = '|';
     private const char StarOperator = '*';
     private const char PlusOperator = '+';
-    private static readonly HashSet<char> s_operators = new HashSet<char>() { '+', '*', '|' };
+    private static readonly HashSet<char> OperatorsSet = new() { '+', '*', '|' };
 
     private static string AddConcatenationOperator(this string text)
     {
         var stringBuilder = new StringBuilder();
         var bracketCounter = 0;
+        var escaped = false;
 
         for (var index = 0; index < text.Length - 1; index++)
         {
             var left = text[index];
             var right = text[index + 1];
-            if (left == '[')
+
+            if (!escaped)
             {
-                bracketCounter++;
-            }
-            else if (left == ']')
-            {
-                bracketCounter--;
+                if (left == '[')
+                {
+                    bracketCounter++;
+                }
+                else if (left == ']')
+                {
+                    bracketCounter--;
+                }
             }
 
             stringBuilder.Append(left);
-            if (bracketCounter > 0 || s_operators.Contains(right) || left is '|' or '(' || right == ')')
+            if ((!escaped && left == '\\') || bracketCounter > 0 || OperatorsSet.Contains(right) || left is '|' or '(' || right == ')')
             {
+                escaped = left == '\\';
                 continue;
             }
 
+            escaped = false;
             stringBuilder.Append(ConcatenationOperator);
         }
 
@@ -53,7 +53,7 @@ public static class StringToRegex
             return Regex.Atom(s[0]);
         }
 
-        if (s[0] != '[')
+        if (s[0] != '[' || s[^1] != ']')
         {
             return Regex.Empty;
         }
@@ -83,7 +83,7 @@ public static class StringToRegex
                     index++;
                 }
 
-                children.Add(s_characterClasses.GetValueOrDefault(s.Substring(start, index - start + 1), Regex.Empty));
+                children.Add(CharacterClasses.GetValueOrDefault(s.Substring(start, index - start + 1), Regex.Empty));
                 continue;
             }
 
@@ -108,16 +108,17 @@ public static class StringToRegex
         return Regex.Union(children);
     }
 
-    private static readonly Dictionary<string, Regex> s_characterClasses = new Dictionary<string, Regex>()
+    private static readonly Dictionary<string, Regex> CharacterClasses = new()
     {
         ["[:lower:]"] = Range('a', 'z'),
         ["[:upper:]"] = Range('A', 'Z'),
         ["[:space:]"] = Regex.Union(" \t\n\r\f\v".ToList().ConvertAll(atom => new AtomRegex(atom))),
-        ["[:alnum:]"] = Regex.Union(new[] { Range('a', 'z'), Range('A', 'Z'), Range('0', '9') }),
-        ["[:digit:]"] = Range('0', '9')
+        ["[:alnum:]"] = Regex.Union(Range('a', 'z'), Range('A', 'Z'), Range('0', '9')),
+        ["[:digit:]"] = Range('0', '9'),
+        ["[:any:]"] = Range(' ', '~')
     };
 
-    private static readonly Dictionary<char, int> s_priorities = new Dictionary<char, int>()
+    private static readonly Dictionary<char, int> Priorities = new()
     {
         [')'] = 0,
         ['|'] = 1,
@@ -134,19 +135,42 @@ public static class StringToRegex
 
         var current = "";
         var escaped = false;
+        var bracketCounter = 0;
 
         var textWithConcatenationOperator = text.AddConcatenationOperator();
         Console.WriteLine(textWithConcatenationOperator);
 
         foreach (var t in textWithConcatenationOperator)
         {
-            if (t == '\\')
+            if (!escaped)
             {
-                escaped = true;
-                continue;
+                if (t == '[')
+                {
+                    bracketCounter++;
+                }
+                else if (t == ']')
+                {
+                    bracketCounter--;
+                }
+                else if (t == '.' && bracketCounter == 0)
+                {
+                    current += "[[:any:]]";
+                    escaped = false;
+                    continue;
+                }
+                else if (t == '\\')
+                {
+                    if (bracketCounter > 0)
+                    {
+                        current += '\\';
+                    }
+
+                    escaped = true;
+                    continue;
+                }
             }
 
-            if (escaped || !s_priorities.ContainsKey(t))
+            if (escaped || !Priorities.ContainsKey(t))
             {
                 current += t;
                 escaped = false;
@@ -159,24 +183,24 @@ public static class StringToRegex
                 current = "";
             }
 
-            var priority = s_priorities[t];
+            var priority = Priorities[t];
 
-            while (operators.Count > 0 && operators.Peek() != '(' && priority < s_priorities[operators.Peek()])
+            while (operators.Count > 0 && operators.Peek() != '(' && priority < Priorities[operators.Peek()])
             {
                 var top = resultStack.Pop();
                 switch (operators.Pop())
                 {
                     case UnionOperator:
-                        resultStack.Push(Regex.Union(new[] { resultStack.Pop(), top }));
+                        resultStack.Push(Regex.Union(resultStack.Pop(), top));
                         break;
                     case ConcatenationOperator:
-                        resultStack.Push(Regex.Concat(new[] { resultStack.Pop(), top }));
+                        resultStack.Push(Regex.Concat(resultStack.Pop(), top));
                         break;
                     case StarOperator:
                         resultStack.Push(Regex.Star(top));
                         break;
                     case PlusOperator:
-                        resultStack.Push(Regex.Concat(new[] { top, Regex.Star(top) }));
+                        resultStack.Push(Regex.Concat(top, Regex.Star(top)));
                         break;
                 }
             }
@@ -202,23 +226,18 @@ public static class StringToRegex
             switch (operators.Pop())
             {
                 case UnionOperator:
-                    resultStack.Push(Regex.Union(new[] { resultStack.Pop(), top }));
+                    resultStack.Push(Regex.Union(resultStack.Pop(), top));
                     break;
                 case ConcatenationOperator:
-                    resultStack.Push(Regex.Concat(new[] { resultStack.Pop(), top }));
+                    resultStack.Push(Regex.Concat(resultStack.Pop(), top));
                     break;
                 case StarOperator:
                     resultStack.Push(Regex.Star(top));
                     break;
                 case PlusOperator:
-                    resultStack.Push(Regex.Concat(new[] { top, Regex.Star(top) }));
+                    resultStack.Push(Regex.Concat(top, Regex.Star(top)));
                     break;
             }
-        }
-
-        if (resultStack.Count > 1)
-        {
-            throw new Exception();
         }
 
         return resultStack.Count == 1 ? resultStack.Peek() : Regex.Empty;
