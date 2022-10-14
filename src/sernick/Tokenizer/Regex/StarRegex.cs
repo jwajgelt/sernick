@@ -9,14 +9,11 @@ internal sealed class StarRegex : Regex
 
     public Regex Child { get; }
 
-    public override bool ContainsEpsilon()
-    {
-        return true;
-    }
+    public override bool ContainsEpsilon() => true;
 
     public override Regex Derivative(char atom)
     {
-        return Concat(new List<Regex> { Child.Derivative(atom), this });
+        return Concat(Child.Derivative(atom), this);
     }
 
     public override int GetHashCode()

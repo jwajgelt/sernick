@@ -116,9 +116,13 @@ public class UnionRegex
     }
 
     [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
-    public void When_BothRegexesContainEpsilon_Then_ReturnTrue()
+    public void When_AllRegexesContainEpsilon_Then_ReturnTrue()
     {
-        var regex = Regex.Union(new List<Regex> { Regex.Epsilon, Regex.Epsilon });
+        var regex = Regex.Union(
+            Regex.Epsilon,
+            Regex.Star(Regex.Atom('a')),
+            Regex.Star(Regex.Atom('b'))
+        );
 
         Assert.True(regex.ContainsEpsilon());
     }
@@ -126,7 +130,11 @@ public class UnionRegex
     [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_OneRegexContainsEpsilon_Then_ReturnTrue()
     {
-        var regex = Regex.Union(new List<Regex> { Regex.Epsilon, Regex.Empty });
+        var regex = Regex.Union(
+            Regex.Epsilon,
+            Regex.Atom('a'),
+            Regex.Atom('b')
+        );
 
         Assert.True(regex.ContainsEpsilon());
     }
@@ -134,7 +142,11 @@ public class UnionRegex
     [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_NoneRegexContainsEpsilon_Then_ReturnFalse()
     {
-        var regex = Regex.Union(new List<Regex> { Regex.Empty, Regex.Empty });
+        var regex = Regex.Union(
+            Regex.Atom('a'),
+            Regex.Atom('b'),
+            Regex.Atom('c')
+            );
 
         Assert.False(regex.ContainsEpsilon());
     }
@@ -142,7 +154,10 @@ public class UnionRegex
     [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_Derivative_Then_ComputeCorrectly_Case1()
     {
-        var regex = Regex.Union(new List<Regex> { Regex.Atom('a'), Regex.Atom('b') });
+        var regex = Regex.Union(
+            Regex.Atom('a'),
+            Regex.Atom('b')
+        );
 
         Assert.True(regex.Derivative('a').Equals(Regex.Epsilon));
     }
@@ -150,7 +165,10 @@ public class UnionRegex
     [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_Derivative_Then_ComputeCorrectly_Case2()
     {
-        var regex = Regex.Union(new List<Regex> { Regex.Atom('a'), Regex.Atom('b') });
+        var regex = Regex.Union(
+            Regex.Atom('a'),
+            Regex.Atom('b')
+        );
 
         Assert.True(regex.Derivative('c').Equals(Regex.Empty));
     }

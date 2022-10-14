@@ -11,7 +11,7 @@ internal sealed class ConcatRegex : Regex
 
     public override bool ContainsEpsilon()
     {
-        return Children.All(c => c.ContainsEpsilon());
+        return Children.All(child => child.ContainsEpsilon());
     }
 
     public override Regex Derivative(char atom)
@@ -26,11 +26,10 @@ internal sealed class ConcatRegex : Regex
         var epsilonLessDerivative = Concat(Children.Skip(1).Prepend(firstDerivative));
 
         return firstRegex.ContainsEpsilon()
-            ? Union(new List<Regex>
-            {
+            ? Union(
                 epsilonLessDerivative,
                 Concat(Children.Skip(1)).Derivative(atom)
-            })
+            )
             : epsilonLessDerivative;
     }
 

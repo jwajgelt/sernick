@@ -79,14 +79,13 @@ public class StarRegex
     public void When_Derivative_Then_ComputeCorrectly_Case3()
     {
         var regex = Regex.Star(
-            Regex.Concat(new List<Regex>
-            {
+            Regex.Concat(
                 Regex.Atom('a'),
                 Regex.Atom('b')
-            })
+            )
         );
 
-        var result = Regex.Union(new List<Regex> { Regex.Atom('b'), regex });
+        var result = Regex.Union(Regex.Atom('b'), regex);
 
         Assert.True(regex.Derivative('a').Equals(result));
     }

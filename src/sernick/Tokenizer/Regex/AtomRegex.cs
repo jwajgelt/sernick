@@ -8,14 +8,11 @@ internal sealed class AtomRegex : Regex
     }
     public char Character { get; }
 
-    public override bool ContainsEpsilon()
-    {
-        return false;
-    }
+    public override bool ContainsEpsilon() => false;
 
     public override Regex Derivative(char atom)
     {
-        return Character == atom ? Regex.Epsilon : Regex.Empty;
+        return Character == atom ? Epsilon : Empty;
     }
 
     public override int GetHashCode()

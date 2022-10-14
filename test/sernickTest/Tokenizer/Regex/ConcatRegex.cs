@@ -112,9 +112,13 @@ public class ConcatRegex
     }
 
     [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
-    public void When_BothRegexesContainEpsilon_Then_ReturnTrue()
+    public void When_AllRegexesContainEpsilon_Then_ReturnTrue()
     {
-        var regex = Regex.Concat(new List<Regex> { Regex.Epsilon, Regex.Epsilon });
+        var regex = Regex.Concat(
+            Regex.Star(Regex.Atom('a')),
+            Regex.Star(Regex.Atom('b')),
+            Regex.Star(Regex.Atom('c'))
+        );
 
         Assert.True(regex.ContainsEpsilon());
     }
@@ -122,7 +126,11 @@ public class ConcatRegex
     [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_OneRegexContainsEpsilon_Then_ReturnFalse()
     {
-        var regex = Regex.Concat(new List<Regex> { Regex.Epsilon, Regex.Empty });
+        var regex = Regex.Concat(
+            Regex.Star(Regex.Atom('a')),
+            Regex.Atom('b'),
+            Regex.Atom('c')
+        );
 
         Assert.False(regex.ContainsEpsilon());
     }
@@ -130,19 +138,34 @@ public class ConcatRegex
     [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_NoneRegexContainsEpsilon_Then_ReturnFalse()
     {
-        var regex = Regex.Concat(new List<Regex> { Regex.Empty, Regex.Empty });
+        var regex = Regex.Concat(
+            Regex.Atom('a'),
+            Regex.Atom('b'),
+            Regex.Atom('c')
+        );
 
         Assert.False(regex.ContainsEpsilon());
     }
 
+    /*
+     * Rule 1: When X hasn't epsilon than
+     * (XY)' = X'Y
+     */
     [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_Derivative_Then_ComputeCorrectly_Rule1()
     {
-        var regex = Regex.Concat(new List<Regex> { Regex.Atom('a'), Regex.Atom('b') });
+        var regex = Regex.Concat(
+            Regex.Atom('a'),
+            Regex.Atom('b')
+        );
 
         Assert.True(regex.Derivative('a').Equals(Regex.Atom('b')));
     }
 
+    /*
+     * Rule 2: When X has epsilon than
+     * (XY)' = X'Y \cup Y'
+     */
     [Fact(Skip = "No Regex.Equals(Regex) implementation at the moment")]
     public void When_Derivative_Then_ComputeCorrectly_Rule2()
     {
@@ -153,7 +176,7 @@ public class ConcatRegex
             Regex.Atom('b')
         });
 
-        var result = Regex.Union(new List<Regex> { regex, Regex.Atom('b') });
+        var result = Regex.Union(regex, Regex.Atom('b'));
 
         Assert.True(regex.Derivative('a').Equals(result));
     }

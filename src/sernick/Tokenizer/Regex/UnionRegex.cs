@@ -11,7 +11,7 @@ internal sealed class UnionRegex : Regex
 
     public override bool ContainsEpsilon()
     {
-        return Children.Any(c => c.ContainsEpsilon());
+        return Children.Any(child => child.ContainsEpsilon());
     }
 
     public override Regex Derivative(char atom)
@@ -21,7 +21,7 @@ internal sealed class UnionRegex : Regex
             return Empty;
         }
 
-        return Union(new List<Regex> { Children.First().Derivative(atom), Union(Children.Skip(1)).Derivative(atom) });
+        return Union(Children.Select(child => child.Derivative(atom)));
     }
 
     public override int GetHashCode()
