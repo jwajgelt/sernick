@@ -5,13 +5,13 @@ using CategoryItems = Dictionary<string, string>;
 
 public class GrammarEntry
 {
-    public GrammarCategory Category;
-    public Regex Regex;
+    public GrammarCategory Category { get; init; }
+    public Regex Regex { get; init; }
 
 
     private static Regex createUnionRegex(CategoryItems categoryItems)
     {
-        string unionRegexAsString = categoryItems.Values.Aggregate("", (partialResult, currentRegex) => partialResult + "|" + currentRegex);
+        string unionRegexAsString = String.Join("|", categoryItems.Values);
         return StringToRegex.ToRegex(unionRegexAsString);
     }
 
@@ -31,7 +31,7 @@ public class Grammar
     // as specified here: https://en.m.wikibooks.org/wiki/Regular_Expressions/POSIX-Extended_Regular_Expressions
     // Otherwise our StringToRegex might not be able to parse it
     //
-    // You could use e.g. https://regex101.com to test if the given regex is OK
+    // You could use e.g. https://regex101.com to test if the given regex is OK 
 
     private GrammarEntry bracesAndParentheses = new GrammarEntry(new BraceCategory(), new CategoryItems()
     {
