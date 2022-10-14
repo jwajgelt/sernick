@@ -21,7 +21,7 @@ internal sealed class StarRegex : Regex
 
     public override int GetHashCode()
     {
-        return Child.GetHashCode();
+        return $"Star({Child.GetHashCode()})".GetHashCode();
     }
 
     public override bool Equals(Regex? other)

@@ -69,5 +69,6 @@ public class StarRegex
 
         Assert.True(regexAstar.GetHashCode() == regexA2star.GetHashCode());
         Assert.False(regexAstar.GetHashCode() == regexBstar.GetHashCode());
+        Assert.False(regexAstar.GetHashCode() == regexA.GetHashCode());
     }
 }
