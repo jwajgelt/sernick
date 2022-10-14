@@ -1,6 +1,6 @@
 namespace sernick.Input.String;
 
-internal static class IInputExtensionMethods
+internal static class StringInputExtensionMethods
 {
     public static int Unpack(this ILocation location)
     {
