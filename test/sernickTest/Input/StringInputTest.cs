@@ -1,4 +1,5 @@
-﻿using sernick.Input;
+using sernick.Input.String;
+using sernick.Input;
 
 namespace sernickTest.Input;
 
