@@ -1,7 +1,6 @@
 namespace sernickTest.Tokenizer.Regex;
 
 using sernick.Tokenizer.Regex;
-using UnionRegex_ = sernick.Tokenizer.Regex.UnionRegex;
 
 public class UnionRegex
 {
@@ -10,12 +9,7 @@ public class UnionRegex
     {
         var regex = Regex.Union(new List<Regex>());
 
-        // Assert.True(regex.Equals(Regex.Empty));
-
-        // NOTE: naive checks follow
-        Assert.IsType<UnionRegex_>(regex);
-        var unionRegex = regex as UnionRegex_;
-        Assert.Empty(unionRegex.Children);
+        Assert.True(regex.Equals(Regex.Empty));
     }
 
     [Fact]

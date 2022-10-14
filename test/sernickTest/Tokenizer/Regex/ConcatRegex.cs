@@ -1,8 +1,6 @@
 namespace sernickTest.Tokenizer.Regex;
 
 using sernick.Tokenizer.Regex;
-using StarRegex_ = sernick.Tokenizer.Regex.StarRegex;
-using UnionRegex_ = sernick.Tokenizer.Regex.UnionRegex;
 
 public class ConcatRegex
 {
@@ -11,14 +9,7 @@ public class ConcatRegex
     {
         var regex = Regex.Concat(new List<Regex>());
 
-        // Assert.True(regex.Equals(Regex.Epsilon));
-
-        // NOTE: naive checks follow
-        Assert.IsType<StarRegex_>(regex);
-        var starRegex = regex as StarRegex_;
-        Assert.IsType<UnionRegex_>(starRegex.Child);
-        var unionRegex = starRegex.Child as UnionRegex_;
-        Assert.Empty(unionRegex.Children);
+        Assert.True(regex.Equals(Regex.Epsilon));
     }
 
     [Fact]
