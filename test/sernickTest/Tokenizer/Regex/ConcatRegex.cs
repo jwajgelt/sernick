@@ -180,4 +180,24 @@ public class ConcatRegex
 
         Assert.True(regex.Derivative('a').Equals(result));
     }
+
+    [Fact]
+    public void TestEqualsAndHashCode()
+    {
+        var regexA = Regex.Atom('a');
+        var regexA2 = Regex.Atom('a');
+        var regexB = Regex.Atom('b');
+        var regexAB = Regex.Concat(regexA, regexB);
+        var regexAB2 = Regex.Concat(regexA2, regexB);
+        var regexABB = Regex.Concat(regexA, regexB, regexB);
+        var regexBA = Regex.Concat(regexB, regexA);
+
+        Assert.True(regexAB.Equals(regexAB2));
+        Assert.False(regexAB.Equals(regexABB));
+        Assert.False(regexAB.Equals(regexBA));
+
+        Assert.True(regexAB.GetHashCode() == regexAB2.GetHashCode());
+        Assert.False(regexAB.GetHashCode() == regexABB.GetHashCode());
+        Assert.False(regexAB.GetHashCode() == regexBA.GetHashCode());
+    }
 }

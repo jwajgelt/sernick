@@ -27,4 +27,21 @@ public class AtomRegex
 
         Assert.True(regex.Derivative('b').Equals(Regex.Empty));
     }
+
+    [Fact]
+    public void TestEqualsAndHashCode()
+    {
+        var regexA = Regex.Atom('a');
+        var regexA2 = Regex.Atom('a');
+        var regexB = Regex.Atom('b');
+        var regexAB = Regex.Concat(regexA2, regexB);
+
+        Assert.True(regexA.Equals(regexA2));
+        Assert.False(regexA.Equals(regexB));
+        Assert.False(regexA.Equals(regexAB));
+
+        Assert.True(regexA.GetHashCode() == regexA2.GetHashCode());
+        Assert.False(regexA.GetHashCode() == regexB.GetHashCode());
+        Assert.False(regexA.GetHashCode() == regexAB.GetHashCode());
+    }
 }

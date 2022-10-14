@@ -18,12 +18,12 @@ internal sealed class StarRegex : Regex
 
     public override int GetHashCode()
     {
-        throw new NotImplementedException();
+        return $"Star({Child.GetHashCode()})".GetHashCode();
     }
 
     public override bool Equals(Regex? other)
     {
-        throw new NotImplementedException();
+        return other is StarRegex starRegex && Child.Equals(starRegex.Child);
     }
 }
 

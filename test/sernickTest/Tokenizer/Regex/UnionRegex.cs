@@ -1,7 +1,6 @@
 namespace sernickTest.Tokenizer.Regex;
 
 using sernick.Tokenizer.Regex;
-
 using UnionRegex_ = sernick.Tokenizer.Regex.UnionRegex;
 
 public class UnionRegex
@@ -171,5 +170,26 @@ public class UnionRegex
         );
 
         Assert.True(regex.Derivative('c').Equals(Regex.Empty));
+    }
+
+    [Fact]
+    public void TestEqualsAndHashCode()
+    {
+        var regexA = Regex.Atom('a');
+        var regexA2 = Regex.Atom('a');
+        var regexB = Regex.Atom('b');
+        var regexC = Regex.Atom('c');
+        var regexAB = Regex.Union(regexA, regexB);
+        var regexAB2 = Regex.Union(regexA2, regexB);
+        var regexBA = Regex.Union(regexB, regexA);
+        var regexABC = Regex.Union(regexA, regexB, regexC);
+
+        Assert.True(regexAB.Equals(regexAB2));
+        Assert.True(regexAB.Equals(regexBA));
+        Assert.False(regexAB.Equals(regexABC));
+
+        Assert.True(regexAB.GetHashCode() == regexAB2.GetHashCode());
+        Assert.True(regexAB.GetHashCode() == regexBA.GetHashCode());
+        Assert.False(regexAB.GetHashCode() == regexABC.GetHashCode());
     }
 }

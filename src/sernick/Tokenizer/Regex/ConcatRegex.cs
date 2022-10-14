@@ -35,12 +35,18 @@ internal sealed class ConcatRegex : Regex
 
     public override int GetHashCode()
     {
-        throw new NotImplementedException();
+        var hashCode = Children.Count;
+        foreach (var child in Children)
+        {
+            hashCode = unchecked(hashCode * 17 + child.GetHashCode());
+        }
+
+        return hashCode;
     }
 
     public override bool Equals(Regex? other)
     {
-        throw new NotImplementedException();
+        return other is ConcatRegex concatRegex && Children.SequenceEqual(concatRegex.Children);
     }
 }
 
