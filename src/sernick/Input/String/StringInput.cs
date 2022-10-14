@@ -37,8 +37,9 @@ public class StringInput : IInput
 
     public bool MoveNext()
     {
+        var pointsToText = !CurrentLocation.Equals(End);
         MoveTo(CurrentLocation.Next());
-        return HasFinished();
+        return pointsToText;
     }
 
     public void Reset() => MoveTo(Start);
@@ -59,6 +60,4 @@ public class StringInput : IInput
 
         return (char)0;
     }
-
-    private bool HasFinished() => CurrentLocation.Equals(End);
 }
