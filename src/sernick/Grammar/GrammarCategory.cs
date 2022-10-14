@@ -22,6 +22,11 @@ namespace sernick.Grammar
         public new Int16 Priority = 3;
     }
 
+    public class ColonCategory : GrammarCategory
+    {
+        public new Int16 Priority = 4;
+    }
+
     public class KeywordCategory : GrammarCategory
     {
         public new Int16 Priority = 8;

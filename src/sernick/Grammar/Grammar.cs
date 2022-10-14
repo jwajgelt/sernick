@@ -39,9 +39,14 @@ public class Grammar
         ["rightParentheses"] = @"\)",
     });
 
-    private GrammarEntry lineDelimiters = new GrammarEntry(new LineDelimiterCategory(), new CategoryItems()
+    private GrammarEntry semicolon = new GrammarEntry(new LineDelimiterCategory(), new CategoryItems()
     {
         ["semicolon"] = ";"
+    });
+
+    private GrammarEntry colon = new GrammarEntry(new ColonCategory(), new CategoryItems()
+    {
+        ["colon"] = ":"
     });
 
 
@@ -96,13 +101,13 @@ public class Grammar
     });
 
 
-
-
+    // TODO test that every category, returned from GenerateGrammar, has distinct priority
     public List<GrammarEntry> generateGrammar()
     {
         return new List<GrammarEntry>() {
             bracesAndParentheses,
-            lineDelimiters,
+            semicolon,
+            colon,
             keywords,
             typeIdentifiers,
             operators,
