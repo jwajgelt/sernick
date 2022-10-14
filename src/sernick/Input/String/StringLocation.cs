@@ -14,6 +14,6 @@ public class StringLocation : ILocation
     public override bool Equals(object? obj) => obj is StringLocation location && Equals(location);
 
     private bool Equals(StringLocation other) => Index == other.Index;
-    
+
     public override int GetHashCode() => Index.GetHashCode();
 }

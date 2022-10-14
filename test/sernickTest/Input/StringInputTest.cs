@@ -1,3 +1,4 @@
+using System.Collections;
 using sernick.Input;
 using sernick.Input.String;
 
@@ -113,5 +114,18 @@ public class StringInputTest
         var s = stringInput.CurrentLocation.ToString();
 
         Assert.Contains("2", s);
+    }
+
+    [Fact]
+    public void EnumeratorWorksInForeach()
+    {
+        var enumerable = new StringInputEnumerable("Lorem Ipsum");
+        Assert.Equal("Lorem Ipsum", string.Join("", enumerable));
+    }
+
+    private record StringInputEnumerable(string Text) : IEnumerable<char>
+    {
+        public IEnumerator<char> GetEnumerator() => new StringInput(Text);
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }
