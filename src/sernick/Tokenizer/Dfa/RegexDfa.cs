@@ -12,16 +12,16 @@ public sealed class RegexDfa : IDfa<Regex>
 
     public bool Accepts(Regex state)
     {
-        throw new NotImplementedException();
+        return state.ContainsEpsilon();
     }
 
     public bool IsDead(Regex state)
     {
-        throw new NotImplementedException();
+        return (state is UnionRegex) && ((state as UnionRegex).Children.Count() == 0); 
     }
 
     public Regex Transition(Regex state, char atom)
     {
-        throw new NotImplementedException();
+        return state.Derivative(atom);
     }
 }
