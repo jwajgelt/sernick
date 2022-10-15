@@ -94,9 +94,10 @@ public class Lexer<TCat, TState> : ILexer<TCat>
         public SumDfa(IReadOnlyDictionary<TCat, IDfa<TState>> dfas)
         {
             this.dfas = dfas;
+            Start = dfas.ToDictionary(kv => kv.Key, kv => kv.Value.Start);
         }
 
-        public Dictionary<TCat, TState> Start => dfas.ToDictionary(kv => kv.Key, kv => kv.Value.Start);
+        public Dictionary<TCat, TState> Start { get; init; }
 
         public bool Accepts(Dictionary<TCat, TState> state) =>
             state.Any(kv => dfas[kv.Key].Accepts(kv.Value));
