@@ -80,7 +80,7 @@ public class StringToRegex
     public void TestCharacterClass()
     {
         var actualRegex = "[[:digit:]]".ToRegex();
-        var expectedRegex = Regex.Union("0123456789".ToList().ConvertAll(Regex.Atom));
+        var expectedRegex = Regex.Union("0123456789".Select(Regex.Atom));
 
         Assert.Equal(expectedRegex, actualRegex);
     }
@@ -89,8 +89,8 @@ public class StringToRegex
     public void TestMultipleCharacterClasses()
     {
         var actualRegex = "[[:digit:]][[:lower:]]".ToRegex();
-        var expectedRegex = Regex.Concat(Regex.Union("0123456789".ToList().ConvertAll(Regex.Atom)),
-            Regex.Union("qwertyuiopasdfghjkklzxcvbnm".ToList().ConvertAll(Regex.Atom)));
+        var expectedRegex = Regex.Concat(Regex.Union("0123456789".Select(Regex.Atom)),
+            Regex.Union("qwertyuiopasdfghjkklzxcvbnm".Select(Regex.Atom)));
 
         Assert.Equal(expectedRegex, actualRegex);
     }

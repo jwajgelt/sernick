@@ -15,10 +15,8 @@ public static class StringToRegex
         var bracketCounter = 0;
         var escaped = false;
 
-        for (var index = 0; index < text.Length - 1; index++)
+        foreach (var (left, right) in text.Zip(text.Skip(1)))
         {
-            var left = text[index];
-            var right = text[index + 1];
 
             if (!escaped)
             {
@@ -112,7 +110,7 @@ public static class StringToRegex
     {
         ["[:lower:]"] = Range('a', 'z'),
         ["[:upper:]"] = Range('A', 'Z'),
-        ["[:space:]"] = Regex.Union(" \t\n\r\f\v".ToList().ConvertAll(atom => new AtomRegex(atom))),
+        ["[:space:]"] = Regex.Union(" \t\n\r\f\v".Select(Regex.Atom)),
         ["[:alnum:]"] = Regex.Union(Range('a', 'z'), Range('A', 'Z'), Range('0', '9')),
         ["[:digit:]"] = Range('0', '9'),
         ["[:any:]"] = Range(' ', '~')
@@ -131,21 +129,13 @@ public static class StringToRegex
     private static void HandleOperator(Stack<Regex> resultStack, Stack<char> operatorsStack)
     {
         var top = resultStack.Pop();
-        switch (operatorsStack.Pop())
+        resultStack.Push(operatorsStack.Pop() switch
         {
-            case UnionOperator:
-                resultStack.Push(Regex.Union(resultStack.Pop(), top));
-                break;
-            case ConcatenationOperator:
-                resultStack.Push(Regex.Concat(resultStack.Pop(), top));
-                break;
-            case StarOperator:
-                resultStack.Push(Regex.Star(top));
-                break;
-            case PlusOperator:
-                resultStack.Push(Regex.Concat(top, Regex.Star(top)));
-                break;
-        }
+            UnionOperator => Regex.Union(resultStack.Pop(), top),
+            ConcatenationOperator => Regex.Concat(resultStack.Pop(), top),
+            StarOperator => Regex.Star(top),
+            PlusOperator => Regex.Concat(top, Regex.Star(top)),
+        });
     }
 
     /// <summary>
@@ -176,7 +166,6 @@ public static class StringToRegex
         var bracketCounter = 0;
 
         var textWithConcatenationOperator = text.AddConcatenationOperator();
-        Console.WriteLine(textWithConcatenationOperator);
 
         foreach (var t in textWithConcatenationOperator)
         {
