@@ -7,127 +7,110 @@ using Input;
 public class Lexer<TCat, TState> : ILexer<TCat>
     where TCat : notnull
 {
-    private readonly IReadOnlyDictionary<TCat, IDfa<TState>> categoryDfas;
+    private readonly SumDfa _sumDfa;
 
     public Lexer(IReadOnlyDictionary<TCat, IDfa<TState>> categoryDfas)
     {
-        this.categoryDfas = categoryDfas;
+        _sumDfa = new SumDfa(categoryDfas);
     }
 
     public IEnumerable<Token<TCat>> Process(IInput input)
     {
         input.MoveTo(input.Start);
+        var currentState = _sumDfa.Start;
 
-        var startingStates = categoryDfas.ToDictionary(
-                kv => kv.Key,
-                kv => kv.Value.Start
-            );
-
-        // holds the current states for all DFAs
-        var currentStates = startingStates.ToDictionary(
-                kv => kv.Key,
-                kv => kv.Value
-            );
-
-        Dictionary<TCat, TState>? lastAcceptingStates = null;
         var lastAcceptingStart = input.Start;
-        ILocation? lastAcceptingEnd = null;
+        LexerProcessingState? lastAcceptingState = null;
         var text = "";
         var textBuilder = new StringBuilder();
 
         // loop over the input
         while (!input.CurrentLocation.Equals(input.End))
         {
-            if (allDfasDead(currentStates))
+            if (_sumDfa.IsDead(currentState))
             {
                 // NOTE: they're either both null or not null,
                 // but this appeases the compiler's nullability checks
-                if (lastAcceptingStates != null && lastAcceptingEnd != null)
+                if (lastAcceptingState != null)
                 {
                     // return all matching token categories for this match
-                    foreach (var (category, state) in lastAcceptingStates)
+                    foreach (var category in _sumDfa.AcceptingCategories(lastAcceptingState.dfaStates))
                     {
-                        var dfa = categoryDfas[category];
-                        if (dfa.Accepts(state))
-                        {
-                            yield return new Token<TCat>(category, text, lastAcceptingStart, lastAcceptingEnd);
-                        }
+                        yield return new Token<TCat>(category, text, lastAcceptingStart, lastAcceptingState.location);
                     }
 
                     // reset the input to the last end of the match
-                    input.MoveTo(lastAcceptingEnd);
+                    input.MoveTo(lastAcceptingState.location);
                 }
                 // If we matched, we start the next match from the position
                 // we just reset to.
                 // Otherwise, all DFAs failed to match on a substring,
                 // and we begin matching again from the current position
-                currentStates = startingStates.ToDictionary(
-                    kv => kv.Key,
-                    kv => kv.Value
-                );
-
+                currentState = _sumDfa.Start;
                 lastAcceptingStart = input.CurrentLocation;
 
                 // reset the local state
                 textBuilder.Clear();
-                lastAcceptingStates = null;
-                lastAcceptingEnd = null;
+                lastAcceptingState = null;
             }
 
-            // advance each DFA by the current character
+            // advance the sum-DFA by the current character
             var current = input.Current;
-            foreach (var (category, state) in currentStates)
-            {
-                var dfa = categoryDfas[category];
-                var nextState = dfa.Transition(state, current);
-                currentStates[category] = nextState;
-            }
+            currentState = _sumDfa.Transition(currentState, current);
             // and add it to the current token's text
             textBuilder.Append(current);
 
-            // advance the input
             input.MoveNext();
 
             // check if we're one position after the match
-            var anyAccepts = anyDfaAccepts(currentStates);
-
+            var anyAccepts = _sumDfa.Accepts(currentState);
             if (anyAccepts)
             {
-                lastAcceptingEnd = input.CurrentLocation;
-                // clone the current states
-                lastAcceptingStates = currentStates.ToDictionary(kv => kv.Key, kv => kv.Value);
+                lastAcceptingState = new LexerProcessingState(
+                    dfaStates: currentState,
+                    location: input.CurrentLocation
+                );
                 text = textBuilder.ToString();
             }
         }
 
         // return the last match
-        if (lastAcceptingStates != null && lastAcceptingEnd != null)
+        if (lastAcceptingState != null)
         {
             // return all matching token categories for this match
-            foreach (var (category, state) in lastAcceptingStates)
+            foreach (var category in _sumDfa.AcceptingCategories(lastAcceptingState.dfaStates))
             {
-                var dfa = categoryDfas[category];
-                if (dfa.Accepts(state))
-                {
-                    yield return new Token<TCat>(category, text, lastAcceptingStart, lastAcceptingEnd);
-                }
+                yield return new Token<TCat>(category, text, lastAcceptingStart, lastAcceptingState.location);
             }
         }
     }
 
-    private bool anyDfaAccepts(Dictionary<TCat, TState> currentStates) => currentStates.Any(
-        (kv) =>
-        {
-            var dfa = categoryDfas[kv.Key];
-            return dfa.Accepts(kv.Value);
-        }
-    );
+    internal record LexerProcessingState(Dictionary<TCat, TState> dfaStates, ILocation location);
 
-    private bool allDfasDead(Dictionary<TCat, TState> currentStates) => currentStates.All(
-        (kv) =>
+    internal class SumDfa : IDfa<Dictionary<TCat, TState>>
+    {
+        private readonly IReadOnlyDictionary<TCat, IDfa<TState>> dfas;
+
+        public SumDfa(IReadOnlyDictionary<TCat, IDfa<TState>> dfas)
         {
-            var dfa = categoryDfas[kv.Key];
-            return dfa.IsDead(kv.Value);
+            this.dfas = dfas;
         }
-    );
+
+        public Dictionary<TCat, TState> Start => dfas.ToDictionary(kv => kv.Key, kv => kv.Value.Start);
+
+        public bool Accepts(Dictionary<TCat, TState> state) =>
+            state.Any(kv => dfas[kv.Key].Accepts(kv.Value));
+
+        public bool IsDead(Dictionary<TCat, TState> state) =>
+            state.All(kv => dfas[kv.Key].IsDead(kv.Value));
+
+        public Dictionary<TCat, TState> Transition(Dictionary<TCat, TState> state, char atom) =>
+            state.ToDictionary(
+                kv => kv.Key,
+                kv => dfas[kv.Key].Transition(kv.Value, atom)
+            );
+
+        public IEnumerable<TCat> AcceptingCategories(Dictionary<TCat, TState> state) =>
+            state.Where(kv => dfas[kv.Key].Accepts(kv.Value)).Select(kv => kv.Key);
+    }
 }
