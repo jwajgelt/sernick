@@ -3,15 +3,15 @@ using sernick.Input;
 
 namespace sernickTest.Tokenizer.Lexer;
 
-internal class InputMock : IInput
+internal class FakeInput : IInput
 {
     private readonly string input;
     private Location currentLocation;
 
-    public InputMock(string input)
+    public FakeInput(string input)
     {
         this.input = input;
-        currentLocation = new Location(0);
+        currentLocation = new Location(-1);
     }
 
     internal record Location(int position) : ILocation { }

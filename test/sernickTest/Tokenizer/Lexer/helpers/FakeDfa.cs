@@ -1,11 +1,11 @@
 namespace sernickTest.Tokenizer.Lexer;
 
-internal class DfaMock : sernick.Tokenizer.Dfa.IDfa<int>
+internal class FakeDfa : sernick.Tokenizer.Dfa.IDfa<int>
 {
     private readonly IReadOnlyDictionary<(int, char), int> transitions;
     private readonly IReadOnlySet<int> accepting;
 
-    public DfaMock(
+    public FakeDfa(
         IReadOnlyDictionary<(int, char), int> transitions,
         int start,
         IReadOnlySet<int> accepting

@@ -14,13 +14,13 @@ public class Lexer
             {
                 { (0, 'a'), 0}
             };
-        var dfa = new DfaMock(
+        var dfa = new FakeDfa(
             transitions,
             0,
             new HashSet<int>() { 0 }
         );
 
-        var input = new InputMock("a");
+        var input = new FakeInput("a");
 
         var categoryDfas = new Dictionary<string, sernick.Tokenizer.Dfa.IDfa<int>>();
         categoryDfas.Add(CATEGORY_NAME, dfa);
@@ -41,13 +41,13 @@ public class Lexer
             {
                 { (0, 'a'), 0}
             };
-        var dfa = new DfaMock(
+        var dfa = new FakeDfa(
             transitions,
             0,
             new HashSet<int>() { 0 }
         );
 
-        var input = new InputMock("b");
+        var input = new FakeInput("b");
 
         var categoryDfas = new Dictionary<string, sernick.Tokenizer.Dfa.IDfa<int>>();
         categoryDfas.Add(CATEGORY_NAME, dfa);
@@ -66,13 +66,13 @@ public class Lexer
             {
                 { (0, 'a'), 0 }
             };
-        var dfa = new DfaMock(
+        var dfa = new FakeDfa(
             transitions,
             0,
             new HashSet<int>() { 0 }
         );
 
-        var input = new InputMock("aaaab");
+        var input = new FakeInput("aaaab");
 
         var categoryDfas = new Dictionary<string, sernick.Tokenizer.Dfa.IDfa<int>>();
         categoryDfas.Add(CATEGORY_NAME, dfa);
@@ -80,7 +80,7 @@ public class Lexer
         var lexer = new Lexer<string, int>(categoryDfas);
 
         var result = lexer.Process(input).ToList();
-        Assert.Contains(new Token<string>(CATEGORY_NAME, "aaaa", input.Start, new InputMock.Location(4)), result);
+        Assert.Contains(new Token<string>(CATEGORY_NAME, "aaaa", input.Start, new FakeInput.Location(4)), result);
         Assert.Single(result);
     }
 
@@ -95,13 +95,13 @@ public class Lexer
                 { (0, 'a'), 1 },
                 { (1, 'b'), 2 }
             };
-        var dfa = new DfaMock(
+        var dfa = new FakeDfa(
             transitions,
             0,
             new HashSet<int>() { 2 }
         );
 
-        var input = new InputMock("abab");
+        var input = new FakeInput("abab");
 
         var categoryDfas = new Dictionary<string, sernick.Tokenizer.Dfa.IDfa<int>>();
         categoryDfas.Add(CATEGORY_NAME, dfa);
@@ -109,8 +109,8 @@ public class Lexer
         var lexer = new Lexer<string, int>(categoryDfas);
 
         var result = lexer.Process(input).ToList();
-        Assert.Contains(new Token<string>(CATEGORY_NAME, "ab", input.Start, new InputMock.Location(2)), result);
-        Assert.Contains(new Token<string>(CATEGORY_NAME, "ab", new InputMock.Location(2), new InputMock.Location(4)), result);
+        Assert.Contains(new Token<string>(CATEGORY_NAME, "ab", input.Start, new FakeInput.Location(2)), result);
+        Assert.Contains(new Token<string>(CATEGORY_NAME, "ab", new FakeInput.Location(2), new FakeInput.Location(4)), result);
         Assert.Equal(2, result.Count);
     }
 
@@ -125,14 +125,14 @@ public class Lexer
                 { (0, 'a'), 1 },
                 { (1, 'b'), 2 }
             };
-        var dfa = new DfaMock(
+        var dfa = new FakeDfa(
             transitions,
             0,
             new HashSet<int>() { 2 }
         );
 
         // the space isn't matched by the DFA
-        var input = new InputMock("ab ab");
+        var input = new FakeInput("ab ab");
 
         var categoryDfas = new Dictionary<string, sernick.Tokenizer.Dfa.IDfa<int>>();
         categoryDfas.Add(CATEGORY_NAME, dfa);
@@ -140,8 +140,8 @@ public class Lexer
         var lexer = new Lexer<string, int>(categoryDfas);
 
         var result = lexer.Process(input).ToList();
-        Assert.Contains(new Token<string>(CATEGORY_NAME, "ab", input.Start, new InputMock.Location(2)), result);
-        Assert.Contains(new Token<string>(CATEGORY_NAME, "ab", new InputMock.Location(3), new InputMock.Location(5)), result);
+        Assert.Contains(new Token<string>(CATEGORY_NAME, "ab", input.Start, new FakeInput.Location(2)), result);
+        Assert.Contains(new Token<string>(CATEGORY_NAME, "ab", new FakeInput.Location(3), new FakeInput.Location(5)), result);
         Assert.Equal(2, result.Count);
     }
 
@@ -158,7 +158,7 @@ public class Lexer
                 { (1, 'b'), 0 }
             };
 
-        var dfa1 = new DfaMock(
+        var dfa1 = new FakeDfa(
             transitions1,
             0,
             new HashSet<int>() { 0 }
@@ -171,13 +171,13 @@ public class Lexer
                 { (1, 'b'), 2 }
             };
 
-        var dfa2 = new DfaMock(
+        var dfa2 = new FakeDfa(
             transitions2,
             0,
             new HashSet<int>() { 2 }
         );
 
-        var input = new InputMock("ababab");
+        var input = new FakeInput("ababab");
 
         var categoryDfas = new Dictionary<int, sernick.Tokenizer.Dfa.IDfa<int>>();
         categoryDfas.Add(CATEGORY_1, dfa1);
@@ -186,7 +186,7 @@ public class Lexer
         var lexer = new Lexer<int, int>(categoryDfas);
 
         var result = lexer.Process(input).ToList();
-        Assert.Contains(new Token<int>(CATEGORY_1, "ababab", input.Start, new InputMock.Location(6)), result);
+        Assert.Contains(new Token<int>(CATEGORY_1, "ababab", input.Start, new FakeInput.Location(6)), result);
         Assert.Single(result);
     }
 
@@ -203,7 +203,7 @@ public class Lexer
                 { (1, 'b'), 0 }
             };
 
-        var dfa1 = new DfaMock(
+        var dfa1 = new FakeDfa(
             transitions1,
             0,
             new HashSet<int>() { 0 }
@@ -216,13 +216,13 @@ public class Lexer
                 { (0, 'b'), 0 }
             };
 
-        var dfa2 = new DfaMock(
+        var dfa2 = new FakeDfa(
             transitions2,
             0,
             new HashSet<int>() { 0 }
         );
 
-        var input = new InputMock("ababab");
+        var input = new FakeInput("ababab");
 
         var categoryDfas = new Dictionary<int, sernick.Tokenizer.Dfa.IDfa<int>>();
         categoryDfas.Add(CATEGORY_1, dfa1);
@@ -231,8 +231,8 @@ public class Lexer
         var lexer = new Lexer<int, int>(categoryDfas);
 
         var result = lexer.Process(input).ToList();
-        Assert.Contains(new Token<int>(CATEGORY_1, "ababab", input.Start, new InputMock.Location(6)), result);
-        Assert.Contains(new Token<int>(CATEGORY_2, "ababab", input.Start, new InputMock.Location(6)), result);
+        Assert.Contains(new Token<int>(CATEGORY_1, "ababab", input.Start, new FakeInput.Location(6)), result);
+        Assert.Contains(new Token<int>(CATEGORY_2, "ababab", input.Start, new FakeInput.Location(6)), result);
         Assert.Equal(2, result.Count);
     }
 }
