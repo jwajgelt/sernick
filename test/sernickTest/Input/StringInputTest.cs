@@ -1,4 +1,3 @@
-using System.Collections;
 using sernick.Input;
 using sernick.Input.String;
 
@@ -9,15 +8,11 @@ public class StringInputTest
     [Fact]
     public void EmptyString()
     {
+
         IInput stringInput = new StringInput("");
 
-        var currentBefore = stringInput.Current;
-        var move = stringInput.MoveNext();
-        var currentAfter = stringInput.Current;
-
-        Assert.Equal(0, currentBefore);
-        Assert.False(move);
-        Assert.Equal(0, currentAfter);
+        Assert.Equal(stringInput.CurrentLocation, stringInput.End);
+        Assert.Equal(stringInput.Start, stringInput.End);
     }
 
     [Fact]
@@ -25,21 +20,16 @@ public class StringInputTest
     {
         IInput stringInput = new StringInput("ab");
 
-        var currentBefore = stringInput.Current;
-        var move0 = stringInput.MoveNext();
         var current0 = stringInput.Current;
-        var move1 = stringInput.MoveNext();
+        var move0 = stringInput.MoveNext();
         var current1 = stringInput.Current;
-        var move2 = stringInput.MoveNext();
-        var currentAfter = stringInput.Current;
+        var move1 = stringInput.MoveNext();
+        Assert.Throws<InvalidOperationException>(() => stringInput.Current);
 
-        Assert.Equal(0, currentBefore);
-        Assert.True(move0);
         Assert.Equal('a', current0);
-        Assert.True(move1);
+        Assert.True(move0);
         Assert.Equal('b', current1);
-        Assert.False(move2);
-        Assert.Equal(0, currentAfter);
+        Assert.False(move1);
     }
 
     [Fact]
@@ -68,19 +58,6 @@ public class StringInputTest
     }
 
     [Fact]
-    public void ResetSetsBackToStart()
-    {
-        IInput stringInput = new StringInput("abc");
-        stringInput.MoveNext();
-        stringInput.MoveNext();
-        stringInput.MoveNext();
-
-        stringInput.Reset();
-
-        Assert.Equal(stringInput.Start, stringInput.CurrentLocation);
-    }
-
-    [Fact]
     public void MoveToChangesLocation()
     {
         IInput stringInput = new StringInput("abc");
@@ -91,7 +68,7 @@ public class StringInputTest
 
         stringInput.MoveTo(targetLocation);
 
-        Assert.Equal('a', stringInput.Current);
+        Assert.Equal('b', stringInput.Current);
     }
 
     [Fact]
@@ -113,19 +90,6 @@ public class StringInputTest
 
         var s = stringInput.CurrentLocation.ToString();
 
-        Assert.Contains("2", s);
-    }
-
-    [Fact]
-    public void EnumeratorWorksInForeach()
-    {
-        var enumerable = new StringInputEnumerable("Lorem Ipsum");
-        Assert.Equal("Lorem Ipsum", string.Join("", enumerable));
-    }
-
-    private record StringInputEnumerable(string Text) : IEnumerable<char>
-    {
-        public IEnumerator<char> GetEnumerator() => new StringInput(Text);
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        Assert.Contains("3", s);
     }
 }
