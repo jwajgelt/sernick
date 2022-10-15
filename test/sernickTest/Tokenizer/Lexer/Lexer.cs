@@ -1,4 +1,5 @@
 using sernick.Tokenizer;
+using sernick.Tokenizer.Dfa;
 using sernick.Tokenizer.Lexer;
 
 namespace sernickTest.Tokenizer.Lexer;
@@ -22,7 +23,7 @@ public class Lexer
 
         var input = new FakeInput("a");
 
-        var categoryDfas = new Dictionary<string, sernick.Tokenizer.Dfa.IDfa<int>>();
+        var categoryDfas = new Dictionary<string, IDfa<int>>();
         categoryDfas.Add(CATEGORY_NAME, dfa);
 
         var lexer = new Lexer<string, int>(categoryDfas);
@@ -49,7 +50,7 @@ public class Lexer
 
         var input = new FakeInput("b");
 
-        var categoryDfas = new Dictionary<string, sernick.Tokenizer.Dfa.IDfa<int>>();
+        var categoryDfas = new Dictionary<string, IDfa<int>>();
         categoryDfas.Add(CATEGORY_NAME, dfa);
 
         var lexer = new Lexer<string, int>(categoryDfas);
@@ -74,7 +75,7 @@ public class Lexer
 
         var input = new FakeInput("aaaab");
 
-        var categoryDfas = new Dictionary<string, sernick.Tokenizer.Dfa.IDfa<int>>();
+        var categoryDfas = new Dictionary<string, IDfa<int>>();
         categoryDfas.Add(CATEGORY_NAME, dfa);
 
         var lexer = new Lexer<string, int>(categoryDfas);
@@ -103,7 +104,7 @@ public class Lexer
 
         var input = new FakeInput("abab");
 
-        var categoryDfas = new Dictionary<string, sernick.Tokenizer.Dfa.IDfa<int>>();
+        var categoryDfas = new Dictionary<string, IDfa<int>>();
         categoryDfas.Add(CATEGORY_NAME, dfa);
 
         var lexer = new Lexer<string, int>(categoryDfas);
@@ -134,7 +135,7 @@ public class Lexer
         // the space isn't matched by the DFA
         var input = new FakeInput("ab ab");
 
-        var categoryDfas = new Dictionary<string, sernick.Tokenizer.Dfa.IDfa<int>>();
+        var categoryDfas = new Dictionary<string, IDfa<int>>();
         categoryDfas.Add(CATEGORY_NAME, dfa);
 
         var lexer = new Lexer<string, int>(categoryDfas);
@@ -179,7 +180,7 @@ public class Lexer
 
         var input = new FakeInput("ababab");
 
-        var categoryDfas = new Dictionary<int, sernick.Tokenizer.Dfa.IDfa<int>>();
+        var categoryDfas = new Dictionary<int, IDfa<int>>();
         categoryDfas.Add(CATEGORY_1, dfa1);
         categoryDfas.Add(CATEGORY_2, dfa2);
 
@@ -224,7 +225,7 @@ public class Lexer
 
         var input = new FakeInput("ababab");
 
-        var categoryDfas = new Dictionary<int, sernick.Tokenizer.Dfa.IDfa<int>>();
+        var categoryDfas = new Dictionary<int, IDfa<int>>();
         categoryDfas.Add(CATEGORY_1, dfa1);
         categoryDfas.Add(CATEGORY_2, dfa2);
 

@@ -85,9 +85,9 @@ public class Lexer<TCat, TState> : ILexer<TCat>
         }
     }
 
-    internal record LexerProcessingState(Dictionary<TCat, TState> dfaStates, ILocation location);
+    private record LexerProcessingState(Dictionary<TCat, TState> dfaStates, ILocation location);
 
-    internal class SumDfa : IDfa<Dictionary<TCat, TState>>
+    private class SumDfa : IDfa<Dictionary<TCat, TState>>
     {
         private readonly IReadOnlyDictionary<TCat, IDfa<TState>> dfas;
 
