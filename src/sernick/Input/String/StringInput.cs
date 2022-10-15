@@ -10,14 +10,21 @@ public class StringInput : IInput
         Start = (0).Pack();
         End = (_text.Length).Pack();
         CurrentLocation = Start;
-        Current = null;
-        if (_text.Length > 0)
-        {
-            Current = _text[0];
-        }
     }
 
-    public char? Current { get; private set; }
+    public char Current
+    {
+        get
+        {
+            var current = GetCurrentChar();
+            if (current.HasValue)
+            {
+                return current.Value;
+            }
+
+            throw new InvalidOperationException("The Input does not point to a character");
+        }
+    }
 
     public ILocation CurrentLocation { get; private set; }
 
@@ -33,13 +40,15 @@ public class StringInput : IInput
 
     public void MoveTo(ILocation location)
     {
+        // verify correct type
+        location.Unpack();
+
         CurrentLocation = location;
-        Current = CharAtLocation(CurrentLocation);
     }
 
-    private char? CharAtLocation(ILocation location)
+    private char? GetCurrentChar()
     {
-        var position = location.Unpack();
+        var position = CurrentLocation.Unpack();
         if (0 <= position && position <= _text.Length - 1)
         {
             return _text[position];

@@ -24,13 +24,12 @@ public class StringInputTest
         var move0 = stringInput.MoveNext();
         var current1 = stringInput.Current;
         var move1 = stringInput.MoveNext();
-        var current2 = stringInput.Current;
+        Assert.Throws<InvalidOperationException>(() => stringInput.Current);
 
         Assert.Equal('a', current0);
         Assert.True(move0);
         Assert.Equal('b', current1);
         Assert.False(move1);
-        Assert.Null(current2);
     }
 
     [Fact]

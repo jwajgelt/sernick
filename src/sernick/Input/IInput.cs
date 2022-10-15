@@ -14,7 +14,7 @@ public interface IInput
 
     void MoveTo(ILocation location);
 
-    char? Current { get; }
+    char Current { get; }
     ILocation CurrentLocation { get; }
 
     /// <summary>
