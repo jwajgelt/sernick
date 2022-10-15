@@ -13,6 +13,31 @@ public class RegexDfaTest
         Assert.Equal(regexDfa.Start, regex);
     }
 
+    /*
+        exampleDfa should return a DFA with 4 states (or equivalent):
+        - state 1 (starting state)
+            transition to state 2 by 'a'
+            transition to state 4 by 'b'
+        - state 2 (accepting)
+            transition to state 3 by 'a'
+        - state 3 
+            transition to state 4 by 'b'
+        - state 4
+            transition to state 2 by 'c'
+            transition to state 4 by 'z'
+
+
+                         -------- c ----------
+                        /                     \   ---z---
+                       V                       \ /       \
+        (1)--- a --->[2]--- a --->(3)--- b --->(4)<--------
+          \                                    ^                                    
+           \                                  /
+            ---------------- b ---------------
+
+
+        Which is equivalent to regex: (a(ab(z*)c)*)|(b(z*)c(ab(z*)c)*)
+     */
     private static RegexDfa exampleDfa()
     {
         var atomA = Regex.Atom('a');
