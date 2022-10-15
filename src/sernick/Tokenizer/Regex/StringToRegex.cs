@@ -3,6 +3,108 @@ using System.Text;
 namespace sernick.Tokenizer.Regex;
 public static class StringToRegex
 {
+    /// <summary>
+    /// Creates a Regex object from a string using the shunting yard algorithm.
+    /// The input string must follow the POSIX standard for regexes. As of now the following features are implemented:
+    /// <list type="bullet">
+    ///     <item>metacharacters: *, +, ., (), [] (without ranges)</item>
+    ///     <item>
+    ///     character classes:
+    ///     <list type="bullet">
+    ///         <item><c>[:lower:]</c></item>
+    ///         <item><c>[:upper:]</c></item>
+    ///         <item><c>[:space:]</c></item>
+    ///         <item><c>[:alnum:]</c></item>
+    ///         <item><c>[:digit:]</c></item>
+    ///         <item><c>[:any:]</c> - custom class equivalent to the . metacharacter</item>
+    ///     </list>
+    /// </item>
+    /// </list>
+    /// </summary>
+    public static Regex ToRegex(this string text)
+    {
+        var operatorsStack = new Stack<char>();
+        var resultStack = new Stack<Regex>();
+
+        var current = "";
+        var escaped = false;
+        var bracketCounter = 0;
+
+        var textWithConcatenationOperator = text.AddConcatenationOperator();
+
+        foreach (var t in textWithConcatenationOperator)
+        {
+            if (!escaped)
+            {
+                if (t == '[')
+                {
+                    bracketCounter++;
+                }
+                else if (t == ']')
+                {
+                    bracketCounter--;
+                }
+                else if (t == '.' && bracketCounter == 0)
+                {
+                    current += "[[:any:]]";
+                    escaped = false;
+                    continue;
+                }
+                else if (t == '\\')
+                {
+                    if (bracketCounter > 0)
+                    {
+                        current += '\\';
+                    }
+
+                    escaped = true;
+                    continue;
+                }
+            }
+
+            if (escaped || !Priorities.ContainsKey(t))
+            {
+                current += t;
+                escaped = false;
+                continue;
+            }
+
+            if (current != "")
+            {
+                resultStack.Push(current.HandleListOrAtom());
+                current = "";
+            }
+
+            var priority = Priorities[t];
+
+            while (operatorsStack.Count > 0 && operatorsStack.Peek() != '(' && priority < Priorities[operatorsStack.Peek()])
+            {
+                HandleOperator(resultStack, operatorsStack);
+            }
+
+            if (t == ')')
+            {
+                operatorsStack.Pop();
+            }
+            else
+            {
+                operatorsStack.Push(t);
+            }
+        }
+
+        if (current != "")
+        {
+            resultStack.Push(current.HandleListOrAtom());
+        }
+
+        while (operatorsStack.Count > 0)
+        {
+            HandleOperator(resultStack, operatorsStack);
+        }
+
+        return resultStack.Count == 1 ? resultStack.Peek() : Regex.Empty;
+    }
+
     private const char ConcatenationOperator = '\0';
     private const char UnionOperator = '|';
     private const char StarOperator = '*';
@@ -31,7 +133,8 @@ public static class StringToRegex
             }
 
             stringBuilder.Append(left);
-            if ((!escaped && left == '\\') || bracketCounter > 0 || OperatorsSet.Contains(right) || left is '|' or '(' || right == ')')
+            if ((!escaped && left == '\\') || bracketCounter > 0 || OperatorsSet.Contains(right) ||
+                left is UnionOperator or '(' || right == ')')
             {
                 escaped = left == '\\';
                 continue;
@@ -135,108 +238,7 @@ public static class StringToRegex
             ConcatenationOperator => Regex.Concat(resultStack.Pop(), top),
             StarOperator => Regex.Star(top),
             PlusOperator => Regex.Concat(top, Regex.Star(top)),
+            _ => throw new ArgumentOutOfRangeException()
         });
-    }
-
-    /// <summary>
-    /// Creates a Regex object from a string using the shunting yard algorithm.
-    /// The input string must follow the POSIX standard for regexes. As of now the following features are implemented:
-    /// <list type="bullet">
-    ///     <item>metacharacters: *, +, ., (), [] (without ranges)</item>
-    ///     <item>
-    ///     character classes:
-    ///     <list type="bullet">
-    ///         <item><c>[:lower:]</c></item>
-    ///         <item><c>[:upper:]</c></item>
-    ///         <item><c>[:space:]</c></item>
-    ///         <item><c>[:alnum:]</c></item>
-    ///         <item><c>[:digit:]</c></item>
-    ///         <item><c>[:any:]</c> - custom class equivalent to the . metacharacter</item>
-    ///     </list>
-    /// </item>
-    /// </list>
-    /// </summary>
-    public static Regex ToRegex(this string text)
-    {
-        var operatorsStack = new Stack<char>();
-        var resultStack = new Stack<Regex>();
-
-        var current = "";
-        var escaped = false;
-        var bracketCounter = 0;
-
-        var textWithConcatenationOperator = text.AddConcatenationOperator();
-
-        foreach (var t in textWithConcatenationOperator)
-        {
-            if (!escaped)
-            {
-                if (t == '[')
-                {
-                    bracketCounter++;
-                }
-                else if (t == ']')
-                {
-                    bracketCounter--;
-                }
-                else if (t == '.' && bracketCounter == 0)
-                {
-                    current += "[[:any:]]";
-                    escaped = false;
-                    continue;
-                }
-                else if (t == '\\')
-                {
-                    if (bracketCounter > 0)
-                    {
-                        current += '\\';
-                    }
-
-                    escaped = true;
-                    continue;
-                }
-            }
-
-            if (escaped || !Priorities.ContainsKey(t))
-            {
-                current += t;
-                escaped = false;
-                continue;
-            }
-
-            if (current != "")
-            {
-                resultStack.Push(current.HandleListOrAtom());
-                current = "";
-            }
-
-            var priority = Priorities[t];
-
-            while (operatorsStack.Count > 0 && operatorsStack.Peek() != '(' && priority < Priorities[operatorsStack.Peek()])
-            {
-                HandleOperator(resultStack, operatorsStack);
-            }
-
-            if (t == ')')
-            {
-                operatorsStack.Pop();
-            }
-            else
-            {
-                operatorsStack.Push(t);
-            }
-        }
-
-        if (current != "")
-        {
-            resultStack.Push(current.HandleListOrAtom());
-        }
-
-        while (operatorsStack.Count > 0)
-        {
-            HandleOperator(resultStack, operatorsStack);
-        }
-
-        return resultStack.Count == 1 ? resultStack.Peek() : Regex.Empty;
     }
 }
