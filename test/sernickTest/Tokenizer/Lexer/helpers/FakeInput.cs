@@ -1,28 +1,28 @@
 using System.Collections;
 using sernick.Input;
 
-namespace sernickTest.Tokenizer.Lexer;
+namespace sernickTest.Tokenizer.Lexer.Helpers;
 
 internal class FakeInput : IInput
 {
-    private readonly string input;
-    private Location currentLocation;
+    private readonly string _input;
+    private Location _currentLocation;
 
     public FakeInput(string input)
     {
-        this.input = input;
-        currentLocation = new Location(-1);
+        _input = input;
+        _currentLocation = new Location(-1);
     }
 
     internal record Location(int position) : ILocation { }
 
-    public ILocation CurrentLocation => currentLocation;
+    public ILocation CurrentLocation => _currentLocation;
 
     public ILocation Start => new Location(0);
 
-    public ILocation End => new Location(input.Length);
+    public ILocation End => new Location(_input.Length);
 
-    public char Current => input[currentLocation.position];
+    public char Current => _input[_currentLocation.position];
 
     object IEnumerator.Current => Current;
 
@@ -31,21 +31,21 @@ internal class FakeInput : IInput
 
     public bool MoveNext()
     {
-        if (currentLocation != (Location)End)
+        if (_currentLocation != (Location)End)
         {
-            currentLocation = new Location(currentLocation.position + 1);
+            _currentLocation = new Location(_currentLocation.position + 1);
         }
 
-        return currentLocation != (Location)End;
+        return _currentLocation != (Location)End;
     }
 
     public void MoveTo(ILocation location)
     {
-        currentLocation = (Location)location;
+        _currentLocation = (Location)location;
     }
 
     public void Reset()
     {
-        currentLocation = (Location)Start;
+        _currentLocation = (Location)Start;
     }
 }

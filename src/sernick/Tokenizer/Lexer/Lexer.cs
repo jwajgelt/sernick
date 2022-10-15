@@ -29,8 +29,6 @@ public class Lexer<TCat, TState> : ILexer<TCat>
         {
             if (_sumDfa.IsDead(currentState))
             {
-                // NOTE: they're either both null or not null,
-                // but this appeases the compiler's nullability checks
                 if (lastAcceptingState != null)
                 {
                     // return all matching token categories for this match

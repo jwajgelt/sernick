@@ -1,6 +1,7 @@
 using sernick.Tokenizer;
 using sernick.Tokenizer.Dfa;
 using sernick.Tokenizer.Lexer;
+using sernickTest.Tokenizer.Lexer.Helpers;
 
 namespace sernickTest.Tokenizer.Lexer;
 
@@ -9,7 +10,7 @@ public class Lexer
     [Fact]
     public void ReturnsMatching()
     {
-        const string CATEGORY_NAME = "cat";
+        var categoryName = "cat";
 
         var transitions = new Dictionary<(int, char), int>()
             {
@@ -23,20 +24,18 @@ public class Lexer
 
         var input = new FakeInput("a");
 
-        var categoryDfas = new Dictionary<string, IDfa<int>>();
-        categoryDfas.Add(CATEGORY_NAME, dfa);
+        var categoryDfas = new Dictionary<string, IDfa<int>> { { categoryName, dfa } };
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
         var result = lexer.Process(input).ToList();
-        Assert.Contains(new Token<string>(CATEGORY_NAME, "a", input.Start, input.End), result);
-        Assert.Single(result);
+        Assert.Single(result, new Token<string>(categoryName, "a", input.Start, input.End));
     }
 
     [Fact]
     public void DoesNotReturnNonMatching()
     {
-        const string CATEGORY_NAME = "cat";
+        var categoryName = "cat";
 
         var transitions = new Dictionary<(int, char), int>()
             {
@@ -50,8 +49,7 @@ public class Lexer
 
         var input = new FakeInput("b");
 
-        var categoryDfas = new Dictionary<string, IDfa<int>>();
-        categoryDfas.Add(CATEGORY_NAME, dfa);
+        var categoryDfas = new Dictionary<string, IDfa<int>> { { categoryName, dfa } };
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
@@ -62,7 +60,7 @@ public class Lexer
     [Fact]
     public void MatchesTheLongestPossibleToken()
     {
-        const string CATEGORY_NAME = "cat";
+        var categoryName = "cat";
         var transitions = new Dictionary<(int, char), int>()
             {
                 { (0, 'a'), 0 }
@@ -75,20 +73,18 @@ public class Lexer
 
         var input = new FakeInput("aaaab");
 
-        var categoryDfas = new Dictionary<string, IDfa<int>>();
-        categoryDfas.Add(CATEGORY_NAME, dfa);
+        var categoryDfas = new Dictionary<string, IDfa<int>> { { categoryName, dfa } };
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
         var result = lexer.Process(input).ToList();
-        Assert.Contains(new Token<string>(CATEGORY_NAME, "aaaa", input.Start, new FakeInput.Location(4)), result);
-        Assert.Single(result);
+        Assert.Single(result, new Token<string>(categoryName, "aaaa", input.Start, new FakeInput.Location(4)));
     }
 
     [Fact]
     public void MatchesMultipleTokens()
     {
-        const string CATEGORY_NAME = "cat";
+        var categoryName = "cat";
 
         // this DFA matches `ab`
         var transitions = new Dictionary<(int, char), int>()
@@ -104,21 +100,22 @@ public class Lexer
 
         var input = new FakeInput("abab");
 
-        var categoryDfas = new Dictionary<string, IDfa<int>>();
-        categoryDfas.Add(CATEGORY_NAME, dfa);
+        var categoryDfas = new Dictionary<string, IDfa<int>> { { categoryName, dfa } };
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
         var result = lexer.Process(input).ToList();
-        Assert.Contains(new Token<string>(CATEGORY_NAME, "ab", input.Start, new FakeInput.Location(2)), result);
-        Assert.Contains(new Token<string>(CATEGORY_NAME, "ab", new FakeInput.Location(2), new FakeInput.Location(4)), result);
-        Assert.Equal(2, result.Count);
+        var expected = new List<Token<string>>() {
+            new Token<string>(categoryName, "ab", input.Start, new FakeInput.Location(2)),
+            new Token<string>(categoryName, "ab", new FakeInput.Location(2), new FakeInput.Location(4))
+        };
+        Assert.Equal(expected, result);
     }
 
     [Fact]
     public void IgnoresNonMatchingSubstrings()
     {
-        const string CATEGORY_NAME = "cat";
+        var categoryName = "cat";
 
         // this DFA matches `ab`
         var transitions = new Dictionary<(int, char), int>()
@@ -135,22 +132,23 @@ public class Lexer
         // the space isn't matched by the DFA
         var input = new FakeInput("ab ab");
 
-        var categoryDfas = new Dictionary<string, IDfa<int>>();
-        categoryDfas.Add(CATEGORY_NAME, dfa);
+        var categoryDfas = new Dictionary<string, IDfa<int>> { { categoryName, dfa } };
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
         var result = lexer.Process(input).ToList();
-        Assert.Contains(new Token<string>(CATEGORY_NAME, "ab", input.Start, new FakeInput.Location(2)), result);
-        Assert.Contains(new Token<string>(CATEGORY_NAME, "ab", new FakeInput.Location(3), new FakeInput.Location(5)), result);
-        Assert.Equal(2, result.Count);
+        var expected = new List<Token<string>>() {
+            new Token<string>(categoryName, "ab", input.Start, new FakeInput.Location(2)),
+            new Token<string>(categoryName, "ab", new FakeInput.Location(3), new FakeInput.Location(5))
+        };
+        Assert.Equal(expected, result);
     }
 
     [Fact]
     public void MatchesOnlyTheLongerToken()
     {
-        const int CATEGORY_1 = 0;
-        const int CATEGORY_2 = 1;
+        var category1 = 0;
+        var category2 = 1;
 
         // this DFA matches `(ab)*`
         var transitions1 = new Dictionary<(int, char), int>()
@@ -180,22 +178,22 @@ public class Lexer
 
         var input = new FakeInput("ababab");
 
-        var categoryDfas = new Dictionary<int, IDfa<int>>();
-        categoryDfas.Add(CATEGORY_1, dfa1);
-        categoryDfas.Add(CATEGORY_2, dfa2);
+        var categoryDfas = new Dictionary<int, IDfa<int>> {
+            { category1, dfa1 },
+            { category2, dfa2 }
+        };
 
         var lexer = new Lexer<int, int>(categoryDfas);
 
         var result = lexer.Process(input).ToList();
-        Assert.Contains(new Token<int>(CATEGORY_1, "ababab", input.Start, new FakeInput.Location(6)), result);
-        Assert.Single(result);
+        Assert.Single(result, new Token<int>(category1, "ababab", input.Start, new FakeInput.Location(6)));
     }
 
     [Fact]
     public void MatchesAllCategories()
     {
-        const int CATEGORY_1 = 0;
-        const int CATEGORY_2 = 1;
+        var category1 = 0;
+        var category2 = 1;
 
         // this DFA matches `(ab)*`
         var transitions1 = new Dictionary<(int, char), int>()
@@ -225,15 +223,20 @@ public class Lexer
 
         var input = new FakeInput("ababab");
 
-        var categoryDfas = new Dictionary<int, IDfa<int>>();
-        categoryDfas.Add(CATEGORY_1, dfa1);
-        categoryDfas.Add(CATEGORY_2, dfa2);
+        var categoryDfas = new Dictionary<int, IDfa<int>> {
+            { category1, dfa1 },
+            { category2, dfa2 }
+        };
 
         var lexer = new Lexer<int, int>(categoryDfas);
 
-        var result = lexer.Process(input).ToList();
-        Assert.Contains(new Token<int>(CATEGORY_1, "ababab", input.Start, new FakeInput.Location(6)), result);
-        Assert.Contains(new Token<int>(CATEGORY_2, "ababab", input.Start, new FakeInput.Location(6)), result);
-        Assert.Equal(2, result.Count);
+        // compare sets, since the order the categories are yielded in
+        // is unspecified
+        var result = lexer.Process(input).ToHashSet();
+        var expected = new HashSet<Token<int>>() {
+            new Token<int>(category1, "ababab", input.Start, new FakeInput.Location(6)),
+            new Token<int>(category2, "ababab", input.Start, new FakeInput.Location(6))
+        };
+        Assert.Equal(expected, result);
     }
 }
