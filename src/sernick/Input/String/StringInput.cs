@@ -1,5 +1,3 @@
-using System.Collections;
-
 namespace sernick.Input.String;
 
 public class StringInput : IInput
@@ -9,40 +7,29 @@ public class StringInput : IInput
     public StringInput(string text)
     {
         _text = text;
-        Start = (-1).Pack();
-        End = (text.Length - 1).Pack();
+        Start = (0).Pack();
+        End = (_text.Length).Pack();
         CurrentLocation = Start;
-        Current = (char)0;
+        Current = null;
+        if (_text.Length > 0)
+        {
+            Current = _text[0];
+        }
     }
 
-    public char Current { get; private set; }
-
-    object IEnumerator.Current => Current;
+    public char? Current { get; private set; }
 
     public ILocation CurrentLocation { get; private set; }
 
-    /// <summary>
-    ///     Points to the location before the first character
-    /// </summary>
     public ILocation Start { get; }
 
-    /// <summary>
-    ///     Points to the location of the last character
-    /// </summary>
     public ILocation End { get; }
-
-    public void Dispose()
-    {
-    }
 
     public bool MoveNext()
     {
-        var pointsToText = !CurrentLocation.Equals(End);
         MoveTo(CurrentLocation.Next());
-        return pointsToText;
+        return CurrentLocation.Unpack() < End.Unpack();
     }
-
-    public void Reset() => MoveTo(Start);
 
     public void MoveTo(ILocation location)
     {
@@ -50,7 +37,7 @@ public class StringInput : IInput
         Current = CharAtLocation(CurrentLocation);
     }
 
-    private char CharAtLocation(ILocation location)
+    private char? CharAtLocation(ILocation location)
     {
         var position = location.Unpack();
         if (0 <= position && position <= _text.Length - 1)
@@ -58,6 +45,6 @@ public class StringInput : IInput
             return _text[position];
         }
 
-        return (char)0;
+        return null;
     }
 }
