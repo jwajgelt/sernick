@@ -17,7 +17,7 @@ public sealed class RegexDfa : IDfa<Regex>
 
     public bool IsDead(Regex state)
     {
-        return (state is UnionRegex) && ((state as UnionRegex).Children.Count() == 0); 
+        return (state is UnionRegex) && (((UnionRegex)state).Children.Count() == 0); 
     }
 
     public Regex Transition(Regex state, char atom)
