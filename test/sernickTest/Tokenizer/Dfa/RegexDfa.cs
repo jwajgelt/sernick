@@ -86,7 +86,7 @@ public class RegexDfaTest
     {
         var regexDfa = exampleDfa();
         var state = regexDfa.Start;
-        state = "bcabzzc".Aggregate(state,  regexDfa.Transition);
+        state = "bcabzzc".Aggregate(state, regexDfa.Transition);
 
         Assert.True(regexDfa.Accepts(state));
     }
