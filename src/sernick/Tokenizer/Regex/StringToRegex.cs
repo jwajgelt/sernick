@@ -7,7 +7,7 @@ public static class StringToRegex
     private const char UnionOperator = '|';
     private const char StarOperator = '*';
     private const char PlusOperator = '+';
-    private static readonly HashSet<char> OperatorsSet = new() { '+', '*', '|' };
+    private static readonly HashSet<char> OperatorsSet = new() { PlusOperator, StarOperator, UnionOperator, ConcatenationOperator };
 
     private static string AddConcatenationOperator(this string text)
     {
@@ -46,7 +46,7 @@ public static class StringToRegex
         stringBuilder.Append(text[^1]);
         return stringBuilder.ToString();
     }
-    private static Regex Helper(this string s)
+    private static Regex HandleListOrAtom(this string s)
     {
         if (s.Length == 1)
         {
@@ -121,16 +121,54 @@ public static class StringToRegex
     private static readonly Dictionary<char, int> Priorities = new()
     {
         [')'] = 0,
-        ['|'] = 1,
+        [UnionOperator] = 1,
         [ConcatenationOperator] = 2,
-        ['+'] = 3,
-        ['*'] = 3,
+        [PlusOperator] = 3,
+        [StarOperator] = 3,
         ['('] = 4
     };
 
+    private static void HandleOperator(Stack<Regex> resultStack, Stack<char> operatorsStack)
+    {
+        var top = resultStack.Pop();
+        switch (operatorsStack.Pop())
+        {
+            case UnionOperator:
+                resultStack.Push(Regex.Union(resultStack.Pop(), top));
+                break;
+            case ConcatenationOperator:
+                resultStack.Push(Regex.Concat(resultStack.Pop(), top));
+                break;
+            case StarOperator:
+                resultStack.Push(Regex.Star(top));
+                break;
+            case PlusOperator:
+                resultStack.Push(Regex.Concat(top, Regex.Star(top)));
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Creates a Regex object from a string using the shunting yard algorithm.
+    /// The input string must follow the POSIX standard for regexes. As of now the following features are implemented:
+    /// <list type="bullet">
+    ///     <item>metacharacters: *, +, ., (), [] (without ranges)</item>
+    ///     <item>
+    ///     character classes:
+    ///     <list type="bullet">
+    ///         <item><c>[:lower:]</c></item>
+    ///         <item><c>[:upper:]</c></item>
+    ///         <item><c>[:space:]</c></item>
+    ///         <item><c>[:alnum:]</c></item>
+    ///         <item><c>[:digit:]</c></item>
+    ///         <item><c>[:any:]</c> - custom class equivalent to the . metacharacter</item>
+    ///     </list>
+    /// </item>
+    /// </list>
+    /// </summary>
     public static Regex ToRegex(this string text)
     {
-        var operators = new Stack<char>();
+        var operatorsStack = new Stack<char>();
         var resultStack = new Stack<Regex>();
 
         var current = "";
@@ -179,65 +217,35 @@ public static class StringToRegex
 
             if (current != "")
             {
-                resultStack.Push(current.Helper());
+                resultStack.Push(current.HandleListOrAtom());
                 current = "";
             }
 
             var priority = Priorities[t];
 
-            while (operators.Count > 0 && operators.Peek() != '(' && priority < Priorities[operators.Peek()])
+            while (operatorsStack.Count > 0 && operatorsStack.Peek() != '(' && priority < Priorities[operatorsStack.Peek()])
             {
-                var top = resultStack.Pop();
-                switch (operators.Pop())
-                {
-                    case UnionOperator:
-                        resultStack.Push(Regex.Union(resultStack.Pop(), top));
-                        break;
-                    case ConcatenationOperator:
-                        resultStack.Push(Regex.Concat(resultStack.Pop(), top));
-                        break;
-                    case StarOperator:
-                        resultStack.Push(Regex.Star(top));
-                        break;
-                    case PlusOperator:
-                        resultStack.Push(Regex.Concat(top, Regex.Star(top)));
-                        break;
-                }
+                HandleOperator(resultStack, operatorsStack);
             }
 
             if (t == ')')
             {
-                operators.Pop();
+                operatorsStack.Pop();
             }
             else
             {
-                operators.Push(t);
+                operatorsStack.Push(t);
             }
         }
 
         if (current != "")
         {
-            resultStack.Push(current.Helper());
+            resultStack.Push(current.HandleListOrAtom());
         }
 
-        while (operators.Count > 0)
+        while (operatorsStack.Count > 0)
         {
-            var top = resultStack.Pop();
-            switch (operators.Pop())
-            {
-                case UnionOperator:
-                    resultStack.Push(Regex.Union(resultStack.Pop(), top));
-                    break;
-                case ConcatenationOperator:
-                    resultStack.Push(Regex.Concat(resultStack.Pop(), top));
-                    break;
-                case StarOperator:
-                    resultStack.Push(Regex.Star(top));
-                    break;
-                case PlusOperator:
-                    resultStack.Push(Regex.Concat(top, Regex.Star(top)));
-                    break;
-            }
+            HandleOperator(resultStack, operatorsStack);
         }
 
         return resultStack.Count == 1 ? resultStack.Peek() : Regex.Empty;

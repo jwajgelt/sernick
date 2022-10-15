@@ -86,6 +86,16 @@ public class StringToRegex
     }
 
     [Fact]
+    public void TestMultipleCharacterClasses()
+    {
+        var actualRegex = "[[:digit:]][[:lower:]]".ToRegex();
+        var expectedRegex = Regex.Concat(Regex.Union("0123456789".ToList().ConvertAll(Regex.Atom)),
+            Regex.Union("qwertyuiopasdfghjkklzxcvbnm".ToList().ConvertAll(Regex.Atom)));
+
+        Assert.Equal(expectedRegex, actualRegex);
+    }
+
+    [Fact]
     public void TestDot()
     {
         var actualRegex = ".".ToRegex();
