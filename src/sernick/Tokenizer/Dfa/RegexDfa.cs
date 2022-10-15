@@ -10,18 +10,12 @@ public sealed class RegexDfa : IDfa<Regex>
     }
     public Regex Start { get; }
 
-    public bool Accepts(Regex state)
-    {
-        return state.ContainsEpsilon();
-    }
+    public bool Accepts(Regex state) => state.ContainsEpsilon();
 
     public bool IsDead(Regex state)
     {
         return (state is UnionRegex unionRegex) && (unionRegex.Children.Count() == 0); 
     }
 
-    public Regex Transition(Regex state, char atom)
-    {
-        return state.Derivative(atom);
-    }
+    public Regex Transition(Regex state, char atom) => state.Derivative(atom);
 }
