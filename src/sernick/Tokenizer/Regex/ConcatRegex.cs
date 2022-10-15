@@ -1,6 +1,6 @@
 namespace sernick.Tokenizer.Regex;
 
-internal class ConcatRegex : Regex
+internal sealed class ConcatRegex : Regex
 {
     public ConcatRegex(IEnumerable<Regex> children)
     {
@@ -11,21 +11,78 @@ internal class ConcatRegex : Regex
 
     public override bool ContainsEpsilon()
     {
-        throw new NotImplementedException();
+        return Children.All(child => child.ContainsEpsilon());
     }
 
     public override Regex Derivative(char atom)
     {
-        throw new NotImplementedException();
+        if (Children.Count == 0)
+        {
+            return Empty;
+        }
+
+        var firstRegex = Children[0];
+        var firstDerivative = firstRegex.Derivative(atom);
+        var epsilonLessDerivative = Concat(Children.Skip(1).Prepend(firstDerivative));
+
+        return firstRegex.ContainsEpsilon()
+            ? Union(
+                epsilonLessDerivative,
+                Concat(Children.Skip(1)).Derivative(atom)
+            )
+            : epsilonLessDerivative;
     }
 
     public override int GetHashCode()
     {
-        throw new NotImplementedException();
+        var hashCode = Children.Count;
+        foreach (var child in Children)
+        {
+            hashCode = unchecked(hashCode * 17 + child.GetHashCode());
+        }
+
+        return hashCode;
     }
 
     public override bool Equals(Regex? other)
     {
-        throw new NotImplementedException();
+        return other is ConcatRegex concatRegex && Children.SequenceEqual(concatRegex.Children);
+    }
+}
+
+public partial class Regex
+{
+    public static partial Regex Concat(IEnumerable<Regex> children)
+    {
+        IReadOnlyCollection<Regex> childrenList = children.ToList();
+
+        // (X * Y) * Z == X * (Y * Z)
+        childrenList = childrenList
+            .SelectMany(regex =>
+            {
+                if (regex is ConcatRegex concatRegex)
+                {
+                    return concatRegex.Children;
+                }
+
+                return Enumerable.Repeat(regex, count: 1);
+            })
+            .ToList();
+
+        // \empty * X == X * \empty == \empty
+        if (childrenList.Any(regex => regex.Equals(Empty)))
+        {
+            return Empty;
+        }
+
+        // \eps * X == X * \eps == X
+        childrenList = childrenList.Where(regex => !regex.Equals(Epsilon)).ToList();
+
+        return childrenList.Count switch
+        {
+            0 => Epsilon,
+            1 => childrenList.First(),
+            _ => new ConcatRegex(childrenList)
+        };
     }
 }

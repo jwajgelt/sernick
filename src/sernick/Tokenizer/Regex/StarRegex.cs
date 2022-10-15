@@ -1,6 +1,6 @@
 namespace sernick.Tokenizer.Regex;
 
-internal class StarRegex : Regex
+internal sealed class StarRegex : Regex
 {
     public StarRegex(Regex child)
     {
@@ -9,23 +9,40 @@ internal class StarRegex : Regex
 
     public Regex Child { get; }
 
-    public override bool ContainsEpsilon()
-    {
-        throw new NotImplementedException();
-    }
+    public override bool ContainsEpsilon() => true;
 
     public override Regex Derivative(char atom)
     {
-        throw new NotImplementedException();
+        return Concat(Child.Derivative(atom), this);
     }
 
     public override int GetHashCode()
     {
-        throw new NotImplementedException();
+        return $"Star({Child.GetHashCode()})".GetHashCode();
     }
 
     public override bool Equals(Regex? other)
     {
-        throw new NotImplementedException();
+        return other is StarRegex starRegex && Child.Equals(starRegex.Child);
+    }
+}
+
+public partial class Regex
+{
+    public static partial Regex Star(Regex child)
+    {
+        // X^^ == X^
+        if (child is StarRegex)
+        {
+            return child;
+        }
+
+        // \eps^ == \empty^ == \eps
+        if (child.Equals(Epsilon) || child.Equals(Empty))
+        {
+            return Epsilon;
+        }
+
+        return new StarRegex(child);
     }
 }
