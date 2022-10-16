@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace sernick.Tokenizer.Regex;
 public static class StringToRegex
 {
@@ -7,238 +5,245 @@ public static class StringToRegex
     /// Creates a Regex object from a string using the shunting yard algorithm.
     /// The input string must follow the POSIX standard for regexes. As of now the following features are implemented:
     /// <list type="bullet">
-    ///     <item>metacharacters: *, +, ., (), [] (without ranges)</item>
+    ///     <item>metacharacters: *, +, ., ()</item>
     ///     <item>
     ///     character classes:
     ///     <list type="bullet">
-    ///         <item><c>[:lower:]</c></item>
-    ///         <item><c>[:upper:]</c></item>
-    ///         <item><c>[:space:]</c></item>
-    ///         <item><c>[:alnum:]</c></item>
-    ///         <item><c>[:digit:]</c></item>
-    ///         <item><c>[:any:]</c> - custom class equivalent to the . metacharacter</item>
+    ///         <item><c>[[:lower:]]</c></item>
+    ///         <item><c>[[:upper:]]</c></item>
+    ///         <item><c>[[:space:]]</c></item>
+    ///         <item><c>[[:alnum:]]</c></item>
+    ///         <item><c>[[:digit:]]</c></item>
+    ///         <item><c>[[:any:]]</c> - custom class equivalent to the <c>'.'</c> metacharacter</item>
     ///     </list>
     /// </item>
     /// </list>
     /// </summary>
     public static Regex ToRegex(this string text)
     {
-        var operatorsStack = new Stack<char>();
+        var specialCharactersStack = new Stack<SpecialCharacter>();
         var resultStack = new Stack<Regex>();
 
-        var current = "";
-        var escaped = false;
-        var bracketCounter = 0;
+        var tokenizedText = text.Tokenize().AddConcatenation();
 
-        var textWithConcatenationOperator = text.AddConcatenationOperator();
-
-        foreach (var t in textWithConcatenationOperator)
+        foreach (var token in tokenizedText)
         {
-            if (!escaped)
-            {
-                if (t == '[')
-                {
-                    bracketCounter++;
-                }
-                else if (t == ']')
-                {
-                    bracketCounter--;
-                }
-                else if (t == '.' && bracketCounter == 0)
-                {
-                    current += "[[:any:]]";
-                    escaped = false;
-                    continue;
-                }
-                else if (t == '\\')
-                {
-                    if (bracketCounter > 0)
-                    {
-                        current += '\\';
-                    }
 
-                    escaped = true;
-                    continue;
-                }
-            }
-
-            if (escaped || !Priorities.ContainsKey(t))
+            // if not a special character then add to the result and move to the next token
+            if (!token.IsSpecial)
             {
-                current += t;
-                escaped = false;
+                resultStack.Push(Regex.Atom(token.Value[0]));
                 continue;
             }
 
-            if (current != "")
+            // if not a character class then add to the result and move to the next token
+            if (CharacterClasses.ContainsKey(token.Value))
             {
-                resultStack.Push(current.HandleListOrAtom());
-                current = "";
+                resultStack.Push(CharacterClasses[token.Value]);
+                continue;
             }
 
-            var priority = Priorities[t];
-
-            while (operatorsStack.Count > 0 && operatorsStack.Peek() != '(' && priority < Priorities[operatorsStack.Peek()])
+            // a special token which is not a character class should be special character
+            if (!token.IsSpecialCharacter())
             {
-                HandleOperator(resultStack, operatorsStack);
+                throw new ArgumentOutOfRangeException(nameof(text));
             }
 
-            if (t == ')')
+            var specialCharacter = (SpecialCharacter)token.Value[0];
+
+            var priority = Priorities[specialCharacter];
+
+            // pop from the stack all the special characters until one with a priority lower or equal
+            // to the current token's priority or an opening parenthesis is encountered
+            while (specialCharactersStack.Count > 0 &&
+                   priority < Priorities[specialCharactersStack.Peek()] &&
+                   specialCharactersStack.Peek() != SpecialCharacter.LeftParenthesis
+                  )
             {
-                operatorsStack.Pop();
+                HandleSpecialCharacter(resultStack, specialCharactersStack);
             }
+
+            // if the current token was a closing parenthesis
+            // then there is an opening one on the stack that need to be popped
+            if (specialCharacter == SpecialCharacter.RightParenthesis)
+            {
+                specialCharactersStack.Pop();
+            }
+            // otherwise the token is an operator that needs to be pushed to the stack
             else
             {
-                operatorsStack.Push(t);
+                specialCharactersStack.Push(specialCharacter);
             }
         }
 
-        if (current != "")
+        while (specialCharactersStack.Count > 0)
         {
-            resultStack.Push(current.HandleListOrAtom());
+            HandleSpecialCharacter(resultStack, specialCharactersStack);
         }
 
-        while (operatorsStack.Count > 0)
+        // after the entire algorithm there should be only one final Regex on the stack
+        // if that's not the case it means the input text must have been invalid
+        if (resultStack.Count > 1)
         {
-            HandleOperator(resultStack, operatorsStack);
+            throw new ArgumentException(nameof(resultStack));
         }
 
         return resultStack.Count == 1 ? resultStack.Peek() : Regex.Empty;
     }
 
-    private const char ConcatenationOperator = '\0';
-    private const char UnionOperator = '|';
-    private const char StarOperator = '*';
-    private const char PlusOperator = '+';
-    private static readonly HashSet<char> OperatorsSet = new() { PlusOperator, StarOperator, UnionOperator, ConcatenationOperator };
-
-    private static string AddConcatenationOperator(this string text)
+    private class Token
     {
-        var stringBuilder = new StringBuilder();
-        var bracketCounter = 0;
-        var escaped = false;
+        public string Value { get; }
+        public bool IsSpecial { get; } // special <-> is a metacharacter (special character) or a character class
 
+        public Token(string value, bool isSpecial)
+        {
+            Value = value;
+            IsSpecial = isSpecial;
+        }
+    }
+
+    private static bool IsSpecialCharacter(this Token token)
+    {
+        return token.IsSpecial && token.Value.Length == 1 &&
+               Enum.IsDefined(typeof(SpecialCharacter), (int)token.Value[0]);
+    }
+
+    private enum SpecialCharacter
+    {
+        Concatenation = '\0',
+        Union = '|',
+        Star = '*',
+        Plus = '+',
+        LeftParenthesis = '(',
+        RightParenthesis = ')'
+    }
+
+    private static char ToChar(this SpecialCharacter specialCharacter)
+    {
+        return (char)specialCharacter;
+    }
+
+    private static List<Token> Tokenize(this string text)
+    {
+        var result = new List<Token>();
+
+        // iterate with index so I can skip easily
+        for (var index = 0; index < text.Length; index++)
+        {
+            var t = text[index];
+
+            Token token;
+
+            // if escaped create a non-special (even if the character is special) token
+            // containing just the character after the backslash
+            if (t == '\\')
+            {
+                index++;
+                token = new Token(text[index].ToString(), false);
+            }
+            // if starts with an opening bracket check for a character class and creat a special token
+            else if (t == '[')
+            {
+                var temp = index;
+                while (text[temp] != ']')
+                {
+                    temp++;
+                }
+
+                token = new Token(text.Substring(index, temp - index + 2), true);
+                if (!CharacterClasses.ContainsKey(token.Value))
+                {
+                    throw new ArgumentOutOfRangeException(nameof(text));
+                }
+
+                index = temp + 1;
+            }
+            // if '.' create a special any character class token
+            else if (t == '.')
+            {
+                token = new Token("[[:any:]]", true);
+            }
+            // otherwise create a token that is special iff the current character is a special character
+            else
+            {
+                token = new Token(t.ToString(), Enum.IsDefined(typeof(SpecialCharacter), (int)t));
+            }
+
+            result.Add(token);
+        }
+
+        return result;
+    }
+
+    private static List<Token> AddConcatenation(this List<Token> text)
+    {
+        var result = new List<Token>();
+        var concatenationToken = new Token(SpecialCharacter.Concatenation.ToChar().ToString(), true);
+
+        // iterate over every space between two tokens to check if there should be a concat character
         foreach (var (left, right) in text.Zip(text.Skip(1)))
         {
 
-            if (!escaped)
-            {
-                if (left == '[')
-                {
-                    bracketCounter++;
-                }
-                else if (left == ']')
-                {
-                    bracketCounter--;
-                }
-            }
+            result.Add(left);
 
-            stringBuilder.Append(left);
-            if ((!escaped && left == '\\') || bracketCounter > 0 || OperatorsSet.Contains(right) ||
-                left is UnionOperator or '(' || right == ')')
+            // if the right character is a special character other than an opening parenthesis then
+            // don't add a concat character
+            if (right.IsSpecialCharacter() && (SpecialCharacter)right.Value[0] != SpecialCharacter.LeftParenthesis)
             {
-                escaped = left == '\\';
                 continue;
             }
 
-            escaped = false;
-            stringBuilder.Append(ConcatenationOperator);
+            // if the left character is a union character or an opening parenthesis then
+            // don't add a concat character
+            if (left.IsSpecialCharacter() &&
+                (SpecialCharacter)left.Value[0] is SpecialCharacter.Union or SpecialCharacter.LeftParenthesis)
+            {
+                continue;
+            }
+
+            result.Add(concatenationToken);
         }
 
-        stringBuilder.Append(text[^1]);
-        return stringBuilder.ToString();
+        result.Add(text[^1]);
+        return result;
     }
-    private static Regex HandleListOrAtom(this string s)
-    {
-        if (s.Length == 1)
-        {
-            return Regex.Atom(s[0]);
-        }
 
-        if (s[0] != '[' || s[^1] != ']')
-        {
-            return Regex.Empty;
-        }
-
-        var children = new List<Regex>();
-        var escaped = false;
-        for (var index = 1; index < s.Length - 1; index++)
-        {
-            if (escaped)
-            {
-                children.Add(Regex.Atom(s[index]));
-                escaped = false;
-                continue;
-            }
-
-            if (s[index] == '\\')
-            {
-                escaped = true;
-                continue;
-            }
-
-            if (s[index] == '[')
-            {
-                var start = index;
-                while (s[index] != ']')
-                {
-                    index++;
-                }
-
-                children.Add(CharacterClasses.GetValueOrDefault(s.Substring(start, index - start + 1), Regex.Empty));
-                continue;
-            }
-
-            children.Add(Regex.Atom(s[index]));
-        }
-
-        return Regex.Union(children);
-    }
     private static Regex Range(char start, char end)
     {
-        if (start > end)
-        {
-            return Regex.Empty;
-        }
-
-        var children = new List<Regex>();
-        for (var atom = start; atom <= end; atom++)
-        {
-            children.Add(Regex.Atom(atom));
-        }
-
-        return Regex.Union(children);
+        return Regex.Union(Enumerable.Range(start, end - start + 1).Select(atom => Regex.Atom((char)atom)));
     }
 
     private static readonly Dictionary<string, Regex> CharacterClasses = new()
     {
-        ["[:lower:]"] = Range('a', 'z'),
-        ["[:upper:]"] = Range('A', 'Z'),
-        ["[:space:]"] = Regex.Union(" \t\n\r\f\v".Select(Regex.Atom)),
-        ["[:alnum:]"] = Regex.Union(Range('a', 'z'), Range('A', 'Z'), Range('0', '9')),
-        ["[:digit:]"] = Range('0', '9'),
-        ["[:any:]"] = Range(' ', '~')
+        ["[[:lower:]]"] = Range('a', 'z'),
+        ["[[:upper:]]"] = Range('A', 'Z'),
+        ["[[:space:]]"] = Regex.Union(" \t\n\r\f\v".Select(Regex.Atom)),
+        ["[[:alnum:]]"] = Regex.Union(Range('a', 'z'), Range('A', 'Z'), Range('0', '9')),
+        ["[[:digit:]]"] = Range('0', '9'),
+        ["[[:any:]]"] = Range(' ', '~')
     };
 
-    private static readonly Dictionary<char, int> Priorities = new()
+    private static readonly Dictionary<SpecialCharacter, int> Priorities = new()
     {
-        [')'] = 0,
-        [UnionOperator] = 1,
-        [ConcatenationOperator] = 2,
-        [PlusOperator] = 3,
-        [StarOperator] = 3,
-        ['('] = 4
+        [SpecialCharacter.RightParenthesis] = 0,
+        [SpecialCharacter.Union] = 1,
+        [SpecialCharacter.Concatenation] = 2,
+        [SpecialCharacter.Plus] = 3,
+        [SpecialCharacter.Star] = 3,
+        [SpecialCharacter.LeftParenthesis] = 4
     };
 
-    private static void HandleOperator(Stack<Regex> resultStack, Stack<char> operatorsStack)
+    private static void HandleSpecialCharacter(Stack<Regex> resultStack, Stack<SpecialCharacter> operatorsStack)
     {
         var top = resultStack.Pop();
         resultStack.Push(operatorsStack.Pop() switch
         {
-            UnionOperator => Regex.Union(resultStack.Pop(), top),
-            ConcatenationOperator => Regex.Concat(resultStack.Pop(), top),
-            StarOperator => Regex.Star(top),
-            PlusOperator => Regex.Concat(top, Regex.Star(top)),
-            _ => throw new ArgumentOutOfRangeException()
+            SpecialCharacter.Union => Regex.Union(resultStack.Pop(), top),
+            SpecialCharacter.Concatenation => Regex.Concat(resultStack.Pop(), top),
+            SpecialCharacter.Star => Regex.Star(top),
+            SpecialCharacter.Plus => Regex.Concat(top, Regex.Star(top)),
+            _ => throw new ArgumentOutOfRangeException(nameof(resultStack))
         });
     }
 }

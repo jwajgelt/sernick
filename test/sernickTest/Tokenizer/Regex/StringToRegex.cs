@@ -68,15 +68,6 @@ public class StringToRegex
     }
 
     [Fact]
-    public void TestEscapeInBrackets()
-    {
-        var actualRegex = @"[\[\\]".ToRegex();
-        var expectedRegex = Regex.Union(Regex.Atom('['), Regex.Atom('\\'));
-
-        Assert.Equal(expectedRegex, actualRegex);
-    }
-
-    [Fact]
     public void TestCharacterClass()
     {
         var actualRegex = "[[:digit:]]".ToRegex();
@@ -114,7 +105,7 @@ public class StringToRegex
     [Fact]
     public void TestComplexRegex()
     {
-        var actualRegex = "([abc]|d*)+((a*b)c)*".ToRegex();
+        var actualRegex = "((a|b|c)|d*)+((a*b)c)*".ToRegex();
         var left = Regex.Union(Regex.Union(Regex.Atom('a'), Regex.Atom('b'), Regex.Atom('c')), Regex.Star(Regex.Atom('d')));
         var right = Regex.Concat(Regex.Concat(Regex.Star(Regex.Atom('a')), Regex.Atom('b')), Regex.Atom('c'));
         var expectedRegex = Regex.Concat(Regex.Concat(left, Regex.Star(left)), Regex.Star(right));
