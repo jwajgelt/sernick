@@ -112,4 +112,18 @@ public class StringToRegex
 
         Assert.Equal(expectedRegex, actualRegex);
     }
+
+    [Fact]
+    public void TestExceptions()
+    {
+        var regexString1 = "[[]";
+        var regexString2 = "[[:x:]]";
+        var regexString3 = "*";
+        var regexString4 = "(abc|)|";
+
+        Assert.ThrowsAny<Exception>(() => regexString1.ToRegex());
+        Assert.ThrowsAny<Exception>(() => regexString2.ToRegex());
+        Assert.ThrowsAny<Exception>(() => regexString3.ToRegex());
+        Assert.ThrowsAny<Exception>(() => regexString4.ToRegex());
+    }
 }

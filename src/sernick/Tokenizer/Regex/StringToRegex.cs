@@ -29,14 +29,14 @@ public static class StringToRegex
         foreach (var token in tokenizedText)
         {
 
-            // if not a special character then add to the result and move to the next token
+            // if token is not a special character then add it to the result and move to the next token
             if (!token.IsSpecial)
             {
                 resultStack.Push(Regex.Atom(token.Value[0]));
                 continue;
             }
 
-            // if not a character class then add to the result and move to the next token
+            // if token is a character class then add it to the result and move to the next token
             if (CharacterClasses.ContainsKey(token.Value))
             {
                 resultStack.Push(CharacterClasses[token.Value]);
@@ -46,7 +46,7 @@ public static class StringToRegex
             // a special token which is not a character class should be special character
             if (!token.IsSpecialCharacter())
             {
-                throw new ArgumentOutOfRangeException(nameof(text));
+                throw new ArgumentException($"Error while parsing {token.Value}");
             }
 
             var specialCharacter = (SpecialCharacter)token.Value[0];
@@ -64,9 +64,15 @@ public static class StringToRegex
             }
 
             // if the current token was a closing parenthesis
-            // then there is an opening one on the stack that need to be popped
+            // then there should be an opening one on the stack that need to be popped
             if (specialCharacter == SpecialCharacter.RightParenthesis)
             {
+                if (specialCharactersStack.Count == 0 ||
+                    specialCharactersStack.Peek() != SpecialCharacter.LeftParenthesis)
+                {
+                    throw new ArgumentException($"Error while parsing {text}");
+                }
+
                 specialCharactersStack.Pop();
             }
             // otherwise the token is an operator that needs to be pushed to the stack
@@ -91,17 +97,8 @@ public static class StringToRegex
         return resultStack.Count == 1 ? resultStack.Peek() : Regex.Empty;
     }
 
-    private class Token
-    {
-        public string Value { get; }
-        public bool IsSpecial { get; } // special <-> is a metacharacter (special character) or a character class
-
-        public Token(string value, bool isSpecial)
-        {
-            Value = value;
-            IsSpecial = isSpecial;
-        }
-    }
+    // special <-> is a metacharacter (special character) or a character class
+    private record struct Token(string Value, bool IsSpecial);
 
     private static bool IsSpecialCharacter(this Token token)
     {
@@ -119,10 +116,7 @@ public static class StringToRegex
         RightParenthesis = ')'
     }
 
-    private static char ToChar(this SpecialCharacter specialCharacter)
-    {
-        return (char)specialCharacter;
-    }
+    private static char ToChar(this SpecialCharacter specialCharacter) => (char)specialCharacter;
 
     private static List<Token> Tokenize(this string text)
     {
@@ -142,7 +136,7 @@ public static class StringToRegex
                 index++;
                 token = new Token(text[index].ToString(), false);
             }
-            // if starts with an opening bracket check for a character class and creat a special token
+            // if starts with an opening bracket check for a character class and create a special token
             else if (t == '[')
             {
                 var temp = index;
@@ -154,7 +148,7 @@ public static class StringToRegex
                 token = new Token(text.Substring(index, temp - index + 2), true);
                 if (!CharacterClasses.ContainsKey(token.Value))
                 {
-                    throw new ArgumentOutOfRangeException(nameof(text));
+                    throw new ArgumentException($"{token.Value} is not a valid CharacterClass");
                 }
 
                 index = temp + 1;
