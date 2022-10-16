@@ -1,4 +1,3 @@
-using System.Collections;
 using sernick.Input;
 
 namespace sernickTest.Tokenizer.Lexer.Helpers;
@@ -24,11 +23,6 @@ internal class FakeInput : IInput
 
     public char Current => _input[_currentLocation.position];
 
-    object IEnumerator.Current => Current;
-
-    public void Dispose()
-    { }
-
     public bool MoveNext()
     {
         if (_currentLocation != (Location)End)
@@ -42,10 +36,5 @@ internal class FakeInput : IInput
     public void MoveTo(ILocation location)
     {
         _currentLocation = (Location)location;
-    }
-
-    public void Reset()
-    {
-        _currentLocation = (Location)Start;
     }
 }
