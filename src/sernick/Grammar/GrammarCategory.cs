@@ -2,12 +2,15 @@ namespace sernick.Grammar;
 
 public interface IGrammarCategory
 {
-    // 1 -- lowest priority
-    // Keep the priority high for categories which are more general
-    // Example: priority of a category which describes "var" keyword
-    // should be LOWER than of a category which describes variable identifiers
-    // because we want to say that "myvariableName" is a correct variable name,
-    // and not a mistake in keyword
+
+    /// <summary> 
+    /// 1 -- lowest priority.
+    /// Keep the priority high for categories which are more general
+    /// Example: priority of a category which describes "var" keyword
+    /// should be LOWER than of a category which describes variable identifiers
+    /// because we want to say that "myvariableName" is a correct variable name,
+    ///and not a mistake in keyword
+    /// </summary>
     public short Priority { get; }
 }
 
