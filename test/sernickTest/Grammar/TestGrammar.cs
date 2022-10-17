@@ -8,8 +8,9 @@ public class TestGrammar
     private readonly string[] keywords = new string[] { "loop", "var", "const", "fun", "break", "continue", "return" };
     private readonly string[] notKeywords = new string[] { "Loop", "Var", "CONST", "function", "breaking", "go", "ret" };
 
-    private readonly string[] integerLiterals = new string[] { "123", "2", "137", "999000999" };
-    private readonly string[] notIntegerLiterals = new string[] { "123.45", "21.3", "7,99", "999,99$", "0.00", "0/0" };
+    // TODO = uncomment these and corresponding tests
+    // private readonly string[] integerLiterals = new string[] { "123", "2", "137", "999000999" };
+    // private readonly string[] notIntegerLiterals = new string[] { "123.45", "21.3", "7,99", "999,99$", "0.00", "0/0" };
 
     private readonly string[] booleanLiterals = new string[] { "true", "false" };
     private readonly string[] notBooleanLiterals = new string[] { "True", "False", "1", "0", "Truth", "Fals" };
@@ -153,7 +154,7 @@ public class TestGrammar
     {
         testCategories(new GrammarCategoryType[] { GrammarCategoryType.Literals },
          booleanLiterals,
-         bracesAndParentheses);
+         notBooleanLiterals);
 
         // TODO uncomment tests, something's wrong with integers
         // testCategories(new GrammarCategoryType[] { GrammarCategoryType.Literals },
