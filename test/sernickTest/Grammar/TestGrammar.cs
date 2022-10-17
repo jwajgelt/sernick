@@ -1,25 +1,23 @@
 using sernick.Grammar;
-using sernick.Tokenizer.Regex;
 using sernick.Tokenizer.Dfa;
 namespace sernickTest.Grammar;
 
 public class TestGrammar
 {
 
-    private string[] keywords = new string[] { "loop", "var", "const", "fun", "break", "continue", "return" };
-    private string[] notKeywords = new string[] { "Loop", "Var", "CONST", "function", "breaking", "go", "ret" };
+    private readonly string[] keywords = new string[] { "loop", "var", "const", "fun", "break", "continue", "return" };
+    private readonly string[] notKeywords = new string[] { "Loop", "Var", "CONST", "function", "breaking", "go", "ret" };
 
+    private readonly string[] integerLiterals = new string[] { "123", "2", "137", "999000999" };
+    private readonly string[] notIntegerLiterals = new string[] { "123.45", "21.3", "7,99", "999,99$", "0.00", "0/0" };
 
-    private string[] integerLiterals = new string[] { "123", "2", "137", "999000999" };
-    private string[] notIntegerLiterals = new string[] { "123.45", "21.3", "7,99", "999,99$", "0.00", "0/0" };
+    private readonly string[] booleanLiterals = new string[] { "true", "false" };
+    private readonly string[] notBooleanLiterals = new string[] { "True", "False", "1", "0", "Truth", "Fals" };
 
-    private string[] booleanLiterals = new string[] { "true", "false" };
-    private string[] notBooleanLiterals = new string[] { "True", "False", "1", "0", "Truth", "Fals" };
-
-    private string[] comments = new string[] { "// single-line comment", @"/* multi
+    private readonly string[] comments = new string[] { "// single-line comment", @"/* multi
     line
     comment */", "/* multi-line comment in one line */" };
-    private string[] notComments = new string[] { "/ missing second /",
+    private readonly string[] notComments = new string[] { "/ missing second /",
      @"//* multi
        line with extra second/
        so invalid */",
@@ -28,31 +26,30 @@ public class TestGrammar
      "just random text",
      "        " };
 
-    private string[] typeNames = new string[] { "Int", "Bool", "CustomTypeName", "A", "B", "Z", "ABBA", "UJ" };
-    private string[] variableNames = new string[] { "varia", "ble", "name", "tcs", "mess", "graphQL", };
+    private readonly string[] typeNames = new string[] { "Int", "Bool", "CustomTypeName", "A", "B", "Z", "ABBA", "UJ" };
+    private readonly string[] variableNames = new string[] { "varia", "ble", "name", "tcs", "mess", "graphQL", };
 
-
-    private string[] operators = new string[] { "+", "-", "||", "&&" };
+    private readonly string[] operators = new string[] { "+", "-", "||", "&&" };
     /// <summary> maybe some of these will be operators in the future, but not now </summary>
-    private string[] notOperators = new string[] { "*", "/", "^", "//", "pow", "$", "(", ")", "{}" };
+    private readonly string[] notOperators = new string[] { "*", "/", "^", "//", "pow", "$", "(", ")", "{}" };
 
-    private string[] whitespaces = new string[] { " ", "     ", "       ", "    ", };
-    private string[] notWhitespaces = new string[] { "", "123", ";", "#" };
+    private readonly string[] whitespaces = new string[] { " ", "     ", "       ", "    ", };
+    private readonly string[] notWhitespaces = new string[] { "", "123", ";", "#" };
 
-    private string[] colon = new string[] { ":", };
-    private string[] semicolon = new string[] { ";" };
-    private string[] bracesAndParentheses = new string[] { "{", "}", ")", "(" };
-    private string[] notBracesNotParentheses = new string[] { "[", "]", @"\", "123", "/" };
+    private readonly string[] colon = new string[] { ":", };
+    private readonly string[] semicolon = new string[] { ";" };
+    private readonly string[] bracesAndParentheses = new string[] { "{", "}", ")", "(" };
+    private readonly string[] notBracesNotParentheses = new string[] { "[", "]", @"\", "123", "/" };
 
-
-    public void testCategories(
+    [Theory]
+    public static void testCategories(
         IEnumerable<GrammarCategoryType> categoriesWhichShouldAccept,
         IEnumerable<string> goodExamples,
         IEnumerable<string> badExamples
     )
     {
         var grammar = new sernick.Grammar.Grammar().generateGrammar();
-        var allGrammarCategories = (GrammarCategoryType[])Enum.GetValues(typeof(GrammarCategoryType));
+        _ = (GrammarCategoryType[])Enum.GetValues(typeof(GrammarCategoryType));
 
         foreach (var grammarCategoryKey in categoriesWhichShouldAccept)
         {
@@ -62,6 +59,7 @@ public class TestGrammar
                 var state = dfa.Transition(dfa.Start, word);
                 Assert.True(dfa.Accepts(state));
             }
+
             foreach (var word in badExamples)
             {
                 var state = dfa.Transition(dfa.Start, word);
@@ -69,7 +67,6 @@ public class TestGrammar
             }
         }
     }
-
 
     [Fact]
     public void Grammar_categories_priorities_are_distinct()
@@ -168,5 +165,4 @@ public class TestGrammar
         // integerLiterals,
         // notIntegerLiterals);
     }
-
 }
