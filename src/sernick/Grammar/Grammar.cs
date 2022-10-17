@@ -10,8 +10,8 @@ public class GrammarEntry
 
     private static Regex createUnionRegex(CategoryItems categoryItems)
     {
-        var unionRegexAsString = string.Join("|", categoryItems.Values);
-        return StringToRegex.ToRegex(unionRegexAsString);
+        return string.Join("|", categoryItems.Values).ToRegex();
+
     }
 
     public GrammarEntry(IGrammarCategory category, CategoryItems rules)
