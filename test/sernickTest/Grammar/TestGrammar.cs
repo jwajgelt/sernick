@@ -41,8 +41,7 @@ public class TestGrammar
     private readonly string[] bracesAndParentheses = new string[] { "{", "}", ")", "(" };
     private readonly string[] notBracesNotParentheses = new string[] { "[", "]", @"\", "123", "/" };
 
-    [Theory]
-    public static void testCategories(
+    private static void testCategories(
         IEnumerable<GrammarCategoryType> categoriesWhichShouldAccept,
         IEnumerable<string> goodExamples,
         IEnumerable<string> badExamples
