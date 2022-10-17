@@ -8,7 +8,6 @@ public class TestGrammar
     private readonly string[] keywords = new string[] { "loop", "var", "const", "fun", "break", "continue", "return" };
     private readonly string[] notKeywords = new string[] { "Loop", "Var", "CONST", "function", "breaking", "go", "ret" };
 
-    // TODO = uncomment these and corresponding tests
     private readonly string[] integerLiterals = new string[] { "123", "2", "137", "999000999" };
     private readonly string[] notIntegerLiterals = new string[] { "123.45", "21.3", "7,99", "999,99$", "0.00", "0/0" };
 
@@ -165,5 +164,4 @@ public class TestGrammar
          notBooleanLiterals);
 
     }
-
 }
