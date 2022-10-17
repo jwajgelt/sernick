@@ -8,24 +8,21 @@ internal sealed class AtomRegex : Regex
     }
     public char Character { get; }
 
-    public override bool ContainsEpsilon()
-    {
-        throw new NotImplementedException();
-    }
+    public override bool ContainsEpsilon() => false;
 
     public override Regex Derivative(char atom)
     {
-        throw new NotImplementedException();
+        return Character == atom ? Epsilon : Empty;
     }
 
     public override int GetHashCode()
     {
-        throw new NotImplementedException();
+        return Character.GetHashCode();
     }
 
     public override bool Equals(Regex? other)
     {
-        throw new NotImplementedException();
+        return other is AtomRegex atomRegex && Character.Equals(atomRegex.Character);
     }
 }
 

@@ -11,22 +11,33 @@ internal sealed class UnionRegex : Regex
 
     public override bool ContainsEpsilon()
     {
-        throw new NotImplementedException();
+        return Children.Any(child => child.ContainsEpsilon());
     }
 
     public override Regex Derivative(char atom)
     {
-        throw new NotImplementedException();
+        if (Children.Count == 0)
+        {
+            return Empty;
+        }
+
+        return Union(Children.Select(child => child.Derivative(atom)));
     }
 
     public override int GetHashCode()
     {
-        throw new NotImplementedException();
+        var hashCode = Children.Count;
+        foreach (var child in Children)
+        {
+            hashCode = unchecked(hashCode + child.GetHashCode());
+        }
+
+        return hashCode;
     }
 
     public override bool Equals(Regex? other)
     {
-        throw new NotImplementedException();
+        return other is UnionRegex unionRegex && Children.SetEquals(unionRegex.Children);
     }
 }
 
@@ -52,11 +63,14 @@ public partial class Regex
         // \empty \cup X == X
         childrenList = childrenList.Where(regex => !regex.Equals(Empty)).ToList();
 
-        return childrenList.Count switch
+        // X \cup X == X
+        IReadOnlyCollection<Regex> childrenSet = childrenList.ToHashSet();
+
+        return childrenSet.Count switch
         {
             0 => Empty,
-            1 => childrenList.First(),
-            _ => new UnionRegex(childrenList)
+            1 => childrenSet.First(),
+            _ => new UnionRegex(childrenSet)
         };
     }
 }

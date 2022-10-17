@@ -7,6 +7,9 @@ public abstract partial class Regex : IEquatable<Regex>
     public static partial Regex Concat(IEnumerable<Regex> children);
     public static partial Regex Star(Regex child);
 
+    public static Regex Union(params Regex[] children) => Union(children.AsEnumerable());
+    public static Regex Concat(params Regex[] children) => Concat(children.AsEnumerable());
+
     public static readonly Regex Empty = new UnionRegex(Enumerable.Empty<Regex>());
     public static readonly Regex Epsilon = new StarRegex(Empty);
 
