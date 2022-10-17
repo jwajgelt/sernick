@@ -1,4 +1,5 @@
 namespace sernick.Tokenizer.Dfa;
+
 using Regex;
 
 public sealed class RegexDfa : IDfa<Regex>
