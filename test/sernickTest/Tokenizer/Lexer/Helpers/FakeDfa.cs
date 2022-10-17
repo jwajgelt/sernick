@@ -36,4 +36,6 @@ internal class FakeDfa : sernick.Tokenizer.Dfa.IDfa<int>
             ? next
             : DEAD_STATE;
     }
+
+    public int Transition(int state, string word) => word.Aggregate(state, (state, c) => Transition(state, c));
 }

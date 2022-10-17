@@ -3,6 +3,20 @@ using sernick.Tokenizer.Regex;
 
 using CategoryItems = Dictionary<string, string>;
 
+public enum GrammarCategoryType
+{
+    Comments,
+    BracesAndParentheses,
+    Semicolon,
+    Colon,
+    Keywords,
+    TypeIdentifiers,
+    VariableIdentifiers,
+    Operators,
+    Whitespaces,
+    Literals,
+}
+
 public class GrammarEntry
 {
     public IGrammarCategory Category { get; init; }
@@ -34,7 +48,7 @@ public class Grammar
     {
         ["leftBrace"] = "{",
         ["rightBrace"] = "}",
-        ["leftParentheses"] = @"\)",
+        ["leftParentheses"] = @"\(",
         ["rightParentheses"] = @"\)",
     });
 
@@ -98,20 +112,20 @@ public class Grammar
         ["multiLineComment"] = @"/\*(.|[[:space:]])*\*/"
     });
 
-    // TODO test that every category, returned from GenerateGrammar, has distinct priority
-    public List<GrammarEntry> generateGrammar()
+    public Dictionary<GrammarCategoryType, GrammarEntry> generateGrammar()
     {
-        return new List<GrammarEntry>() {
-            bracesAndParentheses,
-            semicolon,
-            colon,
-            keywords,
-            typeIdentifiers,
-            operators,
-            whitespaces,
-            variableIdentifiers,
-            literals,
-            comments
+        return new Dictionary<GrammarCategoryType, GrammarEntry>()
+        {
+            [GrammarCategoryType.Colon] = colon,
+            [GrammarCategoryType.Semicolon] = semicolon,
+            [GrammarCategoryType.BracesAndParentheses] = bracesAndParentheses,
+            [GrammarCategoryType.Comments] = comments,
+            [GrammarCategoryType.Literals] = literals,
+            [GrammarCategoryType.Operators] = operators,
+            [GrammarCategoryType.TypeIdentifiers] = typeIdentifiers,
+            [GrammarCategoryType.VariableIdentifiers] = variableIdentifiers,
+            [GrammarCategoryType.Whitespaces] = whitespaces,
+            [GrammarCategoryType.Keywords] = keywords,
         };
 
     }
