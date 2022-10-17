@@ -95,7 +95,7 @@ public class Grammar
     private readonly GrammarEntry comments = new GrammarEntry(new LiteralsCategory(), new CategoryItems()
     {
         ["singleLineComment"] = "//.*",
-        ["multiLineComment"] = @"/\*.*\*/"
+        ["multiLineComment"] = @"/\*(.|[[:space:]])*\*/"
     });
 
     // TODO test that every category, returned from GenerateGrammar, has distinct priority
