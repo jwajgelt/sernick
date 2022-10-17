@@ -48,7 +48,6 @@ public class TestGrammar
     )
     {
         var grammar = new sernick.Grammar.Grammar().generateGrammar();
-        _ = (GrammarCategoryType[])Enum.GetValues(typeof(GrammarCategoryType));
 
         foreach (var grammarCategoryKey in categoriesWhichShouldAccept)
         {
