@@ -7,25 +7,45 @@ public class TestGrammar
 {
 
     private string[] keywords = new string[] { "loop", "var", "const", "fun", "break", "continue", "return" };
+    private string[] notKeywords = new string[] { "Loop", "Var", "CONST", "function", "breaking", "go", "ret" };
+
+
     private string[] integerLiterals = new string[] { "123", "2", "137", "999000999" };
+    private string[] notIntegerLiterals = new string[] { "123.45", "21.3", "7,99", "999,99$", "0.00", "0/0" };
+
     private string[] booleanLiterals = new string[] { "true", "false" };
+    private string[] notBooleanLiterals = new string[] { "True", "False", "1", "0", "Truth", "Fals" };
+
     private string[] comments = new string[] { "// single-line comment", @"/* multi
     line
     comment */", "/* multi-line comment in one line */" };
+    private string[] notComments = new string[] { "/ missing second /",
+     @"//* multi
+       line with extra second/
+       so invalid */",
+     "* missing / at the beginning */",
+     "# python-style comment",
+     "just random text",
+     "        " };
 
     private string[] typeNames = new string[] { "Int", "Bool", "CustomTypeName", "A", "B", "Z", "ABBA", "UJ" };
     private string[] variableNames = new string[] { "varia", "ble", "name", "tcs", "mess", "graphQL", };
 
-    private string[] operators = new string[] { "+", "-", "||", "&&" };
 
-    private string[] blankCharacters = new string[] { " ", "     ", "       ", };
+    private string[] operators = new string[] { "+", "-", "||", "&&" };
+    /// <summary> maybe some of these will be operators in the future, but not now </summary>
+    private string[] notOperators = new string[] { "*", "/", "^", "//", "pow", "$", "(", ")", "{}" };
+
+    private string[] whitespaces = new string[] { " ", "     ", "       ", "    ", };
+    private string[] notWhitespaces = new string[] { "", "123", ";", "#" };
 
     private string[] colon = new string[] { ":", };
     private string[] semicolon = new string[] { ";" };
     private string[] bracesAndParentheses = new string[] { "{", "}", ")", "(" };
+    private string[] notBracesNotParentheses = new string[] { "[", "]", @"\", "123", "/" };
 
 
-    public void testCategoryAcceptingStrings(
+    public void testCategories(
         IEnumerable<GrammarCategoryType> categoriesWhichShouldAccept,
         IEnumerable<string> goodExamples,
         IEnumerable<string> badExamples
@@ -63,31 +83,39 @@ public class TestGrammar
     [Fact]
     public void Test_keywords_category()
     {
-        testCategoryAcceptingStrings(new GrammarCategoryType[] { GrammarCategoryType.Keywords },
+        testCategories(new GrammarCategoryType[] { GrammarCategoryType.Keywords },
          keywords,
-         bracesAndParentheses);
+         notKeywords);
     }
 
     [Fact]
     public void Test_comments_category()
     {
-        testCategoryAcceptingStrings(new GrammarCategoryType[] { GrammarCategoryType.Comments },
+        testCategories(new GrammarCategoryType[] { GrammarCategoryType.Comments },
          comments,
-         bracesAndParentheses); // add more test cases here?
+         notComments);
     }
 
     [Fact]
     public void Test_braces_category()
     {
-        testCategoryAcceptingStrings(new GrammarCategoryType[] { GrammarCategoryType.BracesAndParentheses },
+        testCategories(new GrammarCategoryType[] { GrammarCategoryType.BracesAndParentheses },
          bracesAndParentheses,
-         blankCharacters);
+         notBracesNotParentheses);
+    }
+
+    [Fact]
+    public void Test_whitespaces_category()
+    {
+        testCategories(new GrammarCategoryType[] { GrammarCategoryType.Whitespaces },
+         whitespaces,
+         notWhitespaces);
     }
 
     [Fact]
     public void Test_colon_category()
     {
-        testCategoryAcceptingStrings(new GrammarCategoryType[] { GrammarCategoryType.Colon },
+        testCategories(new GrammarCategoryType[] { GrammarCategoryType.Colon },
          colon,
          semicolon);
     }
@@ -95,7 +123,7 @@ public class TestGrammar
     [Fact]
     public void Test_semicolon_category()
     {
-        testCategoryAcceptingStrings(new GrammarCategoryType[] { GrammarCategoryType.Semicolon },
+        testCategories(new GrammarCategoryType[] { GrammarCategoryType.Semicolon },
          semicolon,
          bracesAndParentheses);
     }
@@ -103,7 +131,7 @@ public class TestGrammar
     [Fact]
     public void Test_type_identifiers_category()
     {
-        testCategoryAcceptingStrings(new GrammarCategoryType[] { GrammarCategoryType.TypeIdentifiers },
+        testCategories(new GrammarCategoryType[] { GrammarCategoryType.TypeIdentifiers },
          typeNames,
          variableNames);
     }
@@ -111,7 +139,7 @@ public class TestGrammar
     [Fact]
     public void Test_variable_identifiers_category()
     {
-        testCategoryAcceptingStrings(new GrammarCategoryType[] { GrammarCategoryType.VariableIdentifiers },
+        testCategories(new GrammarCategoryType[] { GrammarCategoryType.VariableIdentifiers },
          variableNames,
          typeNames);
     }
@@ -119,21 +147,21 @@ public class TestGrammar
     [Fact]
     public void Test_operators_category()
     {
-        testCategoryAcceptingStrings(new GrammarCategoryType[] { GrammarCategoryType.Operators },
+        testCategories(new GrammarCategoryType[] { GrammarCategoryType.Operators },
          operators,
-         integerLiterals);
+         notOperators);
     }
 
     [Fact]
     public void Test_literals_category()
     {
-        testCategoryAcceptingStrings(new GrammarCategoryType[] { GrammarCategoryType.Literals },
+        testCategories(new GrammarCategoryType[] { GrammarCategoryType.Literals },
          booleanLiterals,
-         bracesAndParentheses);
+         notBooleanLiterals);
 
-        testCategoryAcceptingStrings(new GrammarCategoryType[] { GrammarCategoryType.Literals },
+        testCategories(new GrammarCategoryType[] { GrammarCategoryType.Literals },
          integerLiterals,
-         comments);
+         notIntegerLiterals);
     }
 
 }
