@@ -9,8 +9,8 @@ public class TestGrammar
     private readonly string[] notKeywords = new string[] { "Loop", "Var", "CONST", "function", "breaking", "go", "ret" };
 
     // TODO = uncomment these and corresponding tests
-    // private readonly string[] integerLiterals = new string[] { "123", "2", "137", "999000999" };
-    // private readonly string[] notIntegerLiterals = new string[] { "123.45", "21.3", "7,99", "999,99$", "0.00", "0/0" };
+    private readonly string[] integerLiterals = new string[] { "123", "2", "137", "999000999" };
+    private readonly string[] notIntegerLiterals = new string[] { "123.45", "21.3", "7,99", "999,99$", "0.00", "0/0" };
 
     private readonly string[] booleanLiterals = new string[] { "true", "false" };
     private readonly string[] notBooleanLiterals = new string[] { "True", "False", "Truth", "Fals" };
@@ -150,19 +150,20 @@ public class TestGrammar
     }
 
     [Fact]
-    public void Test_literals_category()
+    public void Test_literals_category_integers()
+    {
+        testCategories(new GrammarCategoryType[] { GrammarCategoryType.Literals },
+        integerLiterals,
+        notIntegerLiterals);
+    }
+
+    [Fact]
+    public void Test_literals_category_booleans()
     {
         testCategories(new GrammarCategoryType[] { GrammarCategoryType.Literals },
          booleanLiterals,
          notBooleanLiterals);
 
-        // TODO uncomment tests, something's wrong with integers
-        // testCategories(new GrammarCategoryType[] { GrammarCategoryType.Literals },
-        //  integerLiterals,
-        //  booleanLiterals);
-
-        // testCategories(new GrammarCategoryType[] { GrammarCategoryType.Literals },
-        // integerLiterals,
-        // notIntegerLiterals);
     }
+
 }
