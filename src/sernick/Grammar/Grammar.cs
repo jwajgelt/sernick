@@ -94,7 +94,7 @@ public class Grammar
 
     private readonly GrammarEntry comments = new GrammarEntry(new LiteralsCategory(), new CategoryItems()
     {
-        ["singleLineComment"] = "//.*$",
+        ["singleLineComment"] = "//.*",
         ["multiLineComment"] = @"/\*.*\*/"
     });
 
