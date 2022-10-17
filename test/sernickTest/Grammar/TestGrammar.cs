@@ -13,7 +13,7 @@ public class TestGrammar
     // private readonly string[] notIntegerLiterals = new string[] { "123.45", "21.3", "7,99", "999,99$", "0.00", "0/0" };
 
     private readonly string[] booleanLiterals = new string[] { "true", "false" };
-    private readonly string[] notBooleanLiterals = new string[] { "True", "False", "1", "0", "Truth", "Fals" };
+    private readonly string[] notBooleanLiterals = new string[] { "True", "False", "Truth", "Fals" };
 
     private readonly string[] comments = new string[] { "// single-line comment", @"/* multi
     line
