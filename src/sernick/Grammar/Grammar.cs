@@ -92,7 +92,7 @@ public class Grammar
         ["false"] = "false",
     });
 
-    private readonly GrammarEntry comments = new GrammarEntry(new LiteralsCategory(), new CategoryItems()
+    private readonly GrammarEntry comments = new GrammarEntry(new CommentCategory(), new CategoryItems()
     {
         ["singleLineComment"] = "//.*",
         ["multiLineComment"] = @"/\*(.|[[:space:]])*\*/"
@@ -115,4 +115,6 @@ public class Grammar
         };
 
     }
+
+    public Grammar() { }
 }
