@@ -1,5 +1,5 @@
 namespace sernickTest.Tokenizer.Dfa;
-
+using Helpers;
 using sernick.Tokenizer.Dfa;
 using sernick.Tokenizer.Regex;
 
