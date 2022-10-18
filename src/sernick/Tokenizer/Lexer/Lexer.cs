@@ -109,8 +109,6 @@ public class Lexer<TCat, TState> : ILexer<TCat>
                 kv => dfas[kv.Key].Transition(kv.Value, atom)
             );
 
-        public Dictionary<TCat, TState> Transition(Dictionary<TCat, TState> state, string word) => word.Aggregate(state, (state, c) => Transition(state, c));
-
         public IEnumerable<TCat> AcceptingCategories(Dictionary<TCat, TState> state) =>
             state.Where(kv => dfas[kv.Key].Accepts(kv.Value)).Select(kv => kv.Key);
     }
