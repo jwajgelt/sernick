@@ -6,6 +6,5 @@ public interface IDfa<TState>
     bool Accepts(TState state);
     bool IsDead(TState state);
 
-    TState Transition(TState state, string word);
     TState Start { get; }
 }
