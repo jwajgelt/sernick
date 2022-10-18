@@ -2,6 +2,7 @@ namespace sernick.Tokenizer.Lexer;
 
 using System.Text;
 using Dfa;
+using Diagnostics;
 using Input;
 
 public sealed class Lexer<TCat, TState> : ILexer<TCat>
@@ -14,7 +15,7 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
         _sumDfa = new SumDfa(categoryDfas);
     }
 
-    public IEnumerable<Token<TCat>> Process(IInput input)
+    public IEnumerable<Token<TCat>> Process(IInput input, IDiagnostics diagnostics)
     {
         input.MoveTo(input.Start);
         var currentState = _sumDfa.Start;
