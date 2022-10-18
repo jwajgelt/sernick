@@ -1,6 +1,6 @@
-namespace sernick.Grammar;
+namespace sernick.Grammar.Lexicon;
 
-public interface IGrammarCategory
+public interface ILexicalGrammarCategory
 {
 
     /// <summary> 
@@ -14,49 +14,49 @@ public interface IGrammarCategory
     public short Priority { get; }
 }
 
-public class BraceCategory : IGrammarCategory
+public sealed class BraceCategory : ILexicalGrammarCategory
 {
     public short Priority => 1;
 }
 
-public class LineDelimiterCategory : IGrammarCategory
+public sealed class LineDelimiterCategory : ILexicalGrammarCategory
 {
     public short Priority => 2;
 }
 
-public class ColonCategory : IGrammarCategory
+public sealed class ColonCategory : ILexicalGrammarCategory
 {
     public short Priority => 3;
 }
 
-public class WhitespaceCategory : IGrammarCategory
+public sealed class WhitespaceCategory : ILexicalGrammarCategory
 {
     public short Priority => 4;
 }
 
-public class LiteralsCategory : IGrammarCategory
+public sealed class LiteralsCategory : ILexicalGrammarCategory
 {
     public short Priority => 5;
 }
 
-public class OperatorCategory : IGrammarCategory
+public sealed class OperatorCategory : ILexicalGrammarCategory
 {
     public short Priority => 6;
 }
-public class KeywordCategory : IGrammarCategory
+public sealed class KeywordCategory : ILexicalGrammarCategory
 {
     public short Priority => 7;
 }
 
-public class TypeIdentifierCategory : IGrammarCategory
+public sealed class TypeIdentifierCategory : ILexicalGrammarCategory
 {
     public short Priority => 8;
 }
-public class VariableIdentifierCategory : IGrammarCategory
+public sealed class VariableIdentifierCategory : ILexicalGrammarCategory
 {
     public short Priority => 9;
 }
-public class CommentCategory : IGrammarCategory
+public sealed class CommentCategory : ILexicalGrammarCategory
 {
     public short Priority => 10;
 }
