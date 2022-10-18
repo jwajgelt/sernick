@@ -4,4 +4,5 @@ using System.Runtime.CompilerServices;
 
 Console.WriteLine("Hello, World!");
 // TODO: implement compiler's entry point here
-// "example.ser".ReadFile()
+// "example.ser".ReadFile();
+// new CompilerFrontend().Process(...);
