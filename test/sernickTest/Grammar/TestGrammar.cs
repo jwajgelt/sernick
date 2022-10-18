@@ -1,5 +1,6 @@
 using sernick.Grammar;
 using sernick.Tokenizer.Dfa;
+using sernickTest.Tokenizer.Dfa.Helpers;
 namespace sernickTest.Grammar;
 
 public class TestGrammar
