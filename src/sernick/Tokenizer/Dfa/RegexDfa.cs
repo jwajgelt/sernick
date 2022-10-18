@@ -15,6 +15,4 @@ public sealed class RegexDfa : IDfa<Regex>
     public bool IsDead(Regex state) => state.Equals(Regex.Empty);
 
     public Regex Transition(Regex state, char atom) => state.Derivative(atom);
-
-    public Regex Transition(Regex state, string word) => word.Aggregate(state, (state, c) => Transition(state, c));
 }
