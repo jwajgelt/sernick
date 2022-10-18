@@ -35,13 +35,7 @@ internal sealed class ConcatRegex : Regex
 
     public override int GetHashCode()
     {
-        var hashCode = Children.Count;
-        foreach (var child in Children)
-        {
-            hashCode = unchecked(hashCode * 17 + child.GetHashCode());
-        }
-
-        return hashCode;
+        return Children.Aggregate(Children.Count, (hashCode, child) => unchecked(hashCode * 17 + child.GetHashCode()));
     }
 
     public override bool Equals(Regex? other)

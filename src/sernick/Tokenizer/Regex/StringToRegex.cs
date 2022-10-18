@@ -1,4 +1,5 @@
 namespace sernick.Tokenizer.Regex;
+
 public static class StringToRegex
 {
     /// <summary>
@@ -129,39 +130,40 @@ public static class StringToRegex
 
             Token token;
 
-            // if escaped create a non-special (even if the character is special) token
-            // containing just the character after the backslash
-            if (t == '\\')
+            switch (t)
             {
-                index++;
-                token = new Token(text[index].ToString(), false);
-            }
-            // if starts with an opening bracket check for a character class and create a special token
-            else if (t == '[')
-            {
-                var temp = index;
-                while (text[temp] != ']')
-                {
-                    temp++;
-                }
+                // if escaped create a non-special (even if the character is special) token
+                // containing just the character after the backslash
+                case '\\':
+                    index++;
+                    token = new Token(text[index].ToString(), false);
+                    break;
+                // if starts with an opening bracket check for a character class and create a special token
+                case '[':
+                    {
+                        var temp = index;
+                        while (text[temp] != ']')
+                        {
+                            temp++;
+                        }
 
-                token = new Token(text.Substring(index, temp - index + 2), true);
-                if (!CharacterClasses.ContainsKey(token.Value))
-                {
-                    throw new ArgumentException($"{token.Value} is not a valid CharacterClass");
-                }
+                        token = new Token(text.Substring(index, temp - index + 2), true);
+                        if (!CharacterClasses.ContainsKey(token.Value))
+                        {
+                            throw new ArgumentException($"{token.Value} is not a valid CharacterClass");
+                        }
 
-                index = temp + 1;
-            }
-            // if '.' create a special any character class token
-            else if (t == '.')
-            {
-                token = new Token("[[:any:]]", true);
-            }
-            // otherwise create a token that is special iff the current character is a special character
-            else
-            {
-                token = new Token(t.ToString(), Enum.IsDefined(typeof(SpecialCharacter), (int)t));
+                        index = temp + 1;
+                        break;
+                    }
+                // if '.' create a special any character class token
+                case '.':
+                    token = new Token("[[:any:]]", true);
+                    break;
+                // otherwise create a token that is special iff the current character is a special character
+                default:
+                    token = new Token(t.ToString(), Enum.IsDefined(typeof(SpecialCharacter), (int)t));
+                    break;
             }
 
             result.Add(token);
@@ -178,7 +180,6 @@ public static class StringToRegex
         // iterate over every space between two tokens to check if there should be a concat character
         foreach (var (left, right) in text.Zip(text.Skip(1)))
         {
-
             result.Add(left);
 
             // if the right character is a special character other than an opening parenthesis then

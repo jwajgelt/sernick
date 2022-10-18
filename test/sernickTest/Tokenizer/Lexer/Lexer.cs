@@ -1,9 +1,9 @@
+namespace sernickTest.Tokenizer.Lexer;
+
+using Helpers;
 using sernick.Tokenizer;
 using sernick.Tokenizer.Dfa;
 using sernick.Tokenizer.Lexer;
-using sernickTest.Tokenizer.Lexer.Helpers;
-
-namespace sernickTest.Tokenizer.Lexer;
 
 public class Lexer
 {
@@ -12,14 +12,14 @@ public class Lexer
     {
         var categoryName = "cat";
 
-        var transitions = new Dictionary<(int, char), int>()
+        var transitions = new Dictionary<(int, char), int>
             {
                 { (0, 'a'), 0}
             };
         var dfa = new FakeDfa(
             transitions,
             0,
-            new HashSet<int>() { 0 }
+            new HashSet<int> { 0 }
         );
 
         var input = new FakeInput("a");
@@ -37,14 +37,14 @@ public class Lexer
     {
         var categoryName = "cat";
 
-        var transitions = new Dictionary<(int, char), int>()
+        var transitions = new Dictionary<(int, char), int>
             {
                 { (0, 'a'), 0}
             };
         var dfa = new FakeDfa(
             transitions,
             0,
-            new HashSet<int>() { 0 }
+            new HashSet<int> { 0 }
         );
 
         var input = new FakeInput("b");
@@ -53,7 +53,7 @@ public class Lexer
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
-        var result = lexer.Process(input).ToList();
+        var result = lexer.Process(input);
         Assert.Empty(result);
     }
 
@@ -61,14 +61,14 @@ public class Lexer
     public void MatchesTheLongestPossibleToken()
     {
         var categoryName = "cat";
-        var transitions = new Dictionary<(int, char), int>()
+        var transitions = new Dictionary<(int, char), int>
             {
                 { (0, 'a'), 0 }
             };
         var dfa = new FakeDfa(
             transitions,
             0,
-            new HashSet<int>() { 0 }
+            new HashSet<int> { 0 }
         );
 
         var input = new FakeInput("aaaab");
@@ -77,7 +77,7 @@ public class Lexer
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
-        var result = lexer.Process(input).ToList();
+        var result = lexer.Process(input);
         Assert.Single(result, new Token<string>(categoryName, "aaaa", input.Start, new FakeInput.Location(4)));
     }
 
@@ -87,7 +87,7 @@ public class Lexer
         var categoryName = "cat";
 
         // this DFA matches `ab`
-        var transitions = new Dictionary<(int, char), int>()
+        var transitions = new Dictionary<(int, char), int>
             {
                 { (0, 'a'), 1 },
                 { (1, 'b'), 2 }
@@ -95,7 +95,7 @@ public class Lexer
         var dfa = new FakeDfa(
             transitions,
             0,
-            new HashSet<int>() { 2 }
+            new HashSet<int> { 2 }
         );
 
         var input = new FakeInput("abab");
@@ -104,10 +104,10 @@ public class Lexer
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
-        var result = lexer.Process(input).ToList();
-        var expected = new List<Token<string>>() {
-            new Token<string>(categoryName, "ab", input.Start, new FakeInput.Location(2)),
-            new Token<string>(categoryName, "ab", new FakeInput.Location(2), new FakeInput.Location(4))
+        var result = lexer.Process(input);
+        var expected = new List<Token<string>> {
+            new(categoryName, "ab", input.Start, new FakeInput.Location(2)),
+            new(categoryName, "ab", new FakeInput.Location(2), new FakeInput.Location(4))
         };
         Assert.Equal(expected, result);
     }
@@ -118,7 +118,7 @@ public class Lexer
         var categoryName = "cat";
 
         // this DFA matches `ab`
-        var transitions = new Dictionary<(int, char), int>()
+        var transitions = new Dictionary<(int, char), int>
             {
                 { (0, 'a'), 1 },
                 { (1, 'b'), 2 }
@@ -126,7 +126,7 @@ public class Lexer
         var dfa = new FakeDfa(
             transitions,
             0,
-            new HashSet<int>() { 2 }
+            new HashSet<int> { 2 }
         );
 
         // the space isn't matched by the DFA
@@ -136,10 +136,10 @@ public class Lexer
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
-        var result = lexer.Process(input).ToList();
-        var expected = new List<Token<string>>() {
-            new Token<string>(categoryName, "ab", input.Start, new FakeInput.Location(2)),
-            new Token<string>(categoryName, "ab", new FakeInput.Location(3), new FakeInput.Location(5))
+        var result = lexer.Process(input);
+        var expected = new List<Token<string>> {
+            new(categoryName, "ab", input.Start, new FakeInput.Location(2)),
+            new(categoryName, "ab", new FakeInput.Location(3), new FakeInput.Location(5))
         };
         Assert.Equal(expected, result);
     }
@@ -151,7 +151,7 @@ public class Lexer
         var category2 = 1;
 
         // this DFA matches `(ab)*`
-        var transitions1 = new Dictionary<(int, char), int>()
+        var transitions1 = new Dictionary<(int, char), int>
             {
                 { (0, 'a'), 1 },
                 { (1, 'b'), 0 }
@@ -160,11 +160,11 @@ public class Lexer
         var dfa1 = new FakeDfa(
             transitions1,
             0,
-            new HashSet<int>() { 0 }
+            new HashSet<int> { 0 }
         );
 
         // this DFA matches `ab`
-        var transitions2 = new Dictionary<(int, char), int>()
+        var transitions2 = new Dictionary<(int, char), int>
             {
                 { (0, 'a'), 1 },
                 { (1, 'b'), 2 }
@@ -173,7 +173,7 @@ public class Lexer
         var dfa2 = new FakeDfa(
             transitions2,
             0,
-            new HashSet<int>() { 2 }
+            new HashSet<int> { 2 }
         );
 
         var input = new FakeInput("ababab");
@@ -185,7 +185,7 @@ public class Lexer
 
         var lexer = new Lexer<int, int>(categoryDfas);
 
-        var result = lexer.Process(input).ToList();
+        var result = lexer.Process(input);
         Assert.Single(result, new Token<int>(category1, "ababab", input.Start, new FakeInput.Location(6)));
     }
 
@@ -196,7 +196,7 @@ public class Lexer
         var category2 = 1;
 
         // this DFA matches `(ab)*`
-        var transitions1 = new Dictionary<(int, char), int>()
+        var transitions1 = new Dictionary<(int, char), int>
             {
                 { (0, 'a'), 1 },
                 { (1, 'b'), 0 }
@@ -205,11 +205,11 @@ public class Lexer
         var dfa1 = new FakeDfa(
             transitions1,
             0,
-            new HashSet<int>() { 0 }
+            new HashSet<int> { 0 }
         );
 
         // this DFA matches `(a|b)*`
-        var transitions2 = new Dictionary<(int, char), int>()
+        var transitions2 = new Dictionary<(int, char), int>
             {
                 { (0, 'a'), 0 },
                 { (0, 'b'), 0 }
@@ -218,7 +218,7 @@ public class Lexer
         var dfa2 = new FakeDfa(
             transitions2,
             0,
-            new HashSet<int>() { 0 }
+            new HashSet<int> { 0 }
         );
 
         var input = new FakeInput("ababab");
@@ -233,9 +233,9 @@ public class Lexer
         // compare sets, since the order the categories are yielded in
         // is unspecified
         var result = lexer.Process(input).ToHashSet();
-        var expected = new HashSet<Token<int>>() {
-            new Token<int>(category1, "ababab", input.Start, new FakeInput.Location(6)),
-            new Token<int>(category2, "ababab", input.Start, new FakeInput.Location(6))
+        var expected = new HashSet<Token<int>> {
+            new(category1, "ababab", input.Start, new FakeInput.Location(6)),
+            new(category2, "ababab", input.Start, new FakeInput.Location(6))
         };
         Assert.Equal(expected, result);
     }

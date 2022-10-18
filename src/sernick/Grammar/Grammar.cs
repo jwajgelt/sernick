@@ -1,5 +1,6 @@
 namespace sernick.Grammar;
-using sernick.Tokenizer.Regex;
+
+using Tokenizer.Regex;
 
 using CategoryItems = Dictionary<string, string>;
 
@@ -19,19 +20,18 @@ public enum GrammarCategoryType
 
 public class GrammarEntry
 {
-    public IGrammarCategory Category { get; init; }
-    public Regex Regex { get; init; }
+    public IGrammarCategory Category { get; }
+    public Regex Regex { get; }
 
-    private static Regex createUnionRegex(CategoryItems categoryItems)
+    private static Regex CreateUnionRegex(CategoryItems categoryItems)
     {
         return string.Join("|", categoryItems.Values).ToRegex();
-
     }
 
     public GrammarEntry(IGrammarCategory category, CategoryItems rules)
     {
         Category = category;
-        Regex = createUnionRegex(rules);
+        Regex = CreateUnionRegex(rules);
     }
 }
 
@@ -44,7 +44,7 @@ public class Grammar
     //
     // You could use e.g. https://regex101.com to test if the given regex is OK 
 
-    private readonly GrammarEntry bracesAndParentheses = new GrammarEntry(new BraceCategory(), new CategoryItems()
+    private readonly GrammarEntry bracesAndParentheses = new(new BraceCategory(), new CategoryItems
     {
         ["leftBrace"] = "{",
         ["rightBrace"] = "}",
@@ -52,17 +52,17 @@ public class Grammar
         ["rightParentheses"] = @"\)",
     });
 
-    private readonly GrammarEntry semicolon = new GrammarEntry(new LineDelimiterCategory(), new CategoryItems()
+    private readonly GrammarEntry semicolon = new(new LineDelimiterCategory(), new CategoryItems
     {
         ["semicolon"] = ";"
     });
 
-    private readonly GrammarEntry colon = new GrammarEntry(new ColonCategory(), new CategoryItems()
+    private readonly GrammarEntry colon = new(new ColonCategory(), new CategoryItems
     {
         ["colon"] = ":"
     });
 
-    private readonly GrammarEntry keywords = new GrammarEntry(new KeywordCategory(), new CategoryItems()
+    private readonly GrammarEntry keywords = new(new KeywordCategory(), new CategoryItems
     {
         ["var"] = "var",
         ["const"] = "const",
@@ -73,14 +73,14 @@ public class Grammar
         ["return"] = "return",
     });
 
-    private readonly GrammarEntry typeIdentifiers = new GrammarEntry(new TypeIdentifierCategory(), new CategoryItems()
+    private readonly GrammarEntry typeIdentifiers = new(new TypeIdentifierCategory(), new CategoryItems
     {
         ["Int"] = "Int",
         ["Bool"] = "Bool",
         ["typeNames"] = "[[:upper:]][[:alnum:]]*",
     });
 
-    private readonly GrammarEntry operators = new GrammarEntry(new OperatorCategory(), new CategoryItems()
+    private readonly GrammarEntry operators = new(new OperatorCategory(), new CategoryItems
     {
         ["plus"] = @"\+",
         ["minus"] = "-",
@@ -88,33 +88,33 @@ public class Grammar
         ["shortCircuitAnd"] = "&&"
     });
 
-    private readonly GrammarEntry whitespaces = new GrammarEntry(new WhitespaceCategory(), new CategoryItems()
+    private readonly GrammarEntry whitespaces = new(new WhitespaceCategory(), new CategoryItems
     {
         ["blankCharacter"] = "[[:space:]]+"
     });
 
-    private readonly GrammarEntry variableIdentifiers = new GrammarEntry(new VariableIdentifierCategory(), new CategoryItems()
+    private readonly GrammarEntry variableIdentifiers = new(new VariableIdentifierCategory(), new CategoryItems
     {
 
         ["variableNames"] = "[[:lower:]][[:alnum:]]*",
     });
 
-    private readonly GrammarEntry literals = new GrammarEntry(new LiteralsCategory(), new CategoryItems()
+    private readonly GrammarEntry literals = new(new LiteralsCategory(), new CategoryItems
     {
         ["integers"] = "[[:digit:]]+",
         ["true"] = "true",
         ["false"] = "false",
     });
 
-    private readonly GrammarEntry comments = new GrammarEntry(new CommentCategory(), new CategoryItems()
+    private readonly GrammarEntry comments = new(new CommentCategory(), new CategoryItems
     {
         ["singleLineComment"] = "//.*",
         ["multiLineComment"] = @"/\*(.|[[:space:]])*\*/"
     });
 
-    public Dictionary<GrammarCategoryType, GrammarEntry> generateGrammar()
+    public Dictionary<GrammarCategoryType, GrammarEntry> GenerateGrammar()
     {
-        return new Dictionary<GrammarCategoryType, GrammarEntry>()
+        return new Dictionary<GrammarCategoryType, GrammarEntry>
         {
             [GrammarCategoryType.Colon] = colon,
             [GrammarCategoryType.Semicolon] = semicolon,
@@ -127,8 +127,5 @@ public class Grammar
             [GrammarCategoryType.Whitespaces] = whitespaces,
             [GrammarCategoryType.Keywords] = keywords,
         };
-
     }
-
-    public Grammar() { }
 }

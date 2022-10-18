@@ -6,6 +6,7 @@ internal sealed class AtomRegex : Regex
     {
         Character = character;
     }
+
     public char Character { get; }
 
     public override bool ContainsEpsilon() => false;

@@ -26,13 +26,7 @@ internal sealed class UnionRegex : Regex
 
     public override int GetHashCode()
     {
-        var hashCode = Children.Count;
-        foreach (var child in Children)
-        {
-            hashCode = unchecked(hashCode + child.GetHashCode());
-        }
-
-        return hashCode;
+        return Children.Aggregate(Children.Count, (hashCode, child) => unchecked(hashCode + child.GetHashCode()));
     }
 
     public override bool Equals(Regex? other)

@@ -1,6 +1,6 @@
 namespace sernick.Input.String;
 
-public class StringLocation : ILocation
+public sealed class StringLocation : ILocation
 {
     public StringLocation(int index)
     {

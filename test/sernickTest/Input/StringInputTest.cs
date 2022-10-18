@@ -1,14 +1,13 @@
+namespace sernickTest.Input;
+
 using sernick.Input;
 using sernick.Input.String;
-
-namespace sernickTest.Input;
 
 public class StringInputTest
 {
     [Fact]
     public void EmptyString()
     {
-
         IInput stringInput = new StringInput("");
 
         Assert.Equal(stringInput.CurrentLocation, stringInput.End);

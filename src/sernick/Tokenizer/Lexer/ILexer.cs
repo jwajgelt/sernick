@@ -1,6 +1,6 @@
-using sernick.Input;
-
 namespace sernick.Tokenizer.Lexer;
+
+using Input;
 
 public interface ILexer<TCat>
 {

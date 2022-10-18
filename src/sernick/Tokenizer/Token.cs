@@ -1,5 +1,5 @@
-using sernick.Input;
-
 namespace sernick.Tokenizer;
 
-public record Token<TCat>(TCat Category, string Text, ILocation Start, ILocation End);
+using Input;
+
+public sealed record Token<TCat>(TCat Category, string Text, ILocation Start, ILocation End);

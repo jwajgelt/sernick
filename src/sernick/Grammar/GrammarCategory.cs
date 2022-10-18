@@ -16,47 +16,47 @@ public interface IGrammarCategory
 
 public class BraceCategory : IGrammarCategory
 {
-    public short Priority { get; } = 1;
+    public short Priority => 1;
 }
 
 public class LineDelimiterCategory : IGrammarCategory
 {
-    public short Priority { get; } = 2;
+    public short Priority => 2;
 }
 
 public class ColonCategory : IGrammarCategory
 {
-    public short Priority { get; } = 3;
+    public short Priority => 3;
 }
 
 public class WhitespaceCategory : IGrammarCategory
 {
-    public short Priority { get; } = 4;
+    public short Priority => 4;
 }
 
 public class LiteralsCategory : IGrammarCategory
 {
-    public short Priority { get; } = 5;
+    public short Priority => 5;
 }
 
 public class OperatorCategory : IGrammarCategory
 {
-    public short Priority { get; } = 6;
+    public short Priority => 6;
 }
 public class KeywordCategory : IGrammarCategory
 {
-    public short Priority { get; } = 7;
+    public short Priority => 7;
 }
 
 public class TypeIdentifierCategory : IGrammarCategory
 {
-    public short Priority { get; } = 8;
+    public short Priority => 8;
 }
 public class VariableIdentifierCategory : IGrammarCategory
 {
-    public short Priority { get; } = 9;
+    public short Priority => 9;
 }
 public class CommentCategory : IGrammarCategory
 {
-    public short Priority { get; } = 10;
+    public short Priority => 10;
 }
