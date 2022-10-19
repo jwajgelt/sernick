@@ -1,5 +1,6 @@
 namespace sernick.Grammar.Lexicon;
 
+using Common.Regex;
 using Tokenizer.Regex;
 
 using CategoryItems = Dictionary<string, string>;

@@ -1,10 +1,10 @@
 namespace sernick.Grammar.Dfa;
 
-using Tokenizer.Dfa;
+using Common.Dfa;
 
 /// <summary>
 /// Convenience grammar class, in which right-hand sides of productions are DFAs
 /// </summary>
 public sealed record DfaGrammar<TSymbol, TDfaState>(
     TSymbol Start,
-    IReadOnlyDictionary<TSymbol, IDfa<TDfaState>> Productions);
+    IReadOnlyDictionary<TSymbol, IDfaWithConfig<TDfaState>> Productions);

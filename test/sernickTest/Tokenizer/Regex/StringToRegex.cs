@@ -1,5 +1,6 @@
 namespace sernickTest.Tokenizer.Regex;
 
+using sernick.Common.Regex;
 using sernick.Tokenizer.Regex;
 
 public class StringToRegex

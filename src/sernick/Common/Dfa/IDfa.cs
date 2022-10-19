@@ -1,4 +1,4 @@
-namespace sernick.Tokenizer.Dfa;
+namespace sernick.Common.Dfa;
 
 public interface IDfa<TState>
 {

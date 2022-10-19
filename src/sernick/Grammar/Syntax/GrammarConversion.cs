@@ -1,8 +1,8 @@
 namespace sernick.Grammar.Syntax;
 
+using Common.Dfa;
+using Common.Regex;
 using Dfa;
-using Tokenizer.Dfa;
-using Tokenizer.Regex;
 
 public static class GrammarConversion
 {
@@ -19,7 +19,7 @@ public static class GrammarConversion
             Productions: grammar.Productions
                 .ToDictionary(
                     prod => prod.Left,
-                    prod => new RegexDfa(prod.Right) as IDfa<Regex>)
+                    prod => new RegexDfa(prod.Right) as IDfaWithConfig<Regex>)
             );
     }
 }

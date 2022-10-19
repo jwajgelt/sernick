@@ -1,8 +1,8 @@
 namespace sernickTest.Grammar;
 
+using Common.Dfa.Helpers;
+using sernick.Common.Dfa;
 using sernick.Grammar.Lexicon;
-using sernick.Tokenizer.Dfa;
-using Tokenizer.Dfa.Helpers;
 
 public class TestGrammar
 {

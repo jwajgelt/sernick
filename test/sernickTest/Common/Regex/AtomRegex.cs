@@ -1,6 +1,6 @@
-namespace sernickTest.Tokenizer.Regex;
+namespace sernickTest.Common.Regex;
 
-using sernick.Tokenizer.Regex;
+using sernick.Common.Regex;
 
 public class AtomRegex
 {
