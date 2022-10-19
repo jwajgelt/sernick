@@ -15,8 +15,8 @@ public static class GrammarAnalysis
     /// Compute the function FIRST(A) - all symbols that can appear as the first ones in grammar derivations starting at A
     /// </summary>
     /// <param name="nullableSymbols">Precomputed set NULLABLE</param>
-    public static IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TState>> First<TSymbol, TState>(
-        this DfaGrammar<TSymbol, TState> grammar,
+    public static IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> First<TSymbol, TDfaState>(
+        this DfaGrammar<TSymbol, TDfaState> grammar,
         IReadOnlyCollection<TSymbol> nullableSymbols)
     {
         throw new NotImplementedException();
@@ -27,10 +27,10 @@ public static class GrammarAnalysis
     /// </summary>
     /// <param name="nullableSymbols">Precomputed set NULLABLE</param>
     /// <param name="symbolsFirst">Precomputed function FIRST(A)</param>
-    public static IReadOnlyDictionary<TSymbol, IReadOnlySet<TState>> Follow<TSymbol, TState>(
-        this DfaGrammar<TSymbol, TState> grammar,
-        IEnumerable<TSymbol> nullableSymbols,
-        IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TState>> symbolsFirst)
+    public static IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> Follow<TSymbol, TDfaState>(
+        this DfaGrammar<TSymbol, TDfaState> grammar,
+        IReadOnlyCollection<TSymbol> nullableSymbols,
+        IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFirst)
     {
         throw new NotImplementedException();
     }
