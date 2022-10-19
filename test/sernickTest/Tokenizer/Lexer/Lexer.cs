@@ -1,8 +1,8 @@
 namespace sernickTest.Tokenizer.Lexer;
 
 using Helpers;
+using sernick.Common.Dfa;
 using sernick.Tokenizer;
-using sernick.Tokenizer.Dfa;
 using sernick.Tokenizer.Lexer;
 
 public class Lexer

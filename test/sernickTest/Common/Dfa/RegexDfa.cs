@@ -1,8 +1,8 @@
-namespace sernickTest.Tokenizer.Dfa;
+namespace sernickTest.Common.Dfa;
 
 using Helpers;
-using sernick.Tokenizer.Dfa;
-using sernick.Tokenizer.Regex;
+using sernick.Common.Dfa;
+using sernick.Common.Regex;
 
 public class RegexDfaTest
 {

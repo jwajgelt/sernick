@@ -1,6 +1,6 @@
 namespace sernickTest.Tokenizer.Lexer.Helpers;
 
-using sernick.Tokenizer.Dfa;
+using sernick.Common.Dfa;
 
 internal sealed class FakeDfa : IDfa<int>
 {

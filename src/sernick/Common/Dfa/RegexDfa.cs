@@ -1,4 +1,4 @@
-namespace sernick.Tokenizer.Dfa;
+namespace sernick.Common.Dfa;
 
 using Regex;
 

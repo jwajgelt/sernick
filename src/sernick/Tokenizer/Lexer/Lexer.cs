@@ -1,7 +1,7 @@
 namespace sernick.Tokenizer.Lexer;
 
 using System.Text;
-using Dfa;
+using Common.Dfa;
 using Diagnostics;
 using Input;
 

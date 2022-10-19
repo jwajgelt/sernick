@@ -1,6 +1,6 @@
-namespace sernickTest.Tokenizer.Dfa.Helpers;
+namespace sernickTest.Common.Dfa.Helpers;
 
-using sernick.Tokenizer.Dfa;
+using sernick.Common.Dfa;
 
 public static class DfaExtensions
 {

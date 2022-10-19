@@ -1,6 +1,6 @@
 namespace sernick.Grammar.Syntax;
 
-using Tokenizer.Regex;
+using Common.Regex;
 
 /// <summary>
 /// Left -> Right (production in grammar).

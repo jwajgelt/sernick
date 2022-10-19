@@ -1,4 +1,4 @@
-namespace sernick.Tokenizer.Regex;
+namespace sernick.Common.Regex;
 
 internal sealed class ConcatRegex : Regex
 {

@@ -1,6 +1,6 @@
 namespace sernick.Grammar.Dfa;
 
-using Tokenizer.Dfa;
+using Common.Dfa;
 
 /// <summary>
 /// Convenience grammar class, in which right-hand sides of productions are DFAs
