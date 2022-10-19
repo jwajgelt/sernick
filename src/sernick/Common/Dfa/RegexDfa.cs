@@ -17,10 +17,8 @@ public sealed class RegexDfa : IDfaWithConfig<Regex>
 
     public Regex Transition(Regex state, char atom) => state.Derivative(atom);
 
-    public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionFrom(Regex state)
-    {
-        throw new NotImplementedException();
-    }
+    public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionFrom(Regex state) =>
+        state.PossibleFirstAtoms().Select(atom => new IDfaWithConfig<Regex>.TransitionEdge(state, Transition(state, atom), atom));
 
     public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionsTo(Regex state)
     {
@@ -28,4 +26,30 @@ public sealed class RegexDfa : IDfaWithConfig<Regex>
     }
 
     public IEnumerable<Regex> AcceptingStates => throw new NotImplementedException();
+}
+
+internal static class RegexDfaHelpers
+{
+    public static IEnumerable<char> PossibleFirstAtoms(this Regex regex)
+    {
+        switch (regex)
+        {
+            case AtomRegex atomRegex:
+                return new[] { atomRegex.Character };
+
+            case UnionRegex unionRegex:
+                return unionRegex.Children.SelectMany(child => child.PossibleFirstAtoms()).ToHashSet();
+
+            case ConcatRegex concatRegex:
+                var withEpsilon = concatRegex.Children.TakeWhile(child => child.ContainsEpsilon());
+                var firstWithoutEpsilon = concatRegex.Children.SkipWhile(child => child.ContainsEpsilon()).Take(1);
+                return withEpsilon.Concat(firstWithoutEpsilon).SelectMany(child => child.PossibleFirstAtoms()).ToHashSet();
+
+            case StarRegex starRegex:
+                return starRegex.Child.PossibleFirstAtoms();
+
+            default:
+                throw new NotSupportedException("Unrecognized Regex class implementation");
+        }
+    }
 }
