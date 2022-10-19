@@ -7,4 +7,4 @@ using Common.Dfa;
 /// </summary>
 public sealed record DfaGrammar<TSymbol, TDfaState>(
     TSymbol Start,
-    IReadOnlyDictionary<TSymbol, IDfa<TDfaState>> Productions);
+    IReadOnlyDictionary<TSymbol, IDfaWithConfig<TDfaState>> Productions);
