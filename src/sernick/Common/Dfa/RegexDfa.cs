@@ -7,6 +7,7 @@ public sealed class RegexDfa : IDfaWithConfig<Regex>
     public RegexDfa(Regex regex)
     {
         Start = regex;
+        (AcceptingStates, _transitionsToMap, _transitionsFromMap) = this.Preprocess();
     }
 
     public Regex Start { get; }
@@ -17,17 +18,13 @@ public sealed class RegexDfa : IDfaWithConfig<Regex>
 
     public Regex Transition(Regex state, char atom) => state.Derivative(atom);
 
-    public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionsFrom(Regex state)
-    {
-        throw new NotImplementedException();
-    }
+    public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionFrom(Regex state) =>
+        _transitionsFromMap[state];
 
-    public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionsTo(Regex state)
-    {
-        throw new NotImplementedException();
-    }
-
-    public IEnumerable<Regex> AcceptingStates => throw new NotImplementedException();
+    public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionsTo(Regex state) => _transitionsToMap[state];
+    public IEnumerable<Regex> AcceptingStates { get; }
+    private readonly Dictionary<Regex, List<IDfaWithConfig<Regex>.TransitionEdge>> _transitionsToMap;
+    private readonly Dictionary<Regex, List<IDfaWithConfig<Regex>.TransitionEdge>> _transitionsFromMap;
 }
 
 internal static class RegexDfaHelpers
@@ -53,5 +50,58 @@ internal static class RegexDfaHelpers
             default:
                 throw new NotSupportedException("Unrecognized Regex class implementation");
         }
+    }
+
+    private static List<TValue> GetOrAddList<TKey, TValue>(this IDictionary<TKey, List<TValue>> dictionary, TKey key)
+    {
+        if (!dictionary.ContainsKey(key))
+        {
+            dictionary[key] = new List<TValue>();
+        }
+
+        return dictionary[key];
+    }
+
+    public static (
+        IEnumerable<Regex> AcceptingStates,
+        Dictionary<Regex, List<IDfaWithConfig<Regex>.TransitionEdge>> transitionsToMap,
+        Dictionary<Regex, List<IDfaWithConfig<Regex>.TransitionEdge>> transitionsFromMap
+        ) Preprocess(this RegexDfa dfa)
+    {
+        var acceptingStates = new List<Regex>();
+        var visited = new HashSet<Regex>();
+        var queue = new Queue<Regex>();
+        var transitionsToMap = new Dictionary<Regex, List<IDfaWithConfig<Regex>.TransitionEdge>>();
+        var transitionsFromMap = new Dictionary<Regex, List<IDfaWithConfig<Regex>.TransitionEdge>>();
+
+        queue.Enqueue(dfa.Start);
+        visited.Add(dfa.Start);
+        while (queue.Count > 0)
+        {
+            var currentState = queue.Dequeue();
+            if (dfa.Accepts(currentState))
+            {
+                acceptingStates.Add(currentState);
+            }
+
+            foreach (var atom in currentState.PossibleFirstAtoms())
+            {
+                var nextState = dfa.Transition(currentState, atom);
+                var edge = new IDfaWithConfig<Regex>.TransitionEdge(currentState, nextState, atom);
+
+                transitionsToMap.GetOrAddList(nextState).Add(edge);
+                transitionsFromMap.GetOrAddList(currentState).Add(edge);
+
+                if (visited.Contains(nextState))
+                {
+                    continue;
+                }
+
+                queue.Enqueue(nextState);
+                visited.Add(nextState);
+            }
+        }
+
+        return (acceptingStates, transitionsToMap, transitionsFromMap);
     }
 }
