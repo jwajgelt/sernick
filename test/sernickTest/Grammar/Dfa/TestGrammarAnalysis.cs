@@ -47,10 +47,9 @@ public class TestGrammarAnalysis
             {'B', new HashSet<char>{'A','B'}},
             {'C', new HashSet<char>{'A','C'}}
         };
-        foreach (var entry in expectedFirst)
+        foreach (var (symbol, expectedSet) in expectedFirst)
         {
-            var symbol = entry.Key;
-            Assert.True(entry.Value.SetEquals(first[symbol]));
+            Assert.True(expectedSet.SetEquals(first[symbol]));
         }
 
         var follow = GrammarAnalysis.Follow(grammar, nullable, first);
@@ -60,10 +59,9 @@ public class TestGrammarAnalysis
             {'B', new HashSet<char>{'A'}},
             {'C', new HashSet<char>{}}
         };
-        foreach (var entry in expectedFollow)
+        foreach (var (symbol, expectedSet) in expectedFollow)
         {
-            var symbol = entry.Key;
-            Assert.True(entry.Value.SetEquals(follow[symbol]));
+            Assert.True(expectedSet.SetEquals(follow[symbol]));
         }
     }
 }
