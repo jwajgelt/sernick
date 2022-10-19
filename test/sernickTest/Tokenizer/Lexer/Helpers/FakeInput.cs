@@ -1,19 +1,15 @@
-using sernick.Input;
-
 namespace sernickTest.Tokenizer.Lexer.Helpers;
 
-internal class FakeInput : IInput
+using sernick.Input;
+
+internal sealed class FakeInput : IInput
 {
     private readonly string _input;
     private Location _currentLocation;
 
-    public FakeInput(string input)
-    {
-        _input = input;
-        _currentLocation = new Location(-1);
-    }
+    public FakeInput(string input) => (_input, _currentLocation) = (input, new Location(-1));
 
-    internal record Location(int position) : ILocation { }
+    internal sealed record Location(int Position) : ILocation;
 
     public ILocation CurrentLocation => _currentLocation;
 
@@ -21,13 +17,13 @@ internal class FakeInput : IInput
 
     public ILocation End => new Location(_input.Length);
 
-    public char Current => _input[_currentLocation.position];
+    public char Current => _input[_currentLocation.Position];
 
     public bool MoveNext()
     {
         if (_currentLocation != (Location)End)
         {
-            _currentLocation = new Location(_currentLocation.position + 1);
+            _currentLocation = new Location(_currentLocation.Position + 1);
         }
 
         return _currentLocation != (Location)End;

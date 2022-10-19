@@ -1,14 +1,14 @@
 namespace sernick.Input.String;
 
-public class StringInput : IInput
+public sealed class StringInput : IInput
 {
     private readonly string _text;
 
     public StringInput(string text)
     {
         _text = text;
-        Start = (0).Pack();
-        End = (_text.Length).Pack();
+        Start = 0.Pack();
+        End = _text.Length.Pack();
         CurrentLocation = Start;
     }
 
@@ -49,7 +49,7 @@ public class StringInput : IInput
     private char? GetCurrentChar()
     {
         var position = CurrentLocation.Unpack();
-        if (0 <= position && position <= _text.Length - 1)
+        if (0 <= position && position < _text.Length)
         {
             return _text[position];
         }

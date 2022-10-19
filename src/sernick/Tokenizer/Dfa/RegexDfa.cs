@@ -1,6 +1,6 @@
 namespace sernick.Tokenizer.Dfa;
 
-using sernick.Tokenizer.Regex;
+using Regex;
 
 public sealed class RegexDfa : IDfa<Regex>
 {
@@ -8,6 +8,7 @@ public sealed class RegexDfa : IDfa<Regex>
     {
         Start = regex;
     }
+
     public Regex Start { get; }
 
     public bool Accepts(Regex state) => state.ContainsEpsilon();

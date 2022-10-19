@@ -1,4 +1,5 @@
 namespace sernickTest.Tokenizer.Dfa;
+
 using Helpers;
 using sernick.Tokenizer.Dfa;
 using sernick.Tokenizer.Regex;
@@ -38,7 +39,7 @@ public class RegexDfaTest
 
         Which is equivalent to regex: (a(ab(z*)c)*)|(b(z*)c(ab(z*)c)*)
      */
-    private static RegexDfa exampleDfa()
+    private static RegexDfa ExampleDfa()
     {
         var atomA = Regex.Atom('a');
         var atomB = Regex.Atom('b');
@@ -60,7 +61,7 @@ public class RegexDfaTest
     [Fact]
     public void NonAcceptingState()
     {
-        var regexDfa = exampleDfa();
+        var regexDfa = ExampleDfa();
         var state = regexDfa.Transition(regexDfa.Start, "bzz");
 
         Assert.False(regexDfa.Accepts(state));
@@ -69,7 +70,7 @@ public class RegexDfaTest
     [Fact]
     public void NonAcceptingState2()
     {
-        var regexDfa = exampleDfa();
+        var regexDfa = ExampleDfa();
         var state = regexDfa.Transition(regexDfa.Start, "bcb");
 
         Assert.False(regexDfa.Accepts(state));
@@ -78,7 +79,7 @@ public class RegexDfaTest
     [Fact]
     public void AcceptingState()
     {
-        var regexDfa = exampleDfa();
+        var regexDfa = ExampleDfa();
         var state = regexDfa.Transition(regexDfa.Start, "bcabzzc");
 
         Assert.True(regexDfa.Accepts(state));
@@ -87,7 +88,7 @@ public class RegexDfaTest
     [Fact]
     public void AcceptingState2()
     {
-        var regexDfa = exampleDfa();
+        var regexDfa = ExampleDfa();
         var state = regexDfa.Transition(regexDfa.Start, "aabc");
 
         Assert.True(regexDfa.Accepts(state));
@@ -96,7 +97,7 @@ public class RegexDfaTest
     [Fact]
     public void NonDeadState()
     {
-        var regexDfa = exampleDfa();
+        var regexDfa = ExampleDfa();
         var state = regexDfa.Transition(regexDfa.Start, "aabc");
 
         Assert.False(regexDfa.IsDead(state));
@@ -105,7 +106,7 @@ public class RegexDfaTest
     [Fact]
     public void NonDeadState2()
     {
-        var regexDfa = exampleDfa();
+        var regexDfa = ExampleDfa();
         var state = regexDfa.Start;
         Assert.False(regexDfa.IsDead(state));
     }
@@ -113,7 +114,7 @@ public class RegexDfaTest
     [Fact]
     public void DeadState()
     {
-        var regexDfa = exampleDfa();
+        var regexDfa = ExampleDfa();
         var state = regexDfa.Transition(regexDfa.Start, "x");
 
         Assert.True(regexDfa.IsDead(state));
@@ -122,7 +123,7 @@ public class RegexDfaTest
     [Fact]
     public void DeadState2()
     {
-        var regexDfa = exampleDfa();
+        var regexDfa = ExampleDfa();
         var state = regexDfa.Transition(regexDfa.Start, "aaa");
 
         Assert.True(regexDfa.IsDead(state));

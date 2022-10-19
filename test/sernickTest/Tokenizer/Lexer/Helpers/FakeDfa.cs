@@ -1,6 +1,8 @@
 namespace sernickTest.Tokenizer.Lexer.Helpers;
 
-internal class FakeDfa : sernick.Tokenizer.Dfa.IDfa<int>
+using sernick.Tokenizer.Dfa;
+
+internal sealed class FakeDfa : IDfa<int>
 {
     private readonly IReadOnlyDictionary<(int, char), int> _transitions;
     private readonly IReadOnlySet<int> _accepting;
@@ -11,24 +13,13 @@ internal class FakeDfa : sernick.Tokenizer.Dfa.IDfa<int>
         IReadOnlyDictionary<(int, char), int> transitions,
         int start,
         IReadOnlySet<int> accepting
-    )
-    {
-        _transitions = transitions;
-        _accepting = accepting;
-        Start = start;
-    }
+    ) => (_transitions, Start, _accepting) = (transitions, start, accepting);
 
-    public int Start { get; init; }
+    public int Start { get; }
 
-    public bool Accepts(int state)
-    {
-        return _accepting.Contains(state);
-    }
+    public bool Accepts(int state) => _accepting.Contains(state);
 
-    public bool IsDead(int state)
-    {
-        return state == DEAD_STATE;
-    }
+    public bool IsDead(int state) => state == DEAD_STATE;
 
     public int Transition(int state, char atom)
     {
@@ -36,6 +27,4 @@ internal class FakeDfa : sernick.Tokenizer.Dfa.IDfa<int>
             ? next
             : DEAD_STATE;
     }
-
-    public int Transition(int state, string word) => word.Aggregate(state, (state, c) => Transition(state, c));
 }

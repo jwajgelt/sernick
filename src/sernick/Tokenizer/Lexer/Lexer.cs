@@ -2,9 +2,10 @@ namespace sernick.Tokenizer.Lexer;
 
 using System.Text;
 using Dfa;
+using Diagnostics;
 using Input;
 
-public class Lexer<TCat, TState> : ILexer<TCat>
+public sealed class Lexer<TCat, TState> : ILexer<TCat>
     where TCat : notnull
 {
     private readonly SumDfa _sumDfa;
@@ -14,7 +15,7 @@ public class Lexer<TCat, TState> : ILexer<TCat>
         _sumDfa = new SumDfa(categoryDfas);
     }
 
-    public IEnumerable<Token<TCat>> Process(IInput input)
+    public IEnumerable<Token<TCat>> Process(IInput input, IDiagnostics diagnostics)
     {
         input.MoveTo(input.Start);
         var currentState = _sumDfa.Start;
@@ -83,33 +84,33 @@ public class Lexer<TCat, TState> : ILexer<TCat>
         }
     }
 
-    private record LexerProcessingState(Dictionary<TCat, TState> dfaStates, ILocation location);
+    private sealed record LexerProcessingState(Dictionary<TCat, TState> dfaStates, ILocation location);
 
-    private class SumDfa : IDfa<Dictionary<TCat, TState>>
+    private sealed class SumDfa : IDfa<Dictionary<TCat, TState>>
     {
-        private readonly IReadOnlyDictionary<TCat, IDfa<TState>> dfas;
+        private readonly IReadOnlyDictionary<TCat, IDfa<TState>> _dfas;
 
         public SumDfa(IReadOnlyDictionary<TCat, IDfa<TState>> dfas)
         {
-            this.dfas = dfas;
+            _dfas = dfas;
             Start = dfas.ToDictionary(kv => kv.Key, kv => kv.Value.Start);
         }
 
-        public Dictionary<TCat, TState> Start { get; init; }
+        public Dictionary<TCat, TState> Start { get; }
 
         public bool Accepts(Dictionary<TCat, TState> state) =>
-            state.Any(kv => dfas[kv.Key].Accepts(kv.Value));
+            state.Any(kv => _dfas[kv.Key].Accepts(kv.Value));
 
         public bool IsDead(Dictionary<TCat, TState> state) =>
-            state.All(kv => dfas[kv.Key].IsDead(kv.Value));
+            state.All(kv => _dfas[kv.Key].IsDead(kv.Value));
 
         public Dictionary<TCat, TState> Transition(Dictionary<TCat, TState> state, char atom) =>
             state.ToDictionary(
                 kv => kv.Key,
-                kv => dfas[kv.Key].Transition(kv.Value, atom)
+                kv => _dfas[kv.Key].Transition(kv.Value, atom)
             );
 
         public IEnumerable<TCat> AcceptingCategories(Dictionary<TCat, TState> state) =>
-            state.Where(kv => dfas[kv.Key].Accepts(kv.Value)).Select(kv => kv.Key);
+            state.Where(kv => _dfas[kv.Key].Accepts(kv.Value)).Select(kv => kv.Key);
     }
 }
