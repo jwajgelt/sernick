@@ -17,8 +17,10 @@ public sealed class RegexDfa : IDfaWithConfig<Regex>
 
     public Regex Transition(Regex state, char atom) => state.Derivative(atom);
 
-    public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionFrom(Regex state) =>
-        state.PossibleFirstAtoms().Select(atom => new IDfaWithConfig<Regex>.TransitionEdge(state, Transition(state, atom), atom));
+    public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionsFrom(Regex state)
+    {
+        throw new NotImplementedException();
+    }
 
     public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionsTo(Regex state)
     {
