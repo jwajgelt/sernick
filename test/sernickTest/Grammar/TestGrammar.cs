@@ -27,7 +27,7 @@ public class TestGrammar
      "just random text",
      "        " };
 
-    private readonly string[] typeNames = { "Int", "Bool", "CustomTypeName", "A", "B", "Z", "ABBA", "UJ" };
+    private readonly string[] typeNames = { "Int", "Bool", "Unit", "CustomTypeName", "A", "B", "Z", "ABBA", "UJ" };
     private readonly string[] variableNames = { "varia", "ble", "name", "tcs", "mess", "graphQL", };
 
     private readonly string[] operators = { "+", "-", "||", "&&" };

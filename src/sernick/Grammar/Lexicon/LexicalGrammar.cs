@@ -81,6 +81,7 @@ public class LexicalGrammar
     {
         ["Int"] = "Int",
         ["Bool"] = "Bool",
+        ["Unit"] = "Unit",
         ["typeNames"] = "[[:upper:]][[:alnum:]]*",
     });
 
