@@ -1,4 +1,4 @@
-﻿using sernick.Diagnostics;
+using sernick.Diagnostics;
 using sernick.Input;
 
 namespace sernick.Tokenizer.Lexer;
@@ -7,17 +7,17 @@ public class LexicalError : IDiagnosticItem
 {
     public LexicalError(ILocation start, ILocation end)
     {
-        Start = start;
-        End = end;
+        _start = start;
+        _end = end;
     }
 
-    private ILocation Start;
-    private ILocation End;
-    
+    private readonly ILocation _start;
+    private readonly ILocation _end;
+
     public new string ToString()
     {
-        return $"Lexical Error starting at: {Start.ToString()} and ending at: {End.ToString()}";
+        return $"Lexical Error starting at: {_start.ToString()} and ending at: {_end.ToString()}";
     }
-    
+
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
 }

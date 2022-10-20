@@ -48,7 +48,6 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
                     diagnostics.Report(error);
                 }
 
-                
                 // If we matched, we start the next match from the position
                 // we just reset to.
                 // Otherwise, all DFAs failed to match on a substring,
