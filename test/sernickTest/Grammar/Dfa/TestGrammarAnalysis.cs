@@ -13,7 +13,7 @@ public class TestGrammarAnalysis
     [Fact(Skip = "GrammarAnalysis methods not implemented")]
     public void NullableSimple()
     {
-        var transitions1 = new Dictionary<(int, char), int> {};
+        var transitions1 = new Dictionary<(int, char), int> { };
         var dfa1 = new FakeDfa(transitions1, 0, new HashSet<int> { 0 });
 
         var transitions2 = new Dictionary<(int, char), int>
@@ -135,7 +135,7 @@ public class TestGrammarAnalysis
     [Fact(Skip = "GrammarAnalysis methods not implemented")]
     public void FirstSimple()
     {
-        var transitions1 = new Dictionary<(int, char), int> {};
+        var transitions1 = new Dictionary<(int, char), int> { };
         var dfa1 = new FakeDfa(transitions1, 0, new HashSet<int> { 0 });
 
         var transitions2 = new Dictionary<(int, char), int>
@@ -231,7 +231,7 @@ public class TestGrammarAnalysis
         var grammar = new DfaGrammar<char, int>('S', productions);
 
         var nullable = GrammarAnalysis.Nullable(grammar);
-        var expectedNullable = new HashSet<char> { 'A','B','C','S' };
+        var expectedNullable = new HashSet<char> { 'A', 'B', 'C', 'S' };
         Assert.True(expectedNullable.SetEquals(nullable));
 
         var first = GrammarAnalysis.First(grammar, nullable);
@@ -276,7 +276,7 @@ public class TestGrammarAnalysis
         };
         var dfa1 = new FakeDfa(transitions1, 0, new HashSet<int> { 1 });
 
-        var transitions2 = new Dictionary<(int, char), int> {};
+        var transitions2 = new Dictionary<(int, char), int> { };
         var dfa2 = new FakeDfa(transitions2, 0, new HashSet<int> { 0 });
 
         var transitions3 = new Dictionary<(int, char), int>
@@ -297,7 +297,7 @@ public class TestGrammarAnalysis
         var grammar = new DfaGrammar<char, int>('S', productions);
 
         var nullable = GrammarAnalysis.Nullable(grammar);
-        var expectedNullable = new HashSet<char> { 'B','C' };
+        var expectedNullable = new HashSet<char> { 'B', 'C' };
         Assert.True(expectedNullable.SetEquals(nullable));
 
         var first = GrammarAnalysis.First(grammar, nullable);
@@ -338,7 +338,7 @@ public class TestGrammarAnalysis
     [Fact(Skip = "GrammarAnalysis methods not implemented")]
     public void FollowPaths()
     {
-        var transitions1 = new Dictionary<(int, char), int> {};
+        var transitions1 = new Dictionary<(int, char), int> { };
         var dfa1 = new FakeDfa(transitions1, 0, new HashSet<int> { 0 });
 
         var transitions2 = new Dictionary<(int, char), int>
@@ -352,7 +352,7 @@ public class TestGrammarAnalysis
             { (5, 'D'), 6 },
             { (5, 'E'), 7 }
         };
-        var dfa2 = new FakeDfa(transitions2, 0, new HashSet<int> { 6,7 });
+        var dfa2 = new FakeDfa(transitions2, 0, new HashSet<int> { 6, 7 });
 
         var productions = new Dictionary<char, IDfaWithConfig<int>> {
             { 'A', dfa1 },
@@ -365,7 +365,7 @@ public class TestGrammarAnalysis
         var grammar = new DfaGrammar<char, int>('S', productions);
 
         var nullable = GrammarAnalysis.Nullable(grammar);
-        var expectedNullable = new HashSet<char> { 'A','B','C','D','E','S' };
+        var expectedNullable = new HashSet<char> { 'A', 'B', 'C', 'D', 'E', 'S' };
         Assert.True(expectedNullable.SetEquals(nullable));
 
         var first = GrammarAnalysis.First(grammar, nullable);
@@ -499,7 +499,7 @@ public class TestGrammarAnalysis
     [Fact(Skip = "GrammarAnalysis methods not implemented")]
     public void TestLoop()
     {
-        var transitions1 = new Dictionary<(int, char), int> {};
+        var transitions1 = new Dictionary<(int, char), int> { };
         var dfa1 = new FakeDfa(transitions1, 0, new HashSet<int> { 0 });
 
         var transitions2 = new Dictionary<(int, char), int>
