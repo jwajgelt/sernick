@@ -18,7 +18,7 @@ public sealed class RegexDfa : IDfaWithConfig<Regex>
 
     public Regex Transition(Regex state, char atom) => state.Derivative(atom);
 
-    public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionFrom(Regex state) =>
+    public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionsFrom(Regex state) =>
         _transitionsFromMap[state];
 
     public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionsTo(Regex state) => _transitionsToMap[state];
@@ -29,7 +29,7 @@ public sealed class RegexDfa : IDfaWithConfig<Regex>
 
 internal static class RegexDfaHelpers
 {
-    public static IEnumerable<char> PossibleFirstAtoms(this Regex regex)
+    private static IEnumerable<char> PossibleFirstAtoms(this Regex regex)
     {
         switch (regex)
         {
