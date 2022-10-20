@@ -10,7 +10,7 @@ public class RegexDfaTest
     public void RegexDfaStartGetter()
     {
         var regex = Regex.Atom('x');
-        var regexDfa = new RegexDfa(regex);
+        var regexDfa = RegexDfa.FromRegex(regex);
         Assert.Equal(regexDfa.Start, regex);
     }
 
@@ -39,7 +39,7 @@ public class RegexDfaTest
 
         Which is equivalent to regex: (a(ab(z*)c)*)|(b(z*)c(ab(z*)c)*)
      */
-    private static RegexDfa ExampleDfa()
+    private static IDfaWithConfig<Regex> ExampleDfa()
     {
         var atomA = Regex.Atom('a');
         var atomB = Regex.Atom('b');
@@ -54,7 +54,7 @@ public class RegexDfaTest
         var pathB = Regex.Concat(atomB, starZ, atomC, loopStarred);
 
         var regex = Regex.Union(pathA, pathB);
-        var regexDfa = new RegexDfa(regex);
+        var regexDfa = RegexDfa.FromRegex(regex);
         return regexDfa;
     }
 

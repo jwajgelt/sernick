@@ -19,7 +19,7 @@ public static class GrammarConversion
             Productions: grammar.Productions
                 .ToDictionary(
                     prod => prod.Left,
-                    prod => new RegexDfa(prod.Right) as IDfaWithConfig<Regex>)
+                    prod => RegexDfa.FromRegex(prod.Right))
             );
     }
 }

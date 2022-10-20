@@ -1,13 +1,16 @@
 namespace sernick.Common.Dfa;
 
 using Regex;
+using TransitionEdge = IDfaWithConfig<Regex.Regex>.TransitionEdge;
 
 public sealed class RegexDfa : IDfaWithConfig<Regex>
 {
-    public RegexDfa(Regex regex)
-    {
-        Start = regex;
-    }
+    private RegexDfa(
+        Regex regex,
+        IEnumerable<Regex> acceptingStates,
+        Dictionary<Regex, List<TransitionEdge>> transitionsToMap,
+        Dictionary<Regex, List<TransitionEdge>> transitionsFromMap
+        ) => (Start, AcceptingStates, _transitionsToMap, _transitionsFromMap) = (regex, acceptingStates, transitionsToMap, transitionsFromMap);
 
     public Regex Start { get; }
 
@@ -17,17 +20,52 @@ public sealed class RegexDfa : IDfaWithConfig<Regex>
 
     public Regex Transition(Regex state, char atom) => state.Derivative(atom);
 
-    public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionsFrom(Regex state)
-    {
-        throw new NotImplementedException();
-    }
+    public IEnumerable<TransitionEdge> GetTransitionsFrom(Regex state) =>
+        _transitionsFromMap[state];
 
-    public IEnumerable<IDfaWithConfig<Regex>.TransitionEdge> GetTransitionsTo(Regex state)
-    {
-        throw new NotImplementedException();
-    }
+    public IEnumerable<TransitionEdge> GetTransitionsTo(Regex state) => _transitionsToMap[state];
+    public IEnumerable<Regex> AcceptingStates { get; }
+    private readonly Dictionary<Regex, List<TransitionEdge>> _transitionsToMap;
+    private readonly Dictionary<Regex, List<TransitionEdge>> _transitionsFromMap;
 
-    public IEnumerable<Regex> AcceptingStates => throw new NotImplementedException();
+    public static IDfaWithConfig<Regex> FromRegex(Regex start)
+    {
+        var acceptingStates = new List<Regex>();
+        var visited = new HashSet<Regex>();
+        var queue = new Queue<Regex>();
+        var transitionsToMap = new Dictionary<Regex, List<TransitionEdge>>();
+        var transitionsFromMap = new Dictionary<Regex, List<TransitionEdge>>();
+
+        queue.Enqueue(start);
+        visited.Add(start);
+        while (queue.Count > 0)
+        {
+            var currentState = queue.Dequeue();
+            if (currentState.ContainsEpsilon())
+            {
+                acceptingStates.Add(currentState);
+            }
+
+            foreach (var atom in currentState.PossibleFirstAtoms())
+            {
+                var nextState = currentState.Derivative(atom);
+                var edge = new TransitionEdge(currentState, nextState, atom);
+
+                transitionsToMap.GetOrAddList(nextState).Add(edge);
+                transitionsFromMap.GetOrAddList(currentState).Add(edge);
+
+                if (visited.Contains(nextState))
+                {
+                    continue;
+                }
+
+                queue.Enqueue(nextState);
+                visited.Add(nextState);
+            }
+        }
+
+        return new RegexDfa(start, acceptingStates, transitionsToMap, transitionsFromMap);
+    }
 }
 
 internal static class RegexDfaHelpers
@@ -53,5 +91,11 @@ internal static class RegexDfaHelpers
             default:
                 throw new NotSupportedException("Unrecognized Regex class implementation");
         }
+    }
+
+    public static List<TValue> GetOrAddList<TKey, TValue>(this IDictionary<TKey, List<TValue>> dictionary, TKey key)
+    {
+        dictionary.TryAdd(key, new List<TValue>());
+        return dictionary[key];
     }
 }
