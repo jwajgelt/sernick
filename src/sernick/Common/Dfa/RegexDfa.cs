@@ -6,8 +6,8 @@ public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where 
     private RegexDfa(
         Regex<TAtom> regex,
         IEnumerable<Regex<TAtom>> acceptingStates,
-        Dictionary<Regex<TAtom>, List<IDfaWithConfig<Regex<TAtom>, TAtom>.TransitionEdge>> transitionsToMap,
-        Dictionary<Regex<TAtom>, List<IDfaWithConfig<Regex<TAtom>, TAtom>.TransitionEdge>> transitionsFromMap
+        Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>> transitionsToMap,
+        Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>> transitionsFromMap
         ) => (Start, AcceptingStates, _transitionsToMap, _transitionsFromMap) = (regex, acceptingStates, transitionsToMap, transitionsFromMap);
 
     public Regex<TAtom> Start { get; }
@@ -18,21 +18,21 @@ public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where 
 
     public Regex<TAtom> Transition(Regex<TAtom> state, TAtom atom) => state.Derivative(atom);
 
-    public IEnumerable<IDfaWithConfig<Regex<TAtom>, TAtom>.TransitionEdge> GetTransitionsFrom(Regex<TAtom> state) =>
+    public IEnumerable<TransitionEdge<Regex<TAtom>, TAtom>> GetTransitionsFrom(Regex<TAtom> state) =>
         _transitionsFromMap[state];
 
-    public IEnumerable<IDfaWithConfig<Regex<TAtom>, TAtom>.TransitionEdge> GetTransitionsTo(Regex<TAtom> state) => _transitionsToMap[state];
+    public IEnumerable<TransitionEdge<Regex<TAtom>, TAtom>> GetTransitionsTo(Regex<TAtom> state) => _transitionsToMap[state];
     public IEnumerable<Regex<TAtom>> AcceptingStates { get; }
-    private readonly Dictionary<Regex<TAtom>, List<IDfaWithConfig<Regex<TAtom>, TAtom>.TransitionEdge>> _transitionsToMap;
-    private readonly Dictionary<Regex<TAtom>, List<IDfaWithConfig<Regex<TAtom>, TAtom>.TransitionEdge>> _transitionsFromMap;
+    private readonly Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>> _transitionsToMap;
+    private readonly Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>> _transitionsFromMap;
 
     public static IDfaWithConfig<Regex<TAtom>, TAtom> FromRegex(Regex<TAtom> start)
     {
         var acceptingStates = new List<Regex<TAtom>>();
         var visited = new HashSet<Regex<TAtom>>();
         var queue = new Queue<Regex<TAtom>>();
-        var transitionsToMap = new Dictionary<Regex<TAtom>, List<IDfaWithConfig<Regex<TAtom>, TAtom>.TransitionEdge>>();
-        var transitionsFromMap = new Dictionary<Regex<TAtom>, List<IDfaWithConfig<Regex<TAtom>, TAtom>.TransitionEdge>>();
+        var transitionsToMap = new Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>>();
+        var transitionsFromMap = new Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>>();
 
         queue.Enqueue(start);
         visited.Add(start);
@@ -47,7 +47,7 @@ public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where 
             foreach (var atom in currentState.PossibleFirstAtoms())
             {
                 var nextState = currentState.Derivative(atom);
-                var edge = new IDfaWithConfig<Regex<TAtom>, TAtom>.TransitionEdge(currentState, nextState, atom);
+                var edge = new TransitionEdge<Regex<TAtom>, TAtom>(currentState, nextState, atom);
 
                 transitionsToMap.GetOrAddList(nextState).Add(edge);
                 transitionsFromMap.GetOrAddList(currentState).Add(edge);
