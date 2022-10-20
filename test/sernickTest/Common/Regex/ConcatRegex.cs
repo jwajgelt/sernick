@@ -1,6 +1,6 @@
 namespace sernickTest.Common.Regex;
 
-using sernick.Common.Regex;
+using Regex = sernick.Common.Regex.Regex<char>;
 
 public class ConcatRegex
 {

@@ -8,4 +8,5 @@ namespace sernick.Grammar.Syntax;
 /// <typeparam name="TSymbol">Grammar alphabet type</typeparam>
 public sealed record Grammar<TSymbol>(
     TSymbol Start,
-    IEnumerable<Production<TSymbol>> Productions);
+    IEnumerable<Production<TSymbol>> Productions)
+    where TSymbol : IEquatable<TSymbol>;

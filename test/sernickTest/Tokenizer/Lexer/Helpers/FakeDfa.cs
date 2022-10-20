@@ -2,7 +2,7 @@ namespace sernickTest.Tokenizer.Lexer.Helpers;
 
 using sernick.Common.Dfa;
 
-internal sealed class FakeDfa : IDfa<int>
+internal sealed class FakeDfa : IDfa<int, char>
 {
     private readonly IReadOnlyDictionary<(int, char), int> _transitions;
     private readonly IReadOnlySet<int> _accepting;

@@ -1,33 +1,27 @@
 namespace sernick.Common.Regex;
 
-internal sealed class AtomRegex : Regex
+internal sealed class AtomRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<TAtom>
 {
-    public AtomRegex(char character)
+    public AtomRegex(TAtom atom)
     {
-        Character = character;
+        Atom = atom;
     }
 
-    public char Character { get; }
+    public new TAtom Atom { get; }
 
     public override bool ContainsEpsilon() => false;
 
-    public override Regex Derivative(char atom)
-    {
-        return Character == atom ? Epsilon : Empty;
-    }
+    public override Regex<TAtom> Derivative(TAtom atom) => Atom.Equals(atom) ? Epsilon : Empty;
 
-    public override int GetHashCode()
-    {
-        return Character.GetHashCode();
-    }
+    public override int GetHashCode() => Atom.GetHashCode();
 
-    public override bool Equals(Regex? other)
+    public override bool Equals(Regex<TAtom>? other)
     {
-        return other is AtomRegex atomRegex && Character.Equals(atomRegex.Character);
+        return other is AtomRegex<TAtom> atomRegex && Atom.Equals(atomRegex.Atom);
     }
 }
 
-public partial class Regex
+public partial class Regex<TAtom>
 {
-    public static partial Regex Atom(char character) => new AtomRegex(character);
+    public static partial Regex<TAtom> Atom(TAtom character) => new AtomRegex<TAtom>(character);
 }

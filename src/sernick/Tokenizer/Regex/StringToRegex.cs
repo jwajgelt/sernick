@@ -1,7 +1,6 @@
 namespace sernick.Tokenizer.Regex;
 
-using Common.Regex;
-
+using Regex = Common.Regex.Regex<char>;
 public static class StringToRegex
 {
     /// <summary>

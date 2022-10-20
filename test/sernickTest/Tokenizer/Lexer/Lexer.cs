@@ -24,7 +24,7 @@ public class Lexer
 
         var input = new FakeInput("a");
 
-        var categoryDfas = new Dictionary<string, IDfa<int>> { { categoryName, dfa } };
+        var categoryDfas = new Dictionary<string, IDfa<int, char>> { { categoryName, dfa } };
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
@@ -49,7 +49,7 @@ public class Lexer
 
         var input = new FakeInput("b");
 
-        var categoryDfas = new Dictionary<string, IDfa<int>> { { categoryName, dfa } };
+        var categoryDfas = new Dictionary<string, IDfa<int, char>> { { categoryName, dfa } };
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
@@ -73,7 +73,7 @@ public class Lexer
 
         var input = new FakeInput("aaaab");
 
-        var categoryDfas = new Dictionary<string, IDfa<int>> { { categoryName, dfa } };
+        var categoryDfas = new Dictionary<string, IDfa<int, char>> { { categoryName, dfa } };
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
@@ -100,7 +100,7 @@ public class Lexer
 
         var input = new FakeInput("abab");
 
-        var categoryDfas = new Dictionary<string, IDfa<int>> { { categoryName, dfa } };
+        var categoryDfas = new Dictionary<string, IDfa<int, char>> { { categoryName, dfa } };
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
@@ -132,7 +132,7 @@ public class Lexer
         // the space isn't matched by the DFA
         var input = new FakeInput("ab ab");
 
-        var categoryDfas = new Dictionary<string, IDfa<int>> { { categoryName, dfa } };
+        var categoryDfas = new Dictionary<string, IDfa<int, char>> { { categoryName, dfa } };
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
@@ -178,7 +178,7 @@ public class Lexer
 
         var input = new FakeInput("ababab");
 
-        var categoryDfas = new Dictionary<int, IDfa<int>> {
+        var categoryDfas = new Dictionary<int, IDfa<int, char>> {
             { category1, dfa1 },
             { category2, dfa2 }
         };
@@ -223,7 +223,7 @@ public class Lexer
 
         var input = new FakeInput("ababab");
 
-        var categoryDfas = new Dictionary<int, IDfa<int>> {
+        var categoryDfas = new Dictionary<int, IDfa<int, char>> {
             { category1, dfa1 },
             { category2, dfa2 }
         };

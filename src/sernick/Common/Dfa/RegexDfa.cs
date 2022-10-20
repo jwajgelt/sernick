@@ -3,18 +3,18 @@ namespace sernick.Common.Dfa;
 using Regex;
 using TransitionEdge = IDfaWithConfig<Regex.Regex>.TransitionEdge;
 
-public sealed class RegexDfa : IDfaWithConfig<Regex>
+public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where TAtom : IEquatable<TAtom>
 {
     private RegexDfa(
-        Regex regex,
-        IEnumerable<Regex> acceptingStates,
-        Dictionary<Regex, List<TransitionEdge>> transitionsToMap,
-        Dictionary<Regex, List<TransitionEdge>> transitionsFromMap
+        Regex<TAtom> regex,
+        IEnumerable<Regex<TAtom>> acceptingStates,
+        Dictionary<Regex<TAtom>, List<TransitionEdge>> transitionsToMap,
+        Dictionary<Regex<TAtom>, List<TransitionEdge>> transitionsFromMap
         ) => (Start, AcceptingStates, _transitionsToMap, _transitionsFromMap) = (regex, acceptingStates, transitionsToMap, transitionsFromMap);
 
-    public Regex Start { get; }
+    public Regex<TAtom> Start { get; }
 
-    public bool Accepts(Regex state) => state.ContainsEpsilon();
+    public bool Accepts(Regex<TAtom> state) => state.ContainsEpsilon();
 
     public bool IsDead(Regex state) => state.Equals(Regex.Empty);
 

@@ -7,6 +7,7 @@ public static class GrammarAnalysis
     /// </summary>
     public static IReadOnlyCollection<TSymbol> Nullable<TSymbol, TDfaState>(
         this DfaGrammar<TSymbol, TDfaState> grammar)
+        where TSymbol : IEquatable<TSymbol>
     {
         throw new NotImplementedException();
     }
@@ -18,6 +19,7 @@ public static class GrammarAnalysis
     public static IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> First<TSymbol, TDfaState>(
         this DfaGrammar<TSymbol, TDfaState> grammar,
         IReadOnlyCollection<TSymbol> nullableSymbols)
+        where TSymbol : IEquatable<TSymbol>
     {
         throw new NotImplementedException();
     }
@@ -31,6 +33,7 @@ public static class GrammarAnalysis
         this DfaGrammar<TSymbol, TDfaState> grammar,
         IReadOnlyCollection<TSymbol> nullableSymbols,
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFirst)
+        where TSymbol : IEquatable<TSymbol>
     {
         throw new NotImplementedException();
     }
