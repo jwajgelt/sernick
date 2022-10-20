@@ -5,10 +5,12 @@ using TransitionEdge = IDfaWithConfig<Regex.Regex>.TransitionEdge;
 
 public sealed class RegexDfa : IDfaWithConfig<Regex>
 {
-    public RegexDfa(Regex regex)
+    private RegexDfa(Regex regex, IEnumerable<Regex> acceptingStates, Dictionary<Regex, List<TransitionEdge>> transitionsToMap, Dictionary<Regex, List<TransitionEdge>> transitionsFromMap)
     {
         Start = regex;
-        (AcceptingStates, _transitionsToMap, _transitionsFromMap) = this.Preprocess();
+        AcceptingStates = acceptingStates;
+        _transitionsToMap = transitionsToMap;
+        _transitionsFromMap = transitionsFromMap;
     }
 
     public Regex Start { get; }
@@ -26,11 +28,50 @@ public sealed class RegexDfa : IDfaWithConfig<Regex>
     public IEnumerable<Regex> AcceptingStates { get; }
     private readonly Dictionary<Regex, List<TransitionEdge>> _transitionsToMap;
     private readonly Dictionary<Regex, List<TransitionEdge>> _transitionsFromMap;
+
+    public static RegexDfa FromRegex(Regex start)
+    {
+        var acceptingStates = new List<Regex>();
+        var visited = new HashSet<Regex>();
+        var queue = new Queue<Regex>();
+        var transitionsToMap = new Dictionary<Regex, List<TransitionEdge>>();
+        var transitionsFromMap = new Dictionary<Regex, List<TransitionEdge>>();
+
+        queue.Enqueue(start);
+        visited.Add(start);
+        while (queue.Count > 0)
+        {
+            var currentState = queue.Dequeue();
+            if (currentState.ContainsEpsilon())
+            {
+                acceptingStates.Add(currentState);
+            }
+
+            foreach (var atom in currentState.PossibleFirstAtoms())
+            {
+                var nextState = currentState.Derivative(atom);
+                var edge = new TransitionEdge(currentState, nextState, atom);
+
+                transitionsToMap.GetOrAddList(nextState).Add(edge);
+                transitionsFromMap.GetOrAddList(currentState).Add(edge);
+
+                if (visited.Contains(nextState))
+                {
+                    continue;
+                }
+
+                queue.Enqueue(nextState);
+                visited.Add(nextState);
+            }
+        }
+
+        return new RegexDfa(start, acceptingStates, transitionsToMap, transitionsFromMap);
+    }
 }
 
 internal static class RegexDfaHelpers
 {
-    private static IEnumerable<char> PossibleFirstAtoms(this Regex regex)
+    public static IEnumerable<char> PossibleFirstAtoms(this Regex regex)
     {
         switch (regex)
         {
@@ -53,52 +94,9 @@ internal static class RegexDfaHelpers
         }
     }
 
-    private static List<TValue> GetOrAddList<TKey, TValue>(this IDictionary<TKey, List<TValue>> dictionary, TKey key)
+    public static List<TValue> GetOrAddList<TKey, TValue>(this IDictionary<TKey, List<TValue>> dictionary, TKey key)
     {
         dictionary.TryAdd(key, new List<TValue>());
         return dictionary[key];
-    }
-
-    public static (
-        IEnumerable<Regex> AcceptingStates,
-        Dictionary<Regex, List<TransitionEdge>> transitionsToMap,
-        Dictionary<Regex, List<TransitionEdge>> transitionsFromMap
-        ) Preprocess(this RegexDfa dfa)
-    {
-        var acceptingStates = new List<Regex>();
-        var visited = new HashSet<Regex>();
-        var queue = new Queue<Regex>();
-        var transitionsToMap = new Dictionary<Regex, List<TransitionEdge>>();
-        var transitionsFromMap = new Dictionary<Regex, List<TransitionEdge>>();
-
-        queue.Enqueue(dfa.Start);
-        visited.Add(dfa.Start);
-        while (queue.Count > 0)
-        {
-            var currentState = queue.Dequeue();
-            if (dfa.Accepts(currentState))
-            {
-                acceptingStates.Add(currentState);
-            }
-
-            foreach (var atom in currentState.PossibleFirstAtoms())
-            {
-                var nextState = dfa.Transition(currentState, atom);
-                var edge = new TransitionEdge(currentState, nextState, atom);
-
-                transitionsToMap.GetOrAddList(nextState).Add(edge);
-                transitionsFromMap.GetOrAddList(currentState).Add(edge);
-
-                if (visited.Contains(nextState))
-                {
-                    continue;
-                }
-
-                queue.Enqueue(nextState);
-                visited.Add(nextState);
-            }
-        }
-
-        return (acceptingStates, transitionsToMap, transitionsFromMap);
     }
 }
