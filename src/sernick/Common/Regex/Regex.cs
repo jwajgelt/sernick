@@ -1,6 +1,6 @@
 namespace sernick.Common.Regex;
 
-public abstract partial class Regex<TAtom>: IEquatable<Regex<TAtom>>
+public abstract partial class Regex<TAtom> : IEquatable<Regex<TAtom>>
     where TAtom : IEquatable<TAtom>
 {
     public static partial Regex<TAtom> Atom(TAtom character);
