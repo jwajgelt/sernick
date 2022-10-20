@@ -1,6 +1,7 @@
 namespace sernickTest.Common.Dfa;
 
 using Helpers;
+using sernick.Common.Dfa;
 using Regex = sernick.Common.Regex.Regex<char>;
 using RegexDfa = sernick.Common.Dfa.RegexDfa<char>;
 
@@ -39,7 +40,7 @@ public class RegexDfaTest
 
         Which is equivalent to regex: (a(ab(z*)c)*)|(b(z*)c(ab(z*)c)*)
      */
-    private static IDfaWithConfig<Regex> ExampleDfa()
+    private static IDfaWithConfig<Regex, char> ExampleDfa()
     {
         var atomA = Regex.Atom('a');
         var atomB = Regex.Atom('b');
