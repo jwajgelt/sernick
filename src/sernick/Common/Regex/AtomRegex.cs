@@ -21,7 +21,7 @@ internal sealed class AtomRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<T
     }
 }
 
-public partial class Regex<TAtom>
+public partial class Regex<TAtom> where TAtom : IEquatable<TAtom>
 {
-    public static partial Regex<TAtom> Atom(TAtom character) => new AtomRegex<TAtom>(character);
+    public static partial Regex<TAtom> Atom(TAtom atom) => new AtomRegex<TAtom>(atom);
 }

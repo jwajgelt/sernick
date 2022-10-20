@@ -3,7 +3,7 @@ namespace sernick.Common.Regex;
 public abstract partial class Regex<TAtom> : IEquatable<Regex<TAtom>>
     where TAtom : IEquatable<TAtom>
 {
-    public static partial Regex<TAtom> Atom(TAtom character);
+    public static partial Regex<TAtom> Atom(TAtom atom);
     public static partial Regex<TAtom> Union(IEnumerable<Regex<TAtom>> children);
     public static partial Regex<TAtom> Concat(IEnumerable<Regex<TAtom>> children);
     public static partial Regex<TAtom> Star(Regex<TAtom> child);
