@@ -5,13 +5,12 @@ using TransitionEdge = IDfaWithConfig<Regex.Regex>.TransitionEdge;
 
 public sealed class RegexDfa : IDfaWithConfig<Regex>
 {
-    private RegexDfa(Regex regex, IEnumerable<Regex> acceptingStates, Dictionary<Regex, List<TransitionEdge>> transitionsToMap, Dictionary<Regex, List<TransitionEdge>> transitionsFromMap)
-    {
-        Start = regex;
-        AcceptingStates = acceptingStates;
-        _transitionsToMap = transitionsToMap;
-        _transitionsFromMap = transitionsFromMap;
-    }
+    private RegexDfa(
+        Regex regex,
+        IEnumerable<Regex> acceptingStates,
+        Dictionary<Regex, List<TransitionEdge>> transitionsToMap,
+        Dictionary<Regex, List<TransitionEdge>> transitionsFromMap
+        ) => (Start, AcceptingStates, _transitionsToMap, _transitionsFromMap) = (regex, acceptingStates, transitionsToMap, transitionsFromMap);
 
     public Regex Start { get; }
 
@@ -29,7 +28,7 @@ public sealed class RegexDfa : IDfaWithConfig<Regex>
     private readonly Dictionary<Regex, List<TransitionEdge>> _transitionsToMap;
     private readonly Dictionary<Regex, List<TransitionEdge>> _transitionsFromMap;
 
-    public static RegexDfa FromRegex(Regex start)
+    public static IDfaWithConfig<Regex> FromRegex(Regex start)
     {
         var acceptingStates = new List<Regex>();
         var visited = new HashSet<Regex>();

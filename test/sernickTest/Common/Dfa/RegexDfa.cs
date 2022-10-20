@@ -39,7 +39,7 @@ public class RegexDfaTest
 
         Which is equivalent to regex: (a(ab(z*)c)*)|(b(z*)c(ab(z*)c)*)
      */
-    private static RegexDfa ExampleDfa()
+    private static IDfaWithConfig<Regex> ExampleDfa()
     {
         var atomA = Regex.Atom('a');
         var atomB = Regex.Atom('b');
