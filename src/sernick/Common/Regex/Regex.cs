@@ -1,25 +1,26 @@
 namespace sernick.Common.Regex;
 
-public abstract partial class Regex : IEquatable<Regex>
+public abstract partial class Regex<TAtom> : IEquatable<Regex<TAtom>>
+    where TAtom : IEquatable<TAtom>
 {
-    public static partial Regex Atom(char character);
-    public static partial Regex Union(IEnumerable<Regex> children);
-    public static partial Regex Concat(IEnumerable<Regex> children);
-    public static partial Regex Star(Regex child);
+    public static partial Regex<TAtom> Atom(TAtom atom);
+    public static partial Regex<TAtom> Union(IEnumerable<Regex<TAtom>> children);
+    public static partial Regex<TAtom> Concat(IEnumerable<Regex<TAtom>> children);
+    public static partial Regex<TAtom> Star(Regex<TAtom> child);
 
-    public static Regex Union(params Regex[] children) => Union(children.AsEnumerable());
-    public static Regex Concat(params Regex[] children) => Concat(children.AsEnumerable());
+    public static Regex<TAtom> Union(params Regex<TAtom>[] children) => Union(children.AsEnumerable());
+    public static Regex<TAtom> Concat(params Regex<TAtom>[] children) => Concat(children.AsEnumerable());
 
-    public static readonly Regex Empty = new UnionRegex(Enumerable.Empty<Regex>());
-    public static readonly Regex Epsilon = new StarRegex(Empty);
+    public static readonly Regex<TAtom> Empty = new UnionRegex<TAtom>(Enumerable.Empty<Regex<TAtom>>());
+    public static readonly Regex<TAtom> Epsilon = new StarRegex<TAtom>(Empty);
 
     public abstract override int GetHashCode();
-    public abstract bool Equals(Regex? other);
+    public abstract bool Equals(Regex<TAtom>? other);
     public abstract bool ContainsEpsilon();
-    public abstract Regex Derivative(char atom);
+    public abstract Regex<TAtom> Derivative(TAtom atom);
 
     public override bool Equals(object? obj)
     {
-        return obj is Regex regex && Equals(regex);
+        return obj is Regex<TAtom> regex && Equals(regex);
     }
 }

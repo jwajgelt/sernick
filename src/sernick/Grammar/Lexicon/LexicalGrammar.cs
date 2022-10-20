@@ -22,9 +22,9 @@ public enum LexicalGrammarCategoryType
 public class LexicalGrammarEntry
 {
     public ILexicalGrammarCategory Category { get; }
-    public Regex Regex { get; }
+    public Regex<char> Regex { get; }
 
-    private static Regex CreateUnionRegex(CategoryItems categoryItems)
+    private static Regex<char> CreateUnionRegex(CategoryItems categoryItems)
     {
         return string.Join("|", categoryItems.Values).ToRegex();
     }

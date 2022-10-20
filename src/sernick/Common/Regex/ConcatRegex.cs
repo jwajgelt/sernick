@@ -1,20 +1,20 @@
 namespace sernick.Common.Regex;
 
-internal sealed class ConcatRegex : Regex
+internal sealed class ConcatRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<TAtom>
 {
-    public ConcatRegex(IEnumerable<Regex> children)
+    public ConcatRegex(IEnumerable<Regex<TAtom>> children)
     {
-        Children = new List<Regex>(children);
+        Children = children.ToList();
     }
 
-    public IReadOnlyList<Regex> Children { get; }
+    public IReadOnlyList<Regex<TAtom>> Children { get; }
 
     public override bool ContainsEpsilon()
     {
         return Children.All(child => child.ContainsEpsilon());
     }
 
-    public override Regex Derivative(char atom)
+    public override Regex<TAtom> Derivative(TAtom atom)
     {
         if (Children.Count == 0)
         {
@@ -35,26 +35,29 @@ internal sealed class ConcatRegex : Regex
 
     public override int GetHashCode()
     {
-        return Children.Aggregate(Children.Count, (hashCode, child) => unchecked(hashCode * 17 + child.GetHashCode()));
+        return Children.Aggregate(
+            Children.Count,
+            (hashCode, child) => unchecked(hashCode * 17 + child.GetHashCode())
+            );
     }
 
-    public override bool Equals(Regex? other)
+    public override bool Equals(Regex<TAtom>? other)
     {
-        return other is ConcatRegex concatRegex && Children.SequenceEqual(concatRegex.Children);
+        return other is ConcatRegex<TAtom> concatRegex && Children.SequenceEqual(concatRegex.Children);
     }
 }
 
-public partial class Regex
+public partial class Regex<TAtom> where TAtom : IEquatable<TAtom>
 {
-    public static partial Regex Concat(IEnumerable<Regex> children)
+    public static partial Regex<TAtom> Concat(IEnumerable<Regex<TAtom>> children)
     {
-        IReadOnlyCollection<Regex> childrenList = children.ToList();
+        IReadOnlyCollection<Regex<TAtom>> childrenList = children.ToList();
 
         // (X * Y) * Z == X * (Y * Z)
         childrenList = childrenList
             .SelectMany(regex =>
             {
-                if (regex is ConcatRegex concatRegex)
+                if (regex is ConcatRegex<TAtom> concatRegex)
                 {
                     return concatRegex.Children;
                 }
@@ -76,7 +79,7 @@ public partial class Regex
         {
             0 => Epsilon,
             1 => childrenList.First(),
-            _ => new ConcatRegex(childrenList)
+            _ => new ConcatRegex<TAtom>(childrenList)
         };
     }
 }

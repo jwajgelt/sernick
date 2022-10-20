@@ -1,27 +1,19 @@
 namespace sernick.Common.Regex;
 
-internal sealed class UnionRegex : Regex
+internal sealed class UnionRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<TAtom>
 {
-    public UnionRegex(IEnumerable<Regex> children)
+    public UnionRegex(IEnumerable<Regex<TAtom>> children)
     {
         Children = children.ToHashSet();
     }
 
-    public IReadOnlySet<Regex> Children { get; }
+    public IReadOnlySet<Regex<TAtom>> Children { get; }
 
-    public override bool ContainsEpsilon()
+    public override bool ContainsEpsilon() => Children.Any(child => child.ContainsEpsilon());
+
+    public override Regex<TAtom> Derivative(TAtom atom)
     {
-        return Children.Any(child => child.ContainsEpsilon());
-    }
-
-    public override Regex Derivative(char atom)
-    {
-        if (Children.Count == 0)
-        {
-            return Empty;
-        }
-
-        return Union(Children.Select(child => child.Derivative(atom)));
+        return Children.Count == 0 ? Empty : Union(Children.Select(child => child.Derivative(atom)));
     }
 
     public override int GetHashCode()
@@ -29,23 +21,23 @@ internal sealed class UnionRegex : Regex
         return Children.Aggregate(Children.Count, (hashCode, child) => unchecked(hashCode + child.GetHashCode()));
     }
 
-    public override bool Equals(Regex? other)
+    public override bool Equals(Regex<TAtom>? other)
     {
-        return other is UnionRegex unionRegex && Children.SetEquals(unionRegex.Children);
+        return other is UnionRegex<TAtom> unionRegex && Children.SetEquals(unionRegex.Children);
     }
 }
 
-public partial class Regex
+public partial class Regex<TAtom> where TAtom : IEquatable<TAtom>
 {
-    public static partial Regex Union(IEnumerable<Regex> children)
+    public static partial Regex<TAtom> Union(IEnumerable<Regex<TAtom>> children)
     {
-        IReadOnlyCollection<Regex> childrenList = children.ToList();
+        IReadOnlyCollection<Regex<TAtom>> childrenList = children.ToList();
 
         // (X \cup Y) \cup Z == X \cup (Y \cup Z)
         childrenList = childrenList
             .SelectMany(regex =>
             {
-                if (regex is UnionRegex unionRegex)
+                if (regex is UnionRegex<TAtom> unionRegex)
                 {
                     return unionRegex.Children;
                 }
@@ -58,13 +50,13 @@ public partial class Regex
         childrenList = childrenList.Where(regex => !regex.Equals(Empty)).ToList();
 
         // X \cup X == X
-        IReadOnlyCollection<Regex> childrenSet = childrenList.ToHashSet();
+        IReadOnlyCollection<Regex<TAtom>> childrenSet = childrenList.ToHashSet();
 
         return childrenSet.Count switch
         {
             0 => Empty,
             1 => childrenSet.First(),
-            _ => new UnionRegex(childrenSet)
+            _ => new UnionRegex<TAtom>(childrenSet)
         };
     }
 }

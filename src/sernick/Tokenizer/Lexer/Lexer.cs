@@ -10,7 +10,7 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
 {
     private readonly SumDfa _sumDfa;
 
-    public Lexer(IReadOnlyDictionary<TCat, IDfa<TState>> categoryDfas)
+    public Lexer(IReadOnlyDictionary<TCat, IDfa<TState, char>> categoryDfas)
     {
         _sumDfa = new SumDfa(categoryDfas);
     }
@@ -86,11 +86,11 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
 
     private sealed record LexerProcessingState(Dictionary<TCat, TState> dfaStates, ILocation location);
 
-    private sealed class SumDfa : IDfa<Dictionary<TCat, TState>>
+    private sealed class SumDfa : IDfa<Dictionary<TCat, TState>, char>
     {
-        private readonly IReadOnlyDictionary<TCat, IDfa<TState>> _dfas;
+        private readonly IReadOnlyDictionary<TCat, IDfa<TState, char>> _dfas;
 
-        public SumDfa(IReadOnlyDictionary<TCat, IDfa<TState>> dfas)
+        public SumDfa(IReadOnlyDictionary<TCat, IDfa<TState, char>> dfas)
         {
             _dfas = dfas;
             Start = dfas.ToDictionary(kv => kv.Key, kv => kv.Value.Start);
