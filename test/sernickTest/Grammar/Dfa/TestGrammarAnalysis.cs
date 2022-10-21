@@ -397,12 +397,12 @@ public class TestGrammarAnalysis
     // A -> eps
     // B -> A
     // C -> c
-    // S -> (ABAB)*(AC|ABA)
+    // S -> (ABBA)*(AC|ABA)
     //      
     //   -> ( ) -A-> ( ) -C-> [ ]
     //       ^        B
-    //       B        v
-    //      ( ) <-A- ( ) -A-> [ ] 
+    //       A        v
+    //      ( ) <-B- ( ) -A-> [ ] 
     [Fact(Skip = "GrammarAnalysis methods not implemented")]
     public void TestLoop()
     {
@@ -425,8 +425,8 @@ public class TestGrammarAnalysis
         {
             { (0, 'A'), 1 },
             { (1, 'B'), 2 },
-            { (2, 'A'), 3 },
-            { (3, 'B'), 0 },
+            { (2, 'B'), 3 },
+            { (3, 'A'), 0 },
             { (1, 'C'), 4 },
             { (2, 'A'), 5 }
         };
@@ -466,21 +466,18 @@ public class TestGrammarAnalysis
         Dictionary<char, HashSet<char>> expectedFollow)
     {
         var nullable = grammar.Nullable();
-        Assert.True(expectedNullable.SetEquals(nullable));
-        Assert.Equal(expectedNullable.Count, nullable.Count);
+        Assert.Equal(expectedNullable.OrderBy(a => a), nullable.OrderBy(a => a));
 
         var first = grammar.First(nullable);
         foreach (var (symbol, expectedSet) in expectedFirst)
         {
-            Assert.True(expectedSet.SetEquals(first[symbol]));
-            Assert.Equal(expectedSet.Count, first[symbol].Count);
+            Assert.Equal(expectedSet.OrderBy(a => a), first[symbol].OrderBy(a => a));
         }
 
         var follow = grammar.Follow(nullable, first);
         foreach (var (symbol, expectedSet) in expectedFollow)
         {
-            Assert.True(expectedSet.SetEquals(follow[symbol]));
-            Assert.Equal(expectedSet.Count, follow[symbol].Count);
+            Assert.Equal(expectedSet.OrderBy(a => a), follow[symbol].OrderBy(a => a));
         }
     }
 }
