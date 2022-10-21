@@ -16,38 +16,57 @@ public static class GrammarAnalysis
 
         foreach (var symbol in grammar.Productions.Keys)
         {
+            ConditionalQueues.Add(symbol, new Queue<TDfaState>());
+        }
+
+        foreach (var symbol in grammar.Productions.Keys)
+        {
             foreach (var acceptingState in grammar.Productions[symbol].AcceptingStates)
             {
-                Q.Append(Tuple.Create(symbol, acceptingState));
+                Q.Enqueue(Tuple.Create(symbol, acceptingState));
             }
         }
 
         while (Q.Count != 0)
         {
             Tuple<TSymbol, TDfaState> tuple = Q.Dequeue();
-            TSymbol symbol = tuple.Item1;
+            TSymbol symbolFromGrammar = tuple.Item1;
             TDfaState state = tuple.Item2;
 
-            if (Equals(state, grammar.Productions[symbol].Start))
+            var currentAutomata = grammar.Productions[symbolFromGrammar];
+
+            // If we've encountered a start symbol for DFA => add all states from "conditional set" for "symbol" to Q
+            // and mark current symbol as nullable
+            if (Equals(state, currentAutomata.Start))
             {
-                foreach (var stateForSymbol in ConditionalQueues[symbol])
+                foreach (var stateForSymbol in ConditionalQueues[symbolFromGrammar])
                 {
-                    Q.Append(Tuple.Create(symbol, stateForSymbol));
+                    Q.Enqueue(Tuple.Create(symbolFromGrammar, stateForSymbol));
                 }
-                ConditionalQueues[symbol].Clear();
+                Nullable.Append(symbolFromGrammar);
+                ConditionalQueues[symbolFromGrammar].Clear();
             }
 
-            foreach (var transitionEdge in grammar.Productions[symbol].GetTransitionsTo(state))
+            try
             {
-                var fromState = transitionEdge.From;
-                if (Nullable.Contains(transitionEdge.Atom))
+                foreach (var transitionEdge in grammar.Productions[symbolFromGrammar].GetTransitionsTo(state))
                 {
-                    Nullable.Add(transitionEdge.Atom);
+                    var fromState = transitionEdge.From;
+                    var atom = transitionEdge.Atom;
+                    if (Nullable.Contains(atom))
+                    {
+                        Q.Enqueue(Tuple.Create(symbolFromGrammar, fromState));
+                    }
+                    else
+                    {
+                        ConditionalQueues[atom].Enqueue(fromState);
+                    }
                 }
-                else
-                {
-                    ConditionalQueues[symbol].Append(state);
-                }
+            }
+            catch (KeyNotFoundException)
+            {
+                // our automata throws exception, instead of returning an empty list, when no transitions
+                // ignore and continue
             }
         }
 
