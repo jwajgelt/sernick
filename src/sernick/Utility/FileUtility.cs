@@ -58,7 +58,7 @@ public static class FileUtility
             {
                 return;
             }
-            
+
             // if location is equal to END
             if (ReferenceEquals(End, location))
             {
