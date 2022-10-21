@@ -26,7 +26,7 @@ public static class GrammarAnalysis
         // begin with FIRST(A) := {A}
         var result = grammar.Productions.ToDictionary(
             kv => kv.Key,
-            kv => new HashSet<TSymbol>() { kv.Key }
+            kv => new HashSet<TSymbol> { kv.Key }
         );
 
         // for each production, calculate the dfa states
