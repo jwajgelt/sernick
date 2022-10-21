@@ -6,18 +6,18 @@ public static class FileUtility
 {
     public static IInput ReadFile(this string fileName)
     {
-        return new FileInput(fileName);
+        var lines = File.ReadAllLines(fileName).Select(line => line + '\n').ToArray();
+        return new FileInput(lines);
     }
 
     private sealed class FileInput : IInput
     {
-        internal FileInput(string fileName)
+        internal FileInput(string[] lines)
         {
-            _lines = File.ReadAllLines(fileName).Select(line => line + '\n').ToArray();
+            _lines = lines;
             Start = new FileLocation(0, 0);
             End = new FileLocation(_lines.Length, 0);
             CurrentLocation = Start;
-            Current = _lines[0][0];
         }
 
         private readonly string[] _lines;
@@ -58,6 +58,13 @@ public static class FileUtility
             {
                 return;
             }
+            
+            // if location is equal to END
+            if (ReferenceEquals(End, location))
+            {
+                CurrentLocation = location;
+                return;
+            }
 
             var line = fileLocation.Line;
             var character = fileLocation.Character;
@@ -69,10 +76,9 @@ public static class FileUtility
             }
 
             CurrentLocation = location;
-            Current = _lines[line][character];
         }
 
-        public char Current { get; private set; }
+        public char Current => ReferenceEquals(CurrentLocation, End) ? '\0' : _lines[((FileLocation)CurrentLocation).Line][((FileLocation)CurrentLocation).Character];
         public ILocation CurrentLocation { get; private set; }
         public ILocation Start { get; }
         public ILocation End { get; }
@@ -90,7 +96,7 @@ public static class FileUtility
 
             public new string ToString()
             {
-                return $"line {Line}, character {Character}";
+                return $"line {Line + 1}, character {Character + 1}";
             }
         }
     }
