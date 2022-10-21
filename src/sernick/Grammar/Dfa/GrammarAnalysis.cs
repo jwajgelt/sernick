@@ -21,7 +21,6 @@ public static class GrammarAnalysis
         IReadOnlyCollection<TSymbol> nullableSymbols)
         where TSymbol : IEquatable<TSymbol>
     {
-        // TODO: get rid of `ToChar` once dfa is generic over symbol type
         var symbols = grammar.Productions.Select(kv => kv.Key).ToHashSet();
 
         // begin with FIRST(A) := {A}
@@ -45,7 +44,6 @@ public static class GrammarAnalysis
 
                 foreach (var nullableSymbol in nullableSymbols)
                 {
-                    // TODO: get rid of `ToChar` once dfa is generic over symbol type
                     var next = dfa.Transition(state, nullableSymbol);
                     if (!reachable.Contains(next))
                     {
@@ -57,7 +55,7 @@ public static class GrammarAnalysis
                 processing.Remove(state);
             }
 
-            var symbolsToAdd = processing
+            var symbolsToAdd = reachable
                 .SelectMany(state => dfa.GetTransitionsFrom(state))
                 .Select(transition => transition.Atom);
 
@@ -87,7 +85,10 @@ public static class GrammarAnalysis
             }
         }
 
-        return (IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>>)result;
+        return result.ToDictionary(
+            kv => kv.Key,
+            kv => (IReadOnlyCollection<TSymbol>)kv.Value
+        );
     }
 
     /// <summary>
