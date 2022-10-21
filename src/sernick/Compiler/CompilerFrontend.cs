@@ -32,9 +32,9 @@ public static class CompilerFrontend
         var categoryDfas =
             grammarDict.ToDictionary(
                 e => e.Key,
-                e => (IDfa<Regex>)RegexDfa.FromRegex(e.Value.Regex)
+                e => (IDfa<Regex<char>, char>)RegexDfa<char>.FromRegex(e.Value.Regex)
             );
-        return new Lexer<LexicalGrammarCategoryType, Regex>(categoryDfas);
+        return new Lexer<LexicalGrammarCategoryType, Regex<char>>(categoryDfas);
     }
 
     private static void ThrowIfErrorsOccurred(IDiagnostics diagnostics)
