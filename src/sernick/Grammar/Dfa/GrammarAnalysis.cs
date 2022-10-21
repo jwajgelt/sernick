@@ -64,9 +64,9 @@ public static class GrammarAnalysis
             symbols.UnionWith(symbolsToAdd);
         }
 
-        foreach (var symbol in symbols.Where(symbol => !result.ContainsKey(symbol)))
+        foreach (var symbol in symbols)
         {
-            result.Add(symbol, new HashSet<TSymbol>() { symbol });
+            result.TryAdd(symbol, new HashSet<TSymbol> { symbol });
         }
 
         // transitive closure over FIRST, using Floyd-Warshall
