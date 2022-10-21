@@ -66,7 +66,7 @@ public class LexicalGrammar
     {
         ["colon"] = ":"
     });
-    
+
     private readonly LexicalGrammarEntry comma = new(new CommaCategory(), new CategoryItems
     {
         ["comma"] = ","
