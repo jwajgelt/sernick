@@ -1,13 +1,13 @@
 namespace sernick.Grammar.Dfa;
 
-public static class GrammarAnalysis<TSymbol> where TSymbol : notnull
+public static class GrammarAnalysis
 {
+
     /// <summary>
     /// Compute the set NULLABLE - all symbols, from which epsilon can be derived in grammar
     /// </summary>
-    public static IReadOnlyCollection<TSymbol> Nullable<TDfaState>(
-        this DfaGrammar<TSymbol, TDfaState> grammar)
-        where TSymbol : IEquatable<TSymbol>
+    public static IReadOnlyCollection<TSymbol> Nullable<TSymbol, TDfaState>(
+        this DfaGrammar<TSymbol, TDfaState> grammar) where TSymbol : IEquatable<TSymbol> where TDfaState : IEquatable<TDfaState>
     {
         List<TSymbol> Nullable = new List<TSymbol>();
         // Use Tuple, so we remember which automata does every state come from
@@ -27,6 +27,16 @@ public static class GrammarAnalysis<TSymbol> where TSymbol : notnull
             Tuple<TSymbol, TDfaState> tuple = Q.Dequeue();
             TSymbol symbol = tuple.Item1;
             TDfaState state = tuple.Item2;
+
+            if (Equals(state, grammar.Productions[symbol].Start))
+            {
+                foreach (var stateForSymbol in ConditionalQueues[symbol])
+                {
+                    Q.Append(Tuple.Create(symbol, stateForSymbol));
+                }
+                ConditionalQueues[symbol].Clear();
+            }
+
             foreach (var transitionEdge in grammar.Productions[symbol].GetTransitionsTo(state))
             {
                 var fromState = transitionEdge.From;
@@ -34,12 +44,14 @@ public static class GrammarAnalysis<TSymbol> where TSymbol : notnull
                 {
                     Nullable.Add(transitionEdge.Atom);
                 }
-
+                else
+                {
+                    ConditionalQueues[symbol].Append(state);
+                }
             }
-
         }
 
-
+        return Nullable;
     }
 
     /// <summary>
