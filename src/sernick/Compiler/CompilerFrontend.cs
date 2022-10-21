@@ -19,7 +19,9 @@ public static class CompilerFrontend
     public static void Process(IInput input, IDiagnostics diagnostics)
     {
         var lexer = PrepareLexer();
-        _ = lexer.Process(input, diagnostics);
+        var tokens = lexer.Process(input, diagnostics);
+        // force c# to evaluate the IEnumerable
+        tokens.ToArray();
         ThrowIfErrorsOccurred(diagnostics);
     }
 
