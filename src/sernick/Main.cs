@@ -12,17 +12,27 @@ if (args.Length == 0)
     Environment.Exit(1);
 }
 
+// scan the file
 var filename = args[0];
-
-// scan and process file
 var file = filename.ReadFile();
-IDiagnostics diagnostics = new Diagnostics();
-CompilerFrontend.Process(file, diagnostics);
 
-// log all diagnostics and exit
+// try to process the file
+var success = true;
+IDiagnostics diagnostics = new Diagnostics();
+try
+{
+    CompilerFrontend.Process(file, diagnostics);
+}
+catch (CompilationException _)
+{
+    success = false;
+}
+
+// log the diagnostics
 foreach (var diagnosticItem in diagnostics.DiagnosticItems)
 {
     Console.Error.WriteLine(diagnosticItem.ToString());
 }
 
-Environment.Exit(diagnostics.DidErrorOccur ? 1 : 0);
+// exit
+Environment.Exit(success ? 0 : 1);
