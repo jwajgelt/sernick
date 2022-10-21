@@ -1,7 +1,7 @@
 namespace sernickTest.Tokenizer.Regex;
 
-using sernick.Common.Regex;
 using sernick.Tokenizer.Regex;
+using Regex = sernick.Common.Regex.Regex<char>;
 
 public class StringToRegex
 {

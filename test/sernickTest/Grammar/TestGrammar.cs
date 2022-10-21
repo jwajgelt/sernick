@@ -52,7 +52,7 @@ public class TestGrammar
 
         foreach (var grammarCategoryKey in categoriesWhichShouldAccept)
         {
-            var dfa = new RegexDfa(grammar[grammarCategoryKey].Regex);
+            var dfa = RegexDfa<char>.FromRegex(grammar[grammarCategoryKey].Regex);
             foreach (var word in goodExamples)
             {
                 var state = dfa.Transition(dfa.Start, word);

@@ -8,4 +8,5 @@ using Common.Regex;
 /// <typeparam name="TSymbol">Grammar alphabet type</typeparam>
 public record Production<TSymbol>(
     TSymbol Left,
-    Regex/*<TSymbol>*/ Right);
+    Regex<TSymbol> Right)
+    where TSymbol : IEquatable<TSymbol>;

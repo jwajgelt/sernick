@@ -2,7 +2,8 @@ namespace sernickTest.Common.Dfa;
 
 using Helpers;
 using sernick.Common.Dfa;
-using sernick.Common.Regex;
+using Regex = sernick.Common.Regex.Regex<char>;
+using RegexDfa = sernick.Common.Dfa.RegexDfa<char>;
 
 public class RegexDfaTest
 {
@@ -10,7 +11,7 @@ public class RegexDfaTest
     public void RegexDfaStartGetter()
     {
         var regex = Regex.Atom('x');
-        var regexDfa = new RegexDfa(regex);
+        var regexDfa = RegexDfa.FromRegex(regex);
         Assert.Equal(regexDfa.Start, regex);
     }
 
@@ -39,7 +40,7 @@ public class RegexDfaTest
 
         Which is equivalent to regex: (a(ab(z*)c)*)|(b(z*)c(ab(z*)c)*)
      */
-    private static RegexDfa ExampleDfa()
+    private static IDfaWithConfig<Regex, char> ExampleDfa()
     {
         var atomA = Regex.Atom('a');
         var atomB = Regex.Atom('b');
@@ -54,7 +55,7 @@ public class RegexDfaTest
         var pathB = Regex.Concat(atomB, starZ, atomC, loopStarred);
 
         var regex = Regex.Union(pathA, pathB);
-        var regexDfa = new RegexDfa(regex);
+        var regexDfa = RegexDfa.FromRegex(regex);
         return regexDfa;
     }
 
