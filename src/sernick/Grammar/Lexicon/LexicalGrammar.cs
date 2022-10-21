@@ -11,6 +11,7 @@ public enum LexicalGrammarCategoryType
     BracesAndParentheses,
     Semicolon,
     Colon,
+    Comma,
     Keywords,
     TypeIdentifiers,
     VariableIdentifiers,
@@ -65,6 +66,11 @@ public class LexicalGrammar
     {
         ["colon"] = ":"
     });
+    
+    private readonly LexicalGrammarEntry comma = new(new CommaCategory(), new CategoryItems
+    {
+        ["comma"] = ","
+    });
 
     private readonly LexicalGrammarEntry keywords = new(new KeywordCategory(), new CategoryItems
     {
@@ -89,7 +95,13 @@ public class LexicalGrammar
         ["plus"] = @"\+",
         ["minus"] = "-",
         ["shortCircuitOr"] = @"\|\|",
-        ["shortCircuitAnd"] = "&&"
+        ["shortCircuitAnd"] = "&&",
+        ["assignment"] = "=",
+        ["equality"] = "==",
+        ["greater"] = ">",
+        ["less"] = "<",
+        ["greaterOrEqual"] = ">=",
+        ["lessOrEqual"] = "<="
     });
 
     private readonly LexicalGrammarEntry whitespaces = new(new WhitespaceCategory(), new CategoryItems
@@ -122,6 +134,7 @@ public class LexicalGrammar
         {
             [LexicalGrammarCategoryType.Colon] = colon,
             [LexicalGrammarCategoryType.Semicolon] = semicolon,
+            [LexicalGrammarCategoryType.Comma] = comma,
             [LexicalGrammarCategoryType.BracesAndParentheses] = bracesAndParentheses,
             [LexicalGrammarCategoryType.Comments] = comments,
             [LexicalGrammarCategoryType.Literals] = literals,

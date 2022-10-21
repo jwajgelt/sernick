@@ -29,34 +29,39 @@ public sealed class ColonCategory : ILexicalGrammarCategory
     public short Priority => 3;
 }
 
-public sealed class WhitespaceCategory : ILexicalGrammarCategory
+public sealed class CommaCategory : ILexicalGrammarCategory
 {
     public short Priority => 4;
 }
 
-public sealed class LiteralsCategory : ILexicalGrammarCategory
+public sealed class WhitespaceCategory : ILexicalGrammarCategory
 {
     public short Priority => 5;
 }
 
-public sealed class OperatorCategory : ILexicalGrammarCategory
+public sealed class LiteralsCategory : ILexicalGrammarCategory
 {
     public short Priority => 6;
 }
-public sealed class KeywordCategory : ILexicalGrammarCategory
+
+public sealed class OperatorCategory : ILexicalGrammarCategory
 {
     public short Priority => 7;
+}
+public sealed class KeywordCategory : ILexicalGrammarCategory
+{
+    public short Priority => 8;
 }
 
 public sealed class TypeIdentifierCategory : ILexicalGrammarCategory
 {
-    public short Priority => 8;
+    public short Priority => 9;
 }
 public sealed class VariableIdentifierCategory : ILexicalGrammarCategory
 {
-    public short Priority => 9;
+    public short Priority => 10;
 }
 public sealed class CommentCategory : ILexicalGrammarCategory
 {
-    public short Priority => 10;
+    public short Priority => 11;
 }
