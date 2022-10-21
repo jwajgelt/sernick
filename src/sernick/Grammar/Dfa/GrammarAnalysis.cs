@@ -9,10 +9,10 @@ public static class GrammarAnalysis
     public static IReadOnlyCollection<TSymbol> Nullable<TSymbol, TDfaState>(
         this DfaGrammar<TSymbol, TDfaState> grammar) where TSymbol : IEquatable<TSymbol> where TDfaState : IEquatable<TDfaState>
     {
-        List<TSymbol> Nullable = new List<TSymbol>();
+        var Nullable = new List<TSymbol>();
         // Use Tuple, so we remember which automata does every state come from
-        Queue<Tuple<TSymbol, TDfaState>> Q = new Queue<Tuple<TSymbol, TDfaState>>();
-        Dictionary<TSymbol, Queue<TDfaState>> ConditionalQueues = new Dictionary<TSymbol, Queue<TDfaState>>();
+        var Q = new Queue<Tuple<TSymbol, TDfaState>>();
+        var ConditionalQueues = new Dictionary<TSymbol, Queue<TDfaState>>();
 
         foreach (var symbol in grammar.Productions.Keys)
         {
@@ -29,9 +29,9 @@ public static class GrammarAnalysis
 
         while (Q.Count != 0)
         {
-            Tuple<TSymbol, TDfaState> tuple = Q.Dequeue();
-            TSymbol symbolFromGrammar = tuple.Item1;
-            TDfaState state = tuple.Item2;
+            var tuple = Q.Dequeue();
+            var symbolFromGrammar = tuple.Item1;
+            var state = tuple.Item2;
 
             var currentAutomata = grammar.Productions[symbolFromGrammar];
 
@@ -43,6 +43,7 @@ public static class GrammarAnalysis
                 {
                     Q.Enqueue(Tuple.Create(symbolFromGrammar, stateForSymbol));
                 }
+
                 Nullable.Append(symbolFromGrammar);
                 ConditionalQueues[symbolFromGrammar].Clear();
             }
