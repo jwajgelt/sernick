@@ -25,6 +25,7 @@ try
 }
 catch (CompilationException _)
 {
+    Console.Error.WriteLine("Compilation failed.");
     success = false;
 }
 
