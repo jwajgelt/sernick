@@ -15,8 +15,12 @@ public static class FrontendTest
         var diagnostics = new FakeDiagnostics();
 
         var grammar = new LexicalGrammar().GenerateGrammar();
-        var categoryDfas = grammar.ToDictionary(grammarEntry => grammarEntry.Key, grammarEntry => (IDfa<Regex>)new RegexDfa(grammarEntry.Value.Regex));
-        var lexer = new Lexer<LexicalGrammarCategoryType, Regex>(categoryDfas);
+        var categoryDfas =
+            grammar.ToDictionary(
+                grammarEntry => grammarEntry.Key,
+                grammarEntry => (IDfa<Regex<char>, char>)RegexDfa<char>.FromRegex(grammarEntry.Value.Regex)
+            );
+        var lexer = new Lexer<LexicalGrammarCategoryType, Regex<char>>(categoryDfas);
 
         /*
          * ToList() is needed to force evaluation of the tokens, so the whole lexer.Process() computes
