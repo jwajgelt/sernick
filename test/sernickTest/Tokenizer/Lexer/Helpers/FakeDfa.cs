@@ -30,15 +30,15 @@ internal sealed class FakeDfa : IDfaWithConfig<int, char>
             : DEAD_STATE;
     }
 
-    public IEnumerable<IDfaWithConfig<int>.TransitionEdge> GetTransitionsFrom(int state)
+    public IEnumerable<TransitionEdge<int, char>> GetTransitionsFrom(int state)
     {
         return _transitions.Where(t => t.Key.Item1 == state)
-            .Select(t => new IDfaWithConfig<int>.TransitionEdge(t.Key.Item1, t.Value, t.Key.Item2));
+            .Select(t => new TransitionEdge<int, char>(t.Key.Item1, t.Value, t.Key.Item2));
     }
 
-    public IEnumerable<IDfaWithConfig<int>.TransitionEdge> GetTransitionsTo(int state)
+    public IEnumerable<TransitionEdge<int, char>> GetTransitionsTo(int state)
     {
         return _transitions.Where(t => t.Value == state)
-            .Select(t => new IDfaWithConfig<int>.TransitionEdge(t.Key.Item1, t.Value, t.Key.Item2));
+            .Select(t => new TransitionEdge<int, char>(t.Key.Item1, t.Value, t.Key.Item2));
     }
 }
