@@ -1,22 +1,13 @@
-using sernick.Diagnostics;
-using sernick.Input;
-
 namespace sernick.Tokenizer.Lexer;
 
-public class LexicalError : IDiagnosticItem
+using Diagnostics;
+using Input;
+
+public sealed record LexicalError(ILocation Start, ILocation End) : IDiagnosticItem
 {
-    public LexicalError(ILocation start, ILocation end)
+    public override string ToString()
     {
-        _start = start;
-        _end = end;
-    }
-
-    private readonly ILocation _start;
-    private readonly ILocation _end;
-
-    public new string ToString()
-    {
-        return $"Lexical Error starting at: {_start.ToString()} and ending at: {_end.ToString()}";
+        return $"Lexical Error starting at: {Start} and ending at: {End}";
     }
 
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;

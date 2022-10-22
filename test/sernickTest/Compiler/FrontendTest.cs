@@ -1,33 +1,111 @@
-using sernick.Common.Dfa;
-using sernick.Common.Regex;
-using sernick.Grammar.Lexicon;
-using sernick.Tokenizer.Lexer;
-using sernick.Utility;
-using sernickTest.Diagnostics;
-
 namespace sernickTest.Compiler;
 
-public static class FrontendTest
+using Helpers;
+using sernick.Tokenizer.Lexer;
+
+public class FrontendTest
 {
-    public static FakeDiagnostics Compile(string fileName)
+    [Fact]
+    public void CompileCorrectCode_Case1()
     {
-        var input = FileUtility.ReadFile(fileName);
-        var diagnostics = new FakeDiagnostics();
+        var diagnostics = "../../../../../examples/argument-types/correct/multiple-args.ser".Compile();
 
-        var grammar = new LexicalGrammar().GenerateGrammar();
-        var categoryDfas =
-            grammar.ToDictionary(
-                grammarEntry => grammarEntry.Key,
-                grammarEntry => (IDfa<Regex<char>, char>)RegexDfa<char>.FromRegex(grammarEntry.Value.Regex)
-            );
-        var lexer = new Lexer<LexicalGrammarCategoryType, Regex<char>>(categoryDfas);
+        Assert.False(diagnostics.Items.Any());
+    }
 
-        /*
-         * ToList() is needed to force evaluation of the tokens, so the whole lexer.Process() computes
-         * and diagnostics are reported
-         */
-        var tokens = lexer.Process(input, diagnostics).ToList();
+    [Fact]
+    public void CompileCorrectCode_Case2()
+    {
+        var diagnostics = "../../../../../examples/code-blocks/correct/code_blocks_return_values.ser".Compile();
 
-        return diagnostics;
+        Assert.False(diagnostics.Items.Any());
+    }
+
+    [Fact]
+    public void CompileCorrectCode_Case3()
+    {
+        var diagnostics = "../../../../../examples/control_flow/correct/if_else_expression_true.ser".Compile();
+
+        Assert.False(diagnostics.Items.Any());
+    }
+
+    [Fact]
+    public void CompileCorrectCode_Case4()
+    {
+        var diagnostics = "../../../../../examples/loops/correct/nested.ser".Compile();
+
+        Assert.False(diagnostics.Items.Any());
+    }
+
+    [Fact]
+    public void CompileCorrectCode_Case5()
+    {
+        var diagnostics = "../../../../../examples/variable-declaration-initialization/correct/var_decl_and_init_no_type.ser".Compile();
+
+        Assert.False(diagnostics.Items.Any());
+    }
+
+    [Fact]
+    public void CompileCorrectCode_Case6()
+    {
+        var diagnostics = "../../../../../examples/variable-declaration-initialization/correct/const_decl_no_init.ser".Compile();
+
+        Assert.False(diagnostics.Items.Any());
+    }
+
+    // '#' and '/' are illegal characters so the lexer shouldn't label them
+    [Fact]
+    public void CompileIncorrectCode_Case1()
+    {
+        var diagnostics = "../../../../../examples/comments-and-separators/incorrect/illegal_one_line_comment.ser".Compile();
+
+        Assert.True(diagnostics.Items.Any());
+        Assert.Equal(2, diagnostics.Items.Count(item => item is LexicalError));
+        Assert.Contains(diagnostics.Items, item =>
+        {
+            if (item is not LexicalError lexicalError)
+            {
+                return false;
+            }
+
+            return lexicalError.Start.ToString() == "line 1, character 1" && lexicalError.End.ToString() == "line 1, character 2";
+        });
+        Assert.Contains(diagnostics.Items, item =>
+        {
+            if (item is not LexicalError lexicalError)
+            {
+                return false;
+            }
+
+            return lexicalError.Start.ToString() == "line 2, character 1" && lexicalError.End.ToString() == "line 2, character 3";
+        });
+    }
+
+    // '*/' without matching '/*' is illegal so the lexer shouldn't label them
+    [Fact(Skip = "Issue with block comment at the moment")]
+    public void CompileIncorrectCode_Case2()
+    {
+        var diagnostics = "../../../../../examples/comments-and-separators/incorrect/double_end_of_comment.ser".Compile();
+
+        Assert.True(diagnostics.Items.Any());
+        Assert.Equal(2, diagnostics.Items.Count(item => item is LexicalError));
+        Assert.Contains(diagnostics.Items, item =>
+        {
+            if (item is not LexicalError lexicalError)
+            {
+                return false;
+            }
+
+            return lexicalError.Start.ToString() == "line 4, character 1" && lexicalError.End.ToString() == "line 4, character 2";
+        });
+        Assert.Contains(diagnostics.Items, item =>
+        {
+            if (item is not LexicalError lexicalError)
+            {
+                return false;
+            }
+
+            return lexicalError.Start.ToString() == "line 4, character 2" && lexicalError.End.ToString() == "line 4, character 3";
+        });
     }
 }

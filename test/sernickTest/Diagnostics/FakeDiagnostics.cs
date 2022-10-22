@@ -1,15 +1,10 @@
-using sernick.Diagnostics;
-
 namespace sernickTest.Diagnostics;
 
+using sernick.Diagnostics;
+
 public class FakeDiagnostics : IDiagnostics
-
 {
-    public void Report(IDiagnosticItem diagnosticItem)
-    {
-        _items.Add(diagnosticItem);
-    }
-
     private readonly List<IDiagnosticItem> _items = new();
-    public IEnumerable<IDiagnosticItem> Items => _items.AsReadOnly();
+    public void Report(IDiagnosticItem diagnosticItem) => _items.Add(diagnosticItem);
+    public IEnumerable<IDiagnosticItem> Items => _items;
 }

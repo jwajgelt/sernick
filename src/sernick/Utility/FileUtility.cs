@@ -1,6 +1,6 @@
-using sernick.Input;
-
 namespace sernick.Utility;
+
+using Input;
 
 public static class FileUtility
 {
@@ -16,7 +16,7 @@ public static class FileUtility
         {
             _lines = lines;
             Start = new FileLocation(0, 0);
-            End = new FileLocation(_lines.Length, 0);
+            End = new FileLocation((uint)_lines.Length, 0);
             CurrentLocation = Start;
         }
 
@@ -29,25 +29,25 @@ public static class FileUtility
                 return false;
             }
 
-            var line = _lines[((FileLocation)CurrentLocation).Line];
+            var line = _lines[CurrentFileLocation.Line];
 
             // if at the end of current line then move to the next line
-            if (line.Length <= ((FileLocation)CurrentLocation).Character + 1)
+            if (line.Length <= CurrentFileLocation.Character + 1)
             {
                 // if below the last line then move to End
-                if (_lines.Length <= ((FileLocation)CurrentLocation).Line + 1)
+                if (_lines.Length <= CurrentFileLocation.Line + 1)
                 {
                     CurrentLocation = End;
                     return false;
                 }
 
                 // moving to the beginning of the next line
-                CurrentLocation = new FileLocation(((FileLocation)CurrentLocation).Line + 1, 0);
+                CurrentLocation = new FileLocation(CurrentFileLocation.Line + 1, 0);
                 return true;
             }
 
             // if moving to the next character
-            CurrentLocation = new FileLocation(((FileLocation)CurrentLocation).Line, ((FileLocation)CurrentLocation).Character + 1);
+            CurrentLocation = new FileLocation(CurrentFileLocation.Line, CurrentFileLocation.Character + 1);
             return true;
         }
 
@@ -78,23 +78,15 @@ public static class FileUtility
             CurrentLocation = location;
         }
 
-        public char Current => ReferenceEquals(CurrentLocation, End) ? '\0' : _lines[((FileLocation)CurrentLocation).Line][((FileLocation)CurrentLocation).Character];
+        public char Current => ReferenceEquals(CurrentLocation, End) ? '\0' : _lines[CurrentFileLocation.Line][(int)CurrentFileLocation.Character];
         public ILocation CurrentLocation { get; private set; }
+        private FileLocation CurrentFileLocation => (CurrentLocation as FileLocation)!;
         public ILocation Start { get; }
         public ILocation End { get; }
 
-        private sealed class FileLocation : ILocation
+        private sealed record FileLocation(uint Line, uint Character) : ILocation
         {
-            internal FileLocation(int line, int character)
-            {
-                Line = line;
-                Character = character;
-            }
-
-            internal readonly int Line;
-            internal readonly int Character;
-
-            public new string ToString()
+            public override string ToString()
             {
                 return $"line {Line + 1}, character {Character + 1}";
             }
