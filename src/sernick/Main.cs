@@ -23,7 +23,7 @@ try
 {
     CompilerFrontend.Process(file, diagnostics);
 }
-catch (CompilationException _)
+catch (CompilationException)
 {
     Console.Error.WriteLine("Compilation failed.");
     success = false;
@@ -32,7 +32,7 @@ catch (CompilationException _)
 // log the diagnostics
 foreach (var diagnosticItem in diagnostics.DiagnosticItems)
 {
-    Console.Error.WriteLine(diagnosticItem.ToString());
+    Console.Error.WriteLine(diagnosticItem);
 }
 
 // exit

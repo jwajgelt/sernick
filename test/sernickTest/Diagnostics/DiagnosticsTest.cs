@@ -18,8 +18,8 @@ public class DiagnosticsTest
     public void DiagnosticItemsAreSavedWhenReported()
     {
         var diagnostics = new Diagnostics();
-        var item1 = new DiagnosticItemFake(DiagnosticItemSeverity.Error);
-        var item2 = new DiagnosticItemFake(DiagnosticItemSeverity.Info);
+        var item1 = new FakeDiagnosticItem(DiagnosticItemSeverity.Error);
+        var item2 = new FakeDiagnosticItem(DiagnosticItemSeverity.Info);
 
         diagnostics.Report(item1);
         diagnostics.Report(item2);
@@ -32,9 +32,9 @@ public class DiagnosticsTest
     public void DidErrorOccurFlagIsUpdated()
     {
         var diagnostics = new Diagnostics();
-        var item1 = new DiagnosticItemFake(DiagnosticItemSeverity.Info);
-        var item2 = new DiagnosticItemFake(DiagnosticItemSeverity.Error);
-        var item3 = new DiagnosticItemFake(DiagnosticItemSeverity.Info);
+        var item1 = new FakeDiagnosticItem(DiagnosticItemSeverity.Info);
+        var item2 = new FakeDiagnosticItem(DiagnosticItemSeverity.Error);
+        var item3 = new FakeDiagnosticItem(DiagnosticItemSeverity.Info);
 
         var flag0 = diagnostics.DidErrorOccur;
         diagnostics.Report(item1);
