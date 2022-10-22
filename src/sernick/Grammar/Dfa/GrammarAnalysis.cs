@@ -102,6 +102,100 @@ public static class GrammarAnalysis
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFirst)
         where TSymbol : IEquatable<TSymbol>
     {
-        throw new NotImplementedException();
+
+        /*
+         *  The main idea of the algorithm is to utilize following relationships until a fixed point is reached:
+         *  1. For a production X -> regex and for any symbol Y that can be at the end of a word in L(regex)
+         *      we have that FOLLOW(X) is a subset of FOLLOW(Y), because S ->* XZ -> aYZ
+         *  2. For a production X -> regex and any any word aXYb in L(regex)
+         *      we have that FIRST(Y) is a subset of FOLLOW(X)
+         *
+         *  To make it work with our approach (using dfas on the right-hand side of the productions), we also define
+         *  FOLLOW sets for dfa states. For an accepting state the FOLLOW set consists of the symbols that are present
+         *  in the FOLLOW set of the symbol on the left-hand side of the production. Then we propagate these sets by
+         *  visiting every edge e:
+         *  1. If the symbol of e is nullable then we copy the FOLLOW set of the destination to the source.
+         *  2. We copy all the elements in the FIRST set of the e symbol to the source's FOLLOW set.
+         *
+         *  Then the FOLLOW set of a symbol is a sum of the FOLLOW sets of all the states that can be entered with this symbol.
+         */
+
+        var followSetMap = new Dictionary<TSymbol, HashSet<TSymbol>>();
+        var productionFollowSetMap = new Dictionary<TSymbol, Dictionary<TDfaState, HashSet<TSymbol>>>();
+
+        // iterate until a fixed point is reached
+        bool hasChanged;
+        do
+        {
+            hasChanged = false;
+            foreach (var production in grammar.Productions)
+            {
+                // the FOLLOW set of the left-hand side symbol of a production
+                var keyFollowSet = followSetMap.GetOrAddSet(production.Key);
+                // use queue and set to traverse from accepting states backwards using bfs
+                var queue = new Queue<TDfaState>();
+                var visitedStates = new HashSet<TDfaState>();
+
+                productionFollowSetMap.TryAdd(production.Key, new Dictionary<TDfaState, HashSet<TSymbol>>());
+                // the map of the FOLLOW sets for the states of this dfa
+                var stateFollowSetMap = productionFollowSetMap[production.Key];
+
+                foreach (var state in production.Value.AcceptingStates)
+                {
+                    queue.Enqueue(state);
+                    // add the FOLLOW set of the left side of the production to the FOLLOW sets of accepting states
+                    stateFollowSetMap.GetOrAddSet(state).UnionWithCheck(keyFollowSet, ref hasChanged);
+                }
+
+                while (queue.Count != 0)
+                {
+                    var state = queue.Dequeue();
+                    visitedStates.Add(state);
+                    foreach (var edge in production.Value.GetTransitionsTo(state))
+                    {
+                        if (!visitedStates.Contains(edge.From))
+                        {
+                            queue.Enqueue(edge.From);
+                        }
+
+                        // copy all the elements from the FOLLOW set of the current state to the FOLLOW set of edge.Atom
+                        followSetMap.GetOrAddSet(edge.Atom).UnionWithCheck(stateFollowSetMap.GetOrAddSet(state), ref hasChanged);
+
+                        // copy all the elements from the FIRST set of edge.Atom to the edge.From FOLLOW set
+                        stateFollowSetMap.GetOrAddSet(edge.From).UnionWithCheck(symbolsFirst[edge.Atom], ref hasChanged);
+
+                        // if edge.Atom is nullable then copy all the elements from the FOLLOW set of the current state to edge.FROM
+                        if (nullableSymbols.Contains(edge.Atom))
+                        {
+                            stateFollowSetMap.GetOrAddSet(edge.From).UnionWithCheck(stateFollowSetMap.GetOrAddSet(state), ref hasChanged);
+                        }
+                    }
+                }
+            }
+        } while (hasChanged);
+
+        var result = new Dictionary<TSymbol, IReadOnlyCollection<TSymbol>>();
+        foreach (var (key, value) in followSetMap)
+        {
+            result[key] = value;
+        }
+
+        return result;
+    }
+}
+
+internal static class GrammarAnalysisHelpers
+{
+    public static HashSet<TValue> GetOrAddSet<TKey, TValue>(this IDictionary<TKey, HashSet<TValue>> dictionary, TKey key)
+    {
+        dictionary.TryAdd(key, new HashSet<TValue>());
+        return dictionary[key];
+    }
+
+    public static void UnionWithCheck<T>(this HashSet<T> set, IEnumerable<T> other, ref bool hasChanged)
+    {
+        var count = set.Count;
+        set.UnionWith(other);
+        hasChanged = hasChanged || count != set.Count;
     }
 }
