@@ -1,5 +1,7 @@
 namespace sernick.Grammar.Dfa;
 
+using Utility;
+
 public static class GrammarAnalysis
 {
     /// <summary>
@@ -131,7 +133,7 @@ public static class GrammarAnalysis
             foreach (var production in grammar.Productions)
             {
                 // the FOLLOW set of the left-hand side symbol of a production
-                var keyFollowSet = followSetMap.GetOrAddSet(production.Key);
+                var keyFollowSet = followSetMap.GetOrAddEmpty(production.Key);
                 // use queue and set to traverse from accepting states backwards using bfs
                 var queue = new Queue<TDfaState>();
                 var visitedStates = new HashSet<TDfaState>();
@@ -144,7 +146,7 @@ public static class GrammarAnalysis
                 {
                     queue.Enqueue(state);
                     // add the FOLLOW set of the left side of the production to the FOLLOW sets of accepting states
-                    stateFollowSetMap.GetOrAddSet(state).UnionWithCheck(keyFollowSet, ref hasChanged);
+                    stateFollowSetMap.GetOrAddEmpty(state).UnionWithCheck(keyFollowSet, ref hasChanged);
                 }
 
                 while (queue.Count != 0)
@@ -159,15 +161,15 @@ public static class GrammarAnalysis
                         }
 
                         // copy all the elements from the FOLLOW set of the current state to the FOLLOW set of edge.Atom
-                        followSetMap.GetOrAddSet(edge.Atom).UnionWithCheck(stateFollowSetMap.GetOrAddSet(state), ref hasChanged);
+                        followSetMap.GetOrAddEmpty(edge.Atom).UnionWithCheck(stateFollowSetMap.GetOrAddEmpty(state), ref hasChanged);
 
                         // copy all the elements from the FIRST set of edge.Atom to the edge.From FOLLOW set
-                        stateFollowSetMap.GetOrAddSet(edge.From).UnionWithCheck(symbolsFirst[edge.Atom], ref hasChanged);
+                        stateFollowSetMap.GetOrAddEmpty(edge.From).UnionWithCheck(symbolsFirst[edge.Atom], ref hasChanged);
 
                         // if edge.Atom is nullable then copy all the elements from the FOLLOW set of the current state to edge.FROM
                         if (nullableSymbols.Contains(edge.Atom))
                         {
-                            stateFollowSetMap.GetOrAddSet(edge.From).UnionWithCheck(stateFollowSetMap.GetOrAddSet(state), ref hasChanged);
+                            stateFollowSetMap.GetOrAddEmpty(edge.From).UnionWithCheck(stateFollowSetMap.GetOrAddEmpty(state), ref hasChanged);
                         }
                     }
                 }
@@ -186,12 +188,6 @@ public static class GrammarAnalysis
 
 internal static class GrammarAnalysisHelpers
 {
-    public static HashSet<TValue> GetOrAddSet<TKey, TValue>(this IDictionary<TKey, HashSet<TValue>> dictionary, TKey key)
-    {
-        dictionary.TryAdd(key, new HashSet<TValue>());
-        return dictionary[key];
-    }
-
     public static void UnionWithCheck<T>(this HashSet<T> set, IEnumerable<T> other, ref bool hasChanged)
     {
         var count = set.Count;
