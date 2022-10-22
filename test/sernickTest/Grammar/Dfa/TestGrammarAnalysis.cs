@@ -455,7 +455,7 @@ public class TestGrammarAnalysis
             {'B', new HashSet<char>{'A','B','C','c'}},
             {'C', new HashSet<char>{}},
             {'c', new HashSet<char>{}},
-            {'S', new HashSet<char>{'A','B','C','c'}}
+            {'S', new HashSet<char>{}}
         };
         Verify(grammar, expectedNullable, expectedFirst, expectedFollow);
     }

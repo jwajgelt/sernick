@@ -1,6 +1,7 @@
 namespace sernick.Common.Dfa;
 
 using Regex;
+using Utility;
 
 public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where TAtom : IEquatable<TAtom>
 {
@@ -53,8 +54,8 @@ public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where 
                 var nextState = currentState.Derivative(atom);
                 var edge = new TransitionEdge<Regex<TAtom>, TAtom>(currentState, nextState, atom);
 
-                transitionsToMap.GetOrAddList(nextState).Add(edge);
-                transitionsFromMap.GetOrAddList(currentState).Add(edge);
+                transitionsToMap.GetOrAddEmpty(nextState).Add(edge);
+                transitionsFromMap.GetOrAddEmpty(currentState).Add(edge);
 
                 if (visited.Contains(nextState))
                 {
@@ -94,11 +95,5 @@ internal static class RegexDfaHelpers
             default:
                 throw new NotSupportedException("Unrecognized Regex class implementation");
         }
-    }
-
-    public static List<TValue> GetOrAddList<TKey, TValue>(this IDictionary<TKey, List<TValue>> dictionary, TKey key)
-    {
-        dictionary.TryAdd(key, new List<TValue>());
-        return dictionary[key];
     }
 }
