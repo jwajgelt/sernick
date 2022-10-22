@@ -1,7 +1,9 @@
 namespace sernickTest.Tokenizer.Lexer;
 
 using Helpers;
+using Moq;
 using sernick.Common.Dfa;
+using sernick.Diagnostics;
 using sernick.Tokenizer;
 using sernick.Tokenizer.Lexer;
 
@@ -28,7 +30,7 @@ public class Lexer
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
-        var result = lexer.Process(input, new NoOpDiagnostics()).ToList();
+        var result = lexer.Process(input, new Mock<IDiagnostics>().Object).ToList();
         Assert.Single(result, new Token<string>(categoryName, "a", input.Start, input.End));
     }
 
@@ -53,7 +55,7 @@ public class Lexer
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
-        var result = lexer.Process(input, new NoOpDiagnostics());
+        var result = lexer.Process(input, new Mock<IDiagnostics>().Object);
         Assert.Empty(result);
     }
 
@@ -77,7 +79,7 @@ public class Lexer
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
-        var result = lexer.Process(input, new NoOpDiagnostics());
+        var result = lexer.Process(input, new Mock<IDiagnostics>().Object);
         Assert.Single(result, new Token<string>(categoryName, "aaaa", input.Start, new FakeInput.Location(4)));
     }
 
@@ -104,7 +106,7 @@ public class Lexer
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
-        var result = lexer.Process(input, new NoOpDiagnostics());
+        var result = lexer.Process(input, new Mock<IDiagnostics>().Object);
         var expected = new List<Token<string>> {
             new(categoryName, "ab", input.Start, new FakeInput.Location(2)),
             new(categoryName, "ab", new FakeInput.Location(2), new FakeInput.Location(4))
@@ -136,7 +138,7 @@ public class Lexer
 
         var lexer = new Lexer<string, int>(categoryDfas);
 
-        var result = lexer.Process(input, new NoOpDiagnostics());
+        var result = lexer.Process(input, new Mock<IDiagnostics>().Object);
         var expected = new List<Token<string>> {
             new(categoryName, "ab", input.Start, new FakeInput.Location(2)),
             new(categoryName, "ab", new FakeInput.Location(3), new FakeInput.Location(5))
@@ -185,7 +187,7 @@ public class Lexer
 
         var lexer = new Lexer<int, int>(categoryDfas);
 
-        var result = lexer.Process(input, new NoOpDiagnostics());
+        var result = lexer.Process(input, new Mock<IDiagnostics>().Object);
         Assert.Single(result, new Token<int>(category1, "ababab", input.Start, new FakeInput.Location(6)));
     }
 
@@ -232,7 +234,7 @@ public class Lexer
 
         // compare sets, since the order the categories are yielded in
         // is unspecified
-        var result = lexer.Process(input, new NoOpDiagnostics()).ToHashSet();
+        var result = lexer.Process(input, new Mock<IDiagnostics>().Object).ToHashSet();
         var expected = new HashSet<Token<int>> {
             new(category1, "ababab", input.Start, new FakeInput.Location(6)),
             new(category2, "ababab", input.Start, new FakeInput.Location(6))

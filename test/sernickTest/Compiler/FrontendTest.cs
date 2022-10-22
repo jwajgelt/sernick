@@ -10,7 +10,7 @@ public class FrontendTest
     {
         var diagnostics = "../../../../../examples/argument-types/correct/multiple-args.ser".Compile();
 
-        Assert.False(diagnostics.Items.Any());
+        Assert.False(diagnostics.DidErrorOccur);
     }
 
     [Fact]
@@ -18,7 +18,7 @@ public class FrontendTest
     {
         var diagnostics = "../../../../../examples/code-blocks/correct/code_blocks_return_values.ser".Compile();
 
-        Assert.False(diagnostics.Items.Any());
+        Assert.False(diagnostics.DidErrorOccur);
     }
 
     [Fact]
@@ -26,7 +26,7 @@ public class FrontendTest
     {
         var diagnostics = "../../../../../examples/control_flow/correct/if_else_expression_true.ser".Compile();
 
-        Assert.False(diagnostics.Items.Any());
+        Assert.False(diagnostics.DidErrorOccur);
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class FrontendTest
     {
         var diagnostics = "../../../../../examples/loops/correct/nested.ser".Compile();
 
-        Assert.False(diagnostics.Items.Any());
+        Assert.False(diagnostics.DidErrorOccur);
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public class FrontendTest
     {
         var diagnostics = "../../../../../examples/variable-declaration-initialization/correct/var_decl_and_init_no_type.ser".Compile();
 
-        Assert.False(diagnostics.Items.Any());
+        Assert.False(diagnostics.DidErrorOccur);
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public class FrontendTest
     {
         var diagnostics = "../../../../../examples/variable-declaration-initialization/correct/const_decl_no_init.ser".Compile();
 
-        Assert.False(diagnostics.Items.Any());
+        Assert.False(diagnostics.DidErrorOccur);
     }
 
     // '#' and '/' are illegal characters so the lexer shouldn't label them
@@ -59,9 +59,9 @@ public class FrontendTest
     {
         var diagnostics = "../../../../../examples/comments-and-separators/incorrect/illegal_one_line_comment.ser".Compile();
 
-        Assert.True(diagnostics.Items.Any());
-        Assert.Equal(2, diagnostics.Items.Count(item => item is LexicalError));
-        Assert.Contains(diagnostics.Items, item =>
+        Assert.True(diagnostics.DidErrorOccur);
+        Assert.Equal(2, diagnostics.DiagnosticItems.Count(item => item is LexicalError));
+        Assert.Contains(diagnostics.DiagnosticItems, item =>
         {
             if (item is not LexicalError lexicalError)
             {
@@ -70,7 +70,7 @@ public class FrontendTest
 
             return lexicalError.Start.ToString() == "line 1, character 1" && lexicalError.End.ToString() == "line 1, character 2";
         });
-        Assert.Contains(diagnostics.Items, item =>
+        Assert.Contains(diagnostics.DiagnosticItems, item =>
         {
             if (item is not LexicalError lexicalError)
             {
@@ -87,9 +87,9 @@ public class FrontendTest
     {
         var diagnostics = "../../../../../examples/comments-and-separators/incorrect/double_end_of_comment.ser".Compile();
 
-        Assert.True(diagnostics.Items.Any());
-        Assert.Equal(2, diagnostics.Items.Count(item => item is LexicalError));
-        Assert.Contains(diagnostics.Items, item =>
+        Assert.True(diagnostics.DidErrorOccur);
+        Assert.Equal(2, diagnostics.DiagnosticItems.Count(item => item is LexicalError));
+        Assert.Contains(diagnostics.DiagnosticItems, item =>
         {
             if (item is not LexicalError lexicalError)
             {
@@ -98,7 +98,7 @@ public class FrontendTest
 
             return lexicalError.Start.ToString() == "line 4, character 1" && lexicalError.End.ToString() == "line 4, character 2";
         });
-        Assert.Contains(diagnostics.Items, item =>
+        Assert.Contains(diagnostics.DiagnosticItems, item =>
         {
             if (item is not LexicalError lexicalError)
             {

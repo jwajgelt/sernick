@@ -1,6 +1,7 @@
 namespace sernick.Common.Dfa;
 
 using Regex;
+
 public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where TAtom : IEquatable<TAtom>
 {
     private RegexDfa(
@@ -19,9 +20,12 @@ public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where 
     public Regex<TAtom> Transition(Regex<TAtom> state, TAtom atom) => state.Derivative(atom);
 
     public IEnumerable<TransitionEdge<Regex<TAtom>, TAtom>> GetTransitionsFrom(Regex<TAtom> state) =>
-        _transitionsFromMap[state];
+        _transitionsFromMap.TryGetValue(state, out var value)
+            ? value : Enumerable.Empty<TransitionEdge<Regex<TAtom>, TAtom>>();
 
-    public IEnumerable<TransitionEdge<Regex<TAtom>, TAtom>> GetTransitionsTo(Regex<TAtom> state) => _transitionsToMap[state];
+    public IEnumerable<TransitionEdge<Regex<TAtom>, TAtom>> GetTransitionsTo(Regex<TAtom> state) =>
+        _transitionsToMap.TryGetValue(state, out var value)
+            ? value : Enumerable.Empty<TransitionEdge<Regex<TAtom>, TAtom>>();
     public IEnumerable<Regex<TAtom>> AcceptingStates { get; }
     private readonly Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>> _transitionsToMap;
     private readonly Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>> _transitionsFromMap;
