@@ -7,12 +7,7 @@ namespace sernick.Parser.Ast;
 /// </summary>
 public abstract class AstNode { }
 
-public class Identifier
-{
-    public Identifier(string _name) => name = _name;
-
-    private string name { get; }
-}
+public record Identifier(string Name);
 
 /// <summary>
 /// Base class for all types of expressions
