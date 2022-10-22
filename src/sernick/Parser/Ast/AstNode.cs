@@ -17,7 +17,7 @@ public abstract class Expression : AstNode { }
 /// <summary>
 /// Class for code blocks (introducing new scope)
 /// </summary>
-public class CodeBlock : Expression
+sealed public class CodeBlock : Expression
 {
     public CodeBlock(Expression inner_expression) => inner = inner_expression;
 
@@ -27,7 +27,7 @@ public class CodeBlock : Expression
 /// <summary>
 /// Class representing expressions which consist of many expressions (use of ;)
 /// </summary>
-public class ExpressionJoin : Expression
+sealed public class ExpressionJoin : Expression
 {
     public ExpressionJoin(IEnumerable<Expression> expressions) => inner = expressions;
 
@@ -37,9 +37,9 @@ public class ExpressionJoin : Expression
 /// <summary>
 /// Base class for all expressions which are created through use of operators
 /// </summary>
-public abstract class OperatorExp : Expression { }
+public abstract class Operator : Expression { }
 
-public class PlusOperator : OperatorExp
+sealed public class PlusOperator : Operator
 {
     public PlusOperator(Expression _left, Expression _right) => (left, right) = (_left, _right);
 
@@ -47,15 +47,7 @@ public class PlusOperator : OperatorExp
     private Expression right { get; }
 }
 
-public class MulOperator : OperatorExp
-{
-    public MulOperator(Expression _left, Expression _right) => (left, right) = (_left, _right);
-
-    private Expression left { get; }
-    private Expression right { get; }
-}
-
-public class MinusOperator : OperatorExp
+sealed public class MinusOperator : Operator
 {
     public MinusOperator(Expression _left, Expression _right) => (left, right) = (_left, _right);
 
@@ -63,7 +55,7 @@ public class MinusOperator : OperatorExp
     private Expression right { get; }
 }
 
-public class AssignOperator : OperatorExp
+sealed public class AssignOperator : Operator
 {
     public AssignOperator(Identifier _left, Expression _right) => (left, right) = (_left, _right);
 
@@ -71,7 +63,7 @@ public class AssignOperator : OperatorExp
     private Expression right { get; }
 }
 
-public class EqualsOperator : OperatorExp
+sealed public class EqualsOperator : Operator
 {
     public EqualsOperator(Expression _left, Expression _right) => (left, right) = (_left, _right);
 
@@ -84,20 +76,20 @@ public class EqualsOperator : OperatorExp
 /// </summary>
 public abstract class DeclaredType { }
 
-public class BoolType : DeclaredType { }
+sealed public class BoolType : DeclaredType { }
 
-public class IntType : DeclaredType { }
+sealed public class IntType : DeclaredType { }
 
-public class UnitType : DeclaredType { }
+sealed public class UnitType : DeclaredType { }
 
-public class NoType : DeclaredType { }
+sealed public class NoType : DeclaredType { }
 
 /// <summary>
 /// Base class for expressions which represent some type of declaration
 /// </summary>
 public abstract class Declaration : Expression { }
 
-public class ConstDeclaration : Declaration
+sealed public class ConstDeclaration : Declaration
 {
     public ConstDeclaration(Identifier _name, DeclaredType _declaredType, Expression _initValue)
         => (name, declaredType, initValue) = (_name, _declaredType, _initValue);
@@ -107,7 +99,7 @@ public class ConstDeclaration : Declaration
     private Expression initValue { get; }
 }
 
-public class VariableDeclaration : Declaration
+sealed public class VariableDeclaration : Declaration
 {
     public VariableDeclaration(Identifier _name, DeclaredType _declaredType, Expression _initValue)
         => (name, declaredType, initValue) = (_name, _declaredType, _initValue);
@@ -129,7 +121,7 @@ public class FunctionDeclaration : Declaration
     private DeclaredType returnType { get; }
 }
 
-public class FunctionDefinition : FunctionDeclaration
+sealed public class FunctionDefinition : FunctionDeclaration
 {
     public FunctionDefinition(Identifier _name,
         IEnumerable<ConstDeclaration> _argsDeclaration,
@@ -145,18 +137,18 @@ public class FunctionDefinition : FunctionDeclaration
 /// </summary>
 public abstract class FlowControlStatement : Expression { }
 
-public class ContinueStatement : FlowControlStatement { }
+sealed public class ContinueStatement : FlowControlStatement { }
 
-public class ReturnStatement : FlowControlStatement
+sealed public class ReturnStatement : FlowControlStatement
 {
     public ReturnStatement(Expression _returnValue) => returnValue = _returnValue;
 
     private Expression returnValue { get; }
 }
 
-public class BreakStatement : FlowControlStatement { }
+sealed public class BreakStatement : FlowControlStatement { }
 
-public class IfStatement : FlowControlStatement
+sealed public class IfStatement : FlowControlStatement
 {
     public IfStatement(Expression _testExpression, CodeBlock _ifBlock, CodeBlock _elseBlock)
         => (testExpression, ifBlock, elseBlock) = (_testExpression, _ifBlock, _elseBlock);
@@ -166,7 +158,7 @@ public class IfStatement : FlowControlStatement
     private CodeBlock elseBlock { get; }
 }
 
-public class LoopStatement : FlowControlStatement
+sealed public class LoopStatement : FlowControlStatement
 {
     public LoopStatement(CodeBlock innerBlock) => inner = innerBlock;
 
@@ -179,14 +171,14 @@ public class LoopStatement : FlowControlStatement
 /// </summary>
 public abstract class SimpleValue : Expression { }
 
-public class ConstValue : SimpleValue
+sealed public class ConstValue : SimpleValue
 {
     public ConstValue(Identifier _identifier) => identifier = _identifier;
 
     private Identifier identifier { get; }
 }
 
-public class VariableValue : SimpleValue
+sealed public class VariableValue : SimpleValue
 {
     public VariableValue(Identifier _identifier) => identifier = _identifier;
 
@@ -195,17 +187,17 @@ public class VariableValue : SimpleValue
 
 public abstract class LiteralValue : SimpleValue { }
 
-public class BoolLiteralValue : LiteralValue
+sealed public class BoolLiteralValue : LiteralValue
 {
     public BoolLiteralValue(bool val) => inner = val;
 
     private bool inner { get; }
 }
 
-public class IntLiteralValue : LiteralValue
+sealed public class IntLiteralValue : LiteralValue
 {
     public IntLiteralValue(int val) => inner = val;
 
     private int inner { get; }
 }
-public class NoValue : SimpleValue { }
+sealed public class NoValue : SimpleValue { }
