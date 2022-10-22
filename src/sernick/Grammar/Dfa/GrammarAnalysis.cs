@@ -103,6 +103,7 @@ public static class GrammarAnalysis
         IReadOnlyCollection<TSymbol> nullableSymbols,
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFirst)
         where TSymbol : IEquatable<TSymbol>
+        where TDfaState : notnull
     {
 
         /*
@@ -138,15 +139,14 @@ public static class GrammarAnalysis
                 var queue = new Queue<TDfaState>();
                 var visitedStates = new HashSet<TDfaState>();
 
-                productionFollowSetMap.TryAdd(production.Key, new Dictionary<TDfaState, HashSet<TSymbol>>());
                 // the map of the FOLLOW sets for the states of this dfa
-                var stateFollowSetMap = productionFollowSetMap[production.Key];
+                var stateFollowSetMap = productionFollowSetMap.GetOrAddEmpty(production.Key);
 
                 foreach (var state in production.Value.AcceptingStates)
                 {
                     queue.Enqueue(state);
                     // add the FOLLOW set of the left side of the production to the FOLLOW sets of accepting states
-                    stateFollowSetMap.GetOrAddEmpty(state).UnionWithCheck(keyFollowSet, ref hasChanged);
+                    hasChanged |= stateFollowSetMap.GetOrAddEmpty(state).UnionWithCheck(keyFollowSet);
                 }
 
                 while (queue.Count != 0)
@@ -161,37 +161,22 @@ public static class GrammarAnalysis
                         }
 
                         // copy all the elements from the FOLLOW set of the current state to the FOLLOW set of edge.Atom
-                        followSetMap.GetOrAddEmpty(edge.Atom).UnionWithCheck(stateFollowSetMap.GetOrAddEmpty(state), ref hasChanged);
+                        hasChanged |= followSetMap.GetOrAddEmpty(edge.Atom).UnionWithCheck(stateFollowSetMap.GetOrAddEmpty(state));
 
                         // copy all the elements from the FIRST set of edge.Atom to the edge.From FOLLOW set
-                        stateFollowSetMap.GetOrAddEmpty(edge.From).UnionWithCheck(symbolsFirst[edge.Atom], ref hasChanged);
+                        hasChanged |= stateFollowSetMap.GetOrAddEmpty(edge.From).UnionWithCheck(symbolsFirst[edge.Atom]);
 
                         // if edge.Atom is nullable then copy all the elements from the FOLLOW set of the current state to edge.FROM
                         if (nullableSymbols.Contains(edge.Atom))
                         {
-                            stateFollowSetMap.GetOrAddEmpty(edge.From).UnionWithCheck(stateFollowSetMap.GetOrAddEmpty(state), ref hasChanged);
+                            hasChanged |= stateFollowSetMap.GetOrAddEmpty(edge.From).UnionWithCheck(stateFollowSetMap.GetOrAddEmpty(state));
                         }
                     }
                 }
             }
         } while (hasChanged);
 
-        var result = new Dictionary<TSymbol, IReadOnlyCollection<TSymbol>>();
-        foreach (var (key, value) in followSetMap)
-        {
-            result[key] = value;
-        }
-
-        return result;
+        return followSetMap.ToDictionary(kv => kv.Key, kv => (IReadOnlyCollection<TSymbol>)kv.Value);
     }
 }
 
-internal static class GrammarAnalysisHelpers
-{
-    public static void UnionWithCheck<T>(this HashSet<T> set, IEnumerable<T> other, ref bool hasChanged)
-    {
-        var count = set.Count;
-        set.UnionWith(other);
-        hasChanged = hasChanged || count != set.Count;
-    }
-}
