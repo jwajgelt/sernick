@@ -9,7 +9,7 @@ public class Identifier
 {
     public Identifier(string _name) => name = _name;
 
-    private readonly string name;
+    private string name { get; }
 }
 
 /// <summary>
@@ -24,7 +24,7 @@ public class CodeBlock : Expression
 {
     public CodeBlock(Expression inner_expression) => inner = inner_expression;
 
-    private readonly Expression inner;
+    private Expression inner { get; }
 }
 
 /// <summary>
@@ -34,7 +34,7 @@ public class ExpressionJoin : Expression
 {
     public ExpressionJoin(IEnumerable<Expression> expressions) => inner = expressions;
 
-    private readonly IEnumerable<Expression> inner;
+    private IEnumerable<Expression> inner { get; }
 }
 
 /// <summary>
@@ -46,40 +46,40 @@ public class PlusOperator : OperatorExp
 {
     public PlusOperator(Expression _left, Expression _right) => (left, right) = (_left, _right);
 
-    private readonly Expression left;
-    private readonly Expression right;
+    private Expression left { get; }
+    private Expression right { get; }
 }
 
 public class MulOperator : OperatorExp
 {
     public MulOperator(Expression _left, Expression _right) => (left, right) = (_left, _right);
 
-    private readonly Expression left;
-    private readonly Expression right;
+    private Expression left { get; }
+    private Expression right { get; }
 }
 
 public class MinusOperator : OperatorExp
 {
     public MinusOperator(Expression _left, Expression _right) => (left, right) = (_left, _right);
 
-    private readonly Expression left;
-    private readonly Expression right;
+    private Expression left { get; }
+    private Expression right { get; }
 }
 
 public class AssignOperator : OperatorExp
 {
     public AssignOperator(Identifier _left, Expression _right) => (left, right) = (_left, _right);
 
-    private readonly Identifier left;
-    private readonly Expression right;
+    private Identifier left { get; }
+    private Expression right { get; }
 }
 
 public class EqualsOperator : OperatorExp
 {
     public EqualsOperator(Expression _left, Expression _right) => (left, right) = (_left, _right);
 
-    private readonly Expression left;
-    private readonly Expression right;
+    private Expression left { get; }
+    private Expression right { get; }
 }
 
 /// <summary>
@@ -105,9 +105,9 @@ public class ConstDeclaration : Declaration
     public ConstDeclaration(Identifier _name, DeclaredType _declaredType, Expression _initValue)
         => (name, declaredType, initValue) = (_name, _declaredType, _initValue);
 
-    private readonly Identifier name;
-    private readonly DeclaredType declaredType;
-    private readonly Expression initValue;
+    private Identifier name { get; }
+    private DeclaredType declaredType { get; }
+    private Expression initValue { get; }
 }
 
 public class VariableDeclaration : Declaration
@@ -115,9 +115,9 @@ public class VariableDeclaration : Declaration
     public VariableDeclaration(Identifier _name, DeclaredType _declaredType, Expression _initValue)
         => (name, declaredType, initValue) = (_name, _declaredType, _initValue);
 
-    private readonly Identifier name;
-    private readonly DeclaredType declaredType;
-    private readonly Expression initValue;
+    private Identifier name { get; }
+    private DeclaredType declaredType { get; }
+    private Expression initValue { get; }
 }
 
 public class FunctionDeclaration : Declaration
@@ -127,9 +127,9 @@ public class FunctionDeclaration : Declaration
         DeclaredType _returnType)
         => (name, argsDeclaration, returnType) = (_name, _argsDeclaration, _returnType);
 
-    private readonly Identifier name;
-    private readonly IEnumerable<ConstDeclaration> argsDeclaration;
-    private readonly DeclaredType returnType;
+    private Identifier name { get; }
+    private IEnumerable<ConstDeclaration> argsDeclaration { get; }
+    private DeclaredType returnType { get; }
 }
 
 public class FunctionDefinition : FunctionDeclaration
@@ -140,7 +140,7 @@ public class FunctionDefinition : FunctionDeclaration
         CodeBlock _inner) : base(_name, _argsDeclaration, _returnType)
             => inner = _inner;
 
-    private readonly CodeBlock inner;
+    private CodeBlock inner { get; }
 }
 
 /// <summary>
@@ -154,7 +154,7 @@ public class ReturnStatement : FlowControlStatement
 {
     public ReturnStatement(Expression _returnValue) => returnValue = _returnValue;
 
-    private readonly Expression returnValue;
+    private Expression returnValue { get; }
 }
 
 public class BreakStatement : FlowControlStatement { }
@@ -164,16 +164,16 @@ public class IfStatement : FlowControlStatement
     public IfStatement(Expression _testExpression, CodeBlock _ifBlock, CodeBlock _elseBlock)
         => (testExpression, ifBlock, elseBlock) = (_testExpression, _ifBlock, _elseBlock);
 
-    private readonly Expression testExpression;
-    private readonly CodeBlock ifBlock;
-    private readonly CodeBlock elseBlock;
+    private Expression testExpression { get; }
+    private CodeBlock ifBlock { get; }
+    private CodeBlock elseBlock { get; }
 }
 
 public class LoopStatement : FlowControlStatement
 {
     public LoopStatement(CodeBlock innerBlock) => inner = innerBlock;
 
-    private readonly CodeBlock inner;
+    private CodeBlock inner { get; }
 }
 
 /// <summary>
@@ -186,14 +186,14 @@ public class ConstValue : SimpleValue
 {
     public ConstValue(Identifier _identifier) => identifier = _identifier;
 
-    private readonly Identifier identifier;
+    private Identifier identifier { get; }
 }
 
 public class VariableValue : SimpleValue
 {
     public VariableValue(Identifier _identifier) => identifier = _identifier;
 
-    private readonly Identifier identifier;
+    private Identifier identifier { get; }
 }
 
 public abstract class LiteralValue : SimpleValue { }
@@ -202,13 +202,13 @@ public class BoolLiteralValue : LiteralValue
 {
     public BoolLiteralValue(bool val) => inner = val;
 
-    private readonly bool inner;
+    private bool inner { get; }
 }
 
 public class IntLiteralValue : LiteralValue
 {
     public IntLiteralValue(int val) => inner = val;
 
-    private readonly int inner;
+    private int inner { get; }
 }
 public class NoValue : SimpleValue { }
