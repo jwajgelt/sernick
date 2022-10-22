@@ -21,7 +21,74 @@ public static class GrammarAnalysis
         IReadOnlyCollection<TSymbol> nullableSymbols)
         where TSymbol : IEquatable<TSymbol>
     {
-        throw new NotImplementedException();
+        var symbols = grammar.Productions.Select(kv => kv.Key).ToHashSet();
+
+        // begin with FIRST(A) := {A}
+        var result = grammar.Productions.ToDictionary(
+            kv => kv.Key,
+            kv => new HashSet<TSymbol> { kv.Key }
+        );
+
+        // for each production, calculate the dfa states
+        // reachable using only transitions with NULLABLE 
+        // symbols, and for each transition leaving these states,
+        // add it's symbol to FIRST(A)
+        foreach (var (symbol, dfa) in grammar.Productions)
+        {
+            var reachable = new HashSet<TDfaState>() { dfa.Start };
+            var processing = new HashSet<TDfaState>() { dfa.Start };
+
+            while (processing.Count != 0)
+            {
+                var state = processing.First();
+
+                foreach (var nullableSymbol in nullableSymbols)
+                {
+                    var next = dfa.Transition(state, nullableSymbol);
+                    if (!reachable.Contains(next))
+                    {
+                        reachable.Add(next);
+                        processing.Add(next);
+                    }
+                }
+
+                processing.Remove(state);
+            }
+
+            var symbolsToAdd = reachable
+                .SelectMany(state => dfa.GetTransitionsFrom(state))
+                .Select(transition => transition.Atom);
+
+            result[symbol].UnionWith(symbolsToAdd);
+            // add the symbols that only show up on the right side of productions
+            symbols.UnionWith(symbolsToAdd);
+        }
+
+        foreach (var symbol in symbols)
+        {
+            result.TryAdd(symbol, new HashSet<TSymbol> { symbol });
+        }
+
+        // transitive closure over FIRST, using Floyd-Warshall
+        // in each step, if u->v and v->w, add u->w
+        foreach (var v in symbols)
+        {
+            foreach (var u in symbols)
+            {
+                foreach (var w in symbols)
+                {
+                    if (result[v].Contains(u) && result[w].Contains(v))
+                    {
+                        result[w].Add(u);
+                    }
+                }
+            }
+        }
+
+        return result.ToDictionary(
+            kv => kv.Key,
+            kv => (IReadOnlyCollection<TSymbol>)kv.Value
+        );
     }
 
     /// <summary>
