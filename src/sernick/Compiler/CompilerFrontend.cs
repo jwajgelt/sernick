@@ -1,12 +1,11 @@
-using sernick.Common.Dfa;
-using sernick.Common.Regex;
-using sernick.Grammar.Lexicon;
-using sernick.Tokenizer.Lexer;
-
 namespace sernick.Compiler;
 
+using Common.Dfa;
+using Common.Regex;
 using Diagnostics;
+using Grammar.Lexicon;
 using Input;
+using Tokenizer.Lexer;
 
 public static class CompilerFrontend
 {
@@ -21,7 +20,7 @@ public static class CompilerFrontend
         var lexer = PrepareLexer();
         var tokens = lexer.Process(input, diagnostics);
         // force c# to evaluate the IEnumerable
-        tokens.ToArray();
+        _ = tokens.ToArray();
         ThrowIfErrorsOccurred(diagnostics);
     }
 

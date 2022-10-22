@@ -1,9 +1,9 @@
 namespace sernickTest.Tokenizer.Lexer;
 
-using Moq;
 using Helpers;
-using sernick.Diagnostics;
+using Moq;
 using sernick.Common.Dfa;
+using sernick.Diagnostics;
 using sernick.Tokenizer;
 using sernick.Tokenizer.Lexer;
 

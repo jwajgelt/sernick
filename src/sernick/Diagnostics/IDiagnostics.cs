@@ -2,8 +2,8 @@ namespace sernick.Diagnostics;
 
 public interface IDiagnostics
 {
-    public IReadOnlyList<IDiagnosticItem> DiagnosticItems { get; }
-    public bool DidErrorOccur { get; }
+    IEnumerable<IDiagnosticItem> DiagnosticItems { get; }
+    bool DidErrorOccur { get; }
     void Report(IDiagnosticItem diagnosticItem);
 }
 
