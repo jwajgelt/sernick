@@ -1,10 +1,10 @@
+namespace sernickTest.Compiler;
+
 using Moq;
 using sernick.Compiler;
 using sernick.Diagnostics;
 using sernick.Input;
 using sernick.Input.String;
-
-namespace sernickTest.Compiler;
 
 public class CompilerFrontendTest
 {

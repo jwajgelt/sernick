@@ -34,15 +34,19 @@ public class DiagnosticsTest
         var diagnostics = new Diagnostics();
         var item1 = new DiagnosticItemFake(DiagnosticItemSeverity.Info);
         var item2 = new DiagnosticItemFake(DiagnosticItemSeverity.Error);
+        var item3 = new DiagnosticItemFake(DiagnosticItemSeverity.Info);
 
         var flag0 = diagnostics.DidErrorOccur;
         diagnostics.Report(item1);
         var flag1 = diagnostics.DidErrorOccur;
         diagnostics.Report(item2);
         var flag2 = diagnostics.DidErrorOccur;
+        diagnostics.Report(item3);
+        var flag3 = diagnostics.DidErrorOccur;
 
         Assert.False(flag0);
         Assert.False(flag1);
         Assert.True(flag2);
+        Assert.True(flag3);
     }
 }
