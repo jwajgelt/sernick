@@ -1,6 +1,6 @@
-using sernick.Input;
-
 namespace sernick.Utility;
+
+using Input;
 
 public static class FileUtility
 {

@@ -1,6 +1,6 @@
-using sernick.Input;
-
 namespace sernickTest.Input;
+
+using sernick.Input;
 
 public class FakeLocation : ILocation
 {

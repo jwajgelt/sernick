@@ -1,9 +1,13 @@
 namespace sernick.Compiler;
 
+using Common.Dfa;
+using Common.Regex;
 using Diagnostics;
+using Grammar.Lexicon;
 using Input;
+using Tokenizer.Lexer;
 
-public sealed class CompilerFrontend
+public static class CompilerFrontend
 {
     /// <summary>
     /// This method performs the frontend stage of the compilation, reporting diagnostics if needed.
@@ -11,8 +15,32 @@ public sealed class CompilerFrontend
     /// </summary>
     /// <param name="input"></param>
     /// <param name="diagnostics"></param>
-    public void Process(IInput input, IDiagnostics diagnostics)
+    public static void Process(IInput input, IDiagnostics diagnostics)
     {
-        throw new NotImplementedException();
+        var lexer = PrepareLexer();
+        var tokens = lexer.Process(input, diagnostics);
+        // force c# to evaluate the IEnumerable
+        _ = tokens.ToArray();
+        ThrowIfErrorsOccurred(diagnostics);
+    }
+
+    private static ILexer<LexicalGrammarCategoryType> PrepareLexer()
+    {
+        var grammar = new LexicalGrammar();
+        var grammarDict = grammar.GenerateGrammar();
+        var categoryDfas =
+            grammarDict.ToDictionary(
+                e => e.Key,
+                e => (IDfa<Regex<char>, char>)RegexDfa<char>.FromRegex(e.Value.Regex)
+            );
+        return new Lexer<LexicalGrammarCategoryType, Regex<char>>(categoryDfas);
+    }
+
+    private static void ThrowIfErrorsOccurred(IDiagnostics diagnostics)
+    {
+        if (diagnostics.DidErrorOccur)
+        {
+            throw new CompilationException();
+        }
     }
 }
