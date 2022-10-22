@@ -26,4 +26,11 @@
     <ProjectReference Include="..\..\src\sernick\sernick.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\examples\**\*.ser">
+      <Link>examples\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
