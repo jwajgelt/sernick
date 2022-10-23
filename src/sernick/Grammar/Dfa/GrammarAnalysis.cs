@@ -45,26 +45,18 @@ public static class GrammarAnalysis
                 ConditionalQueues[symbolFromGrammar].Clear();
             }
 
-            try
+            foreach (var transitionEdge in grammar.Productions[symbolFromGrammar].GetTransitionsTo(state))
             {
-                foreach (var transitionEdge in grammar.Productions[symbolFromGrammar].GetTransitionsTo(state))
+                var fromState = transitionEdge.From;
+                var atom = transitionEdge.Atom;
+                if (Nullable.Contains(atom))
                 {
-                    var fromState = transitionEdge.From;
-                    var atom = transitionEdge.Atom;
-                    if (Nullable.Contains(atom))
-                    {
-                        Q.Enqueue((symbolFromGrammar, fromState));
-                    }
-                    else
-                    {
-                        ConditionalQueues[atom].Enqueue(fromState);
-                    }
+                    Q.Enqueue((symbolFromGrammar, fromState));
                 }
-            }
-            catch (KeyNotFoundException)
-            {
-                // our automata throws exception, instead of returning an empty list, when no transitions
-                // ignore and continue
+                else
+                {
+                    ConditionalQueues[atom].Enqueue(fromState);
+                }
             }
         }
 
