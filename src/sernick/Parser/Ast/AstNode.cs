@@ -5,199 +5,105 @@ namespace sernick.Parser.Ast;
 /// <summary>
 /// Base class for all types of nodes that can appear in AST (Abstract Syntax Tree)
 /// </summary>
-public abstract class AstNode { }
+public abstract record AstNode { }
 
-public record Identifier(string Name);
+public record Identifier(string Name) : AstNode;
 
 /// <summary>
 /// Base class for all types of expressions
 /// </summary>
-public abstract class Expression : AstNode { }
+public abstract record Expression : AstNode { }
 
 /// <summary>
 /// Class for code blocks (introducing new scope)
 /// </summary>
-sealed public class CodeBlock : Expression
-{
-    public CodeBlock(Expression inner_expression) => inner = inner_expression;
-
-    private Expression inner { get; }
-}
+public sealed record CodeBlock(Expression inner) : Expression;
 
 /// <summary>
 /// Class representing expressions which consist of many expressions (use of ;)
 /// </summary>
-sealed public class ExpressionJoin : Expression
-{
-    public ExpressionJoin(IEnumerable<Expression> expressions) => inner = expressions;
+public sealed record ExpressionJoin(IEnumerable<Expression> inner) : Expression;
 
-    private IEnumerable<Expression> inner { get; }
-}
+/// <summary>
+/// Class representing function calls
+/// </summary>
+public sealed record FunctionCall(Identifier functionName,
+    IEnumerable<Expression> argList) : Expression;
 
 /// <summary>
 /// Base class for all expressions which are created through use of operators
 /// </summary>
-public abstract class Operator : Expression { }
+public abstract record Operator : Expression { }
 
-sealed public class PlusOperator : Operator
-{
-    public PlusOperator(Expression _left, Expression _right) => (left, right) = (_left, _right);
+public sealed record PlusOperator(Expression left, Expression right) : Operator;
 
-    private Expression left { get; }
-    private Expression right { get; }
-}
+public sealed record MinusOperator(Expression left, Expression right) : Operator;
 
-sealed public class MinusOperator : Operator
-{
-    public MinusOperator(Expression _left, Expression _right) => (left, right) = (_left, _right);
+public sealed record EqualsOperator(Expression left, Expression right) : Operator;
 
-    private Expression left { get; }
-    private Expression right { get; }
-}
-
-sealed public class AssignOperator : Operator
-{
-    public AssignOperator(Identifier _left, Expression _right) => (left, right) = (_left, _right);
-
-    private Identifier left { get; }
-    private Expression right { get; }
-}
-
-sealed public class EqualsOperator : Operator
-{
-    public EqualsOperator(Expression _left, Expression _right) => (left, right) = (_left, _right);
-
-    private Expression left { get; }
-    private Expression right { get; }
-}
+public sealed record AssignOperator(Identifier left, Expression right) : Operator;
 
 /// <summary>
 /// Base class for types declared eg. in variable declarations
 /// </summary>
-public abstract class DeclaredType { }
+public abstract record DeclaredType { }
 
-sealed public class BoolType : DeclaredType { }
+public sealed record BoolType : DeclaredType { }
 
-sealed public class IntType : DeclaredType { }
+public sealed record IntType : DeclaredType { }
 
-sealed public class UnitType : DeclaredType { }
+public sealed record UnitType : DeclaredType { }
 
-sealed public class NoType : DeclaredType { }
+public sealed record NoType : DeclaredType { }
 
 /// <summary>
 /// Base class for expressions which represent some type of declaration
 /// </summary>
-public abstract class Declaration : Expression { }
+public abstract record Declaration : Expression { }
 
-sealed public class ConstDeclaration : Declaration
-{
-    public ConstDeclaration(Identifier _name, DeclaredType _declaredType, Expression _initValue)
-        => (name, declaredType, initValue) = (_name, _declaredType, _initValue);
+public sealed record ConstDeclaration(Identifier name,
+    DeclaredType DeclaredType,
+    Expression initValue) : Declaration;
 
-    private Identifier name { get; }
-    private DeclaredType declaredType { get; }
-    private Expression initValue { get; }
-}
+public sealed record VariableDeclaration(Identifier name,
+    DeclaredType declaredType,
+    Expression initValue) : Declaration;
 
-sealed public class VariableDeclaration : Declaration
-{
-    public VariableDeclaration(Identifier _name, DeclaredType _declaredType, Expression _initValue)
-        => (name, declaredType, initValue) = (_name, _declaredType, _initValue);
-
-    private Identifier name { get; }
-    private DeclaredType declaredType { get; }
-    private Expression initValue { get; }
-}
-
-public class FunctionDeclaration : Declaration
-{
-    public FunctionDeclaration(Identifier _name,
-        IEnumerable<ConstDeclaration> _argsDeclaration,
-        DeclaredType _returnType)
-        => (name, argsDeclaration, returnType) = (_name, _argsDeclaration, _returnType);
-
-    private Identifier name { get; }
-    private IEnumerable<ConstDeclaration> argsDeclaration { get; }
-    private DeclaredType returnType { get; }
-}
-
-sealed public class FunctionDefinition : FunctionDeclaration
-{
-    public FunctionDefinition(Identifier _name,
-        IEnumerable<ConstDeclaration> _argsDeclaration,
-        DeclaredType _returnType,
-        CodeBlock _inner) : base(_name, _argsDeclaration, _returnType)
-            => inner = _inner;
-
-    private CodeBlock inner { get; }
-}
+public record FunctionDefinition(Identifier name,
+    IEnumerable<ConstDeclaration> argsDeclaration,
+    DeclaredType returnType,
+    CodeBlock functionBody) : Declaration;
 
 /// <summary>
 /// Base class for classes representing flow control statements
 /// </summary>
-public abstract class FlowControlStatement : Expression { }
+public abstract record FlowControlStatement : Expression { }
 
-sealed public class ContinueStatement : FlowControlStatement { }
+public sealed record ContinueStatement : FlowControlStatement { }
 
-sealed public class ReturnStatement : FlowControlStatement
-{
-    public ReturnStatement(Expression _returnValue) => returnValue = _returnValue;
+public sealed record ReturnStatement(Expression returnValue) : FlowControlStatement;
 
-    private Expression returnValue { get; }
-}
+public sealed record BreakStatement : FlowControlStatement { }
 
-sealed public class BreakStatement : FlowControlStatement { }
+public sealed record IfStatement(Expression testExpression,
+    CodeBlock ifBlock, CodeBlock elseBlock) : FlowControlStatement;
 
-sealed public class IfStatement : FlowControlStatement
-{
-    public IfStatement(Expression _testExpression, CodeBlock _ifBlock, CodeBlock _elseBlock)
-        => (testExpression, ifBlock, elseBlock) = (_testExpression, _ifBlock, _elseBlock);
-
-    private Expression testExpression { get; }
-    private CodeBlock ifBlock { get; }
-    private CodeBlock elseBlock { get; }
-}
-
-sealed public class LoopStatement : FlowControlStatement
-{
-    public LoopStatement(CodeBlock innerBlock) => inner = innerBlock;
-
-    private CodeBlock inner { get; }
-}
+public sealed record LoopStatement(CodeBlock inner) : FlowControlStatement;
 
 /// <summary>
 /// Base class for classes representing "simple value" expressions
 /// eg. values of variables, literals
 /// </summary>
-public abstract class SimpleValue : Expression { }
+public abstract record SimpleValue : Expression { }
 
-sealed public class ConstValue : SimpleValue
-{
-    public ConstValue(Identifier _identifier) => identifier = _identifier;
+public sealed record ConstValue(Identifier identifier) : SimpleValue;
 
-    private Identifier identifier { get; }
-}
+public sealed record VariableValue(Identifier identifier) : SimpleValue;
 
-sealed public class VariableValue : SimpleValue
-{
-    public VariableValue(Identifier _identifier) => identifier = _identifier;
+public abstract record LiteralValue : SimpleValue { }
 
-    private Identifier identifier { get; }
-}
+public sealed record BoolLiteralValue(bool value) : LiteralValue;
 
-public abstract class LiteralValue : SimpleValue { }
+public sealed record IntLiteralValue(bool value) : LiteralValue;
 
-sealed public class BoolLiteralValue : LiteralValue
-{
-    public BoolLiteralValue(bool val) => inner = val;
-
-    private bool inner { get; }
-}
-
-sealed public class IntLiteralValue : LiteralValue
-{
-    public IntLiteralValue(int val) => inner = val;
-
-    private int inner { get; }
-}
-sealed public class NoValue : SimpleValue { }
+public sealed record NoValue : SimpleValue { }
