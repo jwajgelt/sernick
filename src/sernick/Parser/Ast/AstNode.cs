@@ -8,7 +8,7 @@ public abstract record AstNode { }
 /// <summary>
 /// Class representing identifiers
 /// </summary>
-public record Identifier(string Name) : AstNode;
+public sealed record Identifier(string Name) : AstNode;
 
 /// <summary>
 /// Base class for all types of expressions
