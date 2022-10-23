@@ -12,8 +12,8 @@ public static class GrammarAnalysis
         this DfaGrammar<TSymbol, TDfaState> grammar) where TSymbol : IEquatable<TSymbol> where TDfaState : IEquatable<TDfaState>
     {
         var Nullable = new List<TSymbol>();
-        // Use Tuple, so we remember which automata does every state come from
-        var Q = new Queue<Tuple<TSymbol, TDfaState>>();
+        // Use ValueTuple, so we remember which automata does every state come from
+        var Q = new Queue<ValueTuple<TSymbol, TDfaState>>();
         var ConditionalQueues = new Dictionary<TSymbol, Queue<TDfaState>>();
 
         foreach (var symbol in grammar.Productions.Keys)
@@ -25,7 +25,7 @@ public static class GrammarAnalysis
         {
             foreach (var acceptingState in grammar.Productions[symbol].AcceptingStates)
             {
-                Q.Enqueue(Tuple.Create(symbol, acceptingState));
+                Q.Enqueue((symbol, acceptingState));
             }
         }
 
@@ -43,7 +43,7 @@ public static class GrammarAnalysis
             {
                 foreach (var stateForSymbol in ConditionalQueues[symbolFromGrammar])
                 {
-                    Q.Enqueue(Tuple.Create(symbolFromGrammar, stateForSymbol));
+                    Q.Enqueue((symbolFromGrammar, stateForSymbol));
                 }
 
                 Nullable.Append(symbolFromGrammar);
@@ -58,7 +58,7 @@ public static class GrammarAnalysis
                     var atom = transitionEdge.Atom;
                     if (Nullable.Contains(atom))
                     {
-                        Q.Enqueue(Tuple.Create(symbolFromGrammar, fromState));
+                        Q.Enqueue((symbolFromGrammar, fromState));
                     }
                     else
                     {
