@@ -41,7 +41,7 @@ public static class GrammarAnalysis
                     Q.Enqueue((symbolFromGrammar, stateForSymbol));
                 }
 
-                Nullable.Append(symbolFromGrammar);
+                Nullable.Add(symbolFromGrammar);
                 ConditionalQueues[symbolFromGrammar].Clear();
             }
 
