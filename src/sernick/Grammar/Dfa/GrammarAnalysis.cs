@@ -14,12 +14,7 @@ public static class GrammarAnalysis
         var Nullable = new List<TSymbol>();
         // Use ValueTuple, so we remember which automata does every state come from
         var Q = new Queue<ValueTuple<TSymbol, TDfaState>>();
-        var ConditionalQueues = new Dictionary<TSymbol, Queue<TDfaState>>();
-
-        foreach (var symbol in grammar.Productions.Keys)
-        {
-            ConditionalQueues.Add(symbol, new Queue<TDfaState>());
-        }
+        var ConditionalQueues = grammar.Productions.Keys.ToDictionary(symbol => symbol, _ => new Queue<TDfaState>());
 
         foreach (var symbol in grammar.Productions.Keys)
         {
