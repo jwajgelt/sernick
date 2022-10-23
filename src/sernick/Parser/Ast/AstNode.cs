@@ -1,5 +1,3 @@
-#pragma warning disable IDE0052
-
 namespace sernick.Parser.Ast;
 
 /// <summary>
