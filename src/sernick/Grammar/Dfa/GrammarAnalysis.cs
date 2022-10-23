@@ -34,7 +34,7 @@ public static class GrammarAnalysis
 
             // If we've encountered a start symbol for DFA => add all states from "conditional set" for "symbol" to Q
             // and mark current symbol as nullable
-            if (Equals(state, currentAutomata.Start))
+            if (currentAutomata.Start.Equals(state))
             {
                 foreach (var (symbolWhichDeterminesAutomata, stateForThatSymbol) in ConditionalQueues[symbolFromGrammar])
                 {
