@@ -1,8 +1,5 @@
 namespace sernickTest.Grammar.Dfa;
 using sernick.Common.Dfa;
-using Regex = sernick.Common.Regex.Regex<char>;
-using RegexDfa = sernick.Common.Dfa.RegexDfa<char>;
-using GrammarAnalysis = sernick.Grammar.Dfa.GrammarAnalysis;
 using sernick.Grammar.Dfa;
 using Tokenizer.Lexer.Helpers;
 
