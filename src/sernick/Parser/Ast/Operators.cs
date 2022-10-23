@@ -1,4 +1,4 @@
-using sernick.Parser.Ast;
+namespace sernick.Parser.Ast;
 
 public sealed record PlusOperator(Expression left, Expression right) : Operator;
 
