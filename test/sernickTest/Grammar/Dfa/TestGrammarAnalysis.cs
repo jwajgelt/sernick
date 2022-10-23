@@ -4,7 +4,7 @@ using Regex = sernick.Common.Regex.Regex<char>;
 using RegexDfa = sernick.Common.Dfa.RegexDfa<char>;
 using GrammarAnalysis = sernick.Grammar.Dfa.GrammarAnalysis;
 using sernick.Grammar.Dfa;
-using sernickTest.Tokenizer.Lexer.Helpers;
+using Tokenizer.Lexer.Helpers;
 
 
 public class TestGrammarAnalysis
@@ -38,7 +38,7 @@ public class TestGrammarAnalysis
         var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'A', 'C' };
-        var expectedFirst = new Dictionary<char, HashSet<char>>
+        var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'A', new HashSet<char>{'A'}},
             {'B', new HashSet<char>{'B','b'}},
@@ -46,7 +46,7 @@ public class TestGrammarAnalysis
             {'b', new HashSet<char>{'b'}},
             {'c', new HashSet<char>{'c'}}
         };
-        var expectedFollow = new Dictionary<char, HashSet<char>>
+        var expectedFollow = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'A', new HashSet<char>{}},
             {'B', new HashSet<char>{}},
@@ -89,13 +89,13 @@ public class TestGrammarAnalysis
         var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'S', 'A', 'B' };
-        var expectedFirst = new Dictionary<char, HashSet<char>>
+        var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'S', new HashSet<char>{'S','A','B'}},
             {'A', new HashSet<char>{'A'}},
             {'B', new HashSet<char>{'B','A'}}
         };
-        var expectedFollow = new Dictionary<char, HashSet<char>>
+        var expectedFollow = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'S', new HashSet<char>{}},
             {'A', new HashSet<char>{'A','B'}},
@@ -136,14 +136,14 @@ public class TestGrammarAnalysis
         var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'A' };
-        var expectedFirst = new Dictionary<char, HashSet<char>>
+        var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'A', new HashSet<char>{'A'}},
             {'B', new HashSet<char>{'B','b'}},
             {'b', new HashSet<char>{'b'}},
             {'S', new HashSet<char>{'S','A','b'}}
         };
-        var expectedFollow = new Dictionary<char, HashSet<char>>
+        var expectedFollow = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'A', new HashSet<char>{'A','b'}},
             {'B', new HashSet<char>{}},
@@ -193,7 +193,7 @@ public class TestGrammarAnalysis
         var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { };
-        var expectedFirst = new Dictionary<char, HashSet<char>>
+        var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'a', new HashSet<char>{'a'}},
             {'A', new HashSet<char>{'A','a'}},
@@ -201,7 +201,7 @@ public class TestGrammarAnalysis
             {'C', new HashSet<char>{'C','A','a'}},
             {'S', new HashSet<char>{'S','B','C','A','a'}}
         };
-        var expectedFollow = new Dictionary<char, HashSet<char>>
+        var expectedFollow = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'a', new HashSet<char>{}},
             {'A', new HashSet<char>{}},
@@ -246,7 +246,7 @@ public class TestGrammarAnalysis
         var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'B', 'C' };
-        var expectedFirst = new Dictionary<char, HashSet<char>>
+        var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'a', new HashSet<char>{'a'}},
             {'A', new HashSet<char>{'A','a'}},
@@ -254,7 +254,7 @@ public class TestGrammarAnalysis
             {'C', new HashSet<char>{'C'}},
             {'S', new HashSet<char>{'S','A','a','C'}}
         };
-        var expectedFollow = new Dictionary<char, HashSet<char>>
+        var expectedFollow = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'a', new HashSet<char>{'B','C'}},
             {'A', new HashSet<char>{'B','C'}},
@@ -301,7 +301,7 @@ public class TestGrammarAnalysis
         var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'A', 'B', 'C', 'D', 'E', 'S' };
-        var expectedFirst = new Dictionary<char, HashSet<char>>
+        var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'A', new HashSet<char>{'A'}},
             {'B', new HashSet<char>{'B'}},
@@ -310,7 +310,7 @@ public class TestGrammarAnalysis
             {'E', new HashSet<char>{'E'}},
             {'S', new HashSet<char>{'S','A','B','C','D','E'}}
         };
-        var expectedFollow = new Dictionary<char, HashSet<char>>
+        var expectedFollow = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'A', new HashSet<char>{'A','B','C','D','E'}},
             {'B', new HashSet<char>{'A','B','D','E'}},
@@ -376,7 +376,7 @@ public class TestGrammarAnalysis
         var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'B', 'D' };
-        var expectedFirst = new Dictionary<char, HashSet<char>>
+        var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'a', new HashSet<char>{'a'}},
             {'A', new HashSet<char>{'A','a'}},
@@ -385,7 +385,7 @@ public class TestGrammarAnalysis
             {'D', new HashSet<char>{'D','C','B','A','a'}},
             {'S', new HashSet<char>{'S','A','a'}}
         };
-        var expectedFollow = new Dictionary<char, HashSet<char>>
+        var expectedFollow = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'a', new HashSet<char>{'a','A','B','C','D'}},
             {'A', new HashSet<char>{'a','A','B','C','D'}},
@@ -400,12 +400,12 @@ public class TestGrammarAnalysis
     // A -> eps
     // B -> A
     // C -> c
-    // S -> (ABAB)*(AC|ABA)
+    // S -> (ABBA)*(AC|ABA)
     //      
     //   -> ( ) -A-> ( ) -C-> [ ]
     //       ^        B
-    //       B        v
-    //      ( ) <-A- ( ) -A-> [ ] 
+    //       A        v
+    //      ( ) <-B- ( ) -A-> [ ] 
     [Fact(Skip = "GrammarAnalysis methods not implemented")]
     public void TestLoop()
     {
@@ -428,8 +428,8 @@ public class TestGrammarAnalysis
         {
             { (0, 'A'), 1 },
             { (1, 'B'), 2 },
-            { (2, 'A'), 3 },
-            { (3, 'B'), 0 },
+            { (2, 'B'), 3 },
+            { (3, 'A'), 0 },
             { (1, 'C'), 4 },
             { (2, 'A'), 5 }
         };
@@ -444,7 +444,7 @@ public class TestGrammarAnalysis
         var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'A', 'B', 'S' };
-        var expectedFirst = new Dictionary<char, HashSet<char>>
+        var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'A', new HashSet<char>{'A'}},
             {'B', new HashSet<char>{'B','A'}},
@@ -452,38 +452,35 @@ public class TestGrammarAnalysis
             {'c', new HashSet<char>{'c'}},
             {'S', new HashSet<char>{'S','A','B','C','c'}}
         };
-        var expectedFollow = new Dictionary<char, HashSet<char>>
+        var expectedFollow = new Dictionary<char, IReadOnlyCollection<char>>
         {
             {'A', new HashSet<char>{'A','B','C','c'}},
             {'B', new HashSet<char>{'A','B','C','c'}},
             {'C', new HashSet<char>{}},
             {'c', new HashSet<char>{}},
-            {'S', new HashSet<char>{'A','B','C','c'}}
+            {'S', new HashSet<char>{}}
         };
         Verify(grammar, expectedNullable, expectedFirst, expectedFollow);
     }
 
     private static void Verify(DfaGrammar<char, int> grammar,
-        HashSet<char> expectedNullable,
-        Dictionary<char, HashSet<char>> expectedFirst,
-        Dictionary<char, HashSet<char>> expectedFollow)
+        IReadOnlyCollection<char> expectedNullable,
+        Dictionary<char, IReadOnlyCollection<char>> expectedFirst,
+        Dictionary<char, IReadOnlyCollection<char>> expectedFollow)
     {
         var nullable = grammar.Nullable();
-        Assert.True(expectedNullable.SetEquals(nullable));
-        Assert.Equal(expectedNullable.Count, nullable.Count);
+        Assert.Equal(expectedNullable.OrderBy(a => a), nullable.OrderBy(a => a));
 
-        var first = grammar.First(nullable);
+        var first = grammar.First(expectedNullable);
         foreach (var (symbol, expectedSet) in expectedFirst)
         {
-            Assert.True(expectedSet.SetEquals(first[symbol]));
-            Assert.Equal(expectedSet.Count, first[symbol].Count);
+            Assert.Equal(expectedSet.OrderBy(a => a), first[symbol].OrderBy(a => a));
         }
 
-        var follow = grammar.Follow(nullable, first);
+        var follow = grammar.Follow(expectedNullable, expectedFirst);
         foreach (var (symbol, expectedSet) in expectedFollow)
         {
-            Assert.True(expectedSet.SetEquals(follow[symbol]));
-            Assert.Equal(expectedSet.Count, follow[symbol].Count);
+            Assert.Equal(expectedSet.OrderBy(a => a), follow[symbol].OrderBy(a => a));
         }
     }
 

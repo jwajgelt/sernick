@@ -1,6 +1,8 @@
 namespace sernick.Common.Dfa;
 
 using Regex;
+using Utility;
+
 public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where TAtom : IEquatable<TAtom>
 {
     private RegexDfa(
@@ -19,9 +21,12 @@ public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where 
     public Regex<TAtom> Transition(Regex<TAtom> state, TAtom atom) => state.Derivative(atom);
 
     public IEnumerable<TransitionEdge<Regex<TAtom>, TAtom>> GetTransitionsFrom(Regex<TAtom> state) =>
-        _transitionsFromMap[state];
+        _transitionsFromMap.TryGetValue(state, out var value)
+            ? value : Enumerable.Empty<TransitionEdge<Regex<TAtom>, TAtom>>();
 
-    public IEnumerable<TransitionEdge<Regex<TAtom>, TAtom>> GetTransitionsTo(Regex<TAtom> state) => _transitionsToMap[state];
+    public IEnumerable<TransitionEdge<Regex<TAtom>, TAtom>> GetTransitionsTo(Regex<TAtom> state) =>
+        _transitionsToMap.TryGetValue(state, out var value)
+            ? value : Enumerable.Empty<TransitionEdge<Regex<TAtom>, TAtom>>();
     public IEnumerable<Regex<TAtom>> AcceptingStates { get; }
     private readonly Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>> _transitionsToMap;
     private readonly Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>> _transitionsFromMap;
@@ -49,8 +54,8 @@ public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where 
                 var nextState = currentState.Derivative(atom);
                 var edge = new TransitionEdge<Regex<TAtom>, TAtom>(currentState, nextState, atom);
 
-                transitionsToMap.GetOrAddList(nextState).Add(edge);
-                transitionsFromMap.GetOrAddList(currentState).Add(edge);
+                transitionsToMap.GetOrAddEmpty(nextState).Add(edge);
+                transitionsFromMap.GetOrAddEmpty(currentState).Add(edge);
 
                 if (visited.Contains(nextState))
                 {
@@ -90,11 +95,5 @@ internal static class RegexDfaHelpers
             default:
                 throw new NotSupportedException("Unrecognized Regex class implementation");
         }
-    }
-
-    public static List<TValue> GetOrAddList<TKey, TValue>(this IDictionary<TKey, List<TValue>> dictionary, TKey key)
-    {
-        dictionary.TryAdd(key, new List<TValue>());
-        return dictionary[key];
     }
 }

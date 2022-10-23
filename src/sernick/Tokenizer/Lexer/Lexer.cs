@@ -41,6 +41,13 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
                     // reset the input to the last end of the match
                     input.MoveTo(lastAcceptingState.location);
                 }
+                else
+                {
+                    // report the error
+                    var error = new LexicalError(lastAcceptingStart, input.CurrentLocation);
+                    diagnostics.Report(error);
+                }
+
                 // If we matched, we start the next match from the position
                 // we just reset to.
                 // Otherwise, all DFAs failed to match on a substring,
