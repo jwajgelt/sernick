@@ -3,18 +3,18 @@ namespace sernick.Parser.Ast;
 /// <summary>
 /// Class for code blocks (introducing new scope)
 /// </summary>
-public sealed record CodeBlock(Expression inner) : Expression;
+public sealed record CodeBlock(Expression Inner) : Expression;
 
 /// <summary>
 /// Class representing expressions which consist of many expressions (use of ;)
 /// </summary>
-public sealed record ExpressionJoin(Expression first, Expression second) : Expression;
+public sealed record ExpressionJoin(Expression First, Expression Second) : Expression;
 
 /// <summary>
 /// Class representing function calls
 /// </summary>
-public sealed record FunctionCall(Identifier functionName,
-    IEnumerable<Expression> argList) : Expression;
+public sealed record FunctionCall(Identifier FunctionName,
+    IEnumerable<Expression> Arguments) : Expression;
 
 /// <summary>
 /// Base class for all expressions which are created through use of operators
