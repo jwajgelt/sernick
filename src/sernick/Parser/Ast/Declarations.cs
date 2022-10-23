@@ -10,7 +10,7 @@ public sealed record VariableDeclaration(Identifier name,
 
 public sealed record FunctionArgumentDeclaration(Identifier name,
     DeclaredType declaredType,
-    Expression initValue) : Declaration;
+    LiteralValue? defaultValue) : Declaration;
 
 public record FunctionDefinition(Identifier name,
     IEnumerable<FunctionArgumentDeclaration> argsDeclaration,
