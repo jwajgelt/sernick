@@ -6,7 +6,7 @@ public sealed record ReturnStatement(Expression returnValue) : FlowControlStatem
 
 public sealed record BreakStatement : FlowControlStatement { }
 
-public sealed record IfStatement(Expression testExpression,
+public sealed record IfStatement(Expression condition,
     CodeBlock ifBlock, CodeBlock? elseBlock) : FlowControlStatement;
 
 public sealed record LoopStatement(CodeBlock inner) : FlowControlStatement;
