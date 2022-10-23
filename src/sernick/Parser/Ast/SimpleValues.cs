@@ -8,4 +8,4 @@ public abstract record LiteralValue : SimpleValue { }
 
 public sealed record BoolLiteralValue(bool value) : LiteralValue;
 
-public sealed record IntLiteralValue(bool value) : LiteralValue;
+public sealed record IntLiteralValue(int value) : LiteralValue;
