@@ -13,7 +13,8 @@ public static class GrammarAnalysis
          where TSymbol : IEquatable<TSymbol>
          where TDfaState : IEquatable<TDfaState>
     {
-        var nullable = new List<TSymbol>();
+        var nullable = new HashSet<TSymbol>();
+        var used = new HashSet<ValueTuple<TSymbol, TDfaState>>(); // to help us in case of loops in automatas
         // Use ValueTuple here and below, so we remember which automata does every state come from
         var queue = new Queue<ValueTuple<TSymbol, TDfaState>>();
         var conditionalQueuesForSymbols = grammar.Productions.Keys.ToDictionary(symbol => symbol, _ => new Queue<ValueTuple<TSymbol, TDfaState>>());
@@ -29,7 +30,6 @@ public static class GrammarAnalysis
         while (queue.Count != 0)
         {
             var (currentSymbolWhichDeterminesAutomata, currentState) = queue.Dequeue();
-
             var currentAutomata = grammar.Productions[currentSymbolWhichDeterminesAutomata];
 
             // If we've encountered a start symbol for DFA => add all states from "conditional set" for "symbol" to Q
@@ -38,8 +38,12 @@ public static class GrammarAnalysis
             {
                 foreach (var (symbolWhichDeterminesAutomata, stateForThatSymbol) in conditionalQueuesForSymbols[currentSymbolWhichDeterminesAutomata])
                 {
-
-                    queue.Enqueue((symbolWhichDeterminesAutomata, stateForThatSymbol));
+                    var tupleToAdd = (symbolWhichDeterminesAutomata, stateForThatSymbol);
+                    if (!used.Contains(tupleToAdd))
+                    {
+                        queue.Enqueue(tupleToAdd);
+                        used.Add(tupleToAdd);
+                    }
                 }
 
                 nullable.Add(currentSymbolWhichDeterminesAutomata);
@@ -52,12 +56,17 @@ public static class GrammarAnalysis
                 var atom = transitionEdge.Atom;
                 if (nullable.Contains(atom))
                 {
-                    queue.Enqueue((currentSymbolWhichDeterminesAutomata, fromState));
+                    var tupleToAdd = (currentSymbolWhichDeterminesAutomata, fromState);
+                    if (!used.Contains(tupleToAdd))
+                    {
+                        queue.Enqueue(tupleToAdd);
+                        used.Add(tupleToAdd);
+                    }
                 }
                 else
                 {
                     // we need to remember that "fromState" is a state for a specific automata (one determined by symbolFromGrammar)
-                    conditionalQueuesForSymbols[atom].Enqueue((currentSymbolWhichDeterminesAutomata, fromState));
+                    conditionalQueuesForSymbols.GetOrAddEmpty(atom).Enqueue((currentSymbolWhichDeterminesAutomata, fromState));
                 }
             }
         }
