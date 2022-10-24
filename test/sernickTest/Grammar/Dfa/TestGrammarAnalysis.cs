@@ -56,7 +56,7 @@ public class TestGrammarAnalysis
     // S -> ABA
     // A -> eps
     // B -> AA
-    [Fact(Skip = "GrammarAnalysis methods not implemented")]
+    [Fact]
     public void NullableConditional()
     {
         var transitions1 = new Dictionary<(int, char), int>
@@ -103,7 +103,7 @@ public class TestGrammarAnalysis
     // A -> eps
     // B -> b
     // S -> AAbB
-    [Fact(Skip = "GrammarAnalysis methods not implemented")]
+    [Fact]
     public void FirstSimple()
     {
         var transitions1 = new Dictionary<(int, char), int> { };
@@ -153,7 +153,7 @@ public class TestGrammarAnalysis
     // B -> C
     // C -> A
     // S -> B
-    [Fact(Skip = "GrammarAnalysis methods not implemented")]
+    [Fact]
     public void FirstClosure()
     {
         var transitions1 = new Dictionary<(int, char), int>
@@ -212,7 +212,7 @@ public class TestGrammarAnalysis
     // B -> eps
     // C -> eps
     // S -> CABC
-    [Fact(Skip = "GrammarAnalysis methods not implemented")]
+    [Fact]
     public void FollowSimple()
     {
         var transitions1 = new Dictionary<(int, char), int>
@@ -267,7 +267,7 @@ public class TestGrammarAnalysis
     // D -> eps
     // E -> eps
     // S -> A(BB|CC)A(D|E) (with 2 accepting states)
-    [Fact(Skip = "GrammarAnalysis methods not implemented")]
+    [Fact]
     public void FollowPaths()
     {
         var transitions1 = new Dictionary<(int, char), int> { };
@@ -323,7 +323,7 @@ public class TestGrammarAnalysis
     // C -> BA
     // D -> CA|B
     // S -> A(C|B)D
-    [Fact(Skip = "GrammarAnalysis methods not implemented")]
+    [Fact]
     public void TestMixed()
     {
         var transitions1 = new Dictionary<(int, char), int>
@@ -402,7 +402,7 @@ public class TestGrammarAnalysis
     //       ^        B
     //       A        v
     //      ( ) <-B- ( ) -A-> [ ] 
-    [Fact(Skip = "GrammarAnalysis methods not implemented")]
+    [Fact]
     public void TestLoop()
     {
         var transitions1 = new Dictionary<(int, char), int> { };
