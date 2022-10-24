@@ -11,22 +11,22 @@ public static class GrammarAnalysis
     public static IReadOnlyCollection<TSymbol> Nullable<TSymbol, TDfaState>(
         this DfaGrammar<TSymbol, TDfaState> grammar) where TSymbol : IEquatable<TSymbol> where TDfaState : IEquatable<TDfaState>
     {
-        var Nullable = new List<TSymbol>();
+        var nullable = new List<TSymbol>();
         // Use ValueTuple here and below, so we remember which automata does every state come from
-        var Q = new Queue<ValueTuple<TSymbol, TDfaState>>();
-        var ConditionalQueues = grammar.Productions.Keys.ToDictionary(symbol => symbol, _ => new Queue<ValueTuple<TSymbol, TDfaState>>());
+        var queue = new Queue<ValueTuple<TSymbol, TDfaState>>();
+        var conditionalQueuesForSymbols = grammar.Productions.Keys.ToDictionary(symbol => symbol, _ => new Queue<ValueTuple<TSymbol, TDfaState>>());
 
         foreach (var symbol in grammar.Productions.Keys)
         {
             foreach (var acceptingState in grammar.Productions[symbol].AcceptingStates)
             {
-                Q.Enqueue((symbol, acceptingState));
+                queue.Enqueue((symbol, acceptingState));
             }
         }
 
-        while (Q.Count != 0)
+        while (queue.Count != 0)
         {
-            var tuple = Q.Dequeue();
+            var tuple = queue.Dequeue();
             var symbolFromGrammar = tuple.Item1;
             var state = tuple.Item2;
 
@@ -36,33 +36,33 @@ public static class GrammarAnalysis
             // and mark current symbol as nullable
             if (currentAutomata.Start.Equals(state))
             {
-                foreach (var (symbolWhichDeterminesAutomata, stateForThatSymbol) in ConditionalQueues[symbolFromGrammar])
+                foreach (var (symbolWhichDeterminesAutomata, stateForThatSymbol) in conditionalQueuesForSymbols[symbolFromGrammar])
                 {
 
-                    Q.Enqueue((symbolWhichDeterminesAutomata, stateForThatSymbol));
+                    queue.Enqueue((symbolWhichDeterminesAutomata, stateForThatSymbol));
                 }
 
-                Nullable.Add(symbolFromGrammar);
-                ConditionalQueues[symbolFromGrammar].Clear();
+                nullable.Add(symbolFromGrammar);
+                conditionalQueuesForSymbols[symbolFromGrammar].Clear();
             }
 
             foreach (var transitionEdge in grammar.Productions[symbolFromGrammar].GetTransitionsTo(state))
             {
                 var fromState = transitionEdge.From;
                 var atom = transitionEdge.Atom;
-                if (Nullable.Contains(atom))
+                if (nullable.Contains(atom))
                 {
-                    Q.Enqueue((symbolFromGrammar, fromState));
+                    queue.Enqueue((symbolFromGrammar, fromState));
                 }
                 else
                 {
                     // we need to remember that "fromState" is a state for a specific automata (one determined by symbolFromGrammar)
-                    ConditionalQueues[atom].Enqueue((symbolFromGrammar, fromState));
+                    conditionalQueuesForSymbols[atom].Enqueue((symbolFromGrammar, fromState));
                 }
             }
         }
 
-        return Nullable;
+        return nullable;
     }
 
     /// <summary>
