@@ -33,13 +33,13 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
                 if (lastAcceptingState != null)
                 {
                     // return all matching token categories for this match
-                    foreach (var category in _sumDfa.AcceptingCategories(lastAcceptingState.dfaStates))
+                    foreach (var category in _sumDfa.AcceptingCategories(lastAcceptingState.DfaStates))
                     {
-                        yield return new Token<TCat>(category, text, lastAcceptingStart, lastAcceptingState.location);
+                        yield return new Token<TCat>(category, text, lastAcceptingStart, lastAcceptingState.Location);
                     }
 
                     // reset the input to the last end of the match
-                    input.MoveTo(lastAcceptingState.location);
+                    input.MoveTo(lastAcceptingState.Location);
                 }
                 else
                 {
@@ -73,8 +73,8 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
             if (anyAccepts)
             {
                 lastAcceptingState = new LexerProcessingState(
-                    dfaStates: currentState,
-                    location: input.CurrentLocation
+                    DfaStates: currentState,
+                    Location: input.CurrentLocation
                 );
                 text = textBuilder.ToString();
             }
@@ -84,14 +84,14 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
         if (lastAcceptingState != null)
         {
             // return all matching token categories for this match
-            foreach (var category in _sumDfa.AcceptingCategories(lastAcceptingState.dfaStates))
+            foreach (var category in _sumDfa.AcceptingCategories(lastAcceptingState.DfaStates))
             {
-                yield return new Token<TCat>(category, text, lastAcceptingStart, lastAcceptingState.location);
+                yield return new Token<TCat>(category, text, lastAcceptingStart, lastAcceptingState.Location);
             }
         }
     }
 
-    private sealed record LexerProcessingState(Dictionary<TCat, TState> dfaStates, ILocation location);
+    private sealed record LexerProcessingState(Dictionary<TCat, TState> DfaStates, ILocation Location);
 
     private sealed class SumDfa : IDfa<Dictionary<TCat, TState>, char>
     {
