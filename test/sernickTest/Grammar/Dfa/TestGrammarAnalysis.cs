@@ -8,7 +8,7 @@ public class TestGrammarAnalysis
     // A -> eps
     // B -> b
     // C -> c|eps
-    [Fact(Skip = "GrammarAnalysis methods not implemented")]
+    [Fact]
     public void NullableSimple()
     {
         var transitions1 = new Dictionary<(int, char), int> { };
