@@ -66,15 +66,7 @@ public static class GrammarAnalysis
                 else
                 {
                     // we need to remember that "fromState" is a state for a specific automata (one determined by symbolFromGrammar)
-                    if (conditionalQueuesForSymbols.ContainsKey(atom))
-                    {
-                        conditionalQueuesForSymbols[atom].Enqueue((currentSymbolWhichDeterminesAutomata, fromState));
-                    }
-                    else
-                    {
-                        conditionalQueuesForSymbols[atom] = new Queue<(TSymbol, TDfaState)>();
-                        conditionalQueuesForSymbols[atom].Enqueue((currentSymbolWhichDeterminesAutomata, fromState));
-                    }
+                    conditionalQueuesForSymbols.GetOrAddEmpty(atom).Enqueue((currentSymbolWhichDeterminesAutomata, fromState));
                 }
             }
         }
