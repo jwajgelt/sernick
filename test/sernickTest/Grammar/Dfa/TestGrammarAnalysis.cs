@@ -3,7 +3,6 @@ using sernick.Common.Dfa;
 using sernick.Grammar.Dfa;
 using Tokenizer.Lexer.Helpers;
 
-
 public class TestGrammarAnalysis
 {
     // A -> eps
@@ -480,6 +479,4 @@ public class TestGrammarAnalysis
             Assert.Equal(expectedSet.OrderBy(a => a), follow[symbol].OrderBy(a => a));
         }
     }
-
-
 }
