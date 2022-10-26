@@ -33,6 +33,6 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol, TDfaState>
         throw new NotImplementedException();
     }
 
-    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol>, IParseAction> ActionTable;
-    private readonly Configuration<TDfaState> StartConfig;
+    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol>, IParseAction> _actionTable;
+    private readonly Configuration<TDfaState> _startConfig;
 }
