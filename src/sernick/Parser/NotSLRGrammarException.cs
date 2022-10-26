@@ -1,6 +1,6 @@
 namespace sernick.Parser;
 
-public class NotSLRGrammarException : Exception
+public sealed class NotSLRGrammarException : Exception
 {
-    public NotSLRGrammarException() { }
+    public NotSLRGrammarException(string message) : base(message) { }
 }

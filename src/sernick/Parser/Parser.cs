@@ -8,7 +8,7 @@ using sernick.Parser.ParseTree;
 
 #pragma warning disable IDE0051
 
-public class Parser<TSymbol, TDfaState> : IParser<TSymbol, TDfaState>
+public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol, TDfaState>
     where TSymbol : IEquatable<TSymbol>
     where TDfaState : IEquatable<TDfaState>
 {
@@ -17,7 +17,7 @@ public class Parser<TSymbol, TDfaState> : IParser<TSymbol, TDfaState>
         throw new NotImplementedException();
     }
 
-    private Parser(
+    internal Parser(
         DfaGrammar<TSymbol, TDfaState> dfaGrammar,
         IReadOnlyCollection<TSymbol> symbolsNullable,
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFirst,
@@ -25,15 +25,14 @@ public class Parser<TSymbol, TDfaState> : IParser<TSymbol, TDfaState>
         IReadOnlyDictionary<Production<TSymbol>, IDfaWithConfig<TSymbol, TDfaState>> reversedAutomata)
     {
         throw new NotImplementedException();
-        // throw new NotSLRGrammarException();
+        // throw new NotSLRGrammarException("reason");
     }
 
-    public IParseTree<TSymbol> process(IEnumerable<IParseTree<TSymbol>> leaves, IDiagnostics diagnostics)
+    public IParseTree<TSymbol> Process(IEnumerable<IParseTree<TSymbol>> leaves, IDiagnostics diagnostics)
     {
         throw new NotImplementedException();
     }
 
-    private IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol>, IParseAction> ActionTable { get; set; }
-
-    private Configuration<TDfaState> StartConfig { get; set; }
+    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol>, IParseAction> ActionTable;
+    private readonly Configuration<TDfaState> StartConfig;
 }
