@@ -6,14 +6,15 @@ using sernick.Grammar.Dfa;
 using sernick.Grammar.Syntax;
 using sernick.Parser.ParseTree;
 
+#pragma warning disable IDE0051
+
 public class Parser<TSymbol, TDfaState> : IParser<TSymbol, TDfaState>
     where TSymbol : IEquatable<TSymbol>
     where TDfaState : IEquatable<TDfaState>
 {
-    public Parser(Grammar<TSymbol> grammar)
+    public static Parser<TSymbol, TDfaState> FromGrammar(Grammar<TSymbol> grammar)
     {
         throw new NotImplementedException();
-        // throw new NotSLRGrammarException();
     }
 
     private Parser(

@@ -11,7 +11,7 @@ public class ParseTreeLeaf<TSymbol> : IParseTree<TSymbol>
         ILocation start,
         ILocation end
     ) => (Symbol, Start, End) = (symbol, start, end);
-    
+
     public TSymbol Symbol { get; }
     public ILocation Start { get; }
     public ILocation End { get; }

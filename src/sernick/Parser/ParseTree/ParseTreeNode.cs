@@ -13,7 +13,7 @@ public class ParseTreeNode<TSymbol> : IParseTree<TSymbol>
         Production<TSymbol> production,
         IEnumerable<IParseTree<TSymbol>> children
     ) => (Symbol, Start, End, Production, Children) = (symbol, start, end, production, children);
-    
+
     public TSymbol Symbol { get; }
     public ILocation Start { get; }
     public ILocation End { get; }
