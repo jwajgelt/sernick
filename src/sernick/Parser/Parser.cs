@@ -7,6 +7,8 @@ using Grammar.Syntax;
 using ParseTree;
 
 #pragma warning disable IDE0051
+#pragma warning disable IDE0052
+#pragma warning disable IDE0060
 
 public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     where TSymbol : IEquatable<TSymbol>
@@ -24,6 +26,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFollow,
         IReadOnlyDictionary<Production<TSymbol>, IDfaWithConfig<TSymbol, TDfaState>> reversedAutomata)
     {
+        _reversedAutomata = reversedAutomata;
         throw new NotImplementedException();
         // throw new NotSLRGrammarException("reason");
     }
@@ -33,6 +36,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         throw new NotImplementedException();
     }
 
-    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol>, IParseAction> _actionTable;
     private readonly Configuration<TDfaState> _startConfig;
+    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol>, IParseAction> _actionTable;
+    private readonly IReadOnlyDictionary<Production<TSymbol>, IDfaWithConfig<TSymbol, TDfaState>> _reversedAutomata;
 }
