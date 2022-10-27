@@ -1,6 +1,6 @@
 namespace sernick.Parser;
 
-using sernick.Grammar.Syntax;
+using Grammar.Syntax;
 
 public interface IParseAction { };
 

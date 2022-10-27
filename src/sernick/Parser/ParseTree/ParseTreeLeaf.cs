@@ -1,7 +1,7 @@
 namespace sernick.Parser.ParseTree;
 
-using sernick.Grammar.Lexicon;
-using sernick.Input;
+using Grammar.Lexicon;
+using Input;
 
 public sealed record ParseTreeLeaf<TSymbol>(
     TSymbol Symbol,
