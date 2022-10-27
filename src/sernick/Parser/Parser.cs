@@ -1,14 +1,14 @@
 namespace sernick.Parser;
 
-using sernick.Common.Dfa;
-using sernick.Diagnostics;
-using sernick.Grammar.Dfa;
-using sernick.Grammar.Syntax;
-using sernick.Parser.ParseTree;
+using Common.Dfa;
+using Diagnostics;
+using Grammar.Dfa;
+using Grammar.Syntax;
+using ParseTree;
 
 #pragma warning disable IDE0051
 
-public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol, TDfaState>
+public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     where TSymbol : IEquatable<TSymbol>
     where TDfaState : IEquatable<TDfaState>
 {

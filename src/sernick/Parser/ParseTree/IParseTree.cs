@@ -1,8 +1,8 @@
 namespace sernick.Parser.ParseTree;
 
-using sernick.Input;
+using Input;
 
-public interface IParseTree<TSymbol>
+public interface IParseTree<out TSymbol>
 {
     TSymbol Symbol { get; }
     ILocation Start { get; }

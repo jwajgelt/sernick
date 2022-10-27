@@ -1,9 +1,9 @@
 namespace sernick.Parser;
 
-using sernick.Diagnostics;
-using sernick.Parser.ParseTree;
+using Diagnostics;
+using ParseTree;
 
-public interface IParser<TSymbol, TDfaState>
+public interface IParser<TSymbol>
     where TSymbol : IEquatable<TSymbol>
 {
     IParseTree<TSymbol> Process(IEnumerable<IParseTree<TSymbol>> leaves, IDiagnostics diagnostics);
