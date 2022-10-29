@@ -11,7 +11,7 @@ using ParseTree;
 #pragma warning disable IDE0060
 
 public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
-    where TSymbol : IEquatable<TSymbol>
+    where TSymbol : class, IEquatable<TSymbol>
     where TDfaState : IEquatable<TDfaState>
 {
     public static Parser<TSymbol, TDfaState> FromGrammar(Grammar<TSymbol> grammar)
@@ -37,6 +37,6 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     }
 
     private readonly Configuration<TDfaState> _startConfig;
-    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol>, IParseAction> _actionTable;
+    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol?>, IParseAction> _actionTable;
     private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
 }
