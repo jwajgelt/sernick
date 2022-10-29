@@ -7,5 +7,5 @@ using Common.Dfa;
 /// </summary>
 public sealed record DfaGrammar<TSymbol, TDfaState>(
     TSymbol Start,
-    IReadOnlyDictionary<TSymbol, IDfaWithConfig<TDfaState, TSymbol>> Productions)
+    IReadOnlyDictionary<TSymbol, IDfa<TDfaState, TSymbol>> Productions)
     where TSymbol : IEquatable<TSymbol>;

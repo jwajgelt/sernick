@@ -1,5 +1,7 @@
-namespace sernickTest.Grammar.Dfa;
 using sernick.Common.Dfa;
+
+namespace sernickTest.Grammar.Dfa;
+
 using sernick.Grammar.Dfa;
 using Tokenizer.Lexer.Helpers;
 
@@ -26,7 +28,7 @@ public class TestGrammarAnalysis
         };
         var dfa3 = new FakeDfa(transitions3, 0, new HashSet<int> { 0, 1 });
 
-        var productions = new Dictionary<char, IDfaWithConfig<int, char>> {
+        var productions = new Dictionary<char, IDfa<int, char>> {
             { 'A', dfa1 },
             { 'B', dfa2 },
             { 'C', dfa3 }
@@ -77,7 +79,7 @@ public class TestGrammarAnalysis
         };
         var dfa3 = new FakeDfa(transitions3, 0, new HashSet<int> { 2 });
 
-        var productions = new Dictionary<char, IDfaWithConfig<int, char>> {
+        var productions = new Dictionary<char, IDfa<int, char>> {
             { 'S', dfa1 },
             { 'A', dfa2 },
             { 'B', dfa3 }
@@ -124,7 +126,7 @@ public class TestGrammarAnalysis
         };
         var dfa3 = new FakeDfa(transitions3, 0, new HashSet<int> { 4 });
 
-        var productions = new Dictionary<char, IDfaWithConfig<int, char>> {
+        var productions = new Dictionary<char, IDfa<int, char>> {
             { 'A', dfa1 },
             { 'B', dfa2 },
             { 'S', dfa3 }
@@ -180,7 +182,7 @@ public class TestGrammarAnalysis
         };
         var dfa4 = new FakeDfa(transitions4, 0, new HashSet<int> { 1 });
 
-        var productions = new Dictionary<char, IDfaWithConfig<int, char>> {
+        var productions = new Dictionary<char, IDfa<int, char>> {
             { 'A', dfa1 },
             { 'B', dfa2 },
             { 'C', dfa3 },
@@ -233,7 +235,7 @@ public class TestGrammarAnalysis
         };
         var dfa3 = new FakeDfa(transitions3, 0, new HashSet<int> { 4 });
 
-        var productions = new Dictionary<char, IDfaWithConfig<int, char>> {
+        var productions = new Dictionary<char, IDfa<int, char>> {
             { 'A', dfa1 },
             { 'B', dfa2 },
             { 'C', dfa2 },
@@ -286,7 +288,7 @@ public class TestGrammarAnalysis
         };
         var dfa2 = new FakeDfa(transitions2, 0, new HashSet<int> { 6, 7 });
 
-        var productions = new Dictionary<char, IDfaWithConfig<int, char>> {
+        var productions = new Dictionary<char, IDfa<int, char>> {
             { 'A', dfa1 },
             { 'B', dfa1 },
             { 'C', dfa1 },
@@ -362,7 +364,7 @@ public class TestGrammarAnalysis
         };
         var dfa5 = new FakeDfa(transitions5, 0, new HashSet<int> { 3 });
 
-        var productions = new Dictionary<char, IDfaWithConfig<int, char>> {
+        var productions = new Dictionary<char, IDfa<int, char>> {
             { 'A', dfa1 },
             { 'B', dfa2 },
             { 'C', dfa3 },
@@ -431,7 +433,7 @@ public class TestGrammarAnalysis
         };
         var dfa4 = new FakeDfa(transitions4, 0, new HashSet<int> { 4, 5 });
 
-        var productions = new Dictionary<char, IDfaWithConfig<int, char>> {
+        var productions = new Dictionary<char, IDfa<int, char>> {
             { 'A', dfa1 },
             { 'B', dfa2 },
             { 'C', dfa3 },

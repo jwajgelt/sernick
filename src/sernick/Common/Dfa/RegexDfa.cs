@@ -3,7 +3,7 @@ namespace sernick.Common.Dfa;
 using Regex;
 using Utility;
 
-public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where TAtom : IEquatable<TAtom>
+public sealed class RegexDfa<TAtom> : IDfa<Regex<TAtom>, TAtom> where TAtom : IEquatable<TAtom>
 {
     private RegexDfa(
         Regex<TAtom> regex,
@@ -31,7 +31,7 @@ public sealed class RegexDfa<TAtom> : IDfaWithConfig<Regex<TAtom>, TAtom> where 
     private readonly Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>> _transitionsToMap;
     private readonly Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>> _transitionsFromMap;
 
-    public static IDfaWithConfig<Regex<TAtom>, TAtom> FromRegex(Regex<TAtom> start)
+    public static IDfa<Regex<TAtom>, TAtom> FromRegex(Regex<TAtom> start)
     {
         var acceptingStates = new List<Regex<TAtom>>();
         var visited = new HashSet<Regex<TAtom>>();
