@@ -8,11 +8,11 @@ using Input;
 public sealed class Lexer<TCat, TState> : ILexer<TCat>
     where TCat : notnull
 {
-    private readonly SumDfa<TCat, TState> _sumDfa;
+    private readonly SumDfa<TCat, TState, char> _sumDfa;
 
     public Lexer(IReadOnlyDictionary<TCat, IDfa<TState, char>> categoryDfas)
     {
-        _sumDfa = new SumDfa<TCat, TState>(categoryDfas);
+        _sumDfa = new SumDfa<TCat, TState, char>(categoryDfas);
     }
 
     public IEnumerable<Token<TCat>> Process(IInput input, IDiagnostics diagnostics)
@@ -91,5 +91,5 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
         }
     }
 
-    private sealed record LexerProcessingState(Dictionary<TCat, TState> DfaStates, ILocation Location);
+    private sealed record LexerProcessingState(IReadOnlyDictionary<TCat, TState> DfaStates, ILocation Location);
 }
