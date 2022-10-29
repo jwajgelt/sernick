@@ -24,7 +24,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         IReadOnlyCollection<TSymbol> symbolsNullable,
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFirst,
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFollow,
-        IReadOnlyDictionary<Production<TSymbol>, IDfaWithConfig<TSymbol, TDfaState>> reversedAutomata)
+        IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> reversedAutomata)
     {
         _reversedAutomata = reversedAutomata;
         throw new NotImplementedException();
@@ -38,5 +38,5 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
 
     private readonly Configuration<TDfaState> _startConfig;
     private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol>, IParseAction> _actionTable;
-    private readonly IReadOnlyDictionary<Production<TSymbol>, IDfaWithConfig<TSymbol, TDfaState>> _reversedAutomata;
+    private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
 }
