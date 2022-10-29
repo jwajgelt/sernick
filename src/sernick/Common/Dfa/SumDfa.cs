@@ -1,6 +1,6 @@
-using sernick.Utility;
-
 namespace sernick.Common.Dfa;
+
+using Utility;
 
 public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<IReadOnlyDictionary<TCat, TState>, TSymbol>
     where TCat : notnull

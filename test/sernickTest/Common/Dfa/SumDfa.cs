@@ -1,7 +1,7 @@
-using sernick.Common.Dfa;
-using sernickTest.Tokenizer.Lexer.Helpers;
-
 namespace sernickTest.Common.Dfa;
+
+using sernick.Common.Dfa;
+using Tokenizer.Lexer.Helpers;
 
 public class SumDfaTest
 {
