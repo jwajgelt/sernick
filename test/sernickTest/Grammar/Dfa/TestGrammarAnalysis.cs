@@ -1,6 +1,6 @@
-using sernick.Common.Dfa;
-
 namespace sernickTest.Grammar.Dfa;
+
+using sernick.Common.Dfa;
 
 using sernick.Grammar.Dfa;
 using Tokenizer.Lexer.Helpers;
