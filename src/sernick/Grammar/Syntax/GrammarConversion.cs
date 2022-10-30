@@ -11,7 +11,7 @@ public static class GrammarConversion
     /// Usage: grammar.ToDfaGrammar()
     /// </summary>
     /// <returns>DFA-based grammar equivalent to the input one</returns>
-    public static DfaGrammar<Regex<TSymbol>, TSymbol> ToDfaGrammar<TSymbol>(this Grammar<TSymbol> grammar)
+    public static DfaGrammar<TSymbol> ToDfaGrammar<TSymbol>(this Grammar<TSymbol> grammar)
         where TSymbol : IEquatable<TSymbol>
     {
         var dfaProductions = grammar.Productions.Select(production => (
@@ -25,7 +25,7 @@ public static class GrammarConversion
             ))
         ).ToDictionary(pair => pair.Key, pair => pair.Item2);
 
-        return new DfaGrammar<Regex<TSymbol>, TSymbol>(
+        return new DfaGrammar<TSymbol>(
             Start: grammar.Start,
             Productions: dfaProductions
             );

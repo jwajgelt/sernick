@@ -21,7 +21,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     }
 
     internal Parser(
-        DfaGrammar<TSymbol, TDfaState> dfaGrammar,
+        DfaGrammar<TDfaState> dfaGrammar,
         IReadOnlyCollection<TSymbol> symbolsNullable,
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFirst,
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFollow,
