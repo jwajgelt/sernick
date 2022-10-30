@@ -1,7 +1,6 @@
 namespace sernickTest.Grammar.Dfa;
 
 using sernick.Common.Dfa;
-
 using sernick.Grammar.Dfa;
 using Tokenizer.Lexer.Helpers;
 
@@ -33,7 +32,6 @@ public class TestGrammarAnalysis
             { 'B', dfa2 },
             { 'C', dfa3 }
         };
-        var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'A', 'C' };
         var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
@@ -52,7 +50,7 @@ public class TestGrammarAnalysis
             {'b', new HashSet<char>{}},
             {'c', new HashSet<char>{}}
         };
-        Verify(grammar, expectedNullable, expectedFirst, expectedFollow);
+        Verify(productions, expectedNullable, expectedFirst, expectedFollow);
     }
 
     // S -> ABA
@@ -84,7 +82,6 @@ public class TestGrammarAnalysis
             { 'A', dfa2 },
             { 'B', dfa3 }
         };
-        var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'S', 'A', 'B' };
         var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
@@ -99,7 +96,7 @@ public class TestGrammarAnalysis
             {'A', new HashSet<char>{'A','B'}},
             {'B', new HashSet<char>{'A'}}
         };
-        Verify(grammar, expectedNullable, expectedFirst, expectedFollow);
+        Verify(productions, expectedNullable, expectedFirst, expectedFollow);
     }
 
     // A -> eps
@@ -131,7 +128,6 @@ public class TestGrammarAnalysis
             { 'B', dfa2 },
             { 'S', dfa3 }
         };
-        var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'A' };
         var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
@@ -148,7 +144,7 @@ public class TestGrammarAnalysis
             {'b', new HashSet<char>{'B','b'}},
             {'S', new HashSet<char>{}}
         };
-        Verify(grammar, expectedNullable, expectedFirst, expectedFollow);
+        Verify(productions, expectedNullable, expectedFirst, expectedFollow);
     }
 
     // A -> a
@@ -188,7 +184,6 @@ public class TestGrammarAnalysis
             { 'C', dfa3 },
             { 'S', dfa4 }
         };
-        var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { };
         var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
@@ -207,7 +202,7 @@ public class TestGrammarAnalysis
             {'C', new HashSet<char>{}},
             {'S', new HashSet<char>{}}
         };
-        Verify(grammar, expectedNullable, expectedFirst, expectedFollow);
+        Verify(productions, expectedNullable, expectedFirst, expectedFollow);
     }
 
     // A -> a
@@ -241,7 +236,6 @@ public class TestGrammarAnalysis
             { 'C', dfa2 },
             { 'S', dfa3 }
         };
-        var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'B', 'C' };
         var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
@@ -260,7 +254,7 @@ public class TestGrammarAnalysis
             {'C', new HashSet<char>{'A','a'}},
             {'S', new HashSet<char>{}}
         };
-        Verify(grammar, expectedNullable, expectedFirst, expectedFollow);
+        Verify(productions, expectedNullable, expectedFirst, expectedFollow);
     }
 
     // A -> eps
@@ -296,7 +290,6 @@ public class TestGrammarAnalysis
             { 'E', dfa1 },
             { 'S', dfa2 }
         };
-        var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'A', 'B', 'C', 'D', 'E', 'S' };
         var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
@@ -317,7 +310,7 @@ public class TestGrammarAnalysis
             {'E', new HashSet<char>{}},
             {'S', new HashSet<char>{}}
         };
-        Verify(grammar, expectedNullable, expectedFirst, expectedFollow);
+        Verify(productions, expectedNullable, expectedFirst, expectedFollow);
     }
 
     // A -> a
@@ -371,7 +364,6 @@ public class TestGrammarAnalysis
             { 'D', dfa4 },
             { 'S', dfa5 }
         };
-        var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'B', 'D' };
         var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
@@ -392,7 +384,7 @@ public class TestGrammarAnalysis
             {'D', new HashSet<char>{}},
             {'S', new HashSet<char>{}}
         };
-        Verify(grammar, expectedNullable, expectedFirst, expectedFollow);
+        Verify(productions, expectedNullable, expectedFirst, expectedFollow);
     }
 
     // A -> eps
@@ -439,7 +431,6 @@ public class TestGrammarAnalysis
             { 'C', dfa3 },
             { 'S', dfa4 }
         };
-        var grammar = new DfaGrammar<char, int>('S', productions);
 
         var expectedNullable = new HashSet<char> { 'A', 'B', 'S' };
         var expectedFirst = new Dictionary<char, IReadOnlyCollection<char>>
@@ -458,24 +449,24 @@ public class TestGrammarAnalysis
             {'c', new HashSet<char>{}},
             {'S', new HashSet<char>{}}
         };
-        Verify(grammar, expectedNullable, expectedFirst, expectedFollow);
+        Verify(productions, expectedNullable, expectedFirst, expectedFollow);
     }
 
-    private static void Verify(DfaGrammar<char, int> grammar,
+    private static void Verify(IReadOnlyDictionary<char, IDfa<int, char>> productions,
         IReadOnlyCollection<char> expectedNullable,
         Dictionary<char, IReadOnlyCollection<char>> expectedFirst,
         Dictionary<char, IReadOnlyCollection<char>> expectedFollow)
     {
-        var nullable = grammar.Nullable();
+        var nullable = GrammarAnalysis.Nullable(productions);
         Assert.Equal(expectedNullable.OrderBy(a => a), nullable.OrderBy(a => a));
 
-        var first = grammar.First(expectedNullable);
+        var first = GrammarAnalysis.First(productions, expectedNullable);
         foreach (var (symbol, expectedSet) in expectedFirst)
         {
             Assert.Equal(expectedSet.OrderBy(a => a), first[symbol].OrderBy(a => a));
         }
 
-        var follow = grammar.Follow(expectedNullable, expectedFirst);
+        var follow = GrammarAnalysis.Follow(productions, expectedNullable, expectedFirst);
         foreach (var (symbol, expectedSet) in expectedFollow)
         {
             Assert.Equal(expectedSet.OrderBy(a => a), follow[symbol].OrderBy(a => a));

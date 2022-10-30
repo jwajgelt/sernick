@@ -1,5 +1,6 @@
 namespace sernick.Grammar.Dfa;
 
+using Common.Dfa;
 using Utility;
 
 public static class GrammarAnalysis
@@ -8,8 +9,7 @@ public static class GrammarAnalysis
     /// <summary>
     /// Compute the set NULLABLE - all symbols, from which epsilon can be derived in grammar
     /// </summary>
-    public static IReadOnlyCollection<TSymbol> Nullable<TSymbol, TDfaState>(
-        this DfaGrammar<TSymbol, TDfaState> grammar)
+    public static IReadOnlyCollection<TSymbol> Nullable<TSymbol, TDfaState>(IReadOnlyDictionary<TSymbol, IDfa<TDfaState, TSymbol>> productions)
          where TSymbol : IEquatable<TSymbol>
          where TDfaState : IEquatable<TDfaState>
     {
@@ -17,11 +17,11 @@ public static class GrammarAnalysis
         var used = new HashSet<ValueTuple<TSymbol, TDfaState>>(); // to help us in case of loops in automatas
         // Use ValueTuple here and below, so we remember which automata does every state come from
         var queue = new Queue<ValueTuple<TSymbol, TDfaState>>();
-        var conditionalQueuesForSymbols = grammar.Productions.Keys.ToDictionary(symbol => symbol, _ => new Queue<ValueTuple<TSymbol, TDfaState>>());
+        var conditionalQueuesForSymbols = productions.Keys.ToDictionary(symbol => symbol, _ => new Queue<ValueTuple<TSymbol, TDfaState>>());
 
-        foreach (var symbol in grammar.Productions.Keys)
+        foreach (var symbol in productions.Keys)
         {
-            foreach (var acceptingState in grammar.Productions[symbol].AcceptingStates)
+            foreach (var acceptingState in productions[symbol].AcceptingStates)
             {
                 queue.Enqueue((symbol, acceptingState));
             }
@@ -30,7 +30,7 @@ public static class GrammarAnalysis
         while (queue.Count != 0)
         {
             var (currentSymbolWhichDeterminesAutomata, currentState) = queue.Dequeue();
-            var currentAutomata = grammar.Productions[currentSymbolWhichDeterminesAutomata];
+            var currentAutomata = productions[currentSymbolWhichDeterminesAutomata];
 
             // If we've encountered a start symbol for DFA => add all states from "conditional set" for "symbol" to Q
             // and mark current symbol as nullable
@@ -50,7 +50,7 @@ public static class GrammarAnalysis
                 conditionalQueuesForSymbols[currentSymbolWhichDeterminesAutomata].Clear();
             }
 
-            foreach (var transitionEdge in grammar.Productions[currentSymbolWhichDeterminesAutomata].GetTransitionsTo(currentState))
+            foreach (var transitionEdge in productions[currentSymbolWhichDeterminesAutomata].GetTransitionsTo(currentState))
             {
                 var fromState = transitionEdge.From;
                 var atom = transitionEdge.Atom;
@@ -78,15 +78,14 @@ public static class GrammarAnalysis
     /// Compute the function FIRST(A) - all symbols that can appear as the first ones in grammar derivations starting at A
     /// </summary>
     /// <param name="nullableSymbols">Precomputed set NULLABLE</param>
-    public static IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> First<TSymbol, TDfaState>(
-        this DfaGrammar<TSymbol, TDfaState> grammar,
+    public static IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> First<TSymbol, TDfaState>(IReadOnlyDictionary<TSymbol, IDfa<TDfaState, TSymbol>> productions,
         IReadOnlyCollection<TSymbol> nullableSymbols)
         where TSymbol : IEquatable<TSymbol>
     {
-        var symbols = grammar.Productions.Select(kv => kv.Key).ToHashSet();
+        var symbols = productions.Select(kv => kv.Key).ToHashSet();
 
         // begin with FIRST(A) := {A}
-        var result = grammar.Productions.ToDictionary(
+        var result = productions.ToDictionary(
             kv => kv.Key,
             kv => new HashSet<TSymbol> { kv.Key }
         );
@@ -95,7 +94,7 @@ public static class GrammarAnalysis
         // reachable using only transitions with NULLABLE 
         // symbols, and for each transition leaving these states,
         // add it's symbol to FIRST(A)
-        foreach (var (symbol, dfa) in grammar.Productions)
+        foreach (var (symbol, dfa) in productions)
         {
             var reachable = new HashSet<TDfaState>() { dfa.Start };
             var processing = new HashSet<TDfaState>() { dfa.Start };
@@ -158,8 +157,7 @@ public static class GrammarAnalysis
     /// </summary>
     /// <param name="nullableSymbols">Precomputed set NULLABLE</param>
     /// <param name="symbolsFirst">Precomputed function FIRST(A)</param>
-    public static IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> Follow<TSymbol, TDfaState>(
-        this DfaGrammar<TSymbol, TDfaState> grammar,
+    public static IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> Follow<TSymbol, TDfaState>(IReadOnlyDictionary<TSymbol, IDfa<TDfaState, TSymbol>> productions,
         IReadOnlyCollection<TSymbol> nullableSymbols,
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFirst)
         where TSymbol : IEquatable<TSymbol>
@@ -191,7 +189,7 @@ public static class GrammarAnalysis
         do
         {
             hasChanged = false;
-            foreach (var production in grammar.Productions)
+            foreach (var production in productions)
             {
                 // the FOLLOW set of the left-hand side symbol of a production
                 var keyFollowSet = followSetMap.GetOrAddEmpty(production.Key);

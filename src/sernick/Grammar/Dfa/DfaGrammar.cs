@@ -5,7 +5,7 @@ using Common.Dfa;
 /// <summary>
 /// Convenience grammar class, in which right-hand sides of productions are DFAs
 /// </summary>
-public sealed record DfaGrammar<TSymbol, TDfaState>(
+public sealed record DfaGrammar<TLabel, TDfaState, TSymbol>(
     TSymbol Start,
-    IReadOnlyDictionary<TSymbol, IDfa<TDfaState, TSymbol>> Productions)
-    where TSymbol : IEquatable<TSymbol>;
+    IReadOnlyDictionary<TSymbol, SumDfa<TLabel, TDfaState, TSymbol>> Productions)
+    where TSymbol : IEquatable<TSymbol> where TLabel : notnull;

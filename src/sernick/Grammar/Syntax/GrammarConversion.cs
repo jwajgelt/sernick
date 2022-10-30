@@ -11,15 +11,23 @@ public static class GrammarConversion
     /// Usage: grammar.ToDfaGrammar()
     /// </summary>
     /// <returns>DFA-based grammar equivalent to the input one</returns>
-    public static DfaGrammar<TSymbol, Regex<TSymbol>> ToDfaGrammar<TSymbol>(this Grammar<TSymbol> grammar)
-        where TSymbol : notnull, IEquatable<TSymbol>
+    public static DfaGrammar<Production<TSymbol>, Regex<TSymbol>, TSymbol> ToDfaGrammar<TSymbol>(this Grammar<TSymbol> grammar)
+        where TSymbol : IEquatable<TSymbol>
     {
-        return new DfaGrammar<TSymbol, Regex<TSymbol>>(
+        var dfaProductions = grammar.Productions.Select(production => (
+                production.Left,
+                RegexDfa<TSymbol>.FromRegex(production.Right),
+                production
+            )
+        ).GroupBy(prod => prod.Left).Select(prodGroup =>
+            (prodGroup.Key, new SumDfa<Production<TSymbol>, Regex<TSymbol>, TSymbol>(
+                prodGroup.ToDictionary(item => item.production, item => item.Item2)
+            ))
+        ).ToDictionary(pair => pair.Key, pair => pair.Item2);
+
+        return new DfaGrammar<Production<TSymbol>, Regex<TSymbol>, TSymbol>(
             Start: grammar.Start,
-            Productions: grammar.Productions
-                .ToDictionary(
-                    prod => prod.Left,
-                    prod => RegexDfa<TSymbol>.FromRegex(prod.Right))
+            Productions: dfaProductions
             );
     }
 }
