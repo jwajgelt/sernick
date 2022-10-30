@@ -14,16 +14,15 @@ public static class GrammarConversion
     public static DfaGrammar<TSymbol> ToDfaGrammar<TSymbol>(this Grammar<TSymbol> grammar)
         where TSymbol : IEquatable<TSymbol>
     {
-        var dfaProductions = grammar.Productions.Select(production => (
-                production.Left,
-                RegexDfa<TSymbol>.FromRegex(production.Right),
-                production
-            )
-        ).GroupBy(prod => prod.Left).Select(prodGroup =>
-            (prodGroup.Key, new SumDfa<Production<TSymbol>, Regex<TSymbol>, TSymbol>(
-                prodGroup.ToDictionary(item => item.production, item => item.Item2)
-            ))
-        ).ToDictionary(pair => pair.Key, pair => pair.Item2);
+        var dfaProductions = grammar.Productions.GroupBy(production => production.Left)
+            .Select(group => (
+                symbol: group.Key,
+                dfas: group.ToDictionary(
+                    prod => prod,
+                    prod => RegexDfa<TSymbol>.FromRegex(prod.Right))))
+            .ToDictionary(
+                item => item.symbol,
+                item => new SumDfa<Production<TSymbol>, Regex<TSymbol>, TSymbol>(item.dfas));
 
         return new DfaGrammar<TSymbol>(
             Start: grammar.Start,
