@@ -62,6 +62,27 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                     lookAhead = leavesEnumerator.Current;
 
                     break;
+                case ParseActionReduce<TSymbol> reduceAction:
+                    if (!MatchTail(
+                            dfa: _reversedAutomata[reduceAction.Production],
+                            symbol: reduceAction.Production.Left,
+                            ref symbolStack, ref configStack, ref treeStack,
+                            out var children,
+                            out var nextConfig))
+                    {
+                        // TODO: report syntax error
+                    }
+
+                    Shift(
+                        new ParseTreeNode<TSymbol>(
+                            Symbol: reduceAction.Production.Left,
+                            Start: children.First().Start,
+                            End: children.Last().End,
+                            Production: reduceAction.Production,
+                            Children: children),
+                        nextConfig!);
+
+                    break;
             }
         }
     }
@@ -69,4 +90,53 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     private readonly Configuration<TDfaState> _startConfig;
     private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol?>, IParseAction> _actionTable;
     private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
+
+    /// <summary>
+    /// Helper method, which matches the tail of <paramref name="symbolStack"/> against <paramref name="dfa"/>.
+    /// It pops from all stacks 1 element by 1, as it goes.
+    /// </summary>
+    /// <param name="matchedTrees">Matched tail of the <paramref name="treeStack"/> (if the method returns true)</param>
+    /// <param name="nextConfig">Target configuration of the Shift action found (if the method returns true)</param>
+    /// <returns>
+    /// <c>true</c> if DFA reached an accepting state, and
+    /// a Shift action is possible from the config from top of the stack and <paramref name="symbol"/>; <c>false</c> otherwise
+    /// </returns>
+    private bool MatchTail<TTree>(
+        IDfa<TDfaState, TSymbol> dfa,
+        TSymbol symbol,
+        ref Stack<TSymbol> symbolStack,
+        ref Stack<Configuration<TDfaState>> configStack,
+        ref Stack<TTree> treeStack,
+        out List<TTree> matchedTrees,
+        out Configuration<TDfaState>? nextConfig)
+    {
+        matchedTrees = new List<TTree>();
+
+        var dfaState = dfa.Start;
+        while (symbolStack.Count > 0)
+        {
+            dfaState = dfa.Transition(dfaState, symbolStack.Pop());
+
+            configStack.Pop();
+            matchedTrees.Insert(0, treeStack.Pop());
+
+            if (
+                dfa.Accepts(dfaState) &&
+                _actionTable.TryGetValue((configStack.Peek(), symbol), out var action) &&
+                action is ParseActionShift<TDfaState> shiftAction)
+            {
+                nextConfig = shiftAction.Target;
+                return true;
+            }
+
+            if (dfa.IsDead(dfaState))
+            {
+                nextConfig = default;
+                return false;
+            }
+        }
+
+        nextConfig = default;
+        return false;
+    }
 }
