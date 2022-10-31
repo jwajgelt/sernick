@@ -2,7 +2,7 @@ namespace sernick.Parser;
 
 using Grammar.Syntax;
 
-public interface IParseAction { };
+public interface IParseAction { }
 
 public sealed record ParseActionShift<TDfaState>(Configuration<TDfaState> Target) : IParseAction;
 
