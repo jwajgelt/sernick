@@ -35,8 +35,15 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     public IParseTree<TSymbol> Process(IEnumerable<IParseTree<TSymbol>> leaves, IDiagnostics diagnostics)
     {
         var configStack = new Stack<Configuration<TDfaState>>(new[] { _startConfig });
-        _ = new Stack<TSymbol>();
-        _ = new Stack<IParseTree<TSymbol>>();
+        var symbolStack = new Stack<TSymbol>();
+        var treeStack = new Stack<IParseTree<TSymbol>>();
+
+        void Shift(IParseTree<TSymbol> tree, Configuration<TDfaState> configuration)
+        {
+            treeStack.Push(tree);
+            symbolStack.Push(tree.Symbol);
+            configStack.Push(configuration);
+        }
 
         using var leavesEnumerator = leaves.GetEnumerator();
         leavesEnumerator.MoveNext();
@@ -45,7 +52,17 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         while (true)
         {
             var configuration = configStack.Peek();
-            _ = _actionTable[(configuration, lookAhead?.Symbol)];
+            var parseAction = _actionTable[(configuration, lookAhead?.Symbol)];
+            switch (parseAction)
+            {
+                case ParseActionShift<TDfaState> shiftAction:
+                    Shift(lookAhead!, shiftAction.Target);
+
+                    leavesEnumerator.MoveNext();
+                    lookAhead = leavesEnumerator.Current;
+
+                    break;
+            }
         }
     }
 
