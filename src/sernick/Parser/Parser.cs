@@ -7,8 +7,6 @@ using Grammar.Syntax;
 using ParseTree;
 
 #pragma warning disable CS0649
-#pragma warning disable IDE0051
-#pragma warning disable IDE0052
 #pragma warning disable IDE0060
 
 public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
@@ -55,6 +53,9 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
             var parseAction = _actionTable[(configuration, lookAhead?.Symbol)];
             switch (parseAction)
             {
+                case null:
+                    diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
+                    return null;
                 case ParseActionShift<TDfaState> shiftAction:
                     Shift(lookAhead!, shiftAction.Target);
 
@@ -70,7 +71,8 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                             out var children,
                             out var nextConfig))
                     {
-                        // TODO: report syntax error
+                        diagnostics.Report(new SyntaxError<TSymbol>(treeStack.FirstOrDefault()));
+                        return null;
                     }
 
                     Shift(
