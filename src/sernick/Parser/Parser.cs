@@ -6,6 +6,7 @@ using Grammar.Dfa;
 using Grammar.Syntax;
 using ParseTree;
 
+#pragma warning disable CS0649
 #pragma warning disable IDE0051
 #pragma warning disable IDE0052
 #pragma warning disable IDE0060
@@ -33,7 +34,19 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
 
     public IParseTree<TSymbol> Process(IEnumerable<IParseTree<TSymbol>> leaves, IDiagnostics diagnostics)
     {
-        throw new NotImplementedException();
+        var configStack = new Stack<Configuration<TDfaState>>(new[] { _startConfig });
+        _ = new Stack<TSymbol>();
+        _ = new Stack<IParseTree<TSymbol>>();
+
+        using var leavesEnumerator = leaves.GetEnumerator();
+        leavesEnumerator.MoveNext();
+        var lookAhead = leavesEnumerator.Current;
+
+        while (true)
+        {
+            var configuration = configStack.Peek();
+            _ = _actionTable[(configuration, lookAhead?.Symbol)];
+        }
     }
 
     private readonly Configuration<TDfaState> _startConfig;
