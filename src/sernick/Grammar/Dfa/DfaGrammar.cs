@@ -1,5 +1,5 @@
-
 namespace sernick.Grammar.Dfa;
+
 using Common.Dfa;
 using Common.Regex;
 using Syntax;
