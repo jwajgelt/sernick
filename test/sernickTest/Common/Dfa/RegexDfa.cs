@@ -1,8 +1,7 @@
 namespace sernickTest.Common.Dfa;
 
-using sernick.Common.Dfa;
 using Helpers;
-
+using sernick.Common.Dfa;
 using Regex = sernick.Common.Regex.Regex<char>;
 using RegexDfa = sernick.Common.Dfa.RegexDfa<char>;
 

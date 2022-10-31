@@ -1,17 +1,17 @@
 namespace sernick.Grammar.Dfa;
 
 using Common.Dfa;
+using Common.Regex;
+using Syntax;
 using Utility;
 
 public static class GrammarAnalysis
 {
-
     /// <summary>
     /// Compute the set NULLABLE - all symbols, from which epsilon can be derived in grammar
     /// </summary>
     public static IReadOnlyCollection<TSymbol> Nullable<TSymbol, TDfaState>(IReadOnlyDictionary<TSymbol, IDfa<TDfaState, TSymbol>> productions)
          where TSymbol : IEquatable<TSymbol>
-         where TDfaState : IEquatable<TDfaState>
     {
         var nullable = new HashSet<TSymbol>();
         var used = new HashSet<ValueTuple<TSymbol, TDfaState>>(); // to help us in case of loops in automatas
@@ -235,6 +235,41 @@ public static class GrammarAnalysis
         } while (hasChanged);
 
         return followSetMap.ToDictionary(kv => kv.Key, kv => (IReadOnlyCollection<TSymbol>)kv.Value);
+    }
+
+    public static IReadOnlyCollection<TSymbol> Nullable<TSymbol>(this DfaGrammar<TSymbol> grammar)
+        where TSymbol : IEquatable<TSymbol>
+    {
+        return Nullable(grammar.Productions.ToDictionary(
+            kv => kv.Key,
+            kv => kv.Value as IDfa<IReadOnlyDictionary<Production<TSymbol>, Regex<TSymbol>>, TSymbol>)
+        );
+    }
+
+    public static IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> First<TSymbol>(
+        this DfaGrammar<TSymbol> grammar,
+        IReadOnlyCollection<TSymbol> nullableSymbols)
+        where TSymbol : IEquatable<TSymbol>
+    {
+        return First(grammar.Productions.ToDictionary(
+            kv => kv.Key,
+            kv => kv.Value as IDfa<IReadOnlyDictionary<Production<TSymbol>, Regex<TSymbol>>, TSymbol>),
+            nullableSymbols
+        );
+    }
+
+    public static IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> Follow<TSymbol>(
+        this DfaGrammar<TSymbol> grammar,
+        IReadOnlyCollection<TSymbol> nullableSymbols,
+        IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFirst)
+        where TSymbol : IEquatable<TSymbol>
+    {
+        return Follow(grammar.Productions.ToDictionary(
+                kv => kv.Key,
+                kv => kv.Value as IDfa<IReadOnlyDictionary<Production<TSymbol>, Regex<TSymbol>>, TSymbol>),
+            nullableSymbols,
+            symbolsFirst
+        );
     }
 }
 
