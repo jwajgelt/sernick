@@ -33,6 +33,11 @@ internal sealed class ConcatRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable
             : epsilonLessDerivative;
     }
 
+    public override Regex<TAtom> Reverse()
+    {
+        return Children.Count == 0 ? Empty : Concat(Children.Reverse().Select(child => child.Reverse()));
+    } 
+
     public override int GetHashCode()
     {
         return Children.Aggregate(

@@ -16,6 +16,8 @@ internal sealed class StarRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<T
         return Concat(Child.Derivative(atom), this);
     }
 
+    public override Regex<TAtom> Reverse() => Star(Child.Reverse());
+    
     public override int GetHashCode()
     {
         return $"Star({Child.GetHashCode()})".GetHashCode();

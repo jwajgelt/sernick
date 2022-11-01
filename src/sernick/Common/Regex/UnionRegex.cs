@@ -16,6 +16,11 @@ internal sealed class UnionRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<
         return Children.Count == 0 ? Empty : Union(Children.Select(child => child.Derivative(atom)));
     }
 
+    public override Regex<TAtom> Reverse()
+    {
+        return Children.Count == 0 ? Empty : Union(Children.Select(child => child.Reverse()));
+    }
+
     public override int GetHashCode()
     {
         return Children.Aggregate(Children.Count, (hashCode, child) => unchecked(hashCode + child.GetHashCode()));
