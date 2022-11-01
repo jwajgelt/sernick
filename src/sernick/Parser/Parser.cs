@@ -1,3 +1,5 @@
+using sernick.Common.Regex;
+
 namespace sernick.Parser;
 
 using Common.Dfa;
@@ -14,9 +16,23 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     where TSymbol : class, IEquatable<TSymbol>
     where TDfaState : IEquatable<TDfaState>
 {
-    public static Parser<TSymbol, TDfaState> FromGrammar(Grammar<TSymbol> grammar)
+    private readonly Configuration<TDfaState> _startConfig;
+    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol?>, IParseAction> _actionTable;
+    private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
+
+    public static Parser<TSymbol, Regex<TSymbol>> FromGrammar(Grammar<TSymbol> grammar)
     {
-        throw new NotImplementedException();
+        var dfaGrammar = grammar.ToDfaGrammar();
+        var nullable = dfaGrammar.Nullable();
+        var first = dfaGrammar.First(nullable);
+        var follow = dfaGrammar.Follow(nullable, first);
+        var reversedAutomatas = GetReverseAutomatas(dfaGrammar);
+
+        return new Parser<TSymbol, Regex<TSymbol>>(dfaGrammar,
+            nullable,
+            first,
+            follow,
+            reversedAutomatas);
     }
 
     internal Parser(
@@ -36,7 +52,16 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         throw new NotImplementedException();
     }
 
-    private readonly Configuration<TDfaState> _startConfig;
-    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol?>, IParseAction> _actionTable;
-    private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
+    private static Dictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>> GetReverseAutomatas(DfaGrammar<TSymbol, Regex<TSymbol>> dfaGrammar)
+    {
+        var reversedAutomatas = new Dictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>>();
+        foreach (var production in dfaGrammar.Productions)
+        {
+            var symbol = production.Key;
+            var dfa = (RegexDfa<TSymbol>)production.Value;
+            reversedAutomatas[new Production<TSymbol>(symbol, dfa.Start)] = dfa.Reverse();
+        }
+
+        return reversedAutomatas;
+    }
 }

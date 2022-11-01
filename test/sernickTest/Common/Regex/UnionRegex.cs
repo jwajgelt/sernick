@@ -165,7 +165,7 @@ public class UnionRegex
 
         Assert.True(regex.Derivative('c').Equals(Regex.Empty));
     }
-    
+
     [Fact]
     public void When_Reverse_Then_ComputeCorrectly_Case1()
     {
@@ -173,7 +173,7 @@ public class UnionRegex
             Regex.Atom('a'),
             Regex.Atom('b')
         );
-        
+
         Assert.Equal(regex, regex.Reverse());
     }
 
@@ -200,7 +200,7 @@ public class UnionRegex
                 Regex.Atom('c')
             )
         );
-        
+
         Assert.Equal(expected, regex.Reverse());
     }
 

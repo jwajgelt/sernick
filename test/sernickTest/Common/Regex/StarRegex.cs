@@ -89,14 +89,14 @@ public class StarRegex
 
         Assert.True(regex.Derivative('a').Equals(result));
     }
-    
+
     [Fact]
     public void When_Reverse_Then_ComputeCorrectly_Case1()
     {
         var regex = Regex.Star(
             Regex.Atom('a')
         );
-        
+
         Assert.Equal(regex, regex.Reverse());
     }
 
@@ -115,7 +115,7 @@ public class StarRegex
                 Regex.Atom('a')
             )
         );
-        
+
         Assert.Equal(expected, regex.Reverse());
     }
 

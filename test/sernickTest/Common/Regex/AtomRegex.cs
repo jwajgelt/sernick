@@ -27,7 +27,7 @@ public class AtomRegex
 
         Assert.True(regex.Derivative('b').Equals(Regex.Empty));
     }
-    
+
     [Fact]
     public void When_Reverse_Then_ComputeCorrectly_Case1()
     {
@@ -35,7 +35,7 @@ public class AtomRegex
 
         Assert.Equal(regex, regex.Reverse());
     }
-    
+
     [Fact]
     public void When_Reverse_Then_ComputeCorrectly_Case2()
     {
@@ -43,7 +43,7 @@ public class AtomRegex
 
         Assert.Equal(regex, regex.Reverse());
     }
-    
+
     [Fact]
     public void When_Reverse_Then_ComputeCorrectly_Case3()
     {

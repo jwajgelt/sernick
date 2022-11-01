@@ -177,10 +177,10 @@ public class ConcatRegex
     {
         var regex = Regex.Concat(Regex.Atom('a'), Regex.Atom('b'));
         var expected = Regex.Concat(Regex.Atom('b'), Regex.Atom('a'));
-        
+
         Assert.Equal(expected, regex.Reverse());
     }
-    
+
     [Fact]
     public void When_Reverse_Then_ComputeCorrectly_Case2()
     {
@@ -203,7 +203,7 @@ public class ConcatRegex
 
         Assert.Equal(expected, regex.Reverse());
     }
-    
+
     [Fact]
     public void When_Reverse_Then_ComputeCorrectly_Case3()
     {
@@ -227,7 +227,7 @@ public class ConcatRegex
 
         Assert.Equal(expected, regex.Reverse());
     }
-    
+
     [Fact]
     public void When_Reverse_Then_ComputeCorrectly_Case4()
     {
