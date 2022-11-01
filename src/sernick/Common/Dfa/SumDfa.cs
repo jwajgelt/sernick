@@ -1,37 +1,39 @@
+using System.Collections;
+
 namespace sernick.Common.Dfa;
 
 using Utility;
 
-public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<IReadOnlyDictionary<TCat, TState>, TSymbol>
+public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TSymbol>.SumDfaState, TSymbol>
     where TCat : notnull
     where TSymbol : IEquatable<TSymbol>
 {
     private readonly IReadOnlyDictionary<TCat, IDfa<TState, TSymbol>> _dfas;
 
-    private Dictionary<IReadOnlyDictionary<TCat, TState>, List<TransitionEdge<IReadOnlyDictionary<TCat, TState>, TSymbol>>>?
+    private Dictionary<SumDfaState, List<TransitionEdge<SumDfaState, TSymbol>>>?
         _transitionsToMap;
 
-    private HashSet<IReadOnlyDictionary<TCat, TState>>? _acceptingStates;
+    private HashSet<SumDfaState>? _acceptingStates;
 
     public SumDfa(IReadOnlyDictionary<TCat, IDfa<TState, TSymbol>> dfas)
     {
         _dfas = dfas;
-        Start = dfas.ToDictionary(kv => kv.Key, kv => kv.Value.Start);
+        Start = new SumDfaState(dfas.ToDictionary(kv => kv.Key, kv => kv.Value.Start));
     }
 
-    public IReadOnlyDictionary<TCat, TState> Start { get; }
-    public IEnumerable<TransitionEdge<IReadOnlyDictionary<TCat, TState>, TSymbol>> GetTransitionsFrom(IReadOnlyDictionary<TCat, TState> state)
+    public SumDfaState Start { get; }
+    public IEnumerable<TransitionEdge<SumDfaState, TSymbol>> GetTransitionsFrom(SumDfaState state)
     {
         return _dfas
             .SelectMany(kv => kv.Value.GetTransitionsFrom(state[kv.Key]))
             .Select(transition => transition.Atom)
             .ToHashSet()    // only process each atom once
             .Select(atom =>
-                new TransitionEdge<IReadOnlyDictionary<TCat, TState>, TSymbol>(state, Transition(state, atom), atom)
+                new TransitionEdge<SumDfaState, TSymbol>(state, Transition(state, atom), atom)
             );
     }
 
-    public IEnumerable<TransitionEdge<IReadOnlyDictionary<TCat, TState>, TSymbol>> GetTransitionsTo(IReadOnlyDictionary<TCat, TState> state)
+    public IEnumerable<TransitionEdge<SumDfaState, TSymbol>> GetTransitionsTo(SumDfaState state)
     {
         if (_transitionsToMap == null)
         {
@@ -41,7 +43,7 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<IReadOnlyDictionary<TCa
         return _transitionsToMap![state];
     }
 
-    public IEnumerable<IReadOnlyDictionary<TCat, TState>> AcceptingStates
+    public IEnumerable<SumDfaState> AcceptingStates
     {
         get
         {
@@ -54,28 +56,28 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<IReadOnlyDictionary<TCa
         }
     }
 
-    public bool Accepts(IReadOnlyDictionary<TCat, TState> state) =>
+    public bool Accepts(SumDfaState state) =>
         state.Any(kv => _dfas[kv.Key].Accepts(kv.Value));
 
-    public bool IsDead(IReadOnlyDictionary<TCat, TState> state) =>
+    public bool IsDead(SumDfaState state) =>
         state.All(kv => _dfas[kv.Key].IsDead(kv.Value));
 
-    public IReadOnlyDictionary<TCat, TState> Transition(IReadOnlyDictionary<TCat, TState> state, TSymbol atom) =>
-        state.ToDictionary(
+    public SumDfaState Transition(SumDfaState state, TSymbol atom) =>
+        new(state.ToDictionary(
             kv => kv.Key,
             kv => _dfas[kv.Key].Transition(kv.Value, atom)
-        );
+        ));
 
-    public IEnumerable<TCat> AcceptingCategories(IReadOnlyDictionary<TCat, TState> state) =>
+    public IEnumerable<TCat> AcceptingCategories(SumDfaState state) =>
         state.Where(kv => _dfas[kv.Key].Accepts(kv.Value)).Select(kv => kv.Key);
 
     private void InitializeTransitionsDictionary()
     {
-        _acceptingStates = new HashSet<IReadOnlyDictionary<TCat, TState>>();
+        _acceptingStates = new HashSet<SumDfaState>();
         var transitionsToMap =
-            new Dictionary<IReadOnlyDictionary<TCat, TState>, List<TransitionEdge<IReadOnlyDictionary<TCat, TState>, TSymbol>>>();
-        var visited = new HashSet<IReadOnlyDictionary<TCat, TState>>();
-        var queue = new Queue<IReadOnlyDictionary<TCat, TState>>();
+            new Dictionary<SumDfaState, List<TransitionEdge<SumDfaState, TSymbol>>>();
+        var visited = new HashSet<SumDfaState>();
+        var queue = new Queue<SumDfaState>();
 
         queue.Enqueue(Start);
         visited.Add(Start);
@@ -104,28 +106,47 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<IReadOnlyDictionary<TCa
 
         _transitionsToMap = transitionsToMap.ToDictionary(
             kv => kv.Key,
-            kv => kv.Value,
-            new StateEqualityComparer()
+            kv => kv.Value
             );
     }
 
-    // by default, Dictionary doesn't seem to work as a Key,
-    // so we implement our own EqualityComparer
-    private class StateEqualityComparer : IEqualityComparer<IReadOnlyDictionary<TCat, TState>>
+    public class SumDfaState : IEquatable<SumDfaState>, IEnumerable<KeyValuePair<TCat, TState>>
     {
-        public bool Equals(IReadOnlyDictionary<TCat, TState>? x, IReadOnlyDictionary<TCat, TState>? y)
+        public SumDfaState(IReadOnlyDictionary<TCat, TState> partStates)
         {
-            if (x == null || y == null)
+            _partStates = partStates;
+        }
+
+        public TState this[TCat cat] => _partStates[cat];
+
+        public bool Equals(SumDfaState? other)
+        {
+            if (other == null)
             {
                 return false;
             }
 
-            return x.Count == y.Count && x.All(kv => y.ContainsKey(kv.Key) && Equals(y[kv.Key], kv.Value));
+            return _partStates.Count == other._partStates.Count
+                   && _partStates.All(
+                       kv => other._partStates.ContainsKey(kv.Key) && Equals(other._partStates[kv.Key], kv.Value)
+                       );
         }
 
-        public int GetHashCode(IReadOnlyDictionary<TCat, TState> obj)
+        public IEnumerator<KeyValuePair<TCat, TState>> GetEnumerator()
         {
-            return obj.Aggregate(0, (current, kv) => current ^ kv.Key.GetHashCode() ^ kv.Value!.GetHashCode());
+            return _partStates.GetEnumerator();
         }
+
+        public override int GetHashCode()
+        {
+            return _partStates.Aggregate(0, (current, kv) => current ^ kv.Key.GetHashCode() ^ kv.Value!.GetHashCode());
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)_partStates).GetEnumerator();
+        }
+
+        private readonly IReadOnlyDictionary<TCat, TState> _partStates;
     }
 }

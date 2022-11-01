@@ -3,6 +3,8 @@ namespace sernickTest.Common.Dfa;
 using sernick.Common.Dfa;
 using Tokenizer.Lexer.Helpers;
 
+using SumDfaState = sernick.Common.Dfa.SumDfa<int, int, char>.SumDfaState;
+
 public class SumDfaTest
 {
     [Fact]
@@ -31,17 +33,13 @@ public class SumDfaTest
 
         var sumDfa = new SumDfa<int, int, char>(new Dictionary<int, IDfa<int, char>> { { 0, dfa1 }, { 1, dfa2 } });
 
-        var transitionsFromStart = new List<TransitionEdge<IReadOnlyDictionary<int, int>, char>>(
-            sumDfa.GetTransitionsFrom(sumDfa.Start)
-        );
+        var transitionsFromStart = sumDfa.GetTransitionsFrom(sumDfa.Start).ToList();
         Assert.Single(transitionsFromStart);
         Assert.Equal(sumDfa.Transition(sumDfa.Start, 'a'), transitionsFromStart[0].To);
 
-        var state = new Dictionary<int, int> { { 0, 1 }, { 1, 1 } };
+        var state = new SumDfaState(new Dictionary<int, int> { { 0, 1 }, { 1, 1 } });
 
-        var transitionsFromState = new List<TransitionEdge<IReadOnlyDictionary<int, int>, char>>(
-            sumDfa.GetTransitionsFrom(state)
-        );
+        var transitionsFromState = sumDfa.GetTransitionsFrom(state).ToList();
 
         Assert.Equal(2, transitionsFromState.Count);
         foreach (var transition in transitionsFromState)
@@ -79,9 +77,7 @@ public class SumDfaTest
 
         var state = sumDfa.Transition(sumDfa.Start, 'a'); //new Dictionary<int, int> { { 0, 1 }, { 1, 1 } };
 
-        var transitionsToState = new List<TransitionEdge<IReadOnlyDictionary<int, int>, char>>(
-            sumDfa.GetTransitionsTo(state)
-        );
+        var transitionsToState = sumDfa.GetTransitionsTo(state).ToList();
 
         Assert.Single(transitionsToState);
         Assert.Equal(sumDfa.Start, transitionsToState[0].From);
@@ -115,7 +111,7 @@ public class SumDfaTest
         var acceptingStates = sumDfa.AcceptingStates;
 
         var state = sumDfa.Transition(sumDfa.Start, 'a');
-        var actualAcceptingStates = new List<IReadOnlyDictionary<int, int>>
+        var actualAcceptingStates = new List<SumDfaState>
         {
             sumDfa.Transition(state, 'a'), sumDfa.Transition(state, 'b')
         };

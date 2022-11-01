@@ -91,5 +91,5 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
         }
     }
 
-    private sealed record LexerProcessingState(IReadOnlyDictionary<TCat, TState> DfaStates, ILocation Location);
+    private sealed record LexerProcessingState(SumDfa<TCat, TState, char>.SumDfaState DfaStates, ILocation Location);
 }
