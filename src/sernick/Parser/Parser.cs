@@ -1,5 +1,7 @@
 namespace sernick.Parser;
 
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Common.Dfa;
 using Diagnostics;
 using Grammar.Dfa;
@@ -63,7 +65,9 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                     diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
                     return null;
                 case ParseActionShift<TDfaState> shiftAction:
-                    Shift(lookAhead!, shiftAction.Target);
+                    Debug.Assert(lookAhead is not null, $"actionTable[(config, {null})] mustn't be Shift");
+
+                    Shift(lookAhead, shiftAction.Target);
 
                     leavesEnumerator.MoveNext();
                     lookAhead = leavesEnumerator.Current;
@@ -88,7 +92,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                             End: children.Last().End,
                             Production: reduceAction.Production,
                             Children: children),
-                        nextConfig!);
+                        nextConfig);
 
                     break;
             }
@@ -117,6 +121,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         ref Stack<Configuration<TDfaState>> configStack,
         ref Stack<TTree> treeStack,
         out List<TTree> matchedTrees,
+        [NotNullWhen(true)]
         out Configuration<TDfaState>? nextConfig)
     {
         matchedTrees = new List<TTree>();
