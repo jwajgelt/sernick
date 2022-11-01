@@ -63,7 +63,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                     }
 
                     diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
-                    return null;
+                    throw new ParsingException("No parsing action available at current state");
                 case ParseActionShift<TDfaState> shiftAction:
                     Debug.Assert(lookAhead is not null, $"actionTable[(config, {null})] mustn't be Shift");
 
@@ -82,7 +82,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                             out var nextConfig))
                     {
                         diagnostics.Report(new SyntaxError<TSymbol>(treeStack.FirstOrDefault()));
-                        return null;
+                        throw new ParsingException("The subsequence of tokens cannot be parsed");
                     }
 
                     Shift(
@@ -153,4 +153,9 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         nextConfig = default;
         return false;
     }
+}
+
+public sealed class ParsingException : Exception
+{
+    public ParsingException(string message) : base(message) { }
 }
