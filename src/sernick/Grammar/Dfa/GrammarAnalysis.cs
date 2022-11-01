@@ -34,7 +34,7 @@ public static class GrammarAnalysis
 
             // If we've encountered a start symbol for DFA => add all states from "conditional set" for "symbol" to Q
             // and mark current symbol as nullable
-            if (currentAutomata.Start.Equals(currentState))
+            if (Equals(currentAutomata.Start, currentState))
             {
                 foreach (var (symbolWhichDeterminesAutomata, stateForThatSymbol) in conditionalQueuesForSymbols[currentSymbolWhichDeterminesAutomata])
                 {
@@ -50,10 +50,8 @@ public static class GrammarAnalysis
                 conditionalQueuesForSymbols[currentSymbolWhichDeterminesAutomata].Clear();
             }
 
-            foreach (var transitionEdge in productions[currentSymbolWhichDeterminesAutomata].GetTransitionsTo(currentState))
+            foreach (var (fromState, _, atom) in productions[currentSymbolWhichDeterminesAutomata].GetTransitionsTo(currentState))
             {
-                var fromState = transitionEdge.From;
-                var atom = transitionEdge.Atom;
                 if (nullable.Contains(atom))
                 {
                     var tupleToAdd = (currentSymbolWhichDeterminesAutomata, fromState);
@@ -118,7 +116,8 @@ public static class GrammarAnalysis
 
             var symbolsToAdd = reachable
                 .SelectMany(state => dfa.GetTransitionsFrom(state))
-                .Select(transition => transition.Atom);
+                .Select(transition => transition.Atom)
+                .ToList();
 
             result[symbol].UnionWith(symbolsToAdd);
             // add the symbols that only show up on the right side of productions
