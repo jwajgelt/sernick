@@ -175,27 +175,13 @@ public class ConcatRegex
     [Fact]
     public void When_Reverse_Then_ComputeCorrectly_Case1()
     {
-        var regex = Regex.Concat(Regex.Atom('a'), Regex.Atom('b'));
-        var expected = Regex.Concat(Regex.Atom('b'), Regex.Atom('a'));
-
-        Assert.Equal(expected, regex.Reverse());
-    }
-
-    [Fact]
-    public void When_Reverse_Then_ComputeCorrectly_Case2()
-    {
         var regex = Regex.Concat(
-            Regex.Concat(
-                Regex.Atom('a'),
-                Regex.Atom('b')
-            ),
-            Regex.Concat(
-                Regex.Atom('c'),
-                Regex.Atom('d')
-            )
+            Regex.Atom('a'),
+            Regex.Atom('b'),
+            Regex.Atom('c')
         );
+
         var expected = Regex.Concat(
-            Regex.Atom('d'),
             Regex.Atom('c'),
             Regex.Atom('b'),
             Regex.Atom('a')
@@ -205,7 +191,7 @@ public class ConcatRegex
     }
 
     [Fact]
-    public void When_Reverse_Then_ComputeCorrectly_Case3()
+    public void When_Reverse_Then_ComputeCorrectly_Case2()
     {
         var regex = Regex.Concat(
             Regex.Star(
@@ -229,7 +215,7 @@ public class ConcatRegex
     }
 
     [Fact]
-    public void When_Reverse_Then_ComputeCorrectly_Case4()
+    public void When_Reverse_Then_ComputeCorrectly_Case3()
     {
         var regex = Regex.Concat(
             Regex.Union(
