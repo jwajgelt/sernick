@@ -25,6 +25,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFollow,
         IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> reversedAutomata)
     {
+        _startSymbol = dfaGrammar.Start;
         _reversedAutomata = reversedAutomata;
         throw new NotImplementedException();
         // throw new NotSLRGrammarException("reason");
@@ -54,6 +55,11 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
             switch (parseAction)
             {
                 case null:
+                    if (lookAhead is null && symbolStack.Count == 1 && symbolStack.Peek().Equals(_startSymbol))
+                    {
+                        return treeStack.Single();
+                    }
+
                     diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
                     return null;
                 case ParseActionShift<TDfaState> shiftAction:
@@ -89,6 +95,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         }
     }
 
+    private readonly TSymbol _startSymbol;
     private readonly Configuration<TDfaState> _startConfig;
     private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol?>, IParseAction> _actionTable;
     private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
