@@ -145,8 +145,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
 
             if (dfa.IsDead(dfaState))
             {
-                nextConfig = default;
-                return false;
+                break;
             }
         }
 
