@@ -27,6 +27,30 @@ public class AtomRegex
 
         Assert.True(regex.Derivative('b').Equals(Regex.Empty));
     }
+    
+    [Fact]
+    public void When_Reverse_Then_ComputeCorrectly_Case1()
+    {
+        var regex = Regex.Atom('a');
+
+        Assert.Equal(regex, regex.Reverse());
+    }
+    
+    [Fact]
+    public void When_Reverse_Then_ComputeCorrectly_Case2()
+    {
+        var regex = Regex.Epsilon;
+
+        Assert.Equal(regex, regex.Reverse());
+    }
+    
+    [Fact]
+    public void When_Reverse_Then_ComputeCorrectly_Case3()
+    {
+        var regex = Regex.Empty;
+
+        Assert.Equal(regex, regex.Reverse());
+    }
 
     [Fact]
     public void TestEqualsAndHashCode()

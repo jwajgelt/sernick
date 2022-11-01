@@ -13,7 +13,7 @@ internal sealed class AtomRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<T
 
     public override Regex<TAtom> Derivative(TAtom atom) => Atom.Equals(atom) ? Epsilon : Empty;
 
-    public override Regex<TAtom> Reverse() => this;
+    public override Regex<TAtom> Reverse() => Atom(Atom);
 
     public override int GetHashCode() => Atom.GetHashCode();
 
