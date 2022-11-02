@@ -35,16 +35,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
 
     public IParseTree<TSymbol> Process(IEnumerable<IParseTree<TSymbol>> leaves, IDiagnostics diagnostics)
     {
-        var configStack = new Stack<Configuration<TDfaState>>(new[] { _startConfig });
-        var symbolStack = new Stack<TSymbol>();
-        var treeStack = new Stack<IParseTree<TSymbol>>();
-
-        void Shift(IParseTree<TSymbol> tree, Configuration<TDfaState> configuration)
-        {
-            treeStack.Push(tree);
-            symbolStack.Push(tree.Symbol);
-            configStack.Push(configuration);
-        }
+        var state = new State(_startConfig);
 
         using var leavesEnumerator = leaves.GetEnumerator();
         leavesEnumerator.MoveNext();
@@ -52,47 +43,47 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
 
         while (true)
         {
-            var configuration = configStack.Peek();
-            var parseAction = _actionTable[(configuration, lookAhead?.Symbol)];
+            var parseAction = _actionTable[(state.Configuration, lookAhead?.Symbol)];
             switch (parseAction)
             {
                 case null:
-                    if (lookAhead is null && symbolStack.Count == 1 && symbolStack.Peek().Equals(_startSymbol))
+                    if (lookAhead is null && state.TreeStack.Count == 1 && state.Tree.Symbol.Equals(_startSymbol))
                     {
-                        return treeStack.Single();
+                        return state.TreeStack.Single();
                     }
 
                     diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
                     throw new ParsingException("No parsing action available at current state");
+
                 case ParseActionShift<TDfaState> shiftAction:
                     Debug.Assert(lookAhead is not null, $"actionTable[(config, {null})] mustn't be Shift");
 
-                    Shift(lookAhead, shiftAction.Target);
+                    state.Push(shiftAction.Target, lookAhead);
 
                     leavesEnumerator.MoveNext();
                     lookAhead = leavesEnumerator.Current;
 
                     break;
+
                 case ParseActionReduce<TSymbol> reduceAction:
                     if (!MatchTail(
                             dfa: _reversedAutomata[reduceAction.Production],
                             symbol: reduceAction.Production.Left,
-                            ref symbolStack, ref configStack, ref treeStack,
+                            state,
                             out var children,
                             out var nextConfig))
                     {
-                        diagnostics.Report(new SyntaxError<TSymbol>(treeStack.FirstOrDefault()));
+                        diagnostics.Report(new SyntaxError<TSymbol>(state.TreeStack.FirstOrDefault()));
                         throw new ParsingException("The subsequence of tokens cannot be parsed");
                     }
 
-                    Shift(
+                    state.Push(nextConfig,
                         new ParseTreeNode<TSymbol>(
                             Symbol: reduceAction.Production.Left,
                             Start: children.First().Start,
                             End: children.Last().End,
                             Production: reduceAction.Production,
-                            Children: children),
-                        nextConfig);
+                            Children: children));
 
                     break;
             }
@@ -114,29 +105,28 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     /// <c>true</c> if DFA reached an accepting state, and
     /// a Shift action is possible from the config from top of the stack and <paramref name="symbol"/>; <c>false</c> otherwise
     /// </returns>
-    private bool MatchTail<TTree>(
+    private bool MatchTail(
         IDfa<TDfaState, TSymbol> dfa,
         TSymbol symbol,
-        ref Stack<TSymbol> symbolStack,
-        ref Stack<Configuration<TDfaState>> configStack,
-        ref Stack<TTree> treeStack,
-        out List<TTree> matchedTrees,
+        State state,
+        out List<IParseTree<TSymbol>> matchedTrees,
         [NotNullWhen(true)]
         out Configuration<TDfaState>? nextConfig)
     {
-        matchedTrees = new List<TTree>();
+        matchedTrees = new List<IParseTree<TSymbol>>();
 
         var dfaState = dfa.Start;
-        while (symbolStack.Count > 0)
+        while (state.TreeStack.Count > 0)
         {
-            dfaState = dfa.Transition(dfaState, symbolStack.Pop());
+            var tree = state.Pop();
 
-            configStack.Pop();
-            matchedTrees.Insert(0, treeStack.Pop());
+            dfaState = dfa.Transition(dfaState, tree.Symbol);
+
+            matchedTrees.Insert(0, tree);
 
             if (
                 dfa.Accepts(dfaState) &&
-                _actionTable.TryGetValue((configStack.Peek(), symbol), out var action) &&
+                _actionTable.TryGetValue((state.Configuration, symbol), out var action) &&
                 action is ParseActionShift<TDfaState> shiftAction)
             {
                 nextConfig = shiftAction.Target;
@@ -151,6 +141,29 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
 
         nextConfig = default;
         return false;
+    }
+
+    private sealed class State
+    {
+        internal State(Configuration<TDfaState> startConfig) => ConfigStack.Push(startConfig);
+
+        private Stack<Configuration<TDfaState>> ConfigStack { get; } = new();
+        internal Stack<IParseTree<TSymbol>> TreeStack { get; } = new();
+
+        internal Configuration<TDfaState> Configuration => ConfigStack.Peek();
+        internal IParseTree<TSymbol> Tree => TreeStack.Peek();
+
+        internal void Push(Configuration<TDfaState> configuration, IParseTree<TSymbol> tree)
+        {
+            ConfigStack.Push(configuration);
+            TreeStack.Push(tree);
+        }
+
+        internal IParseTree<TSymbol> Pop()
+        {
+            ConfigStack.Pop();
+            return TreeStack.Pop();
+        }
     }
 }
 
