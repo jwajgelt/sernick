@@ -3,7 +3,7 @@ namespace sernickTest.Common.Dfa;
 using sernick.Common.Dfa;
 using Tokenizer.Lexer.Helpers;
 
-using SumDfaState = sernick.Common.Dfa.SumDfa<int, int, char>.SumDfaState;
+using SumDfaState = sernick.Common.Dfa.SumDfa<int, int, char>.State;
 
 public class SumDfaTest
 {

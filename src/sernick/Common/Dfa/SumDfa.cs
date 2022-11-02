@@ -1,39 +1,38 @@
-using System.Collections;
-
 namespace sernick.Common.Dfa;
 
+using System.Collections.ObjectModel;
 using Utility;
 
-public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TSymbol>.SumDfaState, TSymbol>
+public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TSymbol>.State, TSymbol>
     where TCat : notnull
     where TSymbol : IEquatable<TSymbol>
 {
     private readonly IReadOnlyDictionary<TCat, IDfa<TState, TSymbol>> _dfas;
 
-    private Dictionary<SumDfaState, List<TransitionEdge<SumDfaState, TSymbol>>>?
+    private Dictionary<State, List<TransitionEdge<State, TSymbol>>>?
         _transitionsToMap;
 
-    private HashSet<SumDfaState>? _acceptingStates;
+    private HashSet<State>? _acceptingStates;
 
     public SumDfa(IReadOnlyDictionary<TCat, IDfa<TState, TSymbol>> dfas)
     {
         _dfas = dfas;
-        Start = new SumDfaState(dfas.ToDictionary(kv => kv.Key, kv => kv.Value.Start));
+        Start = new State(dfas.ToDictionary(kv => kv.Key, kv => kv.Value.Start));
     }
 
-    public SumDfaState Start { get; }
-    public IEnumerable<TransitionEdge<SumDfaState, TSymbol>> GetTransitionsFrom(SumDfaState state)
+    public State Start { get; }
+    public IEnumerable<TransitionEdge<State, TSymbol>> GetTransitionsFrom(State state)
     {
         return _dfas
             .SelectMany(kv => kv.Value.GetTransitionsFrom(state[kv.Key]))
             .Select(transition => transition.Atom)
             .ToHashSet()    // only process each atom once
             .Select(atom =>
-                new TransitionEdge<SumDfaState, TSymbol>(state, Transition(state, atom), atom)
+                new TransitionEdge<State, TSymbol>(state, Transition(state, atom), atom)
             );
     }
 
-    public IEnumerable<TransitionEdge<SumDfaState, TSymbol>> GetTransitionsTo(SumDfaState state)
+    public IEnumerable<TransitionEdge<State, TSymbol>> GetTransitionsTo(State state)
     {
         if (_transitionsToMap == null)
         {
@@ -43,7 +42,7 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
         return _transitionsToMap![state];
     }
 
-    public IEnumerable<SumDfaState> AcceptingStates
+    public IEnumerable<State> AcceptingStates
     {
         get
         {
@@ -56,28 +55,28 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
         }
     }
 
-    public bool Accepts(SumDfaState state) =>
+    public bool Accepts(State state) =>
         state.Any(kv => _dfas[kv.Key].Accepts(kv.Value));
 
-    public bool IsDead(SumDfaState state) =>
+    public bool IsDead(State state) =>
         state.All(kv => _dfas[kv.Key].IsDead(kv.Value));
 
-    public SumDfaState Transition(SumDfaState state, TSymbol atom) =>
+    public State Transition(State state, TSymbol atom) =>
         new(state.ToDictionary(
             kv => kv.Key,
             kv => _dfas[kv.Key].Transition(kv.Value, atom)
         ));
 
-    public IEnumerable<TCat> AcceptingCategories(SumDfaState state) =>
+    public IEnumerable<TCat> AcceptingCategories(State state) =>
         state.Where(kv => _dfas[kv.Key].Accepts(kv.Value)).Select(kv => kv.Key);
 
     private void InitializeTransitionsDictionary()
     {
-        _acceptingStates = new HashSet<SumDfaState>();
+        _acceptingStates = new HashSet<State>();
         var transitionsToMap =
-            new Dictionary<SumDfaState, List<TransitionEdge<SumDfaState, TSymbol>>>();
-        var visited = new HashSet<SumDfaState>();
-        var queue = new Queue<SumDfaState>();
+            new Dictionary<State, List<TransitionEdge<State, TSymbol>>>();
+        var visited = new HashSet<State>();
+        var queue = new Queue<State>();
 
         queue.Enqueue(Start);
         visited.Add(Start);
@@ -110,43 +109,32 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
             );
     }
 
-    public class SumDfaState : IEquatable<SumDfaState>, IEnumerable<KeyValuePair<TCat, TState>>
+    public sealed class State : ReadOnlyDictionary<TCat, TState>, IEquatable<State>
     {
-        public SumDfaState(IReadOnlyDictionary<TCat, TState> partStates)
-        {
-            _partStates = partStates;
-        }
+        public State(IDictionary<TCat, TState> partStates) : base(partStates)
+        { }
 
-        public TState this[TCat cat] => _partStates[cat];
-
-        public bool Equals(SumDfaState? other)
+        public bool Equals(State? other)
         {
             if (other == null)
             {
                 return false;
             }
 
-            return _partStates.Count == other._partStates.Count
-                   && _partStates.All(
-                       kv => other._partStates.ContainsKey(kv.Key) && Equals(other._partStates[kv.Key], kv.Value)
+            return Count == other.Count
+                   && this.All(
+                       kv => other.ContainsKey(kv.Key) && Equals(other[kv.Key], kv.Value)
                        );
         }
 
-        public IEnumerator<KeyValuePair<TCat, TState>> GetEnumerator()
+        public override bool Equals(object? other)
         {
-            return _partStates.GetEnumerator();
+            return other is State state && Equals(state);
         }
 
         public override int GetHashCode()
         {
-            return _partStates.Aggregate(0, (current, kv) => current ^ kv.Key.GetHashCode() ^ kv.Value!.GetHashCode());
+            return this.Aggregate(0, (current, kv) => current ^ kv.Key.GetHashCode() ^ kv.Value!.GetHashCode());
         }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return ((IEnumerable)_partStates).GetEnumerator();
-        }
-
-        private readonly IReadOnlyDictionary<TCat, TState> _partStates;
     }
 }
