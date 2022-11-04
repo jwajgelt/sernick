@@ -1,4 +1,4 @@
-namespace sernickTest.Grammar.Helpers;
+namespace sernickTest.Grammar.Dfa.Helpers;
 
 using sernick.Grammar.Dfa;
 using sernick.Grammar.Syntax;

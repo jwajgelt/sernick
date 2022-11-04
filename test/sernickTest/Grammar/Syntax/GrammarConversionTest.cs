@@ -1,7 +1,7 @@
 namespace sernickTest.Grammar.Syntax;
 
 using Common.Dfa.Helpers;
-using Helpers;
+using Dfa.Helpers;
 using sernick.Grammar.Syntax;
 using sernick.Tokenizer.Regex;
 
