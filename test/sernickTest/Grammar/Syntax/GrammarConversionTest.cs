@@ -1,10 +1,10 @@
+namespace sernickTest.Grammar.Syntax;
+
+using Common.Dfa.Helpers;
 using sernick.Common.Dfa;
 using sernick.Grammar.Dfa;
 using sernick.Grammar.Syntax;
 using sernick.Tokenizer.Regex;
-using sernickTest.Common.Dfa.Helpers;
-
-namespace sernickTest.Grammar.Syntax;
 
 public class GrammarConversionTest
 {
