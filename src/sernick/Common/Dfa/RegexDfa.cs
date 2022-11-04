@@ -12,8 +12,6 @@ public sealed class RegexDfa<TAtom> : IDfa<Regex<TAtom>, TAtom> where TAtom : IE
         Dictionary<Regex<TAtom>, List<TransitionEdge<Regex<TAtom>, TAtom>>> transitionsFromMap
         ) => (Start, AcceptingStates, _transitionsToMap, _transitionsFromMap) = (regex, acceptingStates, transitionsToMap, transitionsFromMap);
 
-    public IDfa<Regex<TAtom>, TAtom> Reverse() => FromRegex(Start.Reverse());
-
     public Regex<TAtom> Start { get; }
 
     public bool Accepts(Regex<TAtom> state) => state.ContainsEpsilon();

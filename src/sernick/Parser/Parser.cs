@@ -8,6 +8,7 @@ using Diagnostics;
 using Grammar.Dfa;
 using Grammar.Syntax;
 using ParseTree;
+using Utility;
 
 #pragma warning disable CS0649
 #pragma warning disable IDE0060
@@ -27,7 +28,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         var nullable = dfaGrammar.Nullable();
         var first = dfaGrammar.First(nullable);
         var follow = dfaGrammar.Follow(nullable, first);
-        var reversedAutomatas = GetReverseAutomatas(dfaGrammar);
+        var reversedAutomatas = dfaGrammar.GetReverseAutomatas();
 
         return new Parser<TSymbol, Regex<TSymbol>>(dfaGrammar,
             nullable,
@@ -104,20 +105,6 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                     break;
             }
         }
-    }
-    
-    private static Dictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>> GetReverseAutomatas(DfaGrammar<TSymbol> dfaGrammar)
-    {
-        var reversedAutomatas = new Dictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>>();
-        foreach (var sumDfa in dfaGrammar.Productions)
-        {
-            foreach (var pair in sumDfa.Value.Dfas)
-            {
-                reversedAutomatas[pair.Key] = ((RegexDfa<TSymbol>)pair.Value).Reverse();
-            }
-        }
-
-        return reversedAutomatas;
     }
 
 
