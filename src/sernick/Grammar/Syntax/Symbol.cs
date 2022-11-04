@@ -11,5 +11,8 @@ public enum NonTerminalSymbol
 {
     Program,
     Expression,
-
+    CodeBlock,
+    IfStatement,
+    WhileStatement,
+    
 }
