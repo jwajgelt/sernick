@@ -7,18 +7,16 @@ using Grammar.Syntax;
 
 public static class DfaGrammarExtensions
 {
-    public static Dictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>> GetReverseAutomatas<TSymbol>(this DfaGrammar<TSymbol> dfaGrammar) where TSymbol : IEquatable<TSymbol>
+    public static IReadOnlyDictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>> GetReverseAutomatas<TSymbol>(
+        this DfaGrammar<TSymbol> dfaGrammar)
+        where TSymbol : IEquatable<TSymbol>
     {
-        var reversedAutomatas = new Dictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>>();
-        foreach (var sumDfa in dfaGrammar.Productions)
-        {
-            foreach (var pair in sumDfa.Value.Dfas)
-            {
-                reversedAutomatas[pair.Key] = ((RegexDfa<TSymbol>)pair.Value).Reverse();
-            }
-        }
-
-        return reversedAutomatas;
+        return dfaGrammar.Productions.Values
+            .SelectMany(sumDfa => sumDfa.Dfas)
+            .Select(kv => (production: kv.Key, dfa: kv.Value))
+            .ToDictionary(
+                item => item.production,
+                item => ((RegexDfa<TSymbol>)item.dfa).Reverse());
     }
 
     private static IDfa<Regex<TAtom>, TAtom> Reverse<TAtom>(this RegexDfa<TAtom> dfa) where TAtom : IEquatable<TAtom>
