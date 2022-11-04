@@ -1,8 +1,7 @@
-using sernick.Common.Regex;
-
 namespace sernick.Parser;
 
 using Common.Dfa;
+using Common.Regex;
 using Diagnostics;
 using Grammar.Dfa;
 using Grammar.Syntax;
