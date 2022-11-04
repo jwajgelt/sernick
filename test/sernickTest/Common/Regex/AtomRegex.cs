@@ -37,22 +37,6 @@ public class AtomRegex
     }
 
     [Fact]
-    public void When_Reverse_Then_ComputeCorrectly_Case2()
-    {
-        var regex = Regex.Epsilon;
-
-        Assert.Equal(regex, regex.Reverse());
-    }
-
-    [Fact]
-    public void When_Reverse_Then_ComputeCorrectly_Case3()
-    {
-        var regex = Regex.Empty;
-
-        Assert.Equal(regex, regex.Reverse());
-    }
-
-    [Fact]
     public void TestEqualsAndHashCode()
     {
         var regexA = Regex.Atom('a');
