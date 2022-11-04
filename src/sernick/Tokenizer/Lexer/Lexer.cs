@@ -8,11 +8,11 @@ using Input;
 public sealed class Lexer<TCat, TState> : ILexer<TCat>
     where TCat : notnull
 {
-    private readonly SumDfa _sumDfa;
+    private readonly SumDfa<TCat, TState, char> _sumDfa;
 
     public Lexer(IReadOnlyDictionary<TCat, IDfa<TState, char>> categoryDfas)
     {
-        _sumDfa = new SumDfa(categoryDfas);
+        _sumDfa = new SumDfa<TCat, TState, char>(categoryDfas);
     }
 
     public IEnumerable<Token<TCat>> Process(IInput input, IDiagnostics diagnostics)
@@ -91,33 +91,5 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
         }
     }
 
-    private sealed record LexerProcessingState(Dictionary<TCat, TState> DfaStates, ILocation Location);
-
-    private sealed class SumDfa : IDfa<Dictionary<TCat, TState>, char>
-    {
-        private readonly IReadOnlyDictionary<TCat, IDfa<TState, char>> _dfas;
-
-        public SumDfa(IReadOnlyDictionary<TCat, IDfa<TState, char>> dfas)
-        {
-            _dfas = dfas;
-            Start = dfas.ToDictionary(kv => kv.Key, kv => kv.Value.Start);
-        }
-
-        public Dictionary<TCat, TState> Start { get; }
-
-        public bool Accepts(Dictionary<TCat, TState> state) =>
-            state.Any(kv => _dfas[kv.Key].Accepts(kv.Value));
-
-        public bool IsDead(Dictionary<TCat, TState> state) =>
-            state.All(kv => _dfas[kv.Key].IsDead(kv.Value));
-
-        public Dictionary<TCat, TState> Transition(Dictionary<TCat, TState> state, char atom) =>
-            state.ToDictionary(
-                kv => kv.Key,
-                kv => _dfas[kv.Key].Transition(kv.Value, atom)
-            );
-
-        public IEnumerable<TCat> AcceptingCategories(Dictionary<TCat, TState> state) =>
-            state.Where(kv => _dfas[kv.Key].Accepts(kv.Value)).Select(kv => kv.Key);
-    }
+    private sealed record LexerProcessingState(SumDfa<TCat, TState, char>.State DfaStates, ILocation Location);
 }

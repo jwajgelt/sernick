@@ -1,13 +1,13 @@
-using sernick.Utility;
-
 namespace sernickTest.Utility;
+
+using sernick.Utility;
 
 public class FileUtilityTest
 {
     [Fact]
     public void GetFirstLetters()
     {
-        const string FILE_NAME = "../../../../../examples/argument-types/correct/multiple-args.ser";
+        const string FILE_NAME = "examples/argument-types/correct/multiple-args.ser";
         var file = File.ReadAllText(FILE_NAME);
         var input = FILE_NAME.ReadFile();
 
@@ -23,7 +23,7 @@ public class FileUtilityTest
     [Fact]
     public void AtTheEndOfFile()
     {
-        const string FILE_NAME = "../../../../../examples/argument-types/correct/multiple-args.ser";
+        const string FILE_NAME = "examples/argument-types/correct/multiple-args.ser";
         var input = FILE_NAME.ReadFile();
         input.MoveTo(input.End);
 
@@ -37,7 +37,7 @@ public class FileUtilityTest
     [Fact]
     public void MovingBack()
     {
-        const string FILE_NAME = "../../../../../examples/argument-types/correct/multiple-args.ser";
+        const string FILE_NAME = "examples/argument-types/correct/multiple-args.ser";
         var file = File.ReadAllText(FILE_NAME);
         var input = FILE_NAME.ReadFile();
 
