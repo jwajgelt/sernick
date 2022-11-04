@@ -18,6 +18,7 @@ public abstract partial class Regex<TAtom> : IEquatable<Regex<TAtom>>
     public abstract bool Equals(Regex<TAtom>? other);
     public abstract bool ContainsEpsilon();
     public abstract Regex<TAtom> Derivative(TAtom atom);
+    public abstract Regex<TAtom> Reverse();
 
     public override bool Equals(object? obj)
     {

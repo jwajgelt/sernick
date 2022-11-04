@@ -3,10 +3,12 @@ namespace sernick.Parser;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Common.Dfa;
+using Common.Regex;
 using Diagnostics;
 using Grammar.Dfa;
 using Grammar.Syntax;
 using ParseTree;
+using Utility;
 
 #pragma warning disable CS0649
 #pragma warning disable IDE0060
@@ -15,9 +17,24 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     where TSymbol : class, IEquatable<TSymbol>
     where TDfaState : IEquatable<TDfaState>
 {
-    public static Parser<TSymbol, TDfaState> FromGrammar(Grammar<TSymbol> grammar)
+    private readonly TSymbol _startSymbol;
+    private readonly Configuration<TDfaState> _startConfig;
+    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol?>, IParseAction> _actionTable;
+    private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
+
+    public static Parser<TSymbol, Regex<TSymbol>> FromGrammar(Grammar<TSymbol> grammar)
     {
-        throw new NotImplementedException();
+        var dfaGrammar = grammar.ToDfaGrammar();
+        var nullable = dfaGrammar.Nullable();
+        var first = dfaGrammar.First(nullable);
+        var follow = dfaGrammar.Follow(nullable, first);
+        var reversedAutomatas = dfaGrammar.GetReverseAutomatas();
+
+        return new Parser<TSymbol, Regex<TSymbol>>(dfaGrammar,
+            nullable,
+            first,
+            follow,
+            reversedAutomatas);
     }
 
     internal Parser(
@@ -89,11 +106,6 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
             }
         }
     }
-
-    private readonly TSymbol _startSymbol;
-    private readonly Configuration<TDfaState> _startConfig;
-    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol?>, IParseAction> _actionTable;
-    private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
 
     /// <summary>
     /// Helper method, which matches the tail of <paramref name="symbolStack"/> against <paramref name="dfa"/>.

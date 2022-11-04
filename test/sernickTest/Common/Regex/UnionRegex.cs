@@ -167,6 +167,44 @@ public class UnionRegex
     }
 
     [Fact]
+    public void When_Reverse_Then_ComputeCorrectly_Case1()
+    {
+        var regex = Regex.Union(
+            Regex.Atom('a'),
+            Regex.Atom('b')
+        );
+
+        Assert.Equal(regex, regex.Reverse());
+    }
+
+    [Fact]
+    public void When_Reverse_Then_ComputeCorrectly_Case2()
+    {
+        var regex = Regex.Union(
+            Regex.Concat(
+                Regex.Atom('a'),
+                Regex.Atom('b')
+            ),
+            Regex.Concat(
+                Regex.Atom('c'),
+                Regex.Atom('d')
+            )
+        );
+        var expected = Regex.Union(
+            Regex.Concat(
+                Regex.Atom('b'),
+                Regex.Atom('a')
+            ),
+            Regex.Concat(
+                Regex.Atom('d'),
+                Regex.Atom('c')
+            )
+        );
+
+        Assert.Equal(expected, regex.Reverse());
+    }
+
+    [Fact]
     public void TestEqualsAndHashCode()
     {
         var regexA = Regex.Atom('a');

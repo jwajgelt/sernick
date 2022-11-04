@@ -7,8 +7,6 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
     where TCat : notnull
     where TSymbol : IEquatable<TSymbol>
 {
-    private readonly IReadOnlyDictionary<TCat, IDfa<TState, TSymbol>> _dfas;
-
     private Dictionary<State, List<TransitionEdge<State, TSymbol>>>?
         _transitionsToMap;
 
@@ -16,14 +14,15 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
 
     public SumDfa(IReadOnlyDictionary<TCat, IDfa<TState, TSymbol>> dfas)
     {
-        _dfas = dfas;
+        Dfas = dfas;
         Start = new State(dfas.ToDictionary(kv => kv.Key, kv => kv.Value.Start));
     }
 
+    public readonly IReadOnlyDictionary<TCat, IDfa<TState, TSymbol>> Dfas;
     public State Start { get; }
     public IEnumerable<TransitionEdge<State, TSymbol>> GetTransitionsFrom(State state)
     {
-        return _dfas
+        return Dfas
             .SelectMany(kv => kv.Value.GetTransitionsFrom(state[kv.Key]))
             .Select(transition => transition.Atom)
             .ToHashSet()    // only process each atom once
@@ -56,19 +55,19 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
     }
 
     public bool Accepts(State state) =>
-        state.Any(kv => _dfas[kv.Key].Accepts(kv.Value));
+        state.Any(kv => Dfas[kv.Key].Accepts(kv.Value));
 
     public bool IsDead(State state) =>
-        state.All(kv => _dfas[kv.Key].IsDead(kv.Value));
+        state.All(kv => Dfas[kv.Key].IsDead(kv.Value));
 
     public State Transition(State state, TSymbol atom) =>
         new(state.ToDictionary(
             kv => kv.Key,
-            kv => _dfas[kv.Key].Transition(kv.Value, atom)
+            kv => Dfas[kv.Key].Transition(kv.Value, atom)
         ));
 
     public IEnumerable<TCat> AcceptingCategories(State state) =>
-        state.Where(kv => _dfas[kv.Key].Accepts(kv.Value)).Select(kv => kv.Key);
+        state.Where(kv => Dfas[kv.Key].Accepts(kv.Value)).Select(kv => kv.Key);
 
     private void InitializeTransitionsDictionary()
     {
