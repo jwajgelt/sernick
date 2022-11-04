@@ -1,8 +1,7 @@
 namespace sernickTest.Grammar.Syntax;
 
 using Common.Dfa.Helpers;
-using sernick.Common.Dfa;
-using sernick.Grammar.Dfa;
+using Helpers;
 using sernick.Grammar.Syntax;
 using sernick.Tokenizer.Regex;
 
@@ -117,24 +116,5 @@ public class GrammarConversionTest
             .OrderBy(atom => atom);
 
         Assert.Equal(new[] { 'a' }, transitionAtoms);
-    }
-}
-
-internal static class Helper
-{
-    /// <returns>True if aff accepts whole text when starting from the dfa.start state</returns>
-    public static bool AcceptsText<TState>(this IDfa<TState, char> dfa, string text) =>
-        dfa.Accepts(dfa.Transition(dfa.Start, text));
-
-    /// <returns>Sorted IEnumerable with Left symbols in dfa grammar productions</returns>
-    public static IEnumerable<char> GetLeftSymbols(this DfaGrammar<char> dfaGrammar) =>
-        dfaGrammar.Productions.Keys.OrderBy(symbol => symbol);
-
-    /// <returns>IEnumerable of every accepting production sorted by Left symbol</returns>
-    public static IEnumerable<Production<char>> AcceptingProductions(this DfaGrammar<char> dfaGrammar, string text)
-    {
-        return dfaGrammar.Productions.Values
-            .SelectMany(sumDfa => sumDfa.AcceptingCategories(sumDfa.Transition(sumDfa.Start, text)))
-            .OrderBy(production => production.Left);
     }
 }
