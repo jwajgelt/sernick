@@ -1,4 +1,4 @@
-﻿namespace sernick.Utility;
+namespace sernick.Utility;
 
 using Common.Dfa;
 using Common.Regex;
@@ -25,5 +25,4 @@ public static class DfaGrammarExtensions
     {
         return RegexDfa<TAtom>.FromRegex(dfa.Start.Reverse());
     }
-
 }

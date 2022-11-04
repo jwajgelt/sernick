@@ -93,7 +93,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                         diagnostics.Report(new SyntaxError<TSymbol>(state.TreeStack.FirstOrDefault()));
                         throw new ParsingException("The subsequence of tokens cannot be parsed");
                     }
-                    
+
                     state.Push(nextConfig,
                         new ParseTreeNode<TSymbol>(
                             Symbol: reduceAction.Production.Left,
@@ -106,7 +106,6 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
             }
         }
     }
-
 
     /// <summary>
     /// Helper method, which matches the tail of <paramref name="symbolStack"/> against <paramref name="dfa"/>.
