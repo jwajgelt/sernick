@@ -18,7 +18,7 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
         Start = new State(dfas.ToDictionary(kv => kv.Key, kv => kv.Value.Start));
     }
 
-    public readonly IReadOnlyDictionary<TCat, IDfa<TState, TSymbol>> Dfas;
+    public IReadOnlyDictionary<TCat, IDfa<TState, TSymbol>> Dfas { get; }
     public State Start { get; }
     public IEnumerable<TransitionEdge<State, TSymbol>> GetTransitionsFrom(State state)
     {
