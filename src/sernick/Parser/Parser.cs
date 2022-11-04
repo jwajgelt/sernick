@@ -16,6 +16,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     where TSymbol : class, IEquatable<TSymbol>
     where TDfaState : IEquatable<TDfaState>
 {
+    private readonly TSymbol _startSymbol;
     private readonly Configuration<TDfaState> _startConfig;
     private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol?>, IParseAction> _actionTable;
     private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
@@ -91,19 +92,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                         diagnostics.Report(new SyntaxError<TSymbol>(state.TreeStack.FirstOrDefault()));
                         throw new ParsingException("The subsequence of tokens cannot be parsed");
                     }
-
-    private static Dictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>> GetReverseAutomatas(DfaGrammar<TSymbol, Regex<TSymbol>> dfaGrammar)
-    {
-        var reversedAutomatas = new Dictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>>();
-        foreach (var production in dfaGrammar.Productions)
-        {
-            var symbol = production.Key;
-            var dfa = (RegexDfa<TSymbol>)production.Value;
-            reversedAutomatas[new Production<TSymbol>(symbol, dfa.Start)] = dfa.Reverse();
-        }
-
-        return reversedAutomatas;
-    }
+                    
                     state.Push(nextConfig,
                         new ParseTreeNode<TSymbol>(
                             Symbol: reduceAction.Production.Left,
@@ -116,11 +105,21 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
             }
         }
     }
+    
+    private static Dictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>> GetReverseAutomatas(DfaGrammar<TSymbol> dfaGrammar)
+    {
+        var reversedAutomatas = new Dictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>>();
+        foreach (var sumDfa in dfaGrammar.Productions)
+        {
+            foreach (var pair in sumDfa.Value.Dfas)
+            {
+                reversedAutomatas[pair.Key] = ((RegexDfa<TSymbol>)pair.Value).Reverse();
+            }
+        }
 
-    private readonly TSymbol _startSymbol;
-    private readonly Configuration<TDfaState> _startConfig;
-    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol?>, IParseAction> _actionTable;
-    private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
+        return reversedAutomatas;
+    }
+
 
     /// <summary>
     /// Helper method, which matches the tail of <paramref name="symbolStack"/> against <paramref name="dfa"/>.
