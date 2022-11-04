@@ -18,7 +18,7 @@ internal sealed class UnionRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<
 
     public override Regex<TAtom> Reverse()
     {
-        return Children.Count == 0 ? Empty : Union(Children.Select(child => child.Reverse()));
+        return Union(Children.Select(child => child.Reverse()));
     }
 
     public override int GetHashCode()
