@@ -28,16 +28,12 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         var reversedAutomatas = dfaGrammar.GetReverseAutomatas();
 
         return new Parser<TSymbol, Regex<TSymbol>>(dfaGrammar,
-            nullable,
-            first,
             follow,
             reversedAutomatas);
     }
 
     internal Parser(
         DfaGrammar<TSymbol> dfaGrammar,
-        IReadOnlyCollection<TSymbol> symbolsNullable,
-        IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFirst,
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFollow,
         IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> reversedAutomata)
     {
@@ -179,7 +175,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
             }
         }
     }
-    
+
     /// <summary>
     /// Helper method, which matches the tail of <paramref name="symbolStack"/> against <paramref name="dfa"/>.
     /// It pops from all stacks 1 element by 1, as it goes.
