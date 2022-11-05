@@ -1,4 +1,4 @@
-﻿namespace sernickTest.Parser;
+namespace sernickTest.Parser;
 
 using sernick.Grammar.Lexicon;
 
@@ -48,7 +48,8 @@ public class CharCategory : ILexicalGrammarCategory, IEquatable<CharCategory>
     }
 }
 
-public static class CharCategoryHelper {
+public static class CharCategoryHelper
+{
     public static CharCategory ToCategory(this char character)
     {
         return new CharCategory(character);
