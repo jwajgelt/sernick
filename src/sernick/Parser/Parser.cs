@@ -55,23 +55,24 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
             var currentConfig = queue.Dequeue();
 
             // collect all outgoing edges for each state in the current configuration
-            var symbolToSetMap =
+            var symbolToStatesMap =
                 new Dictionary<TSymbol,
-                    HashSet<ValueTuple<SumDfa<Production<TSymbol>, Regex<TSymbol>, TSymbol>.State, TSymbol>>>();
+                    HashSet<(SumDfa<Production<TSymbol>, Regex<TSymbol>, TSymbol>.State state, TSymbol symbol)>>();
             foreach (var (state, symbol) in currentConfig.States)
             {
                 foreach (var edge in dfaGrammar.Productions[symbol].GetTransitionsFrom(state))
                 {
-                    symbolToSetMap.GetOrAddEmpty(edge.Atom).Add((edge.To, symbol));
+                    symbolToStatesMap.GetOrAddEmpty(edge.Atom).Add((edge.To, symbol));
                 }
             }
 
             // calculate possible shifts from the current state
-            foreach (var (symbol, set) in symbolToSetMap)
+            foreach (var (symbol, states) in symbolToStatesMap)
             {
-                var nextConfig = new Configuration<TSymbol>(
-                    set.Where(a => !dfaGrammar.Productions[a.Item2].IsDead(a.Item1)).ToHashSet()
-                ).Closure(dfaGrammar); // closure of reachable not-dead states
+                var nextConfig = Configuration<TSymbol>.Closure(
+                    states.Where(item => !dfaGrammar.Productions[item.symbol].IsDead(item.state)).ToHashSet(),
+                    dfaGrammar
+                ); // closure of reachable not-dead states
 
                 if (nextConfig.States.Count == 0)
                 {
@@ -80,14 +81,11 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
 
                 actionTable[(currentConfig, symbol)] = new ParseActionShift<TSymbol>(nextConfig);
 
-                if (visitedConfigs.Contains(nextConfig))
+                if (!visitedConfigs.Contains(nextConfig))
                 {
-                    continue;
+                    queue.Enqueue(nextConfig);
+                    visitedConfigs.Add(nextConfig);
                 }
-
-                queue.Enqueue(nextConfig);
-                visitedConfigs.Add(nextConfig);
-
             }
 
             // calculate possible reductions from the current state
@@ -107,9 +105,9 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                         switch (actionTable[(currentConfig, followingSymbol)])
                         {
                             case ParseActionShift<TSymbol> _:
-                                throw new NotSLRGrammarException("Shift/reduce conflict");
-                            case ParseActionReduce<TSymbol> _:
-                                throw new NotSLRGrammarException("Reduce/reduce conflict");
+                                throw new NotSLRGrammarException($"Shift/reduce conflict between symbol {followingSymbol} and production {production}");
+                            case ParseActionReduce<TSymbol> reduce:
+                                throw new NotSLRGrammarException($"Reduce/reduce conflict for symbol {symbol} between production {production} and production {reduce.Production}");
                         }
                     }
                 }
