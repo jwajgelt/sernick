@@ -1,9 +1,9 @@
+namespace sernick.Parser;
+
 using sernick.Common.Dfa;
 using sernick.Common.Regex;
 using sernick.Grammar.Dfa;
 using sernick.Grammar.Syntax;
-
-namespace sernick.Parser;
 
 public sealed record Configuration<TSymbol>(
     IReadOnlySet<ValueTuple<SumDfa<Production<TSymbol>, Regex<TSymbol>, TSymbol>.State, TSymbol>> States
