@@ -1,4 +1,4 @@
-﻿namespace sernickTest.Parser;
+namespace sernickTest.Parser;
 
 using Diagnostics;
 using Input;
@@ -26,7 +26,7 @@ public class ParserTest
         Assert.True(result is ParseTreeLeaf<CharCategory>);
         Assert.Equal('S', result.Symbol.Character);
     }
-    
+
     // Checked sequence is different from start symbol
     [Fact(Skip = "Parser constructor not implemented")]
     public void EmptyGrammarInstantlyRejecting()
@@ -42,7 +42,7 @@ public class ParserTest
 
         Assert.Throws<ParsingException>(() => parser.Process(tree, diagnostics));
     }
-    
+
     /*  S -> A
      * input: A
      * result:
@@ -54,7 +54,7 @@ public class ParserTest
     public void OneAtomProductionGrammarCorrectInput()
     {
         var production1 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Atom('A'.ToCategory()));
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1
         });
@@ -66,10 +66,10 @@ public class ParserTest
 
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(tree, diagnostics);
-        
+
         Assert.True(result is ParseTreeNode<CharCategory>);
         var root = result as ParseTreeNode<CharCategory>;
-        
+
         Assert.Equal('S', result.Symbol.Character);
         Assert.Equal(production1, root!.Production);
         Assert.Single(root.Children);
@@ -78,7 +78,7 @@ public class ParserTest
         Assert.True(child is ParseTreeLeaf<CharCategory>);
         Assert.Equal('A', child.Symbol.Character);
     }
-    
+
     /*  S -> A
      * input: B
      * result: error
@@ -87,7 +87,7 @@ public class ParserTest
     public void OneAtomProductionGrammarIncorrectInput()
     {
         var production1 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Atom('A'.ToCategory()));
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1
         });
@@ -101,7 +101,7 @@ public class ParserTest
 
         Assert.Throws<ParsingException>(() => parser.Process(tree, diagnostics));
     }
-    
+
     /*  S -> A*
      * input: AA
      * result:
@@ -112,8 +112,8 @@ public class ParserTest
     [Fact(Skip = "Parser constructor not implemented")]
     public void OneStarProductionGrammarCorrectInput()
     {
-        var production1 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Star(Regex<CharCategory>.Atom('A'.ToCategory())));
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var production1 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Star(Regex<CharCategory>.Atom('A'.ToCategory())));
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1
         });
@@ -125,10 +125,10 @@ public class ParserTest
 
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(tree, diagnostics);
-        
+
         Assert.True(result is ParseTreeNode<CharCategory>);
         var root = result as ParseTreeNode<CharCategory>;
-        
+
         Assert.Equal('S', result.Symbol.Character);
         Assert.Equal(production1, root!.Production);
         Assert.Equal(2, root.Children.Count());
@@ -141,7 +141,7 @@ public class ParserTest
         Assert.Equal('A', child1.Symbol.Character);
         Assert.Equal('A', child2.Symbol.Character);
     }
-    
+
     /*  S -> A*
      * input: B
      * result: error
@@ -149,8 +149,8 @@ public class ParserTest
     [Fact(Skip = "Parser constructor not implemented")]
     public void OneStarProductionGrammarIncorrectInput()
     {
-        var production1 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Star(Regex<CharCategory>.Atom('A'.ToCategory())));
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var production1 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Star(Regex<CharCategory>.Atom('A'.ToCategory())));
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1
         });
@@ -164,7 +164,7 @@ public class ParserTest
 
         Assert.Throws<ParsingException>(() => parser.Process(tree, diagnostics));
     }
-    
+
     /*  S -> AB
      * input: AB
      * result:
@@ -175,11 +175,11 @@ public class ParserTest
     [Fact(Skip = "Parser constructor not implemented")]
     public void OneConcatProductionGrammarCorrectInput()
     {
-        var production1 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Concat(
-            Regex<CharCategory>.Atom('A'.ToCategory()), 
+        var production1 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Concat(
+            Regex<CharCategory>.Atom('A'.ToCategory()),
             Regex<CharCategory>.Atom('B'.ToCategory())
         ));
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1
         });
@@ -192,10 +192,10 @@ public class ParserTest
 
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(tree, diagnostics);
-        
+
         Assert.True(result is ParseTreeNode<CharCategory>);
         var root = result as ParseTreeNode<CharCategory>;
-        
+
         Assert.Equal('S', result.Symbol.Character);
         Assert.Equal(production1, root!.Production);
         Assert.Equal(2, root.Children.Count());
@@ -208,7 +208,7 @@ public class ParserTest
         Assert.Equal('A', child1.Symbol.Character);
         Assert.Equal('B', child2.Symbol.Character);
     }
-    
+
     /*  S -> AB
      * input: A
      * result: error
@@ -216,11 +216,11 @@ public class ParserTest
     [Fact(Skip = "Parser constructor not implemented")]
     public void OneConcatProductionGrammarIncorrectInput()
     {
-        var production1 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Concat(
-            Regex<CharCategory>.Atom('A'.ToCategory()), 
+        var production1 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Concat(
+            Regex<CharCategory>.Atom('A'.ToCategory()),
             Regex<CharCategory>.Atom('B'.ToCategory())
         ));
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1
         });
@@ -234,7 +234,7 @@ public class ParserTest
 
         Assert.Throws<ParsingException>(() => parser.Process(tree, diagnostics));
     }
-    
+
     /*  S -> A+B
      * input: B
      * result:
@@ -245,11 +245,11 @@ public class ParserTest
     [Fact(Skip = "Parser constructor not implemented")]
     public void OneUnionProductionGrammarCorrectInput()
     {
-        var production1 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Union(
-            Regex<CharCategory>.Atom('A'.ToCategory()), 
+        var production1 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Union(
+            Regex<CharCategory>.Atom('A'.ToCategory()),
             Regex<CharCategory>.Atom('B'.ToCategory())
         ));
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1
         });
@@ -261,19 +261,19 @@ public class ParserTest
 
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(tree, diagnostics);
-        
+
         Assert.True(result is ParseTreeNode<CharCategory>);
         var root = result as ParseTreeNode<CharCategory>;
-        
+
         Assert.Equal('S', result.Symbol.Character);
         Assert.Equal(production1, root!.Production);
         Assert.Single(root.Children);
-        
+
         var child = root.Children.First();
         Assert.True(child is ParseTreeLeaf<CharCategory>);
         Assert.Equal('B', child!.Symbol.Character);
     }
-    
+
     /*  S -> A+B
     * input: C
     * result: error
@@ -281,11 +281,11 @@ public class ParserTest
     [Fact(Skip = "Parser constructor not implemented")]
     public void OneUnionProductionGrammarIncorrectInput()
     {
-        var production1 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Union(
-            Regex<CharCategory>.Atom('A'.ToCategory()), 
+        var production1 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Union(
+            Regex<CharCategory>.Atom('A'.ToCategory()),
             Regex<CharCategory>.Atom('B'.ToCategory())
         ));
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1
         });
@@ -299,7 +299,7 @@ public class ParserTest
 
         Assert.Throws<ParsingException>(() => parser.Process(tree, diagnostics));
     }
-    
+
     /*  S -> A
      *  A -> B
      *  B -> C
@@ -324,7 +324,7 @@ public class ParserTest
         var production3 = new Production<CharCategory>('B'.ToCategory(), Regex<CharCategory>.Atom('C'.ToCategory()));
         var production4 = new Production<CharCategory>('C'.ToCategory(), Regex<CharCategory>.Atom('D'.ToCategory()));
 
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1,
             production2,
@@ -339,27 +339,27 @@ public class ParserTest
 
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(tree, diagnostics);
-        
+
         Assert.True(result is ParseTreeNode<CharCategory>);
         var node0 = result as ParseTreeNode<CharCategory>;
         Assert.Equal('S', node0!.Symbol.Character);
         Assert.Equal(production1, node0.Production);
         Assert.Single(node0.Children);
-        
+
         var child1 = node0.Children.First();
         Assert.True(child1 is ParseTreeNode<CharCategory>);
         var node1 = child1 as ParseTreeNode<CharCategory>;
         Assert.Equal('A', node1!.Symbol.Character);
         Assert.Equal(production2, node1.Production);
         Assert.Single(node1.Children);
-        
+
         var child2 = node1.Children.First();
         Assert.True(child2 is ParseTreeNode<CharCategory>);
         var node2 = child2 as ParseTreeNode<CharCategory>;
         Assert.Equal('B', node2!.Symbol.Character);
         Assert.Equal(production3, node2.Production);
         Assert.Single(node2.Children);
-        
+
         var child3 = node2.Children.First();
         Assert.True(child3 is ParseTreeNode<CharCategory>);
         var node3 = child3 as ParseTreeNode<CharCategory>;
@@ -371,7 +371,7 @@ public class ParserTest
         Assert.True(child4 is ParseTreeLeaf<CharCategory>);
         Assert.Equal('D', child4!.Symbol.Character);
     }
-    
+
     /*  S -> A
      *  A -> B
      *  B -> C
@@ -392,7 +392,7 @@ public class ParserTest
         var production3 = new Production<CharCategory>('B'.ToCategory(), Regex<CharCategory>.Atom('C'.ToCategory()));
         var production4 = new Production<CharCategory>('C'.ToCategory(), Regex<CharCategory>.Atom('D'.ToCategory()));
 
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1,
             production2,
@@ -407,25 +407,25 @@ public class ParserTest
 
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(tree, diagnostics);
-        
+
         Assert.True(result is ParseTreeNode<CharCategory>);
         var node0 = result as ParseTreeNode<CharCategory>;
         Assert.Equal('S', node0!.Symbol.Character);
         Assert.Equal(production1, node0.Production);
         Assert.Single(node0.Children);
-        
+
         var child1 = node0.Children.First();
         Assert.True(child1 is ParseTreeNode<CharCategory>);
         var node1 = child1 as ParseTreeNode<CharCategory>;
         Assert.Equal('A', node1!.Symbol.Character);
         Assert.Equal(production2, node1.Production);
         Assert.Single(node1.Children);
-        
+
         var child2 = node1.Children.First();
         Assert.True(child2 is ParseTreeLeaf<CharCategory>);
         Assert.Equal('B', child2.Symbol.Character);
     }
-    
+
     /*  S -> A
      *  S -> SA
      * input: AAA
@@ -442,12 +442,12 @@ public class ParserTest
     public void LeftRecursiveGrammarCorrectInput()
     {
         var production1 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Atom('A'.ToCategory()));
-        var production2 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Concat(
-            Regex<CharCategory>.Atom('S'.ToCategory()), 
+        var production2 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Concat(
+            Regex<CharCategory>.Atom('S'.ToCategory()),
             Regex<CharCategory>.Atom('A'.ToCategory())
         ));
 
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1,
             production2
@@ -460,7 +460,7 @@ public class ParserTest
 
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(tree, diagnostics);
-        
+
         Assert.True(result is ParseTreeNode<CharCategory>);
         var node0 = result as ParseTreeNode<CharCategory>;
         Assert.Equal('S', node0!.Symbol.Character);
@@ -479,7 +479,7 @@ public class ParserTest
         Assert.Equal('S', node1_0!.Symbol.Character);
         Assert.Equal(production2, node1_0.Production);
         Assert.Equal(2, node1_0.Children.Count());
-        
+
         // second production results
         var children2 = node1_0.Children.ToArray();
         var child2_1 = children2[1];
@@ -492,13 +492,13 @@ public class ParserTest
         Assert.Equal('S', node2_0!.Symbol.Character);
         Assert.Equal(production1, node2_0.Production);
         Assert.Single(node2_0.Children);
-        
+
         // last production result
         var child3 = node2_0.Children.First();
         Assert.True(child3 is ParseTreeLeaf<CharCategory>);
         Assert.Equal('A', child3.Symbol.Character);
     }
-    
+
     /*  S -> X
      *  S -> SX
      *  X -> Yr
@@ -520,24 +520,24 @@ public class ParserTest
     public void ComplexGrammarCorrectInputCase1()
     {
         var production1 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Atom('X'.ToCategory()));
-        var production2 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Concat(
-            Regex<CharCategory>.Atom('S'.ToCategory()), 
+        var production2 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Concat(
+            Regex<CharCategory>.Atom('S'.ToCategory()),
             Regex<CharCategory>.Atom('X'.ToCategory())
         ));
-        var production3 = new Production<CharCategory>('X'.ToCategory(),  Regex<CharCategory>.Concat(
-            Regex<CharCategory>.Atom('Y'.ToCategory()), 
+        var production3 = new Production<CharCategory>('X'.ToCategory(), Regex<CharCategory>.Concat(
+            Regex<CharCategory>.Atom('Y'.ToCategory()),
             Regex<CharCategory>.Atom('r'.ToCategory())
         ));
-        var production4 = new Production<CharCategory>('Y'.ToCategory(),  Regex<CharCategory>.Concat(
-            Regex<CharCategory>.Atom('P'.ToCategory()), 
+        var production4 = new Production<CharCategory>('Y'.ToCategory(), Regex<CharCategory>.Concat(
+            Regex<CharCategory>.Atom('P'.ToCategory()),
             Regex<CharCategory>.Atom('a'.ToCategory())
         ));
-        var production5 = new Production<CharCategory>('Y'.ToCategory(),  Regex<CharCategory>.Concat(
-            Regex<CharCategory>.Atom('s'.ToCategory()), 
+        var production5 = new Production<CharCategory>('Y'.ToCategory(), Regex<CharCategory>.Concat(
+            Regex<CharCategory>.Atom('s'.ToCategory()),
             Regex<CharCategory>.Atom('e'.ToCategory())
         ));
 
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1,
             production2,
@@ -559,7 +559,7 @@ public class ParserTest
 
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(tree, diagnostics);
-        
+
         // root (S -> SX)
         Assert.True(result is ParseTreeNode<CharCategory>);
         var node0 = result as ParseTreeNode<CharCategory>;
@@ -567,7 +567,7 @@ public class ParserTest
         Assert.Equal(production2, node0.Production);
         Assert.Equal(2, node0.Children.Count());
         var children1 = node0.Children.ToArray();
-        
+
         // left branch (S -> X)
         var leftChild1 = children1[0];
         Assert.True(leftChild1 is ParseTreeNode<CharCategory>);
@@ -589,7 +589,7 @@ public class ParserTest
         var leftChild3_1 = leftChildren3[1];
         Assert.True(leftChild3_1 is ParseTreeLeaf<CharCategory>);
         Assert.Equal('r', leftChild3_1.Symbol.Character);
-        
+
         // (Y -> Pa)
         var leftChild3_0 = leftChildren3[0];
         Assert.True(leftChild3_0 is ParseTreeNode<CharCategory>);
@@ -598,17 +598,17 @@ public class ParserTest
         Assert.Equal(production4, leftNode3_0!.Production);
         Assert.Equal(2, leftNode3_0.Children.Count());
         var leftChildren4 = leftNode3_0.Children.ToArray();
-        
+
         // P
         var leftChild4_0 = leftChildren4[0];
         Assert.True(leftChild4_0 is ParseTreeLeaf<CharCategory>);
         Assert.Equal('P', leftChild4_0.Symbol.Character);
-        
+
         // a
         var leftChild4_1 = leftChildren4[1];
         Assert.True(leftChild4_1 is ParseTreeLeaf<CharCategory>);
         Assert.Equal('a', leftChild4_1.Symbol.Character);
-        
+
         // right branch (X -> Yr)
         var rightChild1 = children1[1];
         Assert.True(rightChild1 is ParseTreeNode<CharCategory>);
@@ -617,12 +617,12 @@ public class ParserTest
         Assert.Equal(production3, rightNode1!.Production);
         Assert.Equal(2, rightNode1.Children.Count());
         var rightChildren2 = rightNode1.Children.ToArray();
-        
+
         // r
         var rightChild2_1 = rightChildren2[1];
         Assert.True(rightChild2_1 is ParseTreeLeaf<CharCategory>);
         Assert.Equal('r', rightChild2_1.Symbol.Character);
-        
+
         // (Y -> se)
         var rightChild2_0 = rightChildren2[0];
         Assert.True(rightChild2_0 is ParseTreeNode<CharCategory>);
@@ -631,12 +631,12 @@ public class ParserTest
         Assert.Equal(production5, rightNode2_0!.Production);
         Assert.Equal(2, rightNode2_0.Children.Count());
         var rightChildren3 = rightNode2_0.Children.ToArray();
-        
+
         // s
         var rightChild3_0 = rightChildren3[0];
         Assert.True(rightChild3_0 is ParseTreeLeaf<CharCategory>);
         Assert.Equal('s', rightChild3_0.Symbol.Character);
-        
+
         // e
         var rightChild3_1 = rightChildren3[1];
         Assert.True(rightChild3_1 is ParseTreeLeaf<CharCategory>);
@@ -707,7 +707,7 @@ public class ParserTest
 
         // left (S) (S -> eps)
         CheckEmptyParenthesis(children1[0], children1[1], children1[2], production);
-       
+
         // right (S) (S -> eps)
         CheckEmptyParenthesis(children1[6], children1[7], children1[8], production);
 
@@ -715,15 +715,15 @@ public class ParserTest
         var child1_3 = children1[3];
         var child1_4 = children1[4];
         var child1_5 = children1[5];
-        
+
         // (
         Assert.True(child1_3 is ParseTreeLeaf<CharCategory>);
         Assert.Equal('(', child1_3.Symbol.Character);
-        
+
         // )
         Assert.True(child1_5 is ParseTreeLeaf<CharCategory>);
         Assert.Equal(')', child1_5.Symbol.Character);
-        
+
         // (S -> (S)(S))
         Assert.True(child1_4 is ParseTreeNode<CharCategory>);
         var node1_4 = child1_4 as ParseTreeNode<CharCategory>;
@@ -731,7 +731,7 @@ public class ParserTest
         Assert.Equal(production, node1_4.Production);
         Assert.Equal(6, node1_4.Children.Count());
         var children2 = node1_4.Children.ToArray();
-        
+
         // left (S) (S -> eps)
         CheckEmptyParenthesis(children2[0], children2[1], children2[2], production);
 
@@ -745,11 +745,11 @@ public class ParserTest
         // (
         Assert.True(left is ParseTreeLeaf<CharCategory>);
         Assert.Equal('(', left.Symbol.Character);
-        
+
         // )
         Assert.True(right is ParseTreeLeaf<CharCategory>);
         Assert.Equal(')', right.Symbol.Character);
-        
+
         // (S -> eps)
         Assert.True(middle is ParseTreeNode<CharCategory>);
         var node = middle as ParseTreeNode<CharCategory>;
@@ -757,7 +757,7 @@ public class ParserTest
         Assert.Equal(production, node.Production);
         Assert.Empty(node.Children);
     }
-    
+
     /* S -> S*
      * result: error
      * could be S -> SS or S -> S -> SS etc...
@@ -765,14 +765,14 @@ public class ParserTest
     [Fact(Skip = "Parser constructor not implemented")]
     public void AmbiguousGrammar()
     {
-        var production1 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Star(Regex<CharCategory>.Atom('S'.ToCategory())));
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var production1 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Star(Regex<CharCategory>.Atom('S'.ToCategory())));
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1
         });
         Assert.Throws<NotSLRGrammarException>(() => Parser<CharCategory, CharCategory>.FromGrammar(grammar));
     }
-    
+
     /* This grammar is not SLR
      * S -> Aa
      * S -> bAc
@@ -785,28 +785,28 @@ public class ParserTest
     [Fact(Skip = "Parser constructor not implemented")]
     public void NotSlrGrammar()
     {
-        var production1 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Concat(
-            Regex<CharCategory>.Atom('A'.ToCategory()), 
+        var production1 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Concat(
+            Regex<CharCategory>.Atom('A'.ToCategory()),
             Regex<CharCategory>.Atom('a'.ToCategory())
         ));
-        var production2 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Concat(
-            Regex<CharCategory>.Atom('b'.ToCategory()), 
+        var production2 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Concat(
+            Regex<CharCategory>.Atom('b'.ToCategory()),
             Regex<CharCategory>.Atom('A'.ToCategory()),
             Regex<CharCategory>.Atom('c'.ToCategory())
         ));
-        var production3 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Concat(
-            Regex<CharCategory>.Atom('d'.ToCategory()), 
+        var production3 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Concat(
+            Regex<CharCategory>.Atom('d'.ToCategory()),
             Regex<CharCategory>.Atom('c'.ToCategory())
         ));
-        var production4 = new Production<CharCategory>('S'.ToCategory(),  Regex<CharCategory>.Concat(
-            Regex<CharCategory>.Atom('b'.ToCategory()), 
+        var production4 = new Production<CharCategory>('S'.ToCategory(), Regex<CharCategory>.Concat(
+            Regex<CharCategory>.Atom('b'.ToCategory()),
             Regex<CharCategory>.Atom('d'.ToCategory()),
             Regex<CharCategory>.Atom('a'.ToCategory())
         ));
-        var production5 = new Production<CharCategory>('A'.ToCategory(),  Regex<CharCategory>.Concat(
+        var production5 = new Production<CharCategory>('A'.ToCategory(), Regex<CharCategory>.Concat(
             Regex<CharCategory>.Atom('a'.ToCategory())
         ));
-        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new []
+        var grammar = new Grammar<CharCategory>('S'.ToCategory(), new[]
         {
             production1,
             production2,
