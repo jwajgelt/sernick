@@ -1,5 +1,6 @@
 namespace sernick.Grammar.Syntax;
-using sernick.Common.Regex;
+
+using Regex = Common.Regex.Regex<Symbol>;
 
 public static class SernickGrammarProvider
 {
@@ -12,7 +13,7 @@ public static class SernickGrammarProvider
 
         productions.Add(new Production<Symbol>(
             program,
-            Regex<Symbol>.Atom(expression)
+            Regex.Atom(expression)
         ));
 
         return new Grammar<Symbol>(
