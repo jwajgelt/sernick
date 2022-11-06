@@ -10,9 +10,7 @@ public sealed record Terminal(Token<Cat> Inner) : Symbol
     public bool Equals(Terminal? other)
     {
         bool comp_res;
-        if (Inner.Category == Cat.BracesAndParentheses ||
-            Inner.Category == Cat.Operators ||
-            Inner.Category == Cat.Keywords)
+        if (Inner.Category is Cat.BracesAndParentheses or Cat.Operators or Cat.Keywords)
         {
             comp_res = (Inner.Category == other?.Inner.Category) &&
                     (Inner.Text == other?.Inner.Text);
