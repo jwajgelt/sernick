@@ -9,5 +9,35 @@ public sealed record ParseTreeNode<TSymbol>(
     ILocation End,
     Production<TSymbol> Production,
     IEnumerable<IParseTree<TSymbol>> Children
-) : IParseTree<TSymbol>
-    where TSymbol : IEquatable<TSymbol>;
+) : IParseTree<TSymbol>,
+    IEquatable<IParseTree<TSymbol>> 
+    where TSymbol : IEquatable<TSymbol>
+{
+    public bool Equals(ParseTreeNode<TSymbol>? other)
+    {
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        if (!Equals(Symbol, other!.Symbol) ||
+            Children.Count() != other.Children.Count() ||
+            Production != other.Production)
+        {
+            return false;
+        }
+
+        var zipped = Children.Zip(other.Children, (first, second) => (First: first, Second: second));
+        return zipped.All(pair => Equals(pair.First, pair.Second));
+    }
+    
+    public bool Equals(IParseTree<TSymbol>? other)
+    {
+        if(other is ParseTreeNode<TSymbol> otherLeaf)
+        {
+            return Equals(otherLeaf);
+        }
+        
+        return false;
+    }
+}
