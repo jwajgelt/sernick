@@ -17,8 +17,8 @@ public static class SernickGrammarProvider
         ));
 
         return new Grammar<Symbol>(
-                new NonTerminal(NonTerminalSymbol.Program),
-                productions
-            );
+            new NonTerminal(NonTerminalSymbol.Program),
+            productions
+        );
     }
 }
