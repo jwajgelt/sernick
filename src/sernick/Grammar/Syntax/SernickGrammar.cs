@@ -20,7 +20,8 @@ public static class SernickGrammar
         var elseBlock = new NonTerminal(NonTerminalSymbol.ElseBlock);
         var functionCall = new NonTerminal(NonTerminalSymbol.FunctionCall);
         var assignment = new NonTerminal(NonTerminalSymbol.Assignment);
-        _ = new NonTerminal(NonTerminalSymbol.VariableDeclaration);
+        var variableDeclaration = new NonTerminal(NonTerminalSymbol.VariableDeclaration);
+        var functionDefinition = new NonTerminal(NonTerminalSymbol.FunctionDefinition);
 
         // Terminal
         var semicolon = new Terminal(LexicalCategory.Semicolon, ";");
@@ -38,6 +39,7 @@ public static class SernickGrammar
         var continueKeyword = new Terminal(LexicalCategory.Keywords, "continue");
         var varKeyword = new Terminal(LexicalCategory.Keywords, "var");
         var constKeyword = new Terminal(LexicalCategory.Keywords, "const");
+        var funKeyword = new Terminal(LexicalCategory.Keywords, "fun");
 
         var trueLiteral = new Terminal(LexicalCategory.Literals, "true");
         var falseLiteral = new Terminal(LexicalCategory.Literals, "false");
@@ -73,9 +75,14 @@ public static class SernickGrammar
         var regBracesClose = Regex.Atom(bracesClose);
         var regParenthesesOpen = Regex.Atom(parenthesesOpen);
         var regParenthesesClose = Regex.Atom(parenthesesClose);
+
         var regLoopKeyword = Regex.Atom(loopKeyword);
+        var regFunKeyword = Regex.Atom(funKeyword)
         var regIfKeyword = Regex.Atom(ifKeyword);
         var regElseKeyword = Regex.Atom(elseKeyword);
+        var regVarKeyword = Regex.Atom(varKeyword);
+        var regConstKeyword = Regex.Atom(constKeyword);
+
         var regTrueLiteral = Regex.Atom(trueLiteral);
         var regFalseLiteral = Regex.Atom(falseLiteral);
         var regDigitLiteral = Regex.Atom(digitLiteral);
@@ -134,7 +141,21 @@ public static class SernickGrammar
             Regex.Concat(new Regex[] { regElseKeyword, regCodeBlock })
         ));
 
-        // Preparing regexes for function call production
+        // Production for "variable : Type"
+        var regIdentifierWithType = Regex.Concat(new Regex[] { regIdentifier, regColon, regTypeIdentifier });
+        productions.Add(new Production<Symbol>(
+            expression,
+            regIdentifierWithType
+        ));
+        var identifierWithTypeStarred = Regex.Star(Regex.Concat(new Regex[] { regIdentifierWithType, regComma }));
+
+        // function declaration
+        productions.Add(new Production<Symbol>(
+            functionDefinition,
+            Regex.Concat(new Regex[] { regFunKeyword, regIdentifier, regParenthesesOpen, identifierWithTypeStarred, regParenthesesClose, regBracesOpen, regExpression, regBracesClose })
+        ));
+
+        // function call
         Regex argStarred = Regex.Star(Regex.Concat(new Regex[] { regExpression, regComma }));
         Regex regArgList = Regex.Union(Regex.Concat(argStarred, regExpression), Regex.Epsilon);
 
@@ -144,21 +165,31 @@ public static class SernickGrammar
         ));
 
         // Production for assignment
+        var regUntypedAssignment = Regex.Concat(new Regex[] { regIdentifier, regAssignmentOperator, regExpression });
+        var regTypedAssignment = Regex.Concat(new Regex[] { regIdentifierWithType, regAssignmentOperator, regExpression });
+
         productions.Add(new Production<Symbol>(
             assignment,
-            Regex.Concat(new Regex[] { regIdentifier, regAssignmentOperator, regExpression })
+            regUntypedAssignment
         ));
+
+        // variable declaration 
+        productions.Add(new Production<Symbol>(
+            variableDeclaration,
+            Regex.Union(
+                // both with var or const, we may or may not specify a type
+                Regex.Concat(new Regex[] { regVarKeyword, regUntypedAssignment }),
+                Regex.Concat(new Regex[] { regVarKeyword, regTypedAssignment }),
+                Regex.Concat(new Regex[] { regConstKeyword, regUntypedAssignment }),
+                Regex.Concat(new Regex[] { regConstKeyword, regTypedAssignment })
+            )
+        ));
+
 
         // Production for equality test
         productions.Add(new Production<Symbol>(
             assignment,
             Regex.Concat(new Regex[] { regExpression, regEqualsOperator, regExpression })
-        ));
-
-        // Production for "variable : Type"
-        productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Concat(new Regex[] { regIdentifier, regColon, regTypeIdentifier })
         ));
 
         // +,-, &&, || operations
