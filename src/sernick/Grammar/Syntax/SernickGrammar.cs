@@ -29,6 +29,10 @@ public static class SernickGrammar
         var loopKeyword = new Terminal(LexicalCategory.Keywords, "loop");
         var ifKeyword = new Terminal(LexicalCategory.Keywords, "if");
         var elseKeyword = new Terminal(LexicalCategory.Keywords, "else");
+        var breakKeyword = new Terminal(LexicalCategory.Keywords, "break");
+        var continueKeyword = new Terminal(LexicalCategory.Keywords, "continue");
+        var varKeyword = new Terminal(LexicalCategory.Keywords, "var");
+        var constKeyword = new Terminal(LexicalCategory.Keywords, "const");
 
         // Atomic regular expressions representing symbols
 
