@@ -10,6 +10,6 @@ public sealed record ParseTreeLeaf<TSymbol>(
 ) : IParseTree<TSymbol>
     where TSymbol : class, ILexicalGrammarCategory, IEquatable<TSymbol>
 {
-    public bool Equals(ParseTreeLeaf<TSymbol>? other) => ReferenceEquals(this, other) || Symbol.Equals(other?.Symbol);
+    public bool Equals(ParseTreeLeaf<TSymbol>? other) => Symbol.Equals(other?.Symbol);
     public bool Equals(IParseTree<TSymbol>? other) => Equals(other as ParseTreeLeaf<TSymbol>);
 }
