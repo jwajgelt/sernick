@@ -30,7 +30,7 @@ public enum NonTerminalSymbol
     VariableDeclaration,
     ConstDeclaration,
     FunctionDefinition,
-    FuctionCall,
+    FunctionCall,
     Assignment,
     ExpSummand,
     ExpFactor
