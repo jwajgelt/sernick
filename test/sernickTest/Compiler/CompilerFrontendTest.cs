@@ -8,7 +8,7 @@ using sernick.Input.String;
 
 public class CompilerFrontendTest
 {
-    [Fact]
+    [Fact(Skip = "Wait for grammar to be finished")]
     public void CompileExceptionIsThrownAfterReportingError()
     {
         IInput input = new StringInput("");
@@ -18,7 +18,7 @@ public class CompilerFrontendTest
         Assert.Throws<CompilationException>(() => CompilerFrontend.Process(input, diagnostics.Object));
     }
 
-    [Fact]
+    [Fact(Skip = "Wait for grammar to be finished")]
     public void FinishesSmoothlyAfterNoErrorsReported()
     {
         IInput input = new StringInput("");
