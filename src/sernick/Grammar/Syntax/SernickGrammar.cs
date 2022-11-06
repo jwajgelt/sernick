@@ -17,6 +17,8 @@ public static class SernickGrammar
         var codeBlock = new NonTerminal(NonTerminalSymbol.CodeBlock);
         var ifStatement = new NonTerminal(NonTerminalSymbol.IfStatement);
         var loopStatement = new NonTerminal(NonTerminalSymbol.LoopStatement);
+        var expressionWithReturn = new NonTerminal(NonTerminalSymbol.ExpressionContainingReturn);
+        var expressionMaybeWithReturn = new NonTerminal(NonTerminalSymbol.ExpressionMaybeContainingReturn);
         var elseBlock = new NonTerminal(NonTerminalSymbol.ElseBlock);
         var functionCall = new NonTerminal(NonTerminalSymbol.FunctionCall);
         var assignment = new NonTerminal(NonTerminalSymbol.Assignment);
@@ -37,6 +39,7 @@ public static class SernickGrammar
         var elseKeyword = new Terminal(LexicalCategory.Keywords, "else");
         var breakKeyword = new Terminal(LexicalCategory.Keywords, "break");
         var continueKeyword = new Terminal(LexicalCategory.Keywords, "continue");
+        var returnKeyword = new Terminal(LexicalCategory.Keywords, "return");
         var varKeyword = new Terminal(LexicalCategory.Keywords, "var");
         var constKeyword = new Terminal(LexicalCategory.Keywords, "const");
         var funKeyword = new Terminal(LexicalCategory.Keywords, "fun");
@@ -66,6 +69,8 @@ public static class SernickGrammar
         var regExpression = Regex.Atom(expression);
         var regCodeBlock = Regex.Atom(codeBlock);
         var regElseBlock = Regex.Atom(elseBlock);
+        var regExpressionWithReturn = Regex.Atom(expressionWithReturn);
+        var regExpressionMaybeWithReturn = Regex.Atom(expressionMaybeWithReturn);
 
         // For terminal
         var regSemicolon = Regex.Atom(semicolon);
@@ -77,11 +82,14 @@ public static class SernickGrammar
         var regParenthesesClose = Regex.Atom(parenthesesClose);
 
         var regLoopKeyword = Regex.Atom(loopKeyword);
-        var regFunKeyword = Regex.Atom(funKeyword)
+        var regFunKeyword = Regex.Atom(funKeyword);
         var regIfKeyword = Regex.Atom(ifKeyword);
         var regElseKeyword = Regex.Atom(elseKeyword);
         var regVarKeyword = Regex.Atom(varKeyword);
+        var regBreakKeyword = Regex.Atom(breakKeyword);
         var regConstKeyword = Regex.Atom(constKeyword);
+        var regContinueKeyword = Regex.Atom(continueKeyword);
+        var regReturnKeyword = Regex.Atom(returnKeyword);
 
         var regTrueLiteral = Regex.Atom(trueLiteral);
         var regFalseLiteral = Regex.Atom(falseLiteral);
@@ -118,10 +126,31 @@ public static class SernickGrammar
             Regex.Concat(new Regex[] { regBracesOpen, regExpression, regBracesClose })
         ));
 
-        // Production for loop (do we want to take break/return into account here?)
+        // Production for loop (taking continue/return/break into account)
+
+        // (1) for simplicity, let's create a special "code block" -- for expressions inside loop, which must contain "return"
         productions.Add(new Production<Symbol>(
             loopStatement,
-            Regex.Concat(new Regex[] { regLoopKeyword, regCodeBlock })
+            Regex.Concat(new Regex[] { regLoopKeyword, regBracesOpen, regExpressionWithReturn, regBracesClose })
+        ));
+
+        // (2) we should have a return somewhere inside (at least one, but maybe more)
+        productions.Add(new Production<Symbol>(
+            expressionWithReturn,
+            Regex.Concat(new Regex[] { regExpressionMaybeWithReturn, regReturnKeyword, regExpressionMaybeWithReturn })
+        ));
+
+        // (3) we may or may not have a "break/continue" or more "return"s
+        productions.Add(new Production<Symbol>(
+            expressionMaybeWithReturn,
+            Regex.Union(
+                Regex.Concat(new Regex[] { regExpressionMaybeWithReturn, regBreakKeyword, regSemicolon }),
+                Regex.Concat(new Regex[] { regExpressionMaybeWithReturn, regContinueKeyword, regSemicolon }),
+                Regex.Concat(new Regex[] { regExpressionMaybeWithReturn, regReturnKeyword, regSemicolon }), // return nothing
+                Regex.Concat(new Regex[] { regExpressionMaybeWithReturn, regReturnKeyword, regExpression }), // return expression
+                Regex.Concat(new Regex[] { regExpressionMaybeWithReturn, regExpression }),
+                Regex.Epsilon
+            )
         ));
 
         // Production for if statement
@@ -185,8 +214,7 @@ public static class SernickGrammar
             )
         ));
 
-
-        // Production for equality test
+        // equality test
         productions.Add(new Production<Symbol>(
             assignment,
             Regex.Concat(new Regex[] { regExpression, regEqualsOperator, regExpression })

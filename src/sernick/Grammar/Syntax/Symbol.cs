@@ -27,6 +27,8 @@ public enum NonTerminalSymbol
     CodeBlock,
     IfStatement,
     LoopStatement,
+    ExpressionContainingReturn,
+    ExpressionMaybeContainingReturn,
     VariableDeclaration,
     ConstDeclaration,
     FunctionDefinition,
