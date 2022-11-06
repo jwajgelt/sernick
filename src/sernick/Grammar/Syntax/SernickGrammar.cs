@@ -19,6 +19,7 @@ public static class SernickGrammar
         var loopStatement = new NonTerminal(NonTerminalSymbol.LoopStatement);
         var elseBlock = new NonTerminal(NonTerminalSymbol.ElseBlock);
         var functionCall = new NonTerminal(NonTerminalSymbol.FunctionCall);
+        var assignment = new NonTerminal(NonTerminalSymbol.Assignment);
         _ = new NonTerminal(NonTerminalSymbol.VariableDeclaration);
 
         // Terminal
@@ -37,6 +38,10 @@ public static class SernickGrammar
         var constKeyword = new Terminal(LexicalCategory.Keywords, "const");
         var identifier = new Terminal(LexicalCategory.VariableIdentifiers, "");
         var typeIdentifier = new Terminal(LexicalCategory.TypeIdentifiers, "");
+        var assignmentOperator = new Terminal(LexicalCategory.Operators, "=");
+        var equalsOperator = new Terminal(LexicalCategory.Operators, "==");
+        var plusOperator = new Terminal(LexicalCategory.Operators, "+");
+        var minusOperator = new Terminal(LexicalCategory.Operators, "-"); 
 
         // Atomic regular expressions representing symbols
 
@@ -56,6 +61,8 @@ public static class SernickGrammar
         var regIfKeyword = Regex.Atom(ifKeyword);
         var regElseKeyword = Regex.Atom(elseKeyword);
         var regIdentifier = Regex.Atom(identifier);
+        var regAssignmentOperator = Regex.Atom(assignmentOperator);
+        var regEqualsOperator = Regex.Atom(equalsOperator);
 
         productions.Add(new Production<Symbol>(
             program,
@@ -100,6 +107,18 @@ public static class SernickGrammar
         productions.Add(new Production<Symbol>(
             functionCall,
             Regex.Concat(new Regex[] { regIdentifier, regParenthesesOpen, regArgList, regParenthesesClose })
+        ));
+
+        // Production for assignment
+        productions.Add(new Production<Symbol>(
+            assignment,
+            Regex.Concat(new Regex[] { regIdentifier, regAssignmentOperator, regExpression })
+        ));
+
+        // Production for equality test
+        productions.Add(new Production<Symbol>(
+            assignment,
+            Regex.Concat(new Regex[] { regExpression, regEqualsOperator, regExpression })
         ));
 
         return new Grammar<Symbol>(
