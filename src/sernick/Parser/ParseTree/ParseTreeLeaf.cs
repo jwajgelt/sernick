@@ -7,9 +7,8 @@ public sealed record ParseTreeLeaf<TSymbol>(
     TSymbol Symbol,
     ILocation Start,
     ILocation End
-) : IParseTree<TSymbol>,
-    IEquatable<IParseTree<TSymbol>>
-    where TSymbol : ILexicalGrammarCategory
+) : IParseTree<TSymbol>
+    where TSymbol : ILexicalGrammarCategory, IEquatable<TSymbol>
 {
     public bool Equals(ParseTreeLeaf<TSymbol>? other)
     {
@@ -18,21 +17,8 @@ public sealed record ParseTreeLeaf<TSymbol>(
             return true;
         }
 
-        if (Symbol is not IEquatable<TSymbol> equatable)
-        {
-            return false;
-        }
-
-        return equatable.Equals(other!.Symbol);
+        return other != null && Symbol.Equals(other.Symbol);
     }
 
-    public bool Equals(IParseTree<TSymbol>? other)
-    {
-        if (other is ParseTreeLeaf<TSymbol> otherLeaf)
-        {
-            return Equals(otherLeaf);
-        }
-
-        return false;
-    }
+    public bool Equals(IParseTree<TSymbol>? other) => Equals(other as ParseTreeLeaf<TSymbol>);
 }

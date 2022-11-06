@@ -127,7 +127,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
 
         while (true)
         {
-            var parseAction = _actionTable[(state.Configuration, lookAhead?.Symbol)];
+            var parseAction = _actionTable.GetValueOrDefault((state.Configuration, lookAhead?.Symbol));
             switch (parseAction)
             {
                 case null:

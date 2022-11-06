@@ -39,7 +39,6 @@ public class ParseTreeLeafTest
             new Production('A'.ToCategory(), Regex.Empty),
             Array.Empty<IParseTree>());
 
-        leaf.Equals(node);
         Assert.NotEqual<IParseTree>(leaf, node);
     }
 }

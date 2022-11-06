@@ -9,8 +9,7 @@ public sealed record ParseTreeNode<TSymbol>(
     ILocation End,
     Production<TSymbol> Production,
     IEnumerable<IParseTree<TSymbol>> Children
-) : IParseTree<TSymbol>,
-    IEquatable<IParseTree<TSymbol>>
+) : IParseTree<TSymbol>
     where TSymbol : IEquatable<TSymbol>
 {
     public bool Equals(ParseTreeNode<TSymbol>? other)
