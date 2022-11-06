@@ -30,6 +30,7 @@ public static class SernickGrammar
         var bracesClose = new Terminal(LexicalCategory.BracesAndParentheses, "}");
         var parenthesesOpen = new Terminal(LexicalCategory.BracesAndParentheses, "(");
         var parenthesesClose = new Terminal(LexicalCategory.BracesAndParentheses, ")");
+
         var loopKeyword = new Terminal(LexicalCategory.Keywords, "loop");
         var ifKeyword = new Terminal(LexicalCategory.Keywords, "if");
         var elseKeyword = new Terminal(LexicalCategory.Keywords, "else");
@@ -37,8 +38,14 @@ public static class SernickGrammar
         var continueKeyword = new Terminal(LexicalCategory.Keywords, "continue");
         var varKeyword = new Terminal(LexicalCategory.Keywords, "var");
         var constKeyword = new Terminal(LexicalCategory.Keywords, "const");
+
+        var trueLiteral = new Terminal(LexicalCategory.Literals, "true");
+        var falseLiteral = new Terminal(LexicalCategory.Literals, "false");
+        var digitLiteral = new Terminal(LexicalCategory.Literals, "");
+
         var identifier = new Terminal(LexicalCategory.VariableIdentifiers, "");
         var typeIdentifier = new Terminal(LexicalCategory.TypeIdentifiers, "");
+
         var assignmentOperator = new Terminal(LexicalCategory.Operators, "=");
         var equalsOperator = new Terminal(LexicalCategory.Operators, "==");
         var plusOperator = new Terminal(LexicalCategory.Operators, "+");
@@ -69,6 +76,9 @@ public static class SernickGrammar
         var regLoopKeyword = Regex.Atom(loopKeyword);
         var regIfKeyword = Regex.Atom(ifKeyword);
         var regElseKeyword = Regex.Atom(elseKeyword);
+        var regTrueLiteral = Regex.Atom(trueLiteral);
+        var regFalseLiteral = Regex.Atom(falseLiteral);
+        var regDigitLiteral = Regex.Atom(digitLiteral);
         var regIdentifier = Regex.Atom(identifier);
         var regTypeIdentifier = Regex.Atom(typeIdentifier);
         var regAssignmentOperator = Regex.Atom(assignmentOperator);
@@ -193,6 +203,12 @@ public static class SernickGrammar
         productions.Add(new Production<Symbol>(
             expression,
             Regex.Concat(new Regex[] { regExpression, regLessOrEqualOperator, regExpression })
+        ));
+
+        // expression can be a literal
+        productions.Add(new Production<Symbol>(
+            expression,
+            Regex.Union(new Regex[] { regTrueLiteral, regFalseLiteral, regDigitLiteral })
         ));
 
         return new Grammar<Symbol>(
