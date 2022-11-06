@@ -124,6 +124,7 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
         leavesEnumerator.MoveNext();
         var lookAhead = leavesEnumerator.Current;
 
+        [DoesNotReturn]
         void ReportError(IParseTree<TSymbol>? parseNode, string message)
         {
             diagnostics.Report(new SyntaxError<TSymbol>(parseNode));
