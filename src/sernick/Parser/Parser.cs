@@ -122,8 +122,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         var state = new State(_startConfig);
 
         using var leavesEnumerator = leaves.GetEnumerator();
-        leavesEnumerator.MoveNext();
-        var lookAhead = leavesEnumerator.Current;
+        var lookAhead = leavesEnumerator.Next();
 
         while (true)
         {
@@ -144,8 +143,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
 
                     state.Push(shiftAction.Target, lookAhead);
 
-                    leavesEnumerator.MoveNext();
-                    lookAhead = leavesEnumerator.Current;
+                    lookAhead = leavesEnumerator.Next();
 
                     break;
 
