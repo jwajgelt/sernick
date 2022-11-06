@@ -2,9 +2,9 @@ namespace sernick.Grammar.Syntax;
 
 using Regex = Common.Regex.Regex<Symbol>;
 
-public static class SernickGrammarProvider
+public static class SernickGrammar
 {
-    public static Grammar<Symbol> createSernickGrammar()
+    public static Grammar<Symbol> Create()
     {
         var productions = new List<Production<Symbol>>();
 
