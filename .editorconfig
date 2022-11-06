@@ -135,6 +135,15 @@ dotnet_naming_rule.properties_should_be_pascal_case.style = pascal_case_style
 
 dotnet_naming_symbols.properties.applicable_kinds = property
 
+# Static methods are PascalCase
+dotnet_naming_rule.static_methods_should_be_pascal_case.severity = warning
+dotnet_naming_rule.static_methods_should_be_pascal_case.symbols = static_methods
+dotnet_naming_rule.static_methods_should_be_pascal_case.style = pascal_case_style
+
+dotnet_naming_symbols.static_methods.applicable_kinds = method
+dotnet_naming_symbols.static_methods.applicable_accessibilities = *
+dotnet_naming_symbols.static_methods.required_modifiers = static
+
 # By default, name items with PascalCase
 dotnet_naming_rule.members_should_be_pascal_case.severity = suggestion
 dotnet_naming_rule.members_should_be_pascal_case.symbols = all_members
