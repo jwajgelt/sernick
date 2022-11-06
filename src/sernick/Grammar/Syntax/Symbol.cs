@@ -7,21 +7,11 @@ public abstract record Symbol;
 
 public sealed record Terminal(Token<Cat> Inner) : Symbol
 {
-    public bool Equals(Terminal? other)
+    public bool Equals(Terminal? other) => Inner.Category switch
     {
-        bool comp_res;
-        if (Inner.Category is Cat.BracesAndParentheses or Cat.Operators or Cat.Keywords)
-        {
-            comp_res = (Inner.Category == other?.Inner.Category) &&
-                    (Inner.Text == other?.Inner.Text);
-        }
-        else
-        {
-            comp_res = (Inner.Category == other?.Inner.Category);
-        }
-
-        return comp_res;
-    }
+        Cat.BracesAndParentheses or Cat.Operators or Cat.Keywords => (Inner.Category, Inner.Text) == (other?.Inner.Category, other?.Inner.Text),
+        _ => (Inner.Category == other?.Inner.Category)
+    };
 
     public override int GetHashCode()
     {
