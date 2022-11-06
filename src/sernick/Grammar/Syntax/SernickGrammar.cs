@@ -4,6 +4,7 @@ using sernick.Grammar.Lexicon;
 using sernick.Input;
 using sernick.Common.Regex;
 
+using Regex = Common.Regex.Regex<Symbol>;
 using Cat = Lexicon.LexicalGrammarCategoryType;
 
 sealed record PlaceholderLocation : ILocation {};
@@ -34,17 +35,17 @@ public static class SernickGrammarProvider
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex<Symbol>.Concat((reg_expression, reg_semicolon, reg_expression))
+            Regex.Concat((reg_expression, reg_semicolon, reg_expression))
         ));
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex<Symbol>.Concat((reg_expression, reg_semicolon, reg_expression))
+            Regex.Concat((reg_expression, reg_semicolon, reg_expression))
         ));
 
         return new Grammar<Symbol>(
-                new NonTerminal(NonTerminalSymbol.Program),
-                productions
-            );
+            new NonTerminal(NonTerminalSymbol.Program),
+            productions
+        );
     }
 }
