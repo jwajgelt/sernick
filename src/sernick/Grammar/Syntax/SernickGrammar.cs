@@ -8,8 +8,8 @@ public static class SernickGrammar
     {
         var productions = new List<Production<Symbol>>();
 
-        Symbol program = new NonTerminal(NonTerminalSymbol.Program);
-        Symbol expression = new NonTerminal(NonTerminalSymbol.Expression);
+        var program = new NonTerminal(NonTerminalSymbol.Program);
+        var expression = new NonTerminal(NonTerminalSymbol.Expression);
 
         productions.Add(new Production<Symbol>(
             program,
