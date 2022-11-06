@@ -33,4 +33,17 @@ public sealed record Configuration<TSymbol>(
 
         return new Configuration<TSymbol>(statesSet);
     }
+
+    public bool Equals(Configuration<TSymbol>? other)
+    {
+        return other is not null &&
+               States.Count == other.States.Count &&
+               States.Zip(other.States)
+                   .All(statePair => statePair.First.Equals(statePair.Second));
+    }
+
+    public override int GetHashCode()
+    {
+        return States.Aggregate(0, (hashCode, state) => hashCode ^ state.GetHashCode());
+    }
 }
