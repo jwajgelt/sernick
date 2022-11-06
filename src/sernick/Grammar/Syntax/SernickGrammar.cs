@@ -17,6 +17,7 @@ public static class SernickGrammar
         var codeBlock = new NonTerminal(NonTerminalSymbol.CodeBlock);
         var ifStatement = new NonTerminal(NonTerminalSymbol.IfStatement);
         var loopStatement = new NonTerminal(NonTerminalSymbol.LoopStatement);
+        var elseBlock = new NonTerminal(NonTerminalSymbol.ElseBlock);
         _ = new NonTerminal(NonTerminalSymbol.VariableDeclaration);
 
         // Terminal
@@ -27,12 +28,14 @@ public static class SernickGrammar
         var parenthesesClose = new Terminal(LexicalCategory.BracesAndParentheses, ")");
         var loopKeyword = new Terminal(LexicalCategory.Keywords, "loop");
         var ifKeyword = new Terminal(LexicalCategory.Keywords, "if");
+        var elseKeyword = new Terminal(LexicalCategory.Keywords, "else");
 
         // Atomic regular expressions representing symbols
 
         // For non-terminal
         var regExpression = Regex.Atom(expression);
         var regCodeBlock = Regex.Atom(codeBlock);
+        var regElseBlock = Regex.Atom(elseBlock);
 
         // For terminal
         var regSemicolon = Regex.Atom(semicolon);
@@ -42,6 +45,7 @@ public static class SernickGrammar
         var regParenthesesClose = Regex.Atom(parenthesesClose);
         var regLoopKeyword = Regex.Atom(loopKeyword);
         var regIfKeyword = Regex.Atom(ifKeyword);
+        var regElseKeyword = Regex.Atom(elseKeyword);
 
         productions.Add(new Production<Symbol>(
             program,
@@ -63,10 +67,20 @@ public static class SernickGrammar
             Regex.Concat(new Regex[] { regLoopKeyword, regCodeBlock })
         ));
 
-        // Need to add optional "elseCodeBlock" 
         productions.Add(new Production<Symbol>(
             ifStatement,
-            Regex.Concat(new Regex[] { regIfKeyword, regParenthesesOpen, regExpression, regParenthesesClose, regCodeBlock, regCodeBlock })
+            Regex.Concat(new Regex[] { regIfKeyword, regParenthesesOpen, regExpression, regParenthesesClose, regCodeBlock, regElseBlock })
+        ));
+
+        // Empty - else block is optional
+        productions.Add(new Production<Symbol>(
+            elseBlock,
+            Regex.Concat(new Regex[] { })
+        ));
+
+        productions.Add(new Production<Symbol>(
+            elseBlock,
+            Regex.Concat(new Regex[] { regElseKeyword, regCodeBlock })
         ));
 
         return new Grammar<Symbol>(
