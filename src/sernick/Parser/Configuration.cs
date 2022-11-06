@@ -25,7 +25,7 @@ public sealed record Configuration<TSymbol>(
                 {
                     if (dfaGrammar.Productions.TryGetValue(edge.Atom, out var dfa))
                     {
-                        hasChanged |= statesSet.Add((dfa.Start, symbol));
+                        hasChanged |= statesSet.Add((dfa.Start, edge.Atom));
                     }
                 }
             }
