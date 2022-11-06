@@ -26,9 +26,7 @@ public sealed record Terminal(Token<Cat> Inner) : Symbol
     public override int GetHashCode()
     {
         int hash_code;
-        if (Inner.Category == Cat.BracesAndParentheses ||
-            Inner.Category == Cat.Operators ||
-            Inner.Category == Cat.Keywords)
+        if (Inner.Category is Cat.BracesAndParentheses or Cat.Operators or Cat.Keywords)
         {
             hash_code = HashCode.Combine(Inner.Category, Inner.Text);
         }
