@@ -23,7 +23,10 @@ public sealed record Configuration<TSymbol>(
             {
                 foreach (var edge in dfaGrammar.Productions[symbol].GetTransitionsFrom(state))
                 {
-                    hasChanged |= statesSet.Add((dfaGrammar.Productions[edge.Atom].Start, symbol));
+                    if (dfaGrammar.Productions.TryGetValue(edge.Atom, out var dfa))
+                    {
+                        hasChanged |= statesSet.Add((dfa.Start, symbol));
+                    }
                 }
             }
         } while (hasChanged);
