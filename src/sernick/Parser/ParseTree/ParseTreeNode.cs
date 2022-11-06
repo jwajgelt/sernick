@@ -30,13 +30,5 @@ public sealed record ParseTreeNode<TSymbol>(
         return zipped.All(pair => Equals(pair.First, pair.Second));
     }
 
-    public bool Equals(IParseTree<TSymbol>? other)
-    {
-        if (other is ParseTreeNode<TSymbol> otherLeaf)
-        {
-            return Equals(otherLeaf);
-        }
-
-        return false;
-    }
+    public bool Equals(IParseTree<TSymbol>? other) => Equals(other as ParseTreeNode<TSymbol>);
 }

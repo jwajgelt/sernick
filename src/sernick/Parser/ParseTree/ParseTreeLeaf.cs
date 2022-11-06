@@ -8,17 +8,8 @@ public sealed record ParseTreeLeaf<TSymbol>(
     ILocation Start,
     ILocation End
 ) : IParseTree<TSymbol>
-    where TSymbol : ILexicalGrammarCategory, IEquatable<TSymbol>
+    where TSymbol : class, ILexicalGrammarCategory, IEquatable<TSymbol>
 {
-    public bool Equals(ParseTreeLeaf<TSymbol>? other)
-    {
-        if (ReferenceEquals(this, other))
-        {
-            return true;
-        }
-
-        return other != null && Symbol.Equals(other.Symbol);
-    }
-
+    public bool Equals(ParseTreeLeaf<TSymbol>? other) => ReferenceEquals(this, other) || Symbol.Equals(other?.Symbol);
     public bool Equals(IParseTree<TSymbol>? other) => Equals(other as ParseTreeLeaf<TSymbol>);
 }

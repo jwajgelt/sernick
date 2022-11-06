@@ -1,8 +1,9 @@
 namespace sernickTest.Parser;
 
-using Diagnostics;
 using Helpers;
 using Input;
+using Moq;
+using sernick.Diagnostics;
 using sernick.Parser;
 using Grammar = sernick.Grammar.Syntax.Grammar<Helpers.CharCategory>;
 using IParseTree = sernick.Parser.ParseTree.IParseTree<Helpers.CharCategory>;
@@ -25,8 +26,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('S'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        var diagnostics = new FakeDiagnostics();
-        var result = parser.Process(leaves, diagnostics);
+        var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         Assert.Equal(leaf, result);
     }
@@ -42,9 +42,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        var diagnostics = new FakeDiagnostics();
-
-        Assert.Throws<ParsingException>(() => parser.Process(leaves, diagnostics));
+        Assert.Throws<ParsingException>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
     }
 
     /*  S -> A
@@ -68,8 +66,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        var diagnostics = new FakeDiagnostics();
-        var result = parser.Process(leaves, diagnostics);
+        var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
         var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production, new[] { leaf });
@@ -95,9 +92,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        var diagnostics = new FakeDiagnostics();
-
-        Assert.Throws<ParsingException>(() => parser.Process(leaves, diagnostics));
+        Assert.Throws<ParsingException>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
     }
 
     /*  S -> A*
@@ -121,8 +116,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
         var leaves = new[] { leaf, leaf };
 
-        var diagnostics = new FakeDiagnostics();
-        var result = parser.Process(leaves, diagnostics);
+        var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
         var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production, new[] { leaf, leaf });
@@ -148,9 +142,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        var diagnostics = new FakeDiagnostics();
-
-        Assert.Throws<ParsingException>(() => parser.Process(leaves, diagnostics));
+        Assert.Throws<ParsingException>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
     }
 
     /*  S -> AB
@@ -178,8 +170,7 @@ public class ParserTest
         var leaf2 = new ParseTreeLeaf('B'.ToCategory(), location, location);
         var leaves = new[] { leaf1, leaf2 };
 
-        var diagnostics = new FakeDiagnostics();
-        var result = parser.Process(leaves, diagnostics);
+        var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
         var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production, new[] { leaf1, leaf2 });
@@ -208,9 +199,7 @@ public class ParserTest
         var leaf1 = new ParseTreeLeaf('A'.ToCategory(), location, location);
         var leaves = new[] { leaf1 };
 
-        var diagnostics = new FakeDiagnostics();
-
-        Assert.Throws<ParsingException>(() => parser.Process(leaves, diagnostics));
+        Assert.Throws<ParsingException>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
     }
 
     /*  S -> A+B
@@ -237,8 +226,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        var diagnostics = new FakeDiagnostics();
-        var result = parser.Process(leaves, diagnostics);
+        var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
         var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production, new[] { leaf });
@@ -267,9 +255,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('C'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        var diagnostics = new FakeDiagnostics();
-
-        Assert.Throws<ParsingException>(() => parser.Process(leaves, diagnostics));
+        Assert.Throws<ParsingException>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
     }
 
     /*  S -> A
@@ -309,8 +295,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('D'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        var diagnostics = new FakeDiagnostics();
-        var result = parser.Process(leaves, diagnostics);
+        var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
         var expectedNodeC = new ParseTreeNode('C'.ToCategory(), location, location, production4, new[] { leaf });
@@ -354,8 +339,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        var diagnostics = new FakeDiagnostics();
-        var result = parser.Process(leaves, diagnostics);
+        var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
         var expectedNodeA = new ParseTreeNode('A'.ToCategory(), location, location, production2, new[] { leaf });
@@ -396,8 +380,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
         var leaves = new[] { leaf, leaf, leaf };
 
-        var diagnostics = new FakeDiagnostics();
-        var result = parser.Process(leaves, diagnostics);
+        var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
         var expectedNode2 = new ParseTreeNode('S'.ToCategory(), location, location, production1, new[] { leaf });
@@ -465,8 +448,7 @@ public class ParserTest
 
         var leaves = new[] { leaf1, leaf2, leaf3, leaf4, leaf5, leaf6 };
 
-        var diagnostics = new FakeDiagnostics();
-        var result = parser.Process(leaves, diagnostics);
+        var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
         // (Y -> Pa)
@@ -534,8 +516,7 @@ public class ParserTest
             leafRight
         };
 
-        var diagnostics = new FakeDiagnostics();
-        var result = parser.Process(leaves, diagnostics);
+        var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
         // (S -> eps)
