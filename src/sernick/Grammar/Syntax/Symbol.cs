@@ -14,5 +14,12 @@ public enum NonTerminalSymbol
     Expression,
     CodeBlock,
     IfStatement,
-    WhileStatement,
+    LoopStatement,
+    VariableDeclaration,
+    ConstDeclaration,
+    FunctionDefinition,
+    FuctionCall,
+    Assignment,
+    ExpSummand,
+    ExpFactor
 }
