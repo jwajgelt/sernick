@@ -78,7 +78,7 @@ public class ParserTest
      * input: B
      * result: error
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void OneAtomProductionGrammarIncorrectInput()
     {
         var production = new Production('S'.ToCategory(), Regex.Atom('A'.ToCategory()));
@@ -102,7 +102,7 @@ public class ParserTest
      *   |(S -> A*)
      *   AA
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void OneStarProductionGrammarCorrectInput()
     {
         var production = new Production('S'.ToCategory(), Regex.Star(Regex.Atom('A'.ToCategory())));
@@ -128,7 +128,7 @@ public class ParserTest
      * input: B
      * result: error
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void OneStarProductionGrammarIncorrectInput()
     {
         var production1 = new Production('S'.ToCategory(), Regex.Star(Regex.Atom('A'.ToCategory())));
@@ -152,7 +152,7 @@ public class ParserTest
      *   |(S -> AB)
      *   AB
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void OneConcatProductionGrammarCorrectInput()
     {
         var production = new Production('S'.ToCategory(), Regex.Concat(
@@ -182,7 +182,7 @@ public class ParserTest
      * input: A
      * result: error
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void OneConcatProductionGrammarIncorrectInput()
     {
         var production1 = new Production('S'.ToCategory(), Regex.Concat(
@@ -209,7 +209,7 @@ public class ParserTest
      *   |(S -> A+B)
      *   B
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void OneUnionProductionGrammarCorrectInput()
     {
         var production = new Production('S'.ToCategory(), Regex.Union(
@@ -238,7 +238,7 @@ public class ParserTest
     * input: C
     * result: error
     */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void OneUnionProductionGrammarIncorrectInput()
     {
         var production = new Production('S'.ToCategory(), Regex.Union(
@@ -274,7 +274,7 @@ public class ParserTest
      *   |(C -> D)
      *   D
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void SnakeGrammarCorrectInputCase1()
     {
         var production1 = new Production('S'.ToCategory(), Regex.Atom('A'.ToCategory()));
@@ -318,7 +318,7 @@ public class ParserTest
      *   |(A -> B)
      *   B
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void SnakeGrammarCorrectInputCase2()
     {
         var production1 = new Production('S'.ToCategory(), Regex.Atom('A'.ToCategory()));
@@ -360,7 +360,7 @@ public class ParserTest
      *   |(S -> A)
      *   A
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void LeftRecursiveGrammarCorrectInput()
     {
         var production1 = new Production('S'.ToCategory(), Regex.Atom('A'.ToCategory()));
@@ -407,7 +407,7 @@ public class ParserTest
      *   |(Y -> Pa)
      *   Pa
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void ComplexGrammarCorrectInputCase1()
     {
         var production1 = new Production('S'.ToCategory(), Regex.Atom('X'.ToCategory()));
@@ -484,7 +484,7 @@ public class ParserTest
      *              (S)-----------(S)             
      *               |(S -> eps)   |(S -> eps)
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void ComplexGrammarCorrectInputCase2()
     {
         var production = new Production('S'.ToCategory(), Regex.Star(
@@ -545,7 +545,7 @@ public class ParserTest
      * result: error
      * could be S -> SS or S -> S -> SS etc...
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void AmbiguousGrammar()
     {
         var production = new Production('S'.ToCategory(), Regex.Star(Regex.Atom('S'.ToCategory())));
@@ -565,7 +565,7 @@ public class ParserTest
      * source: https://people.cs.vt.edu/~ryder/515/f05/homework/hw1ans.pdf
      * result: error
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void NotSlrGrammar()
     {
         var production1 = new Production('S'.ToCategory(), Regex.Concat(
