@@ -5,7 +5,7 @@ using Cat = Lexicon.LexicalGrammarCategoryType;
 
 public abstract record Symbol;
 
-public sealed record Terminal(Token<Cat> Inner) : Symbol, IEquatable<Terminal>
+public sealed record Terminal(Token<Cat> Inner) : Symbol
 {
     public bool Equals(Terminal? other)
     {
