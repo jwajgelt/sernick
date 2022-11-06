@@ -30,6 +30,8 @@ internal sealed class UnionRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<
     {
         return other is UnionRegex<TAtom> unionRegex && Children.SetEquals(unionRegex.Children);
     }
+
+    public override string ToString() => string.Join("+", Children);
 }
 
 public partial class Regex<TAtom> where TAtom : IEquatable<TAtom>

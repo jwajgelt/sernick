@@ -21,6 +21,8 @@ internal sealed class AtomRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<T
     {
         return other is AtomRegex<TAtom> atomRegex && Atom.Equals(atomRegex.Atom);
     }
+
+    public override string? ToString() => Atom.ToString();
 }
 
 public partial class Regex<TAtom> where TAtom : IEquatable<TAtom>

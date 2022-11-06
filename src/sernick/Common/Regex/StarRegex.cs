@@ -27,6 +27,8 @@ internal sealed class StarRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<T
     {
         return other is StarRegex<TAtom> starRegex && Child.Equals(starRegex.Child);
     }
+
+    public override string ToString() => $"({Child})*";
 }
 
 public partial class Regex<TAtom> where TAtom : IEquatable<TAtom>
