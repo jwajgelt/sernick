@@ -19,7 +19,7 @@ public sealed record Configuration<TSymbol>(
         do
         {
             hasChanged = false;
-            foreach (var (state, symbol) in statesSet)
+            foreach (var (state, symbol) in statesSet.ToList())
             {
                 foreach (var edge in dfaGrammar.Productions[symbol].GetTransitionsFrom(state))
                 {
