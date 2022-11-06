@@ -14,13 +14,12 @@ public sealed record Terminal(Token<Cat> Inner) : Symbol
             Inner.Category == Cat.Operators ||
             Inner.Category == Cat.Keywords)
         {
-            comp_res = (other != null) &&
-                    (Inner.Category == other.Inner.Category) &&
-                    (Inner.Text == other.Inner.Text);
+            comp_res = (Inner.Category == other?.Inner.Category) &&
+                    (Inner.Text == other?.Inner.Text);
         }
         else
         {
-            comp_res = (other != null) && (Inner.Category == other.Inner.Category);
+            comp_res = (Inner.Category == other?.Inner.Category);
         }
 
         return comp_res;
