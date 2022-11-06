@@ -24,7 +24,8 @@ public static class SernickGrammar
 
         // Terminal
         var semicolon = new Terminal(LexicalCategory.Semicolon, ";");
-        var comma = new Terminal(LexicalCategory.Comma, ","); 
+        var comma = new Terminal(LexicalCategory.Comma, ",");
+        var colon = new Terminal(LexicalCategory.Colon, ":");
         var bracesOpen = new Terminal(LexicalCategory.BracesAndParentheses, "{");
         var bracesClose = new Terminal(LexicalCategory.BracesAndParentheses, "}");
         var parenthesesOpen = new Terminal(LexicalCategory.BracesAndParentheses, "(");
@@ -41,7 +42,7 @@ public static class SernickGrammar
         var assignmentOperator = new Terminal(LexicalCategory.Operators, "=");
         var equalsOperator = new Terminal(LexicalCategory.Operators, "==");
         var plusOperator = new Terminal(LexicalCategory.Operators, "+");
-        var minusOperator = new Terminal(LexicalCategory.Operators, "-"); 
+        var minusOperator = new Terminal(LexicalCategory.Operators, "-");
 
         // Atomic regular expressions representing symbols
 
@@ -53,6 +54,7 @@ public static class SernickGrammar
         // For terminal
         var regSemicolon = Regex.Atom(semicolon);
         var regComma = Regex.Atom(comma);
+        var regColon = Regex.Atom(colon);
         var regBracesOpen = Regex.Atom(bracesOpen);
         var regBracesClose = Regex.Atom(bracesClose);
         var regParenthesesOpen = Regex.Atom(parenthesesOpen);
@@ -61,6 +63,7 @@ public static class SernickGrammar
         var regIfKeyword = Regex.Atom(ifKeyword);
         var regElseKeyword = Regex.Atom(elseKeyword);
         var regIdentifier = Regex.Atom(identifier);
+        var regTypeIdentifier = Regex.Atom(typeIdentifier);
         var regAssignmentOperator = Regex.Atom(assignmentOperator);
         var regEqualsOperator = Regex.Atom(equalsOperator);
 
@@ -125,6 +128,13 @@ public static class SernickGrammar
             assignment,
             Regex.Concat(new Regex[] { regExpression, regEqualsOperator, regExpression })
         ));
+
+        // Production for "variable : Type"
+        productions.Add(new Production<Symbol>(
+            expression,
+            Regex.Concat(new Regex[] { regIdentifier, regColon, regTypeIdentifier });
+
+        ))
 
         return new Grammar<Symbol>(
             new NonTerminal(NonTerminalSymbol.Program),
