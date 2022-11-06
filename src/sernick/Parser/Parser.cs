@@ -10,16 +10,15 @@ using Grammar.Syntax;
 using ParseTree;
 using Utility;
 
-public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
+public sealed class Parser<TSymbol> : IParser<TSymbol>
     where TSymbol : class, IEquatable<TSymbol>
-    where TDfaState : IEquatable<TDfaState>
 {
     private readonly TSymbol _startSymbol;
     private readonly Configuration<TSymbol> _startConfig;
     private readonly IReadOnlyDictionary<ValueTuple<Configuration<TSymbol>, TSymbol?>, IParseAction> _actionTable;
-    private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
+    private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>> _reversedAutomata;
 
-    public static Parser<TSymbol, Regex<TSymbol>> FromGrammar(Grammar<TSymbol> grammar)
+    public static Parser<TSymbol> FromGrammar(Grammar<TSymbol> grammar)
     {
         var dfaGrammar = grammar.ToDfaGrammar();
         var nullable = dfaGrammar.Nullable();
@@ -27,7 +26,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         var follow = dfaGrammar.Follow(nullable, first);
         var reversedAutomatas = dfaGrammar.GetReverseAutomatas();
 
-        return new Parser<TSymbol, Regex<TSymbol>>(dfaGrammar,
+        return new Parser<TSymbol>(dfaGrammar,
             follow,
             reversedAutomatas);
     }
@@ -35,7 +34,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     internal Parser(
         DfaGrammar<TSymbol> dfaGrammar,
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFollow,
-        IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> reversedAutomata)
+        IReadOnlyDictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>> reversedAutomata)
     {
         _startSymbol = dfaGrammar.Start;
         _reversedAutomata = reversedAutomata;
@@ -185,7 +184,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     /// a Shift action is possible from the config from top of the stack and <paramref name="symbol"/>; <c>false</c> otherwise
     /// </returns>
     private bool MatchTail(
-        IDfa<TDfaState, TSymbol> dfa,
+        IDfa<Regex<TSymbol>, TSymbol> dfa,
         TSymbol symbol,
         State state,
         out List<IParseTree<TSymbol>> matchedTrees,

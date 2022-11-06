@@ -4,7 +4,10 @@ using Common.Dfa;
 using Common.Regex;
 using Diagnostics;
 using Grammar.Lexicon;
+using Grammar.Syntax;
 using Input;
+using Parser;
+using Parser.ParseTree;
 using Tokenizer.Lexer;
 
 public static class CompilerFrontend
@@ -19,8 +22,11 @@ public static class CompilerFrontend
     {
         var lexer = PrepareLexer();
         var tokens = lexer.Process(input, diagnostics);
-        // force c# to evaluate the IEnumerable
-        _ = tokens.ToArray();
+        var parseLeaves = tokens.Select(
+                token => new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.Start, token.End))
+            .ToArray(); // force iteration over the lexer for now, since the parser doesn't do that yet
+        var parser = Parser<Symbol>.FromGrammar(SernickGrammar.Create());
+        var parseTree = parser.Process(parseLeaves, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
     }
 
