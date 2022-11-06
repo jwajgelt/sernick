@@ -4,9 +4,9 @@ using sernick.Tokenizer;
 
 public abstract record Symbol;
 
-public record Terminal(Token<LexicalGrammarCategoryType> symbol) : Symbol;
+public record Terminal(Token<LexicalGrammarCategoryType> Inner) : Symbol;
 
-public record NonTerminal(NonTerminalSymbol symbol) : Symbol;
+public record NonTerminal(NonTerminalSymbol Inner) : Symbol;
 
 public enum NonTerminalSymbol
 {
