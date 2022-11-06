@@ -27,12 +27,20 @@ public enum NonTerminalSymbol
     CodeBlock,
     IfStatement,
     LoopStatement,
+<<<<<<< HEAD
     ExpressionContainingReturn,
     ExpressionMaybeContainingReturn,
+=======
+>>>>>>> main
     VariableDeclaration,
     ConstDeclaration,
     FunctionDefinition,
     FunctionCall,
     Assignment,
+<<<<<<< HEAD
     ElseBlock
+=======
+    ExpSummand,
+    ExpFactor
+>>>>>>> main
 }

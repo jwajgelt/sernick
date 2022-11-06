@@ -91,6 +91,35 @@ public class StarRegex
     }
 
     [Fact]
+    public void When_Reverse_Then_ComputeCorrectly_Case1()
+    {
+        var regex = Regex.Star(
+            Regex.Atom('a')
+        );
+
+        Assert.Equal(regex, regex.Reverse());
+    }
+
+    [Fact]
+    public void When_Reverse_Then_ComputeCorrectly_Case2()
+    {
+        var regex = Regex.Star(
+            Regex.Concat(
+                Regex.Atom('a'),
+                Regex.Atom('b')
+            )
+        );
+        var expected = Regex.Star(
+            Regex.Concat(
+                Regex.Atom('b'),
+                Regex.Atom('a')
+            )
+        );
+
+        Assert.Equal(expected, regex.Reverse());
+    }
+
+    [Fact]
     public void TestEqualsAndHashCode()
     {
         var regexA = Regex.Atom('a');
