@@ -104,10 +104,10 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
 
                         switch (actionTable[(currentConfig, followingSymbol)])
                         {
-                            case ParseActionShift<TSymbol> _:
-                                throw new NotSLRGrammarException($"Shift/reduce conflict between symbol {followingSymbol} and production {production}");
+                            case ParseActionShift<TSymbol>:
+                                throw NotSLRGrammarException.ShiftReduceConflict(followingSymbol, production);
                             case ParseActionReduce<TSymbol> reduce:
-                                throw new NotSLRGrammarException($"Reduce/reduce conflict for symbol {symbol} between production {production} and production {reduce.Production}");
+                                throw NotSLRGrammarException.ReduceReduceConflict(symbol, production, reduce.Production);
                         }
                     }
                 }
