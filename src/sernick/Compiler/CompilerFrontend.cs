@@ -24,8 +24,8 @@ public static class CompilerFrontend
         var tokens = lexer.Process(input, diagnostics);
         var parseLeaves = tokens
             .Where(token => !token.Category.Equals(LexicalGrammarCategoryType.Whitespaces)) // strip whitespace
-            .Select(token => new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.Start, token.End))
-            .ToArray(); // force iteration over the lexer for now, since the parser doesn't do that yet
+            .Select(token =>
+                new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.Start, token.End));
         var parser = Parser<Symbol>.FromGrammar(SernickGrammar.Create());
         var parseTree = parser.Process(parseLeaves, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);

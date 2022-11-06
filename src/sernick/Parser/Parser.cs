@@ -118,15 +118,28 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
 
     public IParseTree<TSymbol> Process(IEnumerable<IParseTree<TSymbol>> leaves, IDiagnostics diagnostics)
     {
+
         var state = new State(_startConfig);
 
         using var leavesEnumerator = leaves.GetEnumerator();
         leavesEnumerator.MoveNext();
         var lookAhead = leavesEnumerator.Current;
 
+        void ReportError(IParseTree<TSymbol>? parseNode, string message)
+        {
+            diagnostics.Report(new SyntaxError<TSymbol>(parseNode));
+            // consume the `leaves` Enumerable
+            // to force Lexer to report any remaining errors
+            while (leavesEnumerator.MoveNext())
+            {
+            }
+
+            throw new ParsingException(message);
+        }
+
         while (true)
         {
-            var parseAction = _actionTable[(state.Configuration, lookAhead?.Symbol)];
+            var parseAction = _actionTable.GetValueOrDefault((state.Configuration, lookAhead?.Symbol));
             switch (parseAction)
             {
                 case null:
@@ -135,8 +148,8 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
                         return state.TreeStack.Single();
                     }
 
-                    diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
-                    throw new ParsingException("No parsing action available at current state");
+                    ReportError(lookAhead, "No parsing action available at current state");
+                    break;
 
                 case ParseActionShift<TSymbol> shiftAction:
                     Debug.Assert(lookAhead is not null, $"actionTable[(config, {null})] mustn't be Shift");
@@ -156,8 +169,7 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
                             out var children,
                             out var nextConfig))
                     {
-                        diagnostics.Report(new SyntaxError<TSymbol>(state.TreeStack.FirstOrDefault()));
-                        throw new ParsingException("The subsequence of tokens cannot be parsed");
+                        ReportError(state.TreeStack.FirstOrDefault(), "The subsequence of tokens cannot be parsed");
                     }
 
                     state.Push(nextConfig,
