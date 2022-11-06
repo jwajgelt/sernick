@@ -64,26 +64,31 @@ public static class SernickGrammar
         var regAssignmentOperator = Regex.Atom(assignmentOperator);
         var regEqualsOperator = Regex.Atom(equalsOperator);
 
+        // Production: the whole program can be seen as an expression
         productions.Add(new Production<Symbol>(
             program,
             regExpression
         ));
 
+        // Expression can be a join of two expressions
         productions.Add(new Production<Symbol>(
             expression,
             Regex.Concat(new Regex[] { regExpression, regSemicolon, regExpression })
         ));
 
+        // Production for code block
         productions.Add(new Production<Symbol>(
             codeBlock,
             Regex.Concat(new Regex[] { regBracesOpen, regExpression, regBracesClose })
         ));
 
+        // Production for loop (do we want to take break/return into account here?)
         productions.Add(new Production<Symbol>(
             loopStatement,
             Regex.Concat(new Regex[] { regLoopKeyword, regCodeBlock })
         ));
 
+        // Production for if statement
         productions.Add(new Production<Symbol>(
             ifStatement,
             Regex.Concat(new Regex[] { regIfKeyword, regParenthesesOpen, regExpression, regParenthesesClose, regCodeBlock, regElseBlock })
