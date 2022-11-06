@@ -10,7 +10,7 @@ public sealed record ParseTreeNode<TSymbol>(
     Production<TSymbol> Production,
     IEnumerable<IParseTree<TSymbol>> Children
 ) : IParseTree<TSymbol>,
-    IEquatable<IParseTree<TSymbol>> 
+    IEquatable<IParseTree<TSymbol>>
     where TSymbol : IEquatable<TSymbol>
 {
     public bool Equals(ParseTreeNode<TSymbol>? other)
@@ -30,14 +30,14 @@ public sealed record ParseTreeNode<TSymbol>(
         var zipped = Children.Zip(other.Children, (first, second) => (First: first, Second: second));
         return zipped.All(pair => Equals(pair.First, pair.Second));
     }
-    
+
     public bool Equals(IParseTree<TSymbol>? other)
     {
-        if(other is ParseTreeNode<TSymbol> otherLeaf)
+        if (other is ParseTreeNode<TSymbol> otherLeaf)
         {
             return Equals(otherLeaf);
         }
-        
+
         return false;
     }
 }

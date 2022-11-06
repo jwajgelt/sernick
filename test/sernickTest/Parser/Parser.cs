@@ -4,19 +4,18 @@ using Diagnostics;
 using Helpers;
 using Input;
 using sernick.Parser;
-
-using Parser = sernick.Parser.Parser<Helpers.CharCategory, Helpers.CharCategory>;
-using Regex = sernick.Common.Regex.Regex<Helpers.CharCategory>;
 using Grammar = sernick.Grammar.Syntax.Grammar<Helpers.CharCategory>;
 using IParseTree = sernick.Parser.ParseTree.IParseTree<Helpers.CharCategory>;
-using ParseTreeNode = sernick.Parser.ParseTree.ParseTreeNode<Helpers.CharCategory>;
+using Parser = sernick.Parser.Parser<Helpers.CharCategory, Helpers.CharCategory>;
 using ParseTreeLeaf = sernick.Parser.ParseTree.ParseTreeLeaf<Helpers.CharCategory>;
+using ParseTreeNode = sernick.Parser.ParseTree.ParseTreeNode<Helpers.CharCategory>;
 using Production = sernick.Grammar.Syntax.Production<Helpers.CharCategory>;
+using Regex = sernick.Common.Regex.Regex<Helpers.CharCategory>;
 
 public class ParserTest
 {
     // Checked sequence is equal to start symbol
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void EmptyGrammarInstantlyAccepting()
     {
         var grammar = new Grammar('S'.ToCategory(), Array.Empty<Production>());
@@ -28,12 +27,12 @@ public class ParserTest
 
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(leaves, diagnostics);
-        
+
         Assert.Equal(leaf, result);
     }
 
     // Checked sequence is different from start symbol
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void EmptyGrammarInstantlyRejecting()
     {
         var grammar = new Grammar('S'.ToCategory(), Array.Empty<Production>());
@@ -55,7 +54,7 @@ public class ParserTest
      *   |(S -> A)
      *   A
      */
-    [Fact(Skip = "Parser constructor not implemented")]
+    [Fact]
     public void OneAtomProductionGrammarCorrectInput()
     {
         var production = new Production('S'.ToCategory(), Regex.Atom('A'.ToCategory()));
@@ -72,6 +71,7 @@ public class ParserTest
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(leaves, diagnostics);
 
+        // expected result
         var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production, new[] { leaf });
 
         Assert.Equal(expectedRoot, result);
@@ -110,10 +110,10 @@ public class ParserTest
     [Fact(Skip = "Parser constructor not implemented")]
     public void OneStarProductionGrammarCorrectInput()
     {
-        var production1 = new Production('S'.ToCategory(), Regex.Star(Regex.Atom('A'.ToCategory())));
+        var production = new Production('S'.ToCategory(), Regex.Star(Regex.Atom('A'.ToCategory())));
         var grammar = new Grammar('S'.ToCategory(), new[]
         {
-            production1
+            production
         });
         var parser = Parser.FromGrammar(grammar);
 
@@ -124,20 +124,10 @@ public class ParserTest
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(leaves, diagnostics);
 
-        Assert.True(result is ParseTreeNode);
-        var root = result as ParseTreeNode;
+        // expected result
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production, new[] { leaf, leaf });
 
-        Assert.Equal('S', result.Symbol.Character);
-        Assert.Equal(production1, root!.Production);
-        Assert.Equal(2, root.Children.Count());
-
-        var children = root.Children.ToArray();
-        var child1 = children[0];
-        var child2 = children[1];
-        Assert.True(child1 is ParseTreeLeaf);
-        Assert.True(child2 is ParseTreeLeaf);
-        Assert.Equal('A', child1.Symbol.Character);
-        Assert.Equal('A', child2.Symbol.Character);
+        Assert.Equal(expectedRoot, result);
     }
 
     /*  S -> A*
@@ -173,13 +163,13 @@ public class ParserTest
     [Fact(Skip = "Parser constructor not implemented")]
     public void OneConcatProductionGrammarCorrectInput()
     {
-        var production1 = new Production('S'.ToCategory(), Regex.Concat(
+        var production = new Production('S'.ToCategory(), Regex.Concat(
             Regex.Atom('A'.ToCategory()),
             Regex.Atom('B'.ToCategory())
         ));
         var grammar = new Grammar('S'.ToCategory(), new[]
         {
-            production1
+            production
         });
         var parser = Parser.FromGrammar(grammar);
 
@@ -191,20 +181,10 @@ public class ParserTest
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(leaves, diagnostics);
 
-        Assert.True(result is ParseTreeNode);
-        var root = result as ParseTreeNode;
+        // expected result
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production, new[] { leaf1, leaf2 });
 
-        Assert.Equal('S', result.Symbol.Character);
-        Assert.Equal(production1, root!.Production);
-        Assert.Equal(2, root.Children.Count());
-
-        var children = root.Children.ToArray();
-        var child1 = children[0];
-        var child2 = children[1];
-        Assert.True(child1 is ParseTreeLeaf);
-        Assert.True(child2 is ParseTreeLeaf);
-        Assert.Equal('A', child1.Symbol.Character);
-        Assert.Equal('B', child2.Symbol.Character);
+        Assert.Equal(expectedRoot, result);
     }
 
     /*  S -> AB
@@ -260,16 +240,10 @@ public class ParserTest
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(leaves, diagnostics);
 
-        Assert.True(result is ParseTreeNode);
-        var root = result as ParseTreeNode;
+        // expected result
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production, new[] { leaf });
 
-        Assert.Equal('S', result.Symbol.Character);
-        Assert.Equal(production, root!.Production);
-        Assert.Single(root.Children);
-
-        var child = root.Children.First();
-        Assert.True(child is ParseTreeLeaf);
-        Assert.Equal('B', child!.Symbol.Character);
+        Assert.Equal(expectedRoot, result);
     }
 
     /*  S -> A+B
@@ -338,36 +312,13 @@ public class ParserTest
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(leaves, diagnostics);
 
-        Assert.True(result is ParseTreeNode);
-        var node0 = result as ParseTreeNode;
-        Assert.Equal('S', node0!.Symbol.Character);
-        Assert.Equal(production1, node0.Production);
-        Assert.Single(node0.Children);
+        // expected result
+        var expectedNodeC = new ParseTreeNode('C'.ToCategory(), location, location, production4, new[] { leaf });
+        var expectedNodeB = new ParseTreeNode('B'.ToCategory(), location, location, production3, new[] { expectedNodeC });
+        var expectedNodeA = new ParseTreeNode('A'.ToCategory(), location, location, production2, new[] { expectedNodeB });
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production1, new[] { expectedNodeA });
 
-        var child1 = node0.Children.First();
-        Assert.True(child1 is ParseTreeNode);
-        var node1 = child1 as ParseTreeNode;
-        Assert.Equal('A', node1!.Symbol.Character);
-        Assert.Equal(production2, node1.Production);
-        Assert.Single(node1.Children);
-
-        var child2 = node1.Children.First();
-        Assert.True(child2 is ParseTreeNode);
-        var node2 = child2 as ParseTreeNode;
-        Assert.Equal('B', node2!.Symbol.Character);
-        Assert.Equal(production3, node2.Production);
-        Assert.Single(node2.Children);
-
-        var child3 = node2.Children.First();
-        Assert.True(child3 is ParseTreeNode);
-        var node3 = child3 as ParseTreeNode;
-        Assert.Equal('C', node3!.Symbol.Character);
-        Assert.Equal(production4, node3.Production);
-        Assert.Single(node3.Children);
-
-        var child4 = node3.Children.First();
-        Assert.True(child4 is ParseTreeLeaf);
-        Assert.Equal('D', child4!.Symbol.Character);
+        Assert.Equal(expectedRoot, result);
     }
 
     /*  S -> A
@@ -406,22 +357,11 @@ public class ParserTest
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(leaves, diagnostics);
 
-        Assert.True(result is ParseTreeNode);
-        var node0 = result as ParseTreeNode;
-        Assert.Equal('S', node0!.Symbol.Character);
-        Assert.Equal(production1, node0.Production);
-        Assert.Single(node0.Children);
+        // expected result
+        var expectedNodeA = new ParseTreeNode('A'.ToCategory(), location, location, production2, new[] { leaf });
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production1, new[] { expectedNodeA });
 
-        var child1 = node0.Children.First();
-        Assert.True(child1 is ParseTreeNode);
-        var node1 = child1 as ParseTreeNode;
-        Assert.Equal('A', node1!.Symbol.Character);
-        Assert.Equal(production2, node1.Production);
-        Assert.Single(node1.Children);
-
-        var child2 = node1.Children.First();
-        Assert.True(child2 is ParseTreeLeaf);
-        Assert.Equal('B', child2.Symbol.Character);
+        Assert.Equal(expectedRoot, result);
     }
 
     /*  S -> A
@@ -459,42 +399,12 @@ public class ParserTest
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(leaves, diagnostics);
 
-        Assert.True(result is ParseTreeNode);
-        var node0 = result as ParseTreeNode;
-        Assert.Equal('S', node0!.Symbol.Character);
-        Assert.Equal(production2, node0.Production);
-        Assert.Equal(2, node0.Children.Count());
+        // expected result
+        var expectedNode2 = new ParseTreeNode('S'.ToCategory(), location, location, production1, new[] { leaf });
+        var expectedNode1 = new ParseTreeNode('S'.ToCategory(), location, location, production2, new IParseTree[] { expectedNode2, leaf });
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production2, new IParseTree[] { expectedNode1, leaf });
 
-        // first production results
-        var children1 = node0.Children.ToArray();
-        var child1_1 = children1[1];
-        Assert.True(child1_1 is ParseTreeLeaf);
-        Assert.Equal('A', child1_1.Symbol.Character);
-
-        var child1_0 = children1[0];
-        Assert.True(child1_0 is ParseTreeNode);
-        var node1_0 = child1_0 as ParseTreeNode;
-        Assert.Equal('S', node1_0!.Symbol.Character);
-        Assert.Equal(production2, node1_0.Production);
-        Assert.Equal(2, node1_0.Children.Count());
-
-        // second production results
-        var children2 = node1_0.Children.ToArray();
-        var child2_1 = children2[1];
-        Assert.True(child2_1 is ParseTreeLeaf);
-        Assert.Equal('A', child2_1.Symbol.Character);
-
-        var child2_0 = children2[0];
-        Assert.True(child2_0 is ParseTreeNode);
-        var node2_0 = child1_0 as ParseTreeNode;
-        Assert.Equal('S', node2_0!.Symbol.Character);
-        Assert.Equal(production1, node2_0.Production);
-        Assert.Single(node2_0.Children);
-
-        // last production result
-        var child3 = node2_0.Children.First();
-        Assert.True(child3 is ParseTreeLeaf);
-        Assert.Equal('A', child3.Symbol.Character);
+        Assert.Equal(expectedRoot, result);
     }
 
     /*  S -> X
@@ -558,87 +468,27 @@ public class ParserTest
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(leaves, diagnostics);
 
-        // root (S -> SX)
-        Assert.True(result is ParseTreeNode);
-        var node0 = result as ParseTreeNode;
-        Assert.Equal('S', node0!.Symbol.Character);
-        Assert.Equal(production2, node0.Production);
-        Assert.Equal(2, node0.Children.Count());
-        var children1 = node0.Children.ToArray();
-
-        // left branch (S -> X)
-        var leftChild1 = children1[0];
-        Assert.True(leftChild1 is ParseTreeNode);
-        var leftNode1 = leftChild1 as ParseTreeNode;
-        Assert.Equal('S', leftChild1.Symbol.Character);
-        Assert.Equal(production1, leftNode1!.Production);
-        Assert.Single(leftNode1.Children);
-
-        // (X -> Yr)
-        var leftChild2 = leftNode1.Children.First();
-        Assert.True(leftChild2 is ParseTreeNode);
-        var leftNode2 = leftChild2 as ParseTreeNode;
-        Assert.Equal('X', leftChild2.Symbol.Character);
-        Assert.Equal(production3, leftNode2!.Production);
-        Assert.Equal(2, leftNode2.Children.Count());
-        var leftChildren3 = leftNode2.Children.ToArray();
-
-        // r
-        var leftChild3_1 = leftChildren3[1];
-        Assert.True(leftChild3_1 is ParseTreeLeaf);
-        Assert.Equal('r', leftChild3_1.Symbol.Character);
-
+        // expected result
         // (Y -> Pa)
-        var leftChild3_0 = leftChildren3[0];
-        Assert.True(leftChild3_0 is ParseTreeNode);
-        var leftNode3_0 = leftChild3_0 as ParseTreeNode;
-        Assert.Equal('Y', leftChild3_0.Symbol.Character);
-        Assert.Equal(production4, leftNode3_0!.Production);
-        Assert.Equal(2, leftNode3_0.Children.Count());
-        var leftChildren4 = leftNode3_0.Children.ToArray();
-
-        // P
-        var leftChild4_0 = leftChildren4[0];
-        Assert.True(leftChild4_0 is ParseTreeLeaf);
-        Assert.Equal('P', leftChild4_0.Symbol.Character);
-
-        // a
-        var leftChild4_1 = leftChildren4[1];
-        Assert.True(leftChild4_1 is ParseTreeLeaf);
-        Assert.Equal('a', leftChild4_1.Symbol.Character);
-
-        // right branch (X -> Yr)
-        var rightChild1 = children1[1];
-        Assert.True(rightChild1 is ParseTreeNode);
-        var rightNode1 = rightChild1 as ParseTreeNode;
-        Assert.Equal('X', rightChild1.Symbol.Character);
-        Assert.Equal(production3, rightNode1!.Production);
-        Assert.Equal(2, rightNode1.Children.Count());
-        var rightChildren2 = rightNode1.Children.ToArray();
-
-        // r
-        var rightChild2_1 = rightChildren2[1];
-        Assert.True(rightChild2_1 is ParseTreeLeaf);
-        Assert.Equal('r', rightChild2_1.Symbol.Character);
-
+        var expectedLeftNode3 =
+            new ParseTreeNode('Y'.ToCategory(), location, location, production4, new[] { leaf1, leaf2 });
+        // (X -> Yr)
+        var expectedLeftNode2 =
+            new ParseTreeNode('X'.ToCategory(), location, location, production3, new IParseTree[] { expectedLeftNode3, leaf3 });
+        // (S -> X)
+        var expectedLeftNode1 =
+            new ParseTreeNode('S'.ToCategory(), location, location, production1, new[] { expectedLeftNode2 });
         // (Y -> se)
-        var rightChild2_0 = rightChildren2[0];
-        Assert.True(rightChild2_0 is ParseTreeNode);
-        var rightNode2_0 = rightChild2_0 as ParseTreeNode;
-        Assert.Equal('Y', rightChild2_0.Symbol.Character);
-        Assert.Equal(production5, rightNode2_0!.Production);
-        Assert.Equal(2, rightNode2_0.Children.Count());
-        var rightChildren3 = rightNode2_0.Children.ToArray();
+        var expectedRightNode2 =
+            new ParseTreeNode('Y'.ToCategory(), location, location, production4, new[] { leaf4, leaf5 });
+        // (X -> Yr)
+        var expectedRightNode1 =
+            new ParseTreeNode('X'.ToCategory(), location, location, production3, new IParseTree[] { expectedRightNode2, leaf6 });
+        // (S -> SX)
+        var expectedRoot =
+            new ParseTreeNode('S'.ToCategory(), location, location, production3, new[] { expectedLeftNode1, expectedRightNode1 });
 
-        // s
-        var rightChild3_0 = rightChildren3[0];
-        Assert.True(rightChild3_0 is ParseTreeLeaf);
-        Assert.Equal('s', rightChild3_0.Symbol.Character);
-
-        // e
-        var rightChild3_1 = rightChildren3[1];
-        Assert.True(rightChild3_1 is ParseTreeLeaf);
-        Assert.Equal('e', rightChild3_1.Symbol.Character);
+        Assert.Equal(expectedRoot, result);
     }
 
     /* Parenthesis
@@ -687,65 +537,27 @@ public class ParserTest
         var diagnostics = new FakeDiagnostics();
         var result = parser.Process(leaves, diagnostics);
 
-        // root (S -> (S)(S)(S))
-        Assert.True(result is ParseTreeNode);
-        var node0 = result as ParseTreeNode;
-        Assert.Equal('S', node0!.Symbol.Character);
-        Assert.Equal(production, node0.Production);
-        Assert.Equal(9, node0.Children.Count());
-        var children1 = node0.Children.ToArray();
-
-        // left (S) (S -> eps)
-        CheckEmptyParenthesis(children1[0], children1[1], children1[2], production);
-
-        // right (S) (S -> eps)
-        CheckEmptyParenthesis(children1[6], children1[7], children1[8], production);
-
-        // middle (S -> (S)(S))
-        var child1_3 = children1[3];
-        var child1_4 = children1[4];
-        var child1_5 = children1[5];
-
-        // (
-        Assert.True(child1_3 is ParseTreeLeaf);
-        Assert.Equal('(', child1_3.Symbol.Character);
-
-        // )
-        Assert.True(child1_5 is ParseTreeLeaf);
-        Assert.Equal(')', child1_5.Symbol.Character);
-
-        // (S -> (S)(S))
-        Assert.True(child1_4 is ParseTreeNode);
-        var node1_4 = child1_4 as ParseTreeNode;
-        Assert.Equal('S', node1_4!.Symbol.Character);
-        Assert.Equal(production, node1_4.Production);
-        Assert.Equal(6, node1_4.Children.Count());
-        var children2 = node1_4.Children.ToArray();
-
-        // left (S) (S -> eps)
-        CheckEmptyParenthesis(children2[0], children2[1], children2[2], production);
-
-        // right (S) (S -> eps)
-        CheckEmptyParenthesis(children2[3], children2[4], children2[5], production);
-    }
-
-    private static void CheckEmptyParenthesis(IParseTree left, IParseTree middle,
-        IParseTree right, Production production)
-    {
-        // (
-        Assert.True(left is ParseTreeLeaf);
-        Assert.Equal('(', left.Symbol.Character);
-
-        // )
-        Assert.True(right is ParseTreeLeaf);
-        Assert.Equal(')', right.Symbol.Character);
-
+        // expected result
         // (S -> eps)
-        Assert.True(middle is ParseTreeNode);
-        var node = middle as ParseTreeNode;
-        Assert.Equal('S', node!.Symbol.Character);
-        Assert.Equal(production, node.Production);
-        Assert.Empty(node.Children);
+        var emptySProductionNode =
+            new ParseTreeNode('S'.ToCategory(), location, location, production, Array.Empty<IParseTree>());
+        // (S -> (S)(S)) 
+        var expectedMiddleNode =
+            new ParseTreeNode('S'.ToCategory(), location, location, production, new IParseTree[]
+            {
+                leafLeft, emptySProductionNode, leafRight,
+                leafLeft, emptySProductionNode, leafRight
+            });
+        // (S -> (S)(S)(S))
+        var expectedRoot =
+            new ParseTreeNode('S'.ToCategory(), location, location, production, new IParseTree[]
+            {
+                leafLeft, emptySProductionNode, leafRight,
+                leafLeft, expectedMiddleNode, leafRight,
+                leafLeft, emptySProductionNode, leafRight
+            });
+
+        Assert.Equal(expectedRoot, result);
     }
 
     /* S -> S*
@@ -755,10 +567,10 @@ public class ParserTest
     [Fact(Skip = "Parser constructor not implemented")]
     public void AmbiguousGrammar()
     {
-        var production1 = new Production('S'.ToCategory(), Regex.Star(Regex.Atom('S'.ToCategory())));
+        var production = new Production('S'.ToCategory(), Regex.Star(Regex.Atom('S'.ToCategory())));
         var grammar = new Grammar('S'.ToCategory(), new[]
         {
-            production1
+            production
         });
         Assert.Throws<NotSLRGrammarException>(() => Parser.FromGrammar(grammar));
     }

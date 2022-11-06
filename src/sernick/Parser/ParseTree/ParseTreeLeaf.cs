@@ -8,10 +8,9 @@ public sealed record ParseTreeLeaf<TSymbol>(
     ILocation Start,
     ILocation End
 ) : IParseTree<TSymbol>,
-    IEquatable<IParseTree<TSymbol>> 
+    IEquatable<IParseTree<TSymbol>>
     where TSymbol : ILexicalGrammarCategory
 {
-
     public bool Equals(ParseTreeLeaf<TSymbol>? other)
     {
         if (ReferenceEquals(this, other))
@@ -26,14 +25,14 @@ public sealed record ParseTreeLeaf<TSymbol>(
 
         return equatable.Equals(other!.Symbol);
     }
-    
+
     public bool Equals(IParseTree<TSymbol>? other)
     {
-        if(other is ParseTreeLeaf<TSymbol> otherLeaf)
+        if (other is ParseTreeLeaf<TSymbol> otherLeaf)
         {
             return Equals(otherLeaf);
         }
-        
+
         return false;
     }
 }
