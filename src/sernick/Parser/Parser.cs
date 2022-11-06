@@ -10,16 +10,13 @@ using Grammar.Syntax;
 using ParseTree;
 using Utility;
 
-#pragma warning disable CS0649
-#pragma warning disable IDE0060
-
 public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     where TSymbol : class, IEquatable<TSymbol>
     where TDfaState : IEquatable<TDfaState>
 {
     private readonly TSymbol _startSymbol;
-    private readonly Configuration<TDfaState> _startConfig;
-    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TDfaState>, TSymbol?>, IParseAction> _actionTable;
+    private readonly Configuration<TSymbol> _startConfig;
+    private readonly IReadOnlyDictionary<ValueTuple<Configuration<TSymbol>, TSymbol?>, IParseAction> _actionTable;
     private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
 
     public static Parser<TSymbol, Regex<TSymbol>> FromGrammar(Grammar<TSymbol> grammar)
@@ -31,23 +28,93 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         var reversedAutomatas = dfaGrammar.GetReverseAutomatas();
 
         return new Parser<TSymbol, Regex<TSymbol>>(dfaGrammar,
-            nullable,
-            first,
             follow,
             reversedAutomatas);
     }
 
     internal Parser(
         DfaGrammar<TSymbol> dfaGrammar,
-        IReadOnlyCollection<TSymbol> symbolsNullable,
-        IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFirst,
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFollow,
         IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> reversedAutomata)
     {
         _startSymbol = dfaGrammar.Start;
         _reversedAutomata = reversedAutomata;
-        throw new NotImplementedException();
-        // throw new NotSLRGrammarException("reason");
+        _startConfig = new Configuration<TSymbol>(dfaGrammar.Productions
+            .Select(production => (production.Value.Start, production.Key)).ToHashSet());
+        var actionTable = new Dictionary<ValueTuple<Configuration<TSymbol>, TSymbol?>, IParseAction>();
+
+        // traverse all reachable configurations using bfs
+        var queue = new Queue<Configuration<TSymbol>>();
+        var visitedConfigs = new HashSet<Configuration<TSymbol>>();
+
+        queue.Enqueue(_startConfig);
+        visitedConfigs.Add(_startConfig);
+
+        while (queue.Count > 0)
+        {
+            var currentConfig = queue.Dequeue();
+
+            // collect all outgoing edges for each state in the current configuration
+            var symbolToStatesMap =
+                new Dictionary<TSymbol,
+                    HashSet<(SumDfa<Production<TSymbol>, Regex<TSymbol>, TSymbol>.State state, TSymbol symbol)>>();
+            foreach (var (state, symbol) in currentConfig.States)
+            {
+                foreach (var edge in dfaGrammar.Productions[symbol].GetTransitionsFrom(state))
+                {
+                    symbolToStatesMap.GetOrAddEmpty(edge.Atom).Add((edge.To, symbol));
+                }
+            }
+
+            // calculate possible shifts from the current state
+            foreach (var (symbol, states) in symbolToStatesMap)
+            {
+                var nextConfig = Configuration<TSymbol>.Closure(
+                    states.Where(item => !dfaGrammar.Productions[item.symbol].IsDead(item.state)).ToHashSet(),
+                    dfaGrammar
+                ); // closure of reachable not-dead states
+
+                if (nextConfig.States.Count == 0)
+                {
+                    continue;
+                }
+
+                actionTable[(currentConfig, symbol)] = new ParseActionShift<TSymbol>(nextConfig);
+
+                if (!visitedConfigs.Contains(nextConfig))
+                {
+                    queue.Enqueue(nextConfig);
+                    visitedConfigs.Add(nextConfig);
+                }
+            }
+
+            // calculate possible reductions from the current state
+            foreach (var (state, symbol) in currentConfig.States)
+            {
+                foreach (var production in dfaGrammar.Productions[symbol].AcceptingCategories(state))
+                {
+                    // SLR only allows for a reduction A->E, when the next symbol is in the follow set of A or we reached the end
+                    foreach (var followingSymbol in symbolsFollow[symbol].Append(null))
+                    {
+                        if (actionTable.TryAdd((currentConfig, followingSymbol),
+                                new ParseActionReduce<TSymbol>(production)))
+                        {
+                            continue;
+                        }
+
+                        switch (actionTable[(currentConfig, followingSymbol)])
+                        {
+                            case ParseActionShift<TSymbol> _:
+                                throw new NotSLRGrammarException($"Shift/reduce conflict between symbol {followingSymbol} and production {production}");
+                            case ParseActionReduce<TSymbol> reduce:
+                                throw new NotSLRGrammarException($"Reduce/reduce conflict for symbol {symbol} between production {production} and production {reduce.Production}");
+                        }
+                    }
+                }
+            }
+        }
+
+        _actionTable = actionTable;
     }
 
     public IParseTree<TSymbol> Process(IEnumerable<IParseTree<TSymbol>> leaves, IDiagnostics diagnostics)
@@ -72,7 +139,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                     diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
                     throw new ParsingException("No parsing action available at current state");
 
-                case ParseActionShift<TDfaState> shiftAction:
+                case ParseActionShift<TSymbol> shiftAction:
                     Debug.Assert(lookAhead is not null, $"actionTable[(config, {null})] mustn't be Shift");
 
                     state.Push(shiftAction.Target, lookAhead);
@@ -123,7 +190,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         State state,
         out List<IParseTree<TSymbol>> matchedTrees,
         [NotNullWhen(true)]
-        out Configuration<TDfaState>? nextConfig)
+        out Configuration<TSymbol>? nextConfig)
     {
         matchedTrees = new List<IParseTree<TSymbol>>();
 
@@ -139,7 +206,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
             if (
                 dfa.Accepts(dfaState) &&
                 _actionTable.TryGetValue((state.Configuration, symbol), out var action) &&
-                action is ParseActionShift<TDfaState> shiftAction)
+                action is ParseActionShift<TSymbol> shiftAction)
             {
                 nextConfig = shiftAction.Target;
                 return true;
@@ -157,15 +224,15 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
 
     private sealed class State
     {
-        internal State(Configuration<TDfaState> startConfig) => ConfigStack.Push(startConfig);
+        internal State(Configuration<TSymbol> startConfig) => ConfigStack.Push(startConfig);
 
-        private Stack<Configuration<TDfaState>> ConfigStack { get; } = new();
+        private Stack<Configuration<TSymbol>> ConfigStack { get; } = new();
         internal Stack<IParseTree<TSymbol>> TreeStack { get; } = new();
 
-        internal Configuration<TDfaState> Configuration => ConfigStack.Peek();
+        internal Configuration<TSymbol> Configuration => ConfigStack.Peek();
         internal IParseTree<TSymbol> Tree => TreeStack.Peek();
 
-        internal void Push(Configuration<TDfaState> configuration, IParseTree<TSymbol> tree)
+        internal void Push(Configuration<TSymbol> configuration, IParseTree<TSymbol> tree)
         {
             ConfigStack.Push(configuration);
             TreeStack.Push(tree);
