@@ -43,6 +43,8 @@ public static class SernickGrammar
         var equalsOperator = new Terminal(LexicalCategory.Operators, "==");
         var plusOperator = new Terminal(LexicalCategory.Operators, "+");
         var minusOperator = new Terminal(LexicalCategory.Operators, "-");
+        var shortCircuitAndOperator = new Terminal(LexicalCategory.Operators, "&&");
+        var shortCircuitOrOperator = new Terminal(LexicalCategory.Operators, "||");
 
         // Atomic regular expressions representing symbols
 
@@ -66,6 +68,11 @@ public static class SernickGrammar
         var regTypeIdentifier = Regex.Atom(typeIdentifier);
         var regAssignmentOperator = Regex.Atom(assignmentOperator);
         var regEqualsOperator = Regex.Atom(equalsOperator);
+        var regPlusOperator = Regex.Atom(plusOperator);
+        var regMinusOperator = Regex.Atom(minusOperator);
+        var regShortCircuitAndOperator = Regex.Atom(shortCircuitAndOperator);
+        var regShortCircuitOrOperator = Regex.Atom(shortCircuitOrOperator);
+
 
         // Production: the whole program can be seen as an expression
         productions.Add(new Production<Symbol>(
@@ -108,7 +115,7 @@ public static class SernickGrammar
             Regex.Concat(new Regex[] { regElseKeyword, regCodeBlock })
         ));
 
-        // Prepering regexes for function call production
+        // Preparing regexes for function call production
         Regex argStarred = Regex.Star(Regex.Concat(new Regex[] { regExpression, regComma }));
         Regex regArgList = Regex.Union(Regex.Concat(argStarred, regExpression), Regex.Epsilon);
 
@@ -132,9 +139,30 @@ public static class SernickGrammar
         // Production for "variable : Type"
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regIdentifier, regColon, regTypeIdentifier });
+            Regex.Concat(new Regex[] { regIdentifier, regColon, regTypeIdentifier })
+        ));
 
-        ))
+        // +,-, &&, || operations
+
+        productions.Add(new Production<Symbol>(
+            expression,
+            Regex.Concat(new Regex[] { regExpression, regPlusOperator, regExpression });
+        ));
+
+        productions.Add(new Production<Symbol>(
+            expression,
+            Regex.Concat(new Regex[] { regExpression, regMinusOperator, regExpression });
+        ));
+
+        productions.Add(new Production<Symbol>(
+            expression,
+            Regex.Concat(new Regex[] { regExpression, regShortCircuitAndOperator, regExpression });
+        ));
+
+        productions.Add(new Production<Symbol>(
+            expression,
+            Regex.Concat(new Regex[] { regExpression, regShortCircuitOrOperator, regExpression });
+        ));
 
         return new Grammar<Symbol>(
             new NonTerminal(NonTerminalSymbol.Program),
