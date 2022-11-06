@@ -1,18 +1,47 @@
 namespace sernick.Grammar.Syntax;
-using sernick.Grammar.Lexicon;
 using sernick.Tokenizer;
+
+using Cat = Lexicon.LexicalGrammarCategoryType;
 
 public abstract record Symbol;
 
-public sealed record Terminal(Token<LexicalGrammarCategoryType> Inner) : Symbol, IEquatable<Terminal>
+public sealed record Terminal(Token<Cat> Inner) : Symbol, IEquatable<Terminal>
 {
-    public bool Equals(Terminal? other) =>
-        (other != null) &&
-        (Inner.Category == other.Inner.Category) &&
-        (Inner.Text == other.Inner.Text);
+    public bool Equals(Terminal? other)
+    {
+        bool comp_res;
+        if (Inner.Category == Cat.BracesAndParentheses ||
+            Inner.Category == Cat.Operators ||
+            Inner.Category == Cat.Keywords)
+        {
+            comp_res = (other != null) &&
+                    (Inner.Category == other.Inner.Category) &&
+                    (Inner.Text == other.Inner.Text);
+        }
+        else
+        {
+            comp_res = (other != null) && (Inner.Category == other.Inner.Category);
+        }
 
-    public override int GetHashCode() =>
-        HashCode.Combine(Inner.Category, Inner.Text);
+        return comp_res;
+    }
+
+    public override int GetHashCode()
+    {
+        int hash_code;
+        if (Inner.Category == Cat.BracesAndParentheses ||
+            Inner.Category == Cat.Operators ||
+            Inner.Category == Cat.Keywords)
+        {
+            hash_code = HashCode.Combine(Inner.Category, Inner.Text);
+        }
+        else
+        {
+            hash_code = Inner.Category.GetHashCode();
+        }
+
+        return hash_code;
+    }
 }
 
 public sealed record NonTerminal(NonTerminalSymbol Inner) : Symbol;
