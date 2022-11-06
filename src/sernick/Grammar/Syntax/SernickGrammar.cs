@@ -2,26 +2,23 @@ namespace sernick.Grammar.Syntax;
 using sernick.Common.Regex;
 using sernick.Input;
 using sernick.Tokenizer;
-using Cat = Lexicon.LexicalGrammarCategoryType;
+using LexicalCategory = Lexicon.LexicalGrammarCategoryType;
 using Regex = Common.Regex.Regex<Symbol>;
 
-internal sealed record PlaceholderLocation : ILocation { };
-
-public static class SernickGrammarProvider
+public static class SernickGrammar
 {
-    public static Grammar<Symbol> createSernickGrammar()
+    public static Grammar<Symbol> Create()
     {
         var productions = new List<Production<Symbol>>();
-        var I = new PlaceholderLocation();
 
-        Symbol program = new NonTerminal(NonTerminalSymbol.Program);
-        Symbol expression = new NonTerminal(NonTerminalSymbol.Expression);
-        Symbol codeBlock = new NonTerminal(NonTerminalSymbol.CodeBlock);
-        Symbol ifStatement = new NonTerminal(NonTerminalSymbol.IfStatement);
-        Symbol loopStatement = new NonTerminal(NonTerminalSymbol.LoopStatement);
-        Symbol varDeclaration = new NonTerminal(NonTerminalSymbol.VariableDeclaration);
+        var program = new NonTerminal(NonTerminalSymbol.Program);
+        var expression = new NonTerminal(NonTerminalSymbol.Expression);
+        var codeBlock = new NonTerminal(NonTerminalSymbol.CodeBlock);
+        var ifStatement = new NonTerminal(NonTerminalSymbol.IfStatement);
+        var loopStatement = new NonTerminal(NonTerminalSymbol.LoopStatement);
+        var varDeclaration = new NonTerminal(NonTerminalSymbol.VariableDeclaration);
 
-        Symbol semicolon = new Terminal(new Token<Cat>(Cat.Semicolon, ";", I, I));
+        var semicolon = new Terminal(LexicalCategory.Semicolon, ";");
 
         var reg_expression = Regex<Symbol>.Atom(expression);
         var reg_semicolon = Regex<Symbol>.Atom(semicolon);

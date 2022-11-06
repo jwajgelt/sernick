@@ -1,42 +1,21 @@
 namespace sernick.Grammar.Syntax;
-using sernick.Tokenizer;
-
-using Cat = Lexicon.LexicalGrammarCategoryType;
+using LexicalCategory = Lexicon.LexicalGrammarCategoryType;
 
 public abstract record Symbol;
 
-public sealed record Terminal(Token<Cat> Inner) : Symbol
+public sealed record Terminal(LexicalCategory Category, string Text) : Symbol
 {
-    public bool Equals(Terminal? other)
+    public bool Equals(Terminal? other) => Category switch
     {
-        bool comp_res;
-        if (Inner.Category is Cat.BracesAndParentheses or Cat.Operators or Cat.Keywords)
-        {
-            comp_res = (Inner.Category == other?.Inner.Category) &&
-                    (Inner.Text == other?.Inner.Text);
-        }
-        else
-        {
-            comp_res = (Inner.Category == other?.Inner.Category);
-        }
+        LexicalCategory.BracesAndParentheses or LexicalCategory.Operators or LexicalCategory.Keywords => (Category, Text) == (other?.Category, other?.Text),
+        _ => (Category == other?.Category)
+    };
 
-        return comp_res;
-    }
-
-    public override int GetHashCode()
+    public override int GetHashCode() => Category switch
     {
-        int hash_code;
-        if (Inner.Category is Cat.BracesAndParentheses or Cat.Operators or Cat.Keywords)
-        {
-            hash_code = HashCode.Combine(Inner.Category, Inner.Text);
-        }
-        else
-        {
-            hash_code = Inner.Category.GetHashCode();
-        }
-
-        return hash_code;
-    }
+        LexicalCategory.BracesAndParentheses or LexicalCategory.Operators or LexicalCategory.Keywords => HashCode.Combine(Category, Text),
+        _ => Category.GetHashCode()
+    };
 }
 
 public sealed record NonTerminal(NonTerminalSymbol Inner) : Symbol;
