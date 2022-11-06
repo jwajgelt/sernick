@@ -18,10 +18,12 @@ public static class SernickGrammar
         var ifStatement = new NonTerminal(NonTerminalSymbol.IfStatement);
         var loopStatement = new NonTerminal(NonTerminalSymbol.LoopStatement);
         var elseBlock = new NonTerminal(NonTerminalSymbol.ElseBlock);
+        var functionCall = new NonTerminal(NonTerminalSymbol.FunctionCall);
         _ = new NonTerminal(NonTerminalSymbol.VariableDeclaration);
 
         // Terminal
         var semicolon = new Terminal(LexicalCategory.Semicolon, ";");
+        var comma = new Terminal(LexicalCategory.Comma, ","); 
         var bracesOpen = new Terminal(LexicalCategory.BracesAndParentheses, "{");
         var bracesClose = new Terminal(LexicalCategory.BracesAndParentheses, "}");
         var parenthesesOpen = new Terminal(LexicalCategory.BracesAndParentheses, "(");
@@ -33,6 +35,8 @@ public static class SernickGrammar
         var continueKeyword = new Terminal(LexicalCategory.Keywords, "continue");
         var varKeyword = new Terminal(LexicalCategory.Keywords, "var");
         var constKeyword = new Terminal(LexicalCategory.Keywords, "const");
+        var identifier = new Terminal(LexicalCategory.VariableIdentifiers, "");
+        var typeIdentifier = new Terminal(LexicalCategory.TypeIdentifiers, "");
 
         // Atomic regular expressions representing symbols
 
@@ -43,6 +47,7 @@ public static class SernickGrammar
 
         // For terminal
         var regSemicolon = Regex.Atom(semicolon);
+        var regComma = Regex.Atom(comma);
         var regBracesOpen = Regex.Atom(bracesOpen);
         var regBracesClose = Regex.Atom(bracesClose);
         var regParenthesesOpen = Regex.Atom(parenthesesOpen);
@@ -50,6 +55,7 @@ public static class SernickGrammar
         var regLoopKeyword = Regex.Atom(loopKeyword);
         var regIfKeyword = Regex.Atom(ifKeyword);
         var regElseKeyword = Regex.Atom(elseKeyword);
+        var regIdentifier = Regex.Atom(identifier);
 
         productions.Add(new Production<Symbol>(
             program,
@@ -79,12 +85,21 @@ public static class SernickGrammar
         // Empty - else block is optional
         productions.Add(new Production<Symbol>(
             elseBlock,
-            Regex.Concat(new Regex[] { })
+            Regex.Epsilon
         ));
 
         productions.Add(new Production<Symbol>(
             elseBlock,
             Regex.Concat(new Regex[] { regElseKeyword, regCodeBlock })
+        ));
+
+        // Prepering regexes for function call production
+        Regex argStarred = Regex.Star(Regex.Concat(new Regex[] { regExpression, regComma }));
+        Regex regArgList = Regex.Union(Regex.Concat(argStarred, regExpression), Regex.Epsilon);
+
+        productions.Add(new Production<Symbol>(
+            functionCall,
+            Regex.Concat(new Regex[] { regIdentifier, regParenthesesOpen, regArgList, regParenthesesClose })
         ));
 
         return new Grammar<Symbol>(
