@@ -41,7 +41,13 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         _reversedAutomata = reversedAutomata;
         _startConfig = new Configuration<TSymbol>(dfaGrammar.Productions
             .Select(production => (production.Value.Start, production.Key)).ToHashSet());
-        var actionTable = new Dictionary<ValueTuple<Configuration<TSymbol>, TSymbol?>, IParseAction>();
+
+        var dummyConfiguration = new Configuration<TSymbol>(Enumerable
+            .Empty<ValueTuple<SumDfa<Production<TSymbol>, Regex<TSymbol>, TSymbol>.State, TSymbol>>().ToHashSet());
+        var actionTable = new Dictionary<ValueTuple<Configuration<TSymbol>, TSymbol?>, IParseAction>
+        {
+            { (_startConfig, dfaGrammar.Start), new ParseActionShift<TSymbol>(dummyConfiguration) }
+        };
 
         // traverse all reachable configurations using bfs
         var queue = new Queue<Configuration<TSymbol>>();
