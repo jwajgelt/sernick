@@ -38,7 +38,7 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
             InitializeTransitionsDictionary();
         }
 
-        return _transitionsToMap![state];
+        return _transitionsToMap!.GetValueOrDefault(state, new List<TransitionEdge<State, TSymbol>>());
     }
 
     public IEnumerable<State> AcceptingStates
