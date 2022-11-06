@@ -118,7 +118,6 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
 
     public IParseTree<TSymbol> Process(IEnumerable<IParseTree<TSymbol>> leaves, IDiagnostics diagnostics)
     {
-
         var state = new State(_startConfig);
 
         using var leavesEnumerator = leaves.GetEnumerator();
