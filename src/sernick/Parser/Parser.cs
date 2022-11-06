@@ -70,7 +70,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
             foreach (var (symbol, states) in symbolToStatesMap)
             {
                 var nextConfig = Configuration<TSymbol>.Closure(
-                    states.Where(item => !dfaGrammar.Productions[item.symbol].IsDead(item.state)).ToHashSet(),
+                    states.Where(item => !dfaGrammar.Productions[item.symbol].IsDead(item.state)),
                     dfaGrammar
                 ); // closure of reachable not-dead states
 
