@@ -45,6 +45,11 @@ public static class SernickGrammar
         var minusOperator = new Terminal(LexicalCategory.Operators, "-");
         var shortCircuitAndOperator = new Terminal(LexicalCategory.Operators, "&&");
         var shortCircuitOrOperator = new Terminal(LexicalCategory.Operators, "||");
+        var greaterOperator = new Terminal(LexicalCategory.Operators, ">");
+        var lessOperator = new Terminal(LexicalCategory.Operators, "<");
+        var greaterOrEqualOperator = new Terminal(LexicalCategory.Operators, ">=");
+        var lessOrEqualOperator = new Terminal(LexicalCategory.Operators, "<=");
+
 
         // Atomic regular expressions representing symbols
 
@@ -72,6 +77,10 @@ public static class SernickGrammar
         var regMinusOperator = Regex.Atom(minusOperator);
         var regShortCircuitAndOperator = Regex.Atom(shortCircuitAndOperator);
         var regShortCircuitOrOperator = Regex.Atom(shortCircuitOrOperator);
+        var regGreaterOperator = Regex.Atom(greaterOperator);
+        var regLessOperator = Regex.Atom(lessOperator);
+        var regGreaterOrEqualOperator = Regex.Atom(greaterOrEqualOperator);
+        var regLessOrEqualOperator = Regex.Atom(lessOrEqualOperator);
 
 
         // Production: the whole program can be seen as an expression
@@ -146,22 +155,44 @@ public static class SernickGrammar
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regPlusOperator, regExpression });
+            Regex.Concat(new Regex[] { regExpression, regPlusOperator, regExpression })
         ));
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regMinusOperator, regExpression });
+            Regex.Concat(new Regex[] { regExpression, regMinusOperator, regExpression })
         ));
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regShortCircuitAndOperator, regExpression });
+            Regex.Concat(new Regex[] { regExpression, regShortCircuitAndOperator, regExpression })
         ));
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regShortCircuitOrOperator, regExpression });
+            Regex.Concat(new Regex[] { regExpression, regShortCircuitOrOperator, regExpression })
+        ));
+
+
+        // Comparisons: >, <, >=, <=
+        productions.Add(new Production<Symbol>(
+            expression,
+            Regex.Concat(new Regex[] { regExpression, regLessOperator, regExpression })
+        ));
+
+        productions.Add(new Production<Symbol>(
+            expression,
+            Regex.Concat(new Regex[] { regExpression, regGreaterOperator, regExpression })
+        ));
+
+        productions.Add(new Production<Symbol>(
+            expression,
+            Regex.Concat(new Regex[] { regExpression, regGreaterOrEqualOperator, regExpression })
+        ));
+
+        productions.Add(new Production<Symbol>(
+            expression,
+            Regex.Concat(new Regex[] { regExpression, regLessOrEqualOperator, regExpression })
         ));
 
         return new Grammar<Symbol>(
