@@ -122,7 +122,7 @@ public static class SernickGrammar
         // Expression can be a join of two expressions
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(Regex.Star(regJoinableExpression), regExpression)
+            Regex.Concat(Regex.Concat(Regex.Star(regJoinableExpression), regJoinableExpression), regExpression)
         ));
 
         productions.Add(new Production<Symbol>(
