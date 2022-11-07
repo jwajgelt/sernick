@@ -198,7 +198,9 @@ public static class SernickGrammar
         // Production for "variable : Type"
         var regIdentifierWithType = Regex.Concat(regIdentifier, regColon, regTypeIdentifier);
         var identifierWithTypeStarred = Regex.Star(Regex.Concat(regIdentifierWithType, regComma));
-        var regArgDeclList = Regex.Concat(identifierWithTypeStarred, regIdentifierWithType);
+        var argumentListNoArguments = Regex.Epsilon;
+        var argumentListAtLeastOneArgument = Regex.Concat(identifierWithTypeStarred, regIdentifierWithType);
+        var regArgDeclList = Regex.Union(argumentListNoArguments, argumentListAtLeastOneArgument);
 
         // function declaration
         productions.Add(new Production<Symbol>(
