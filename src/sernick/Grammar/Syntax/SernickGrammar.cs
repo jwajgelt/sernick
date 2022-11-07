@@ -248,8 +248,11 @@ public static class SernickGrammar
             Regex.Union(regX1, Regex.Concat(regParenthesesOpen, regExpression, regParenthesesClose))
         ));
 
-        // lowest priority (priority 1) -- comparison "=="
-        productions.Add(new Production<Symbol>(binaryOperatorPriority1, regEqualsOperator));
+        // lowest priority (priority 1) -- comparisons "==, <, >, <=, >="
+        productions.Add(new Production<Symbol>(
+            binaryOperatorPriority1,
+            Regex.Union(regEqualsOperator, regLessOperator, regLessOrEqualOperator, regGreaterOperator, regGreaterOrEqualOperator)
+        ));
 
         productions.Add(new Production<Symbol>(
             x1,
@@ -270,27 +273,6 @@ public static class SernickGrammar
         productions.Add(new Production<Symbol>(
             x3,
             Regex.Union(regExpression, Regex.Concat(regX3, regBinaryOperatorPriority3, regExpression))
-        ));
-
-        // Comparisons: >, <, >=, <=
-        productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Concat(regExpression, regLessOperator, regExpression)
-        ));
-
-        productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Concat(regExpression, regGreaterOperator, regExpression)
-        ));
-
-        productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Concat(regExpression, regGreaterOrEqualOperator, regExpression)
-        ));
-
-        productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Concat(regExpression, regLessOrEqualOperator, regExpression)
         ));
 
         // expression can be a literal
