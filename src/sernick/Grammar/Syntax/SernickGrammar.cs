@@ -157,7 +157,10 @@ public static class SernickGrammar
                         regExpressionWithReturn,
                         regExpressionMaybeWithReturn,
                         regVarDeclaration,
-                        regAssignment
+                        regAssignment,
+                        regBreakKeyword,
+                        regContinueKeyword,
+                        regReturnKeyword
             )
         ));
 
