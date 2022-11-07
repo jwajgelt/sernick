@@ -169,7 +169,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                         {
                             return children.Single();
                         }
-                        
+
                         diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
                         throw new ParsingException("Some tokens cannot be parsed");
                     }

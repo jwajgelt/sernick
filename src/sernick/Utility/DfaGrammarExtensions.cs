@@ -4,7 +4,6 @@ using Common.Dfa;
 using Common.Regex;
 using Grammar.Dfa;
 using Grammar.Syntax;
-using Parser;
 
 public static class DfaGrammarExtensions
 {
