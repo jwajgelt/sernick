@@ -31,4 +31,5 @@ public sealed record ParseTreeNode<TSymbol>(
     }
 
     public bool Equals(IParseTree<TSymbol>? other) => Equals(other as ParseTreeNode<TSymbol>);
+    public override int GetHashCode() => (Symbol, Production, Children).GetHashCode();
 }
