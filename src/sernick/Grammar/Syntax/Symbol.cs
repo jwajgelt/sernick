@@ -35,6 +35,4 @@ public enum NonTerminalSymbol
     FunctionCall,
     Assignment,
     ElseBlock,
-    ExpSummand,
-    ExpFactor
 }

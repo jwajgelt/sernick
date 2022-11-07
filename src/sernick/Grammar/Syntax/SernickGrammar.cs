@@ -62,7 +62,6 @@ public static class SernickGrammar
         var greaterOrEqualOperator = new Terminal(LexicalCategory.Operators, ">=");
         var lessOrEqualOperator = new Terminal(LexicalCategory.Operators, "<=");
 
-
         // Atomic regular expressions representing symbols
 
         // For non-terminal
@@ -106,7 +105,6 @@ public static class SernickGrammar
         var regLessOperator = Regex.Atom(lessOperator);
         var regGreaterOrEqualOperator = Regex.Atom(greaterOrEqualOperator);
         var regLessOrEqualOperator = Regex.Atom(lessOrEqualOperator);
-
 
         // Production: the whole program can be seen as an expression
         productions.Add(new Production<Symbol>(
@@ -185,8 +183,8 @@ public static class SernickGrammar
         ));
 
         // function call
-        Regex argStarred = Regex.Star(Regex.Concat(new Regex[] { regExpression, regComma }));
-        Regex regArgList = Regex.Union(Regex.Concat(argStarred, regExpression), Regex.Epsilon);
+        var argStarred = Regex.Star(Regex.Concat(new Regex[] { regExpression, regComma }));
+        var regArgList = Regex.Union(Regex.Concat(argStarred, regExpression), Regex.Epsilon);
 
         productions.Add(new Production<Symbol>(
             functionCall,
@@ -241,7 +239,6 @@ public static class SernickGrammar
             expression,
             Regex.Concat(new Regex[] { regExpression, regShortCircuitOrOperator, regExpression })
         ));
-
 
         // Comparisons: >, <, >=, <=
         productions.Add(new Production<Symbol>(
