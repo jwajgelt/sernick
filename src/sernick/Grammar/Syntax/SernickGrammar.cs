@@ -70,6 +70,8 @@ public static class SernickGrammar
         var regElseBlock = Regex.Atom(elseBlock);
         var regExpressionWithReturn = Regex.Atom(expressionWithReturn);
         var regExpressionMaybeWithReturn = Regex.Atom(expressionMaybeWithReturn);
+        _ = Regex.Atom(ifStatement);
+        _ = Regex.Atom(loopStatement);
 
         // For terminal
         var regSemicolon = Regex.Atom(semicolon);
@@ -115,13 +117,13 @@ public static class SernickGrammar
         // Expression can be a join of two expressions
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regSemicolon, regExpression })
+            Regex.Concat(regExpression, regSemicolon, regExpression)
         ));
 
         // Production for code block
         productions.Add(new Production<Symbol>(
             codeBlock,
-            Regex.Concat(new Regex[] { regBracesOpen, regExpression, regBracesClose })
+            Regex.Concat(regBracesOpen, regExpression, regBracesClose)
         ));
 
         // Production for loop (taking continue/return/break into account)
@@ -129,24 +131,24 @@ public static class SernickGrammar
         // (1) for simplicity, let's create a special "code block" -- for expressions inside loop, which must contain "return"
         productions.Add(new Production<Symbol>(
             loopStatement,
-            Regex.Concat(new Regex[] { regLoopKeyword, regBracesOpen, regExpressionWithReturn, regBracesClose })
+            Regex.Concat(regLoopKeyword, regBracesOpen, regExpressionWithReturn, regBracesClose)
         ));
 
         // (2) we should have a return somewhere inside (at least one, but maybe more)
         productions.Add(new Production<Symbol>(
             expressionWithReturn,
-            Regex.Concat(new Regex[] { regExpressionMaybeWithReturn, regReturnKeyword, regExpressionMaybeWithReturn })
+            Regex.Concat(regExpressionMaybeWithReturn, regReturnKeyword, regExpressionMaybeWithReturn)
         ));
 
         // (3) we may or may not have a "break/continue" or more "return"s
         productions.Add(new Production<Symbol>(
             expressionMaybeWithReturn,
             Regex.Union(
-                Regex.Concat(new Regex[] { regExpressionMaybeWithReturn, regBreakKeyword, regSemicolon }),
-                Regex.Concat(new Regex[] { regExpressionMaybeWithReturn, regContinueKeyword, regSemicolon }),
-                Regex.Concat(new Regex[] { regExpressionMaybeWithReturn, regReturnKeyword, regSemicolon }), // return nothing
-                Regex.Concat(new Regex[] { regExpressionMaybeWithReturn, regReturnKeyword, regExpression }), // return expression
-                Regex.Concat(new Regex[] { regExpressionMaybeWithReturn, regExpression }),
+                Regex.Concat(regExpressionMaybeWithReturn, regBreakKeyword, regSemicolon),
+                Regex.Concat(regExpressionMaybeWithReturn, regContinueKeyword, regSemicolon),
+                Regex.Concat(regExpressionMaybeWithReturn, regReturnKeyword, regSemicolon), // return nothing
+                Regex.Concat(regExpressionMaybeWithReturn, regReturnKeyword, regExpression), // return expression
+                Regex.Concat(regExpressionMaybeWithReturn, regExpression),
                 Regex.Epsilon
             )
         ));
@@ -154,7 +156,7 @@ public static class SernickGrammar
         // Production for if statement
         productions.Add(new Production<Symbol>(
             ifStatement,
-            Regex.Concat(new Regex[] { regIfKeyword, regParenthesesOpen, regExpression, regParenthesesClose, regCodeBlock, regElseBlock })
+            Regex.Concat(regIfKeyword, regParenthesesOpen, regExpression, regParenthesesClose, regCodeBlock, regElseBlock)
         ));
 
         // Empty - else block is optional
@@ -165,35 +167,35 @@ public static class SernickGrammar
 
         productions.Add(new Production<Symbol>(
             elseBlock,
-            Regex.Concat(new Regex[] { regElseKeyword, regCodeBlock })
+            Regex.Concat(regElseKeyword, regCodeBlock)
         ));
 
         // Production for "variable : Type"
-        var regIdentifierWithType = Regex.Concat(new Regex[] { regIdentifier, regColon, regTypeIdentifier });
+        var regIdentifierWithType = Regex.Concat(regIdentifier, regColon, regTypeIdentifier);
         productions.Add(new Production<Symbol>(
             expression,
             regIdentifierWithType
         ));
-        var identifierWithTypeStarred = Regex.Star(Regex.Concat(new Regex[] { regIdentifierWithType, regComma }));
+        var identifierWithTypeStarred = Regex.Star(Regex.Concat(regIdentifierWithType, regComma));
 
         // function declaration
         productions.Add(new Production<Symbol>(
             functionDefinition,
-            Regex.Concat(new Regex[] { regFunKeyword, regIdentifier, regParenthesesOpen, identifierWithTypeStarred, regParenthesesClose, regBracesOpen, regExpression, regBracesClose })
+            Regex.Concat(regFunKeyword, regIdentifier, regParenthesesOpen, identifierWithTypeStarred, regParenthesesClose, regBracesOpen, regExpression, regBracesClose)
         ));
 
         // function call
-        var argStarred = Regex.Star(Regex.Concat(new Regex[] { regExpression, regComma }));
+        var argStarred = Regex.Star(Regex.Concat(regExpression, regComma));
         var regArgList = Regex.Union(Regex.Concat(argStarred, regExpression), Regex.Epsilon);
 
         productions.Add(new Production<Symbol>(
             functionCall,
-            Regex.Concat(new Regex[] { regIdentifier, regParenthesesOpen, regArgList, regParenthesesClose })
+            Regex.Concat(regIdentifier, regParenthesesOpen, regArgList, regParenthesesClose)
         ));
 
         // Production for assignment
-        var regUntypedAssignment = Regex.Concat(new Regex[] { regIdentifier, regAssignmentOperator, regExpression });
-        var regTypedAssignment = Regex.Concat(new Regex[] { regIdentifierWithType, regAssignmentOperator, regExpression });
+        var regUntypedAssignment = Regex.Concat(regIdentifier, regAssignmentOperator, regExpression);
+        var regTypedAssignment = Regex.Concat(regIdentifierWithType, regAssignmentOperator, regExpression);
 
         productions.Add(new Production<Symbol>(
             assignment,
@@ -205,66 +207,66 @@ public static class SernickGrammar
             variableDeclaration,
             Regex.Union(
                 // both with var or const, we may or may not specify a type
-                Regex.Concat(new Regex[] { regVarKeyword, regUntypedAssignment }),
-                Regex.Concat(new Regex[] { regVarKeyword, regTypedAssignment }),
-                Regex.Concat(new Regex[] { regConstKeyword, regUntypedAssignment }),
-                Regex.Concat(new Regex[] { regConstKeyword, regTypedAssignment })
+                Regex.Concat(regVarKeyword, regUntypedAssignment),
+                Regex.Concat(regVarKeyword, regTypedAssignment),
+                Regex.Concat(regConstKeyword, regUntypedAssignment),
+                Regex.Concat(regConstKeyword, regTypedAssignment)
             )
         ));
 
         // equality test
         productions.Add(new Production<Symbol>(
             assignment,
-            Regex.Concat(new Regex[] { regExpression, regEqualsOperator, regExpression })
+            Regex.Concat(regExpression, regEqualsOperator, regExpression)
         ));
 
         // +,-, &&, || operations
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regPlusOperator, regExpression })
+            Regex.Concat(regExpression, regPlusOperator, regExpression)
         ));
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regMinusOperator, regExpression })
+            Regex.Concat(regExpression, regMinusOperator, regExpression)
         ));
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regShortCircuitAndOperator, regExpression })
+            Regex.Concat(regExpression, regShortCircuitAndOperator, regExpression)
         ));
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regShortCircuitOrOperator, regExpression })
+            Regex.Concat(regExpression, regShortCircuitOrOperator, regExpression)
         ));
 
         // Comparisons: >, <, >=, <=
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regLessOperator, regExpression })
+            Regex.Concat(regExpression, regLessOperator, regExpression)
         ));
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regGreaterOperator, regExpression })
+            Regex.Concat(regExpression, regGreaterOperator, regExpression)
         ));
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regGreaterOrEqualOperator, regExpression })
+            Regex.Concat(regExpression, regGreaterOrEqualOperator, regExpression)
         ));
 
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(new Regex[] { regExpression, regLessOrEqualOperator, regExpression })
+            Regex.Concat(regExpression, regLessOrEqualOperator, regExpression)
         ));
 
         // expression can be a literal
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Union(new Regex[] { regTrueLiteral, regFalseLiteral, regDigitLiteral })
+            Regex.Union(regTrueLiteral, regFalseLiteral, regDigitLiteral)
         ));
 
         return new Grammar<Symbol>(
