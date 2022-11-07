@@ -18,8 +18,6 @@ public static class SernickGrammar
         var codeBlock = new NonTerminal(NonTerminalSymbol.CodeBlock);
         var ifStatement = new NonTerminal(NonTerminalSymbol.IfStatement);
         var loopStatement = new NonTerminal(NonTerminalSymbol.LoopStatement);
-        var expressionWithReturn = new NonTerminal(NonTerminalSymbol.ExpressionContainingReturn);
-        var expressionMaybeWithReturn = new NonTerminal(NonTerminalSymbol.ExpressionMaybeContainingReturn);
         var elseBlock = new NonTerminal(NonTerminalSymbol.ElseBlock);
         var functionCall = new NonTerminal(NonTerminalSymbol.FunctionCall);
         var assignment = new NonTerminal(NonTerminalSymbol.Assignment);
@@ -70,8 +68,6 @@ public static class SernickGrammar
         var regJoinableExpression = Regex.Atom(joinableExpression);
         var regCodeBlock = Regex.Atom(codeBlock);
         var regElseBlock = Regex.Atom(elseBlock);
-        var regExpressionWithReturn = Regex.Atom(expressionWithReturn);
-        var regExpressionMaybeWithReturn = Regex.Atom(expressionMaybeWithReturn);
         var regIfStatement = Regex.Atom(ifStatement);
         var regLoopStatement = Regex.Atom(loopStatement);
         var regVarDeclaration = Regex.Atom(variableDeclaration);
@@ -154,8 +150,6 @@ public static class SernickGrammar
         productions.Add(new Production<Symbol>(
             expression,
             Regex.Union(regCodeBlock,
-                        regExpressionWithReturn,
-                        regExpressionMaybeWithReturn,
                         regVarDeclaration,
                         regAssignment,
                         regBreakKeyword,
@@ -164,31 +158,12 @@ public static class SernickGrammar
             )
         ));
 
-        // Production for loop (taking continue/return/break into account)
-
-        // (1) for simplicity, let's create a special "code block" -- for expressions inside loop, which must contain "return"
+        // Production for loop
+        // we decided not to take break/return/continue into account at this point
+        // and do analysis based on AST later
         productions.Add(new Production<Symbol>(
             loopStatement,
-            Regex.Concat(regLoopKeyword, regBracesOpen, regExpressionWithReturn, regBracesClose)
-        ));
-
-        // (2) we should have a return somewhere inside (at least one, but maybe more)
-        productions.Add(new Production<Symbol>(
-            expressionWithReturn,
-            Regex.Concat(regExpressionMaybeWithReturn, regReturnKeyword, regExpressionMaybeWithReturn)
-        ));
-
-        // (3) we may or may not have a "break/continue" or more "return"s
-        productions.Add(new Production<Symbol>(
-            expressionMaybeWithReturn,
-            Regex.Union(
-                Regex.Concat(regExpressionMaybeWithReturn, regBreakKeyword, regSemicolon),
-                Regex.Concat(regExpressionMaybeWithReturn, regContinueKeyword, regSemicolon),
-                Regex.Concat(regExpressionMaybeWithReturn, regReturnKeyword, regSemicolon), // return nothing
-                Regex.Concat(regExpressionMaybeWithReturn, regReturnKeyword, regExpression), // return expression
-                Regex.Concat(regExpressionMaybeWithReturn, regExpression),
-                Regex.Epsilon
-            )
+            Regex.Concat(regLoopKeyword, regCodeBlock)
         ));
 
         // Production for if statement
