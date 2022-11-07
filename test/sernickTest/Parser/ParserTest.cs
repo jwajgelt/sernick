@@ -20,7 +20,7 @@ public class ParserTest
     public void EmptyGrammarInstantlyAccepting()
     {
         var grammar = new Grammar('S'.ToCategory(), Array.Empty<Production>());
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf = new ParseTreeLeaf('S'.ToCategory(), location, location);
@@ -36,7 +36,7 @@ public class ParserTest
     public void EmptyGrammarInstantlyRejecting()
     {
         var grammar = new Grammar('S'.ToCategory(), Array.Empty<Production>());
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
@@ -60,7 +60,7 @@ public class ParserTest
         {
             production
         });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
@@ -86,7 +86,7 @@ public class ParserTest
         {
             production
         });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
@@ -110,7 +110,7 @@ public class ParserTest
         {
             production
         });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
@@ -136,7 +136,7 @@ public class ParserTest
         {
             production1
         });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
@@ -163,7 +163,7 @@ public class ParserTest
         {
             production
         });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf1 = new ParseTreeLeaf('A'.ToCategory(), location, location);
@@ -193,7 +193,7 @@ public class ParserTest
         {
             production1
         });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf1 = new ParseTreeLeaf('A'.ToCategory(), location, location);
@@ -220,7 +220,7 @@ public class ParserTest
         {
             production
         });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
@@ -249,7 +249,7 @@ public class ParserTest
         {
             production
         });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf = new ParseTreeLeaf('C'.ToCategory(), location, location);
@@ -289,7 +289,7 @@ public class ParserTest
             production3,
             production4
         });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf = new ParseTreeLeaf('D'.ToCategory(), location, location);
@@ -333,7 +333,7 @@ public class ParserTest
             production3,
             production4
         });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
@@ -374,7 +374,7 @@ public class ParserTest
             production1,
             production2
         });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
@@ -436,7 +436,7 @@ public class ParserTest
             production4,
             production5
         });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
         var leaf1 = new ParseTreeLeaf('P'.ToCategory(), location, location);
@@ -494,7 +494,7 @@ public class ParserTest
                 Regex.Atom(')'.ToCategory())
             )));
         var grammar = new Grammar('S'.ToCategory(), new[] { production });
-        var parser = Parser.FromGrammar(grammar);
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
         var location = new FakeLocation();
 
@@ -553,7 +553,7 @@ public class ParserTest
         {
             production
         });
-        Assert.Throws<NotSLRGrammarException>(() => Parser.FromGrammar(grammar));
+        Assert.Throws<NotSLRGrammarException>(() => Parser.FromGrammar(grammar, '\0'.ToCategory()));
     }
 
     /* This grammar is not SLR
@@ -597,6 +597,6 @@ public class ParserTest
             production4,
             production5
         });
-        Assert.Throws<NotSLRGrammarException>(() => Parser.FromGrammar(grammar));
+        Assert.Throws<NotSLRGrammarException>(() => Parser.FromGrammar(grammar, '\0'.ToCategory()));
     }
 }

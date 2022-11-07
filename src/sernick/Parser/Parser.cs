@@ -19,9 +19,9 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     private readonly IReadOnlyDictionary<ValueTuple<Configuration<TSymbol>, TSymbol?>, IParseAction> _actionTable;
     private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
 
-    public static Parser<TSymbol, Regex<TSymbol>> FromGrammar(Grammar<TSymbol> grammar)
+    public static Parser<TSymbol, Regex<TSymbol>> FromGrammar(Grammar<TSymbol> grammar, TSymbol dummySymbol)
     {
-        var dfaGrammar = grammar.ToDfaGrammar();
+        var dfaGrammar = grammar.ToDfaGrammar().WithDummyStartSymbol(dummySymbol);
         var nullable = dfaGrammar.Nullable();
         var first = dfaGrammar.First(nullable);
         var follow = dfaGrammar.Follow(nullable, first);
@@ -113,7 +113,8 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                             case ParseActionShift<TSymbol>:
                                 throw NotSLRGrammarException.ShiftReduceConflict(followingSymbol, production);
                             case ParseActionReduce<TSymbol> reduce:
-                                throw NotSLRGrammarException.ReduceReduceConflict(symbol, production, reduce.Production);
+                                throw NotSLRGrammarException.ReduceReduceConflict(symbol, production,
+                                    reduce.Production);
                         }
                     }
                 }
@@ -136,11 +137,6 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
             switch (parseAction)
             {
                 case null:
-                    if (lookAhead is null && state.TreeStack.Count == 1 && state.Tree.Symbol.Equals(_startSymbol))
-                    {
-                        return state.TreeStack.Single();
-                    }
-
                     diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
                     throw new ParsingException("No parsing action available at current state");
 
@@ -163,6 +159,19 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                     {
                         diagnostics.Report(new SyntaxError<TSymbol>(state.TreeStack.FirstOrDefault()));
                         throw new ParsingException("The subsequence of tokens cannot be parsed");
+                    }
+
+                    // Reduce to start symbol => end of parsing
+                    if (reduceAction.Production.Left.Equals(_startSymbol))
+                    {
+                        Debug.Assert(children.Count == 1);
+                        if (lookAhead is null && state.TreeStack.Count == 0)
+                        {
+                            return children.Single();
+                        }
+                        
+                        diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
+                        throw new ParsingException("Some tokens cannot be parsed");
                     }
 
                     state.Push(nextConfig,
@@ -213,7 +222,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
             {
                 break;
             }
-            
+
             var tree = state.Pop();
 
             dfaState = dfa.Transition(dfaState, tree.Symbol);
