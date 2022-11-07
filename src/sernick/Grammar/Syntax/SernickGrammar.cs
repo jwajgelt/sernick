@@ -72,6 +72,8 @@ public static class SernickGrammar
         var regExpressionMaybeWithReturn = Regex.Atom(expressionMaybeWithReturn);
         _ = Regex.Atom(ifStatement);
         _ = Regex.Atom(loopStatement);
+        var regVarDeclaration = Regex.Atom(variableDeclaration);
+        var regFunctionDefinition = Regex.Atom(functionDefinition);
 
         // For terminal
         var regSemicolon = Regex.Atom(semicolon);
@@ -124,6 +126,17 @@ public static class SernickGrammar
         productions.Add(new Production<Symbol>(
             codeBlock,
             Regex.Concat(regBracesOpen, regExpression, regBracesClose)
+        ));
+
+        // All non-terminals that can be directly "casted" to expression
+        productions.Add(new Production<Symbol>(
+            expression,
+            Regex.Union(regCodeBlock,
+                        regExpressionWithReturn,
+                        regExpressionMaybeWithReturn,
+                        regFunctionDefinition,
+                        regVarDeclaration
+            )
         ));
 
         // Production for loop (taking continue/return/break into account)
