@@ -31,5 +31,12 @@ public sealed record ParseTreeNode<TSymbol>(
     }
 
     public bool Equals(IParseTree<TSymbol>? other) => Equals(other as ParseTreeNode<TSymbol>);
-    public override int GetHashCode() => (Symbol, Production, Children).GetHashCode();
+    public override int GetHashCode()
+    {
+        var childrenHashCode = Children.Aggregate(
+            Children.Count(),
+            (hashCode, child) => unchecked(hashCode * 17 + child.GetHashCode())
+        );
+        return (Symbol, Production, childrenHashCode).GetHashCode();
+    }
 }
