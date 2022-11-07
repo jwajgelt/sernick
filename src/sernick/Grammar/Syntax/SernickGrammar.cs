@@ -238,9 +238,7 @@ public static class SernickGrammar
             )
         ));
 
-
-        // #region binary and unary operators and parentheses
-        // +,-, &&, ||, ==  operations
+        // Binary and unary operators and parentheses
 
         // parentheses
         productions.Add(new Production<Symbol>(
