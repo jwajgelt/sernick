@@ -168,8 +168,8 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                     state.Push(nextConfig,
                         new ParseTreeNode<TSymbol>(
                             Symbol: reduceAction.Production.Left,
-                            Start: children.First().Start,
-                            End: children.Last().End,
+                            Start: children.FirstOrDefault()?.Start ?? state.Tree.End,
+                            End: children.LastOrDefault()?.End ?? state.Tree.End,
                             Production: reduceAction.Production,
                             Children: children));
 
@@ -193,20 +193,13 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         TSymbol symbol,
         State state,
         out List<IParseTree<TSymbol>> matchedTrees,
-        [NotNullWhen(true)]
-        out Configuration<TSymbol>? nextConfig)
+        [NotNullWhen(true)] out Configuration<TSymbol>? nextConfig)
     {
         matchedTrees = new List<IParseTree<TSymbol>>();
 
         var dfaState = dfa.Start;
-        while (state.TreeStack.Count > 0)
+        while (true)
         {
-            var tree = state.Pop();
-
-            dfaState = dfa.Transition(dfaState, tree.Symbol);
-
-            matchedTrees.Insert(0, tree);
-
             if (
                 dfa.Accepts(dfaState) &&
                 _actionTable.TryGetValue((state.Configuration, symbol), out var action) &&
@@ -216,10 +209,16 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                 return true;
             }
 
-            if (dfa.IsDead(dfaState))
+            if (dfa.IsDead(dfaState) || state.TreeStack.Count == 0)
             {
                 break;
             }
+            
+            var tree = state.Pop();
+
+            dfaState = dfa.Transition(dfaState, tree.Symbol);
+
+            matchedTrees.Insert(0, tree);
         }
 
         nextConfig = default;
