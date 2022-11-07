@@ -14,6 +14,7 @@ public static class SernickGrammar
         // Non-terminal
         var program = new NonTerminal(NonTerminalSymbol.Program);
         var expression = new NonTerminal(NonTerminalSymbol.Expression);
+        var joinableExpression = new NonTerminal(NonTerminalSymbol.JoinableExpression);
         var codeBlock = new NonTerminal(NonTerminalSymbol.CodeBlock);
         var ifStatement = new NonTerminal(NonTerminalSymbol.IfStatement);
         var loopStatement = new NonTerminal(NonTerminalSymbol.LoopStatement);
@@ -66,6 +67,7 @@ public static class SernickGrammar
 
         // For non-terminal
         var regExpression = Regex.Atom(expression);
+        var regJoinableExpression = Regex.Atom(joinableExpression);
         var regCodeBlock = Regex.Atom(codeBlock);
         var regElseBlock = Regex.Atom(elseBlock);
         var regExpressionWithReturn = Regex.Atom(expressionWithReturn);
@@ -120,7 +122,26 @@ public static class SernickGrammar
         // Expression can be a join of two expressions
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(regExpression, regSemicolon, regExpression)
+            Regex.Concat(Regex.Star(regJoinableExpression), regExpression)
+        ));
+
+        productions.Add(new Production<Symbol>(
+            expression,
+            regJoinableExpression
+        ));
+
+        productions.Add(new Production<Symbol>(
+            joinableExpression,
+            Regex.Union(
+                regLoopStatement,
+                regIfStatement,
+                regFunctionDefinition
+            )
+        ));
+
+        productions.Add(new Production<Symbol>(
+            joinableExpression,
+            Regex.Concat(regExpression, regSemicolon)
         ));
 
         // Production for code block
@@ -135,10 +156,7 @@ public static class SernickGrammar
             Regex.Union(regCodeBlock,
                         regExpressionWithReturn,
                         regExpressionMaybeWithReturn,
-                        regFunctionDefinition,
                         regVarDeclaration,
-                        regLoopStatement,
-                        regIfStatement,
                         regAssignment
             )
         ));

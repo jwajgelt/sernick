@@ -24,6 +24,7 @@ public enum NonTerminalSymbol
 {
     Program,
     Expression,
+    JoinableExpression,
     CodeBlock,
     IfStatement,
     LoopStatement,
