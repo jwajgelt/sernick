@@ -70,10 +70,11 @@ public static class SernickGrammar
         var regElseBlock = Regex.Atom(elseBlock);
         var regExpressionWithReturn = Regex.Atom(expressionWithReturn);
         var regExpressionMaybeWithReturn = Regex.Atom(expressionMaybeWithReturn);
-        _ = Regex.Atom(ifStatement);
-        _ = Regex.Atom(loopStatement);
+        var regIfStatement = Regex.Atom(ifStatement);
+        var regLoopStatement = Regex.Atom(loopStatement);
         var regVarDeclaration = Regex.Atom(variableDeclaration);
         var regFunctionDefinition = Regex.Atom(functionDefinition);
+        var regAssignment = Regex.Atom(assignment);
 
         // For terminal
         var regSemicolon = Regex.Atom(semicolon);
@@ -135,7 +136,10 @@ public static class SernickGrammar
                         regExpressionWithReturn,
                         regExpressionMaybeWithReturn,
                         regFunctionDefinition,
-                        regVarDeclaration
+                        regVarDeclaration,
+                        regLoopStatement,
+                        regIfStatement,
+                        regAssignment
             )
         ));
 
