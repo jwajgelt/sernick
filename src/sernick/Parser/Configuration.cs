@@ -46,4 +46,6 @@ public sealed record Configuration<TSymbol>(
     {
         return States.Aggregate(0, (hashCode, state) => hashCode ^ state.GetHashCode());
     }
+
+    public override string ToString() => string.Join(", ", States);
 }
