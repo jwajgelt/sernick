@@ -462,13 +462,13 @@ public class ParserTest
             new ParseTreeNode('S'.ToCategory(), location, location, production1, new[] { expectedLeftNode2 });
         // (Y -> se)
         var expectedRightNode2 =
-            new ParseTreeNode('Y'.ToCategory(), location, location, production4, new[] { leaf4, leaf5 });
+            new ParseTreeNode('Y'.ToCategory(), location, location, production5, new[] { leaf4, leaf5 });
         // (X -> Yr)
         var expectedRightNode1 =
             new ParseTreeNode('X'.ToCategory(), location, location, production3, new IParseTree[] { expectedRightNode2, leaf6 });
         // (S -> SX)
         var expectedRoot =
-            new ParseTreeNode('S'.ToCategory(), location, location, production3, new[] { expectedLeftNode1, expectedRightNode1 });
+            new ParseTreeNode('S'.ToCategory(), location, location, production2, new[] { expectedLeftNode1, expectedRightNode1 });
 
         Assert.Equal(expectedRoot, result);
     }
@@ -561,7 +561,7 @@ public class ParserTest
      * S -> bAc
      * S -> dc
      * S -> bda
-     * A -> a
+     * A -> d
      * source: https://people.cs.vt.edu/~ryder/515/f05/homework/hw1ans.pdf
      * result: error
      */
@@ -587,7 +587,7 @@ public class ParserTest
             Regex.Atom('a'.ToCategory())
         ));
         var production5 = new Production('A'.ToCategory(), Regex.Concat(
-            Regex.Atom('a'.ToCategory())
+            Regex.Atom('d'.ToCategory())
         ));
         var grammar = new Grammar('S'.ToCategory(), new[]
         {
