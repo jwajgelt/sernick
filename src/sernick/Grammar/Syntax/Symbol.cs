@@ -34,4 +34,11 @@ public enum NonTerminalSymbol
     FunctionCall,
     Assignment,
     ElseBlock,
+    // lower number == lower priority
+    BinaryOperatorPriority1,
+    X1,
+    BinaryOperatorPriority2,
+    X2,
+    BinaryOperatorPriority3,
+    X3,
 }

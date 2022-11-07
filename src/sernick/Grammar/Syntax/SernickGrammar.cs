@@ -23,6 +23,12 @@ public static class SernickGrammar
         var assignment = new NonTerminal(NonTerminalSymbol.Assignment);
         var variableDeclaration = new NonTerminal(NonTerminalSymbol.VariableDeclaration);
         var functionDefinition = new NonTerminal(NonTerminalSymbol.FunctionDefinition);
+        var binaryOperatorPriority1 = new NonTerminal(NonTerminalSymbol.BinaryOperatorPriority1); // == 
+        var binaryOperatorPriority2 = new NonTerminal(NonTerminalSymbol.BinaryOperatorPriority2); // &&, ||
+        var binaryOperatorPriority3 = new NonTerminal(NonTerminalSymbol.BinaryOperatorPriority3); // +, -
+        var x1 = new NonTerminal(NonTerminalSymbol.X1); // == 
+        var x2 = new NonTerminal(NonTerminalSymbol.X2); // &&, ||
+        var x3 = new NonTerminal(NonTerminalSymbol.X3); // +, -
 
         // Terminal
         var semicolon = new Terminal(LexicalCategory.Semicolon, ";");
@@ -73,6 +79,12 @@ public static class SernickGrammar
         var regVarDeclaration = Regex.Atom(variableDeclaration);
         var regFunctionDefinition = Regex.Atom(functionDefinition);
         var regAssignment = Regex.Atom(assignment);
+        var regBinaryOperatorPriority1 = Regex.Atom(binaryOperatorPriority1);
+        var regBinaryOperatorPriority2 = Regex.Atom(binaryOperatorPriority2);
+        var regBinaryOperatorPriority3 = Regex.Atom(binaryOperatorPriority3);
+        var regX1 = Regex.Atom(x1);
+        var regX2 = Regex.Atom(x2);
+        var regX3 = Regex.Atom(x3);
 
         // For terminal
         var regSemicolon = Regex.Atom(semicolon);
@@ -224,32 +236,38 @@ public static class SernickGrammar
             )
         ));
 
-        // equality test
+
+        // #region binary and unary operators and parentheses
+        // +,-, &&, ||, ==  operations
+
+        // parentheses
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Concat(regExpression, regEqualsOperator, regExpression)
+            Regex.Union(regX1, Regex.Concat(regParenthesesOpen, regExpression, regParenthesesClose))
         ));
 
-        // +,-, &&, || operations
+        // lowest priority (priority 1) -- comparison "=="
+        productions.Add(new Production<Symbol>(binaryOperatorPriority1, regEqualsOperator));
 
         productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Concat(regExpression, regPlusOperator, regExpression)
+            x1,
+            Regex.Union(regX2, Regex.Concat(regX1, regBinaryOperatorPriority1, regX2))
         ));
 
-        productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Concat(regExpression, regMinusOperator, regExpression)
-        ));
+        // priority 2 -- short-circuit and (&&) and or (||)
+        productions.Add(new Production<Symbol>(binaryOperatorPriority2, Regex.Union(regShortCircuitAndOperator, regShortCircuitOrOperator)));
 
         productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Concat(regExpression, regShortCircuitAndOperator, regExpression)
+            x2,
+            Regex.Union(regX3, Regex.Concat(regX2, regBinaryOperatorPriority2, regX3))
         ));
 
+        // priority 3 (highest) -- + and -
+        productions.Add(new Production<Symbol>(binaryOperatorPriority3, Regex.Union(regPlusOperator, regMinusOperator)));
+
         productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Concat(regExpression, regShortCircuitOrOperator, regExpression)
+            x3,
+            Regex.Union(regExpression, Regex.Concat(regX3, regBinaryOperatorPriority3, regExpression))
         ));
 
         // Comparisons: >, <, >=, <=
