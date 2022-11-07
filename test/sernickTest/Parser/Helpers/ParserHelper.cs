@@ -2,10 +2,8 @@ namespace sernickTest.Parser.Helpers;
 
 using sernick.Grammar.Lexicon;
 
-public record CharCategory(char Character) : ILexicalGrammarCategory
+public sealed record CharCategory(char Character) : LexicalGrammarCategory(Priority: 1)
 {
-    public short Priority => 1;
-
     public override string ToString() => Character.ToString();
 }
 

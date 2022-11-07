@@ -22,7 +22,7 @@ public enum LexicalGrammarCategoryType
 
 public class LexicalGrammarEntry
 {
-    public ILexicalGrammarCategory Category { get; }
+    public LexicalGrammarCategory Category { get; }
     public Regex<char> Regex { get; }
 
     private static Regex<char> CreateUnionRegex(CategoryItems categoryItems)
@@ -30,7 +30,7 @@ public class LexicalGrammarEntry
         return string.Join("|", categoryItems.Values).ToRegex();
     }
 
-    public LexicalGrammarEntry(ILexicalGrammarCategory category, CategoryItems rules)
+    public LexicalGrammarEntry(LexicalGrammarCategory category, CategoryItems rules)
     {
         Category = category;
         Regex = CreateUnionRegex(rules);
