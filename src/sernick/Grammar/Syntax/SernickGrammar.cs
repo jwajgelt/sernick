@@ -207,16 +207,13 @@ public static class SernickGrammar
 
         // Production for "variable : Type"
         var regIdentifierWithType = Regex.Concat(regIdentifier, regColon, regTypeIdentifier);
-        productions.Add(new Production<Symbol>(
-            expression,
-            regIdentifierWithType
-        ));
         var identifierWithTypeStarred = Regex.Star(Regex.Concat(regIdentifierWithType, regComma));
+        var regArgDeclList = Regex.Concat(identifierWithTypeStarred, regIdentifierWithType);
 
         // function declaration
         productions.Add(new Production<Symbol>(
             functionDefinition,
-            Regex.Concat(regFunKeyword, regIdentifier, regParenthesesOpen, identifierWithTypeStarred, regParenthesesClose, regBracesOpen, regExpression, regBracesClose)
+            Regex.Concat(regFunKeyword, regIdentifier, regParenthesesOpen, regArgDeclList, regParenthesesClose, regCodeBlock)
         ));
 
         // function call
@@ -251,7 +248,7 @@ public static class SernickGrammar
 
         // equality test
         productions.Add(new Production<Symbol>(
-            assignment,
+            expression,
             Regex.Concat(regExpression, regEqualsOperator, regExpression)
         ));
 
