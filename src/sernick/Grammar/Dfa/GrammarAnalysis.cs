@@ -223,7 +223,7 @@ public static class GrammarAnalysis
                         hasChanged |= followSetMap.GetOrAddEmpty(edge.Atom).UnionWithCheck(stateFollowSetMap.GetOrAddEmpty(state));
 
                         // copy all the elements from the FIRST set of edge.Atom to the edge.From FOLLOW set
-                        hasChanged |= stateFollowSetMap.GetOrAddEmpty(edge.From).UnionWithCheck(symbolsFirst[edge.Atom]);
+                        hasChanged |= stateFollowSetMap.GetOrAddEmpty(edge.From).UnionWithCheck(symbolsFirst.GetValueOrDefault(edge.Atom, new[] { edge.Atom }));
 
                         // if edge.Atom is nullable then copy all the elements from the FOLLOW set of the current state to edge.FROM
                         if (nullableSymbols.Contains(edge.Atom))

@@ -9,4 +9,7 @@ using Common.Regex;
 public record Production<TSymbol>(
     TSymbol Left,
     Regex<TSymbol> Right)
-    where TSymbol : IEquatable<TSymbol>;
+    where TSymbol : IEquatable<TSymbol>
+{
+    public override string ToString() => $"{Left} -> {Right}";
+}

@@ -2,7 +2,7 @@ namespace sernick.Parser.ParseTree;
 
 using Input;
 
-public interface IParseTree<out TSymbol>
+public interface IParseTree<TSymbol> : IEquatable<IParseTree<TSymbol>>
 {
     TSymbol Symbol { get; }
     ILocation Start { get; }

@@ -50,6 +50,8 @@ internal sealed class ConcatRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable
     {
         return other is ConcatRegex<TAtom> concatRegex && Children.SequenceEqual(concatRegex.Children);
     }
+
+    public override string ToString() => string.Join("*", Children);
 }
 
 public partial class Regex<TAtom> where TAtom : IEquatable<TAtom>
