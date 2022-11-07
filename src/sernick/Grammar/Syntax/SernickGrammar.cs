@@ -239,10 +239,10 @@ public static class SernickGrammar
             variableDeclaration,
             Regex.Union(
                 // both with var or const, we may or may not specify a type
-                Regex.Concat(regVarKeyword, regUntypedAssignment),
-                Regex.Concat(regVarKeyword, regTypedAssignment),
-                Regex.Concat(regConstKeyword, regUntypedAssignment),
-                Regex.Concat(regConstKeyword, regTypedAssignment)
+                Regex.Concat(
+                    Regex.Union(regVarKeyword, regConstKeyword),
+                    Regex.Union(regUntypedAssignment, regTypedAssignment)
+                )
             )
         ));
 
