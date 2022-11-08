@@ -2,6 +2,15 @@ namespace sernick.Ast;
 
 using Nodes;
 
+/// <summary>
+/// A base class for AST tree visitors. A typical implementation would override only the Visit() methods it is interested in.
+/// It is implementor's responsibility to visit children (or siblings) recursively: e.g.
+/// <code>
+/// foreach (var child in node.Children) {
+///     child.Accept(this, param);
+/// }
+/// </code>
+/// </summary>
 public abstract class AstVisitor<TResult, TParam>
 {
     protected abstract TResult VisitAstNode(AstNode node, TParam param);
