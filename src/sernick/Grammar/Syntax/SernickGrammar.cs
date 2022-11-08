@@ -258,7 +258,10 @@ public static class SernickGrammar
         ));
 
         // priority 2 -- short-circuit and (&&) and or (||)
-        productions.Add(new Production<Symbol>(binaryOperatorPriority2, Regex.Union(regShortCircuitAndOperator, regShortCircuitOrOperator)));
+        productions.Add(new Production<Symbol>(
+            binaryOperatorPriority2,
+            Regex.Union(regShortCircuitAndOperator, regShortCircuitOrOperator)
+        ));
 
         productions.Add(new Production<Symbol>(
             x2,
