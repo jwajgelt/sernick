@@ -10,16 +10,15 @@ using Grammar.Syntax;
 using ParseTree;
 using Utility;
 
-public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
+public sealed class Parser<TSymbol> : IParser<TSymbol>
     where TSymbol : class, IEquatable<TSymbol>
-    where TDfaState : IEquatable<TDfaState>
 {
     private readonly TSymbol _startSymbol;
     private readonly Configuration<TSymbol> _startConfig;
     private readonly IReadOnlyDictionary<ValueTuple<Configuration<TSymbol>, TSymbol?>, IParseAction> _actionTable;
-    private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> _reversedAutomata;
+    private readonly IReadOnlyDictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>> _reversedAutomata;
 
-    public static Parser<TSymbol, Regex<TSymbol>> FromGrammar(Grammar<TSymbol> grammar, TSymbol dummySymbol)
+    public static Parser<TSymbol> FromGrammar(Grammar<TSymbol> grammar, TSymbol dummySymbol)
     {
         var dfaGrammar = grammar.ToDfaGrammar().WithDummyStartSymbol(dummySymbol);
         var nullable = dfaGrammar.Nullable();
@@ -27,7 +26,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         var follow = dfaGrammar.Follow(nullable, first);
         var reversedAutomatas = dfaGrammar.GetReverseAutomatas();
 
-        return new Parser<TSymbol, Regex<TSymbol>>(dfaGrammar,
+        return new Parser<TSymbol>(dfaGrammar,
             follow,
             reversedAutomatas);
     }
@@ -35,7 +34,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     internal Parser(
         DfaGrammar<TSymbol> dfaGrammar,
         IReadOnlyDictionary<TSymbol, IReadOnlyCollection<TSymbol>> symbolsFollow,
-        IReadOnlyDictionary<Production<TSymbol>, IDfa<TDfaState, TSymbol>> reversedAutomata)
+        IReadOnlyDictionary<Production<TSymbol>, IDfa<Regex<TSymbol>, TSymbol>> reversedAutomata)
     {
         _startSymbol = dfaGrammar.Start;
         _reversedAutomata = reversedAutomata;
@@ -131,14 +130,27 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
         using var leavesEnumerator = leaves.GetEnumerator();
         var lookAhead = leavesEnumerator.Next();
 
+        [DoesNotReturn]
+        void ReportError(IParseTree<TSymbol>? parseNode, string message)
+        {
+            diagnostics.Report(new SyntaxError<TSymbol>(parseNode));
+            // consume the `leaves` Enumerable
+            // to force Lexer to report any remaining errors
+            while (leavesEnumerator.MoveNext())
+            {
+            }
+
+            throw new ParsingException(message);
+        }
+
         while (true)
         {
             var parseAction = _actionTable.GetValueOrDefault((state.Configuration, lookAhead?.Symbol));
             switch (parseAction)
             {
                 case null:
-                    diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
-                    throw new ParsingException("No parsing action available at current state");
+                    ReportError(lookAhead, "No parsing action available at current state");
+                    break;
 
                 case ParseActionShift<TSymbol> shiftAction:
                     Debug.Assert(lookAhead is not null, $"actionTable[(config, {null})] mustn't be Shift");
@@ -157,8 +169,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                             out var children,
                             out var nextConfig))
                     {
-                        diagnostics.Report(new SyntaxError<TSymbol>(state.TreeStack.FirstOrDefault()));
-                        throw new ParsingException("The subsequence of tokens cannot be parsed");
+                        ReportError(state.TreeStack.FirstOrDefault(), "The subsequence of tokens cannot be parsed");
                     }
 
                     // Reduce to start symbol => end of parsing
@@ -170,8 +181,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
                             return children.Single();
                         }
 
-                        diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
-                        throw new ParsingException("Some tokens cannot be parsed");
+                        ReportError(lookAhead, "Some tokens cannot be parsed");
                     }
 
                     state.Push(nextConfig,
@@ -198,7 +208,7 @@ public sealed class Parser<TSymbol, TDfaState> : IParser<TSymbol>
     /// a Shift action is possible from the config from top of the stack and <paramref name="symbol"/>; <c>false</c> otherwise
     /// </returns>
     private bool MatchTail(
-        IDfa<TDfaState, TSymbol> dfa,
+        IDfa<Regex<TSymbol>, TSymbol> dfa,
         TSymbol symbol,
         State state,
         out List<IParseTree<TSymbol>> matchedTrees,

@@ -7,7 +7,7 @@ using sernick.Diagnostics;
 using sernick.Parser;
 using Grammar = sernick.Grammar.Syntax.Grammar<Helpers.CharCategory>;
 using IParseTree = sernick.Parser.ParseTree.IParseTree<Helpers.CharCategory>;
-using Parser = sernick.Parser.Parser<Helpers.CharCategory, Helpers.CharCategory>;
+using Parser = sernick.Parser.Parser<Helpers.CharCategory>;
 using ParseTreeLeaf = sernick.Parser.ParseTree.ParseTreeLeaf<Helpers.CharCategory>;
 using ParseTreeNode = sernick.Parser.ParseTree.ParseTreeNode<Helpers.CharCategory>;
 using Production = sernick.Grammar.Syntax.Production<Helpers.CharCategory>;

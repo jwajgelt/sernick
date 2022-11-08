@@ -72,7 +72,7 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
     private void InitializeTransitionsDictionary()
     {
         _acceptingStates = new HashSet<State>();
-        var transitionsToMap =
+        _transitionsToMap =
             new Dictionary<State, List<TransitionEdge<State, TSymbol>>>();
         var visited = new HashSet<State>();
         var queue = new Queue<State>();
@@ -90,7 +90,7 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
             foreach (var transition in GetTransitionsFrom(currentState))
             {
                 var nextState = transition.To;
-                transitionsToMap.GetOrAddEmpty(nextState).Add(transition);
+                _transitionsToMap.GetOrAddEmpty(nextState).Add(transition);
 
                 if (visited.Contains(nextState))
                 {
@@ -101,11 +101,6 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
                 visited.Add(nextState);
             }
         }
-
-        _transitionsToMap = transitionsToMap.ToDictionary(
-            kv => kv.Key,
-            kv => kv.Value
-            );
     }
 
     public sealed class State : ReadOnlyDictionary<TCat, TState>, IEquatable<State>

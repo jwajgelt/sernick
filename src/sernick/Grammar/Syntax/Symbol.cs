@@ -22,6 +22,7 @@ public sealed record NonTerminal(NonTerminalSymbol Inner) : Symbol;
 
 public enum NonTerminalSymbol
 {
+    Start,
     Program,
     Expression,
     JoinableExpression,
