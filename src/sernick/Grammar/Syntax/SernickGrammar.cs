@@ -269,7 +269,10 @@ public static class SernickGrammar
         ));
 
         // priority 3 (highest) -- + and -
-        productions.Add(new Production<Symbol>(binaryOperatorPriority3, Regex.Union(regPlusOperator, regMinusOperator)));
+        productions.Add(new Production<Symbol>(
+            binaryOperatorPriority3,
+            Regex.Union(regPlusOperator, regMinusOperator)
+        ));
 
         productions.Add(new Production<Symbol>(
             x3,
