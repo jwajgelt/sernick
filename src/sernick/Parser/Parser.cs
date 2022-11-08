@@ -181,8 +181,7 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
                             return children.Single();
                         }
 
-                        diagnostics.Report(new SyntaxError<TSymbol>(lookAhead));
-                        throw new ParsingException("Some tokens cannot be parsed");
+                        ReportError(lookAhead, "Some tokens cannot be parsed");
                     }
 
                     state.Push(nextConfig,
