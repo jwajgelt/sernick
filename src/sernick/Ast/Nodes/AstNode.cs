@@ -18,18 +18,19 @@ public abstract record AstNode
         throw new NotImplementedException();
     }
 
-    public TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam initialParam)
-    {
-        throw new NotImplementedException();
-    }
+    public abstract TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param);
 }
 
 /// <summary>
 /// Class representing identifiers
 /// </summary>
-public sealed record Identifier(string Name) : AstNode;
+public sealed record Identifier(string Name) : AstNode
+{
+    public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
+        visitor.VisitIdentifier(this, param);
+}
 
 /// <summary>
 /// Base class for all types of expressions
 /// </summary>
-public abstract record Expression : AstNode { }
+public abstract record Expression : AstNode;

@@ -47,6 +47,6 @@ public sealed class NameResolution
     // TODO: use correct param and result types
     private class NameResolvingAstVisitor : AstVisitor<Unit, Unit>
     {
-
+        protected override Unit VisitAstNode(AstNode node, Unit param) => Unit.I;
     }
 }
