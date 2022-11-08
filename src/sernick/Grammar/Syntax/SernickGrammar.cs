@@ -161,12 +161,13 @@ public static class SernickGrammar
         // All non-terminals that can be directly "casted" to expression
         productions.Add(new Production<Symbol>(
             expression,
-            Regex.Union(regCodeBlock,
-                        regVarDeclaration,
-                        regAssignment,
-                        regBreakKeyword,
-                        regContinueKeyword,
-                        regReturnKeyword
+            Regex.Union(
+                regCodeBlock,
+                regVarDeclaration,
+                regAssignment,
+                regBreakKeyword,
+                regContinueKeyword,
+                regReturnKeyword
             )
         ));
 
