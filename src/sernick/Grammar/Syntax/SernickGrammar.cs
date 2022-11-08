@@ -208,13 +208,14 @@ public static class SernickGrammar
             functionDefinition,
             Regex.Concat(
                 regFunKeyword, 
-                regIdentifier, 
-                regParenthesesOpen, 
-                regArgDeclList, 
-                regParenthesesClose, 
-                regColon, 
-                regTypeIdentifier, 
-                regCodeBlock)
+                regIdentifier,
+                regParenthesesOpen,
+                regArgDeclList,
+                regParenthesesClose,
+                regColon,
+                regTypeIdentifier,
+                regCodeBlock
+            )
         ));
 
         // function call
