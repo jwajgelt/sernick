@@ -3,7 +3,7 @@ namespace sernick.Ast.Nodes;
 public sealed record VariableDeclaration(Identifier Name,
     Type? Type,
     Expression? InitValue,
-    bool Const) : Declaration;
+    bool IsConst) : Declaration;
 
 public sealed record FunctionParameterDeclaration(Identifier Name,
     Type Type,
