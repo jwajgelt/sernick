@@ -17,11 +17,6 @@ public sealed record FunctionCall(Identifier FunctionName,
     IEnumerable<Expression> Arguments) : Expression;
 
 /// <summary>
-/// Base class for all expressions which are created through use of operators
-/// </summary>
-public abstract record Operator : Expression { }
-
-/// <summary>
 /// Base class for expressions which represent some type of declaration
 /// </summary>
 public abstract record Declaration : Expression { }

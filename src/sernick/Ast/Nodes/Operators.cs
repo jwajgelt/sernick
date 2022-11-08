@@ -1,9 +1,18 @@
 namespace sernick.Ast.Nodes;
 
-public sealed record PlusOperator(Expression Left, Expression Right) : Operator;
+public sealed record Infix(Expression Left, Expression Right, Infix.Op Operator) : Expression
+{
+    public enum Op
+    {
+        Plus, Minus,
+        Less, Greater,
+        LessOrEquals, GreaterOrEquals,
+        Equals,
+        ScAnd, ScOr
+    }
 
-public sealed record MinusOperator(Expression Left, Expression Right) : Operator;
+}
 
-public sealed record EqualsOperator(Expression Left, Expression Right) : Operator;
-
-public sealed record AssignOperator(Identifier Left, Expression Right) : Operator;
+public sealed record Assignment(Identifier Left, Expression Right) : Expression
+{
+}

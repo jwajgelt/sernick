@@ -22,7 +22,7 @@ public sealed class NameResolution
     /// NOTE: Since function parameters are non-assignable,
     /// these can only be variable declarations (`var x`, `const y`)
     /// </summary>
-    public IReadOnlyDictionary<AssignOperator, VariableDeclaration> AssignedVariableDeclarations
+    public IReadOnlyDictionary<Assignment, VariableDeclaration> AssignedVariableDeclarations
     {
         get;
         init;
