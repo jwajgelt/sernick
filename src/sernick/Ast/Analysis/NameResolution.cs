@@ -4,7 +4,7 @@ using Diagnostics;
 using Nodes;
 using Utility;
 
-public class NameResolution
+public sealed class NameResolution
 {
     /// <summary>
     /// Maps uses of variables to the declarations
@@ -13,6 +13,7 @@ public class NameResolution
     public IReadOnlyDictionary<VariableValue, Declaration> UsedVariableDeclarations
     {
         get;
+        init;
     }
 
     /// <summary>
@@ -24,6 +25,7 @@ public class NameResolution
     public IReadOnlyDictionary<AssignOperator, VariableDeclaration> AssignedVariableDeclarations
     {
         get;
+        init;
     }
 
     /// <summary>

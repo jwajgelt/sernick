@@ -4,7 +4,7 @@ using Diagnostics;
 using Nodes;
 using Utility;
 
-public class TypeChecking
+public sealed class TypeChecking
 {
     /// <summary>
     /// Maps expressions to their types
