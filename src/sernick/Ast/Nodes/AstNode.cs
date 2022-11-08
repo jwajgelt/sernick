@@ -18,7 +18,7 @@ public abstract record AstNode
         throw new NotImplementedException();
     }
 
-    public TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor)
+    public TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam initialParam)
     {
         throw new NotImplementedException();
     }
