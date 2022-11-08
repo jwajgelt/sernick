@@ -206,7 +206,15 @@ public static class SernickGrammar
         // function declaration
         productions.Add(new Production<Symbol>(
             functionDefinition,
-            Regex.Concat(regFunKeyword, regIdentifier, regParenthesesOpen, regArgDeclList, regParenthesesClose, regCodeBlock)
+            Regex.Concat(
+                regFunKeyword, 
+                regIdentifier, 
+                regParenthesesOpen, 
+                regArgDeclList, 
+                regParenthesesClose, 
+                regColon, 
+                regTypeIdentifier, 
+                regCodeBlock)
         ));
 
         // function call
