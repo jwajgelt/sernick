@@ -599,4 +599,50 @@ public class ParserTest
         });
         Assert.Throws<NotSLRGrammarException>(() => Parser.FromGrammar(grammar, '\0'.ToCategory()));
     }
+
+    /* if (x) {} [else {}] y = 1
+     * S -> IA
+     * I -> ibE
+     * E -> Eps|eb
+     * A -> a
+     * ibeba
+     */
+    [Fact]
+    public void IfElseGrammar()
+    {
+        var production1 = new Production('S'.ToCategory(), Regex.Concat(
+            Regex.Atom('I'.ToCategory()),
+            Regex.Atom('A'.ToCategory())
+        ));
+        var production2 = new Production('I'.ToCategory(), Regex.Concat(
+            Regex.Atom('i'.ToCategory()),
+            Regex.Atom('b'.ToCategory()),
+            Regex.Atom('E'.ToCategory())
+        ));
+        var production3 = new Production('E'.ToCategory(), Regex.Epsilon);
+        var production4 = new Production('E'.ToCategory(), Regex.Concat(
+            Regex.Atom('e'.ToCategory()),
+            Regex.Atom('b'.ToCategory())
+        ));
+        var production5 = new Production('A'.ToCategory(), Regex.Concat(
+            Regex.Atom('a'.ToCategory())
+        ));
+        var grammar = new Grammar('S'.ToCategory(), new[]
+        {
+            production1,
+            production2,
+            production3,
+            production4,
+            production5
+        });
+        var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
+
+        var location = new FakeLocation();
+        var leaf = new ParseTreeLeaf('S'.ToCategory(), location, location);
+        var leaves = new[] { leaf };
+
+        var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
+
+        Assert.Equal(leaf, result);
+    }
 }
