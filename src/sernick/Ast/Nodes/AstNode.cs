@@ -8,7 +8,7 @@ using Parser.ParseTree;
 /// </summary>
 public abstract record AstNode
 {
-    
+
     /// <summary>
     /// Constructs the Abstract Syntax Tree from the given parse tree
     /// <param name="parseTree">Parse tree to generate the AST from</param>

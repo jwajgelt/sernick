@@ -45,6 +45,6 @@ public class NameResolution
     // TODO: use correct param and result types
     private class NameResolvingAstVisitor : AstVisitor<Unit, Unit>
     {
-    
+
     }
 }

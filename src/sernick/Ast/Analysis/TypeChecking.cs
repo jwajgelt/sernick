@@ -24,6 +24,6 @@ public class TypeChecking
     // TODO: use correct param and result types
     private class TypeCheckingAstVisitor : AstVisitor<Unit, Unit>
     {
-    
+
     }
 }
