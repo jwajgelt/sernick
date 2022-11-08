@@ -130,5 +130,7 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
         {
             return this.Aggregate(0, (current, kv) => current ^ kv.Key.GetHashCode() ^ kv.Value!.GetHashCode());
         }
+
+        public override string ToString() => string.Join("; ", this.Select(kv => $"{kv.Key}: {kv.Value}"));
     }
 }

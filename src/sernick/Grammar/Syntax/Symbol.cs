@@ -22,8 +22,10 @@ public sealed record NonTerminal(NonTerminalSymbol Inner) : Symbol;
 
 public enum NonTerminalSymbol
 {
+    Start,
     Program,
     Expression,
+    JoinableExpression,
     CodeBlock,
     IfStatement,
     LoopStatement,
@@ -32,6 +34,12 @@ public enum NonTerminalSymbol
     FunctionDefinition,
     FunctionCall,
     Assignment,
-    ExpSummand,
-    ExpFactor
+    ElseBlock,
+    // lower number == lower priority
+    BinaryOperatorPriority1,
+    X1,
+    BinaryOperatorPriority2,
+    X2,
+    BinaryOperatorPriority3,
+    X3,
 }

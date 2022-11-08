@@ -19,15 +19,33 @@ public sealed record Configuration<TSymbol>(
         do
         {
             hasChanged = false;
-            foreach (var (state, symbol) in statesSet)
+            foreach (var (state, symbol) in statesSet.ToList())
             {
                 foreach (var edge in dfaGrammar.Productions[symbol].GetTransitionsFrom(state))
                 {
-                    hasChanged |= statesSet.Add((dfaGrammar.Productions[edge.Atom].Start, symbol));
+                    if (dfaGrammar.Productions.TryGetValue(edge.Atom, out var dfa))
+                    {
+                        hasChanged |= statesSet.Add((dfa.Start, edge.Atom));
+                    }
                 }
             }
         } while (hasChanged);
 
         return new Configuration<TSymbol>(statesSet);
     }
+
+    public bool Equals(Configuration<TSymbol>? other)
+    {
+        return other is not null &&
+               States.Count == other.States.Count &&
+               States.Zip(other.States)
+                   .All(statePair => statePair.First.Equals(statePair.Second));
+    }
+
+    public override int GetHashCode()
+    {
+        return States.Aggregate(0, (hashCode, state) => hashCode ^ state.GetHashCode());
+    }
+
+    public override string ToString() => string.Join(", ", States);
 }
