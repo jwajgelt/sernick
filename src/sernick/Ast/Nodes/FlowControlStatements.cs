@@ -1,4 +1,4 @@
-namespace sernick.Parser.Ast;
+namespace sernick.Ast.Nodes;
 
 public sealed record ContinueStatement : FlowControlStatement { }
 

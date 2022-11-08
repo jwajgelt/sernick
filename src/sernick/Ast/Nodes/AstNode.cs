@@ -1,7 +1,7 @@
-namespace sernick.Parser.Ast;
+namespace sernick.Ast.Nodes;
 
 using Grammar.Syntax;
-using ParseTree;
+using Parser.ParseTree;
 
 /// <summary>
 /// Base class for all types of nodes that can appear in AST (Abstract Syntax Tree)
@@ -17,6 +17,11 @@ public abstract record AstNode
     {
         throw new NotImplementedException();
     }
+
+    public TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 /// <summary>
@@ -28,8 +33,3 @@ public sealed record Identifier(string Name) : AstNode;
 /// Base class for all types of expressions
 /// </summary>
 public abstract record Expression : AstNode { }
-
-/// <summary>
-/// Base class for types declared eg. in variable declarations
-/// </summary>
-public abstract record DeclaredType : AstNode { }

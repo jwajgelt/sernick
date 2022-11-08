@@ -1,4 +1,4 @@
-namespace sernick.Parser.Ast;
+namespace sernick.Ast.Nodes;
 
 /// <summary>
 /// Class for code blocks (introducing new scope)
