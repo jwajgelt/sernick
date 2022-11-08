@@ -207,7 +207,7 @@ public static class SernickGrammar
         productions.Add(new Production<Symbol>(
             functionDefinition,
             Regex.Concat(
-                regFunKeyword, 
+                regFunKeyword,
                 regIdentifier,
                 regParenthesesOpen,
                 regArgDeclList,
