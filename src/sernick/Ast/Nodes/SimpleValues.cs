@@ -1,8 +1,6 @@
-namespace sernick.Parser.Ast;
+namespace sernick.Ast.Nodes;
 
 public sealed record VariableValue(Identifier Identifier) : SimpleValue;
-
-public sealed record ConstValue(Identifier Identifier) : SimpleValue;
 
 public abstract record LiteralValue : SimpleValue { }
 
