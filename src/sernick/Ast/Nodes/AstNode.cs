@@ -8,6 +8,7 @@ using Parser.ParseTree;
 /// </summary>
 public abstract record AstNode
 {
+    public virtual IEnumerable<AstNode> Children => Enumerable.Empty<AstNode>();
 
     /// <summary>
     /// Constructs the Abstract Syntax Tree from the given parse tree

@@ -5,6 +5,8 @@ namespace sernick.Ast.Nodes;
 /// </summary>
 public sealed record CodeBlock(Expression Inner) : Expression
 {
+    public override IEnumerable<AstNode> Children => new[] { Inner };
+
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitCodeBlock(this, param);
 }
@@ -14,6 +16,8 @@ public sealed record CodeBlock(Expression Inner) : Expression
 /// </summary>
 public sealed record ExpressionJoin(Expression First, Expression Second) : Expression
 {
+    public override IEnumerable<AstNode> Children => new[] { First, Second };
+
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitExpressionJoin(this, param);
 }
@@ -21,9 +25,10 @@ public sealed record ExpressionJoin(Expression First, Expression Second) : Expre
 /// <summary>
 /// Class representing function calls
 /// </summary>
-public sealed record FunctionCall(Identifier FunctionName,
-    IEnumerable<Expression> Arguments) : Expression
+public sealed record FunctionCall(Identifier FunctionName, IEnumerable<Expression> Arguments) : Expression
 {
+    public override IEnumerable<AstNode> Children => new AstNode[] { FunctionName }.Concat(Arguments);
+
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitFunctionCall(this, param);
 }

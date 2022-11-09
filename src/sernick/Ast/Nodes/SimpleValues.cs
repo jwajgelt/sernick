@@ -2,6 +2,8 @@ namespace sernick.Ast.Nodes;
 
 public sealed record VariableValue(Identifier Identifier) : SimpleValue
 {
+    public override IEnumerable<AstNode> Children => new[] { Identifier };
+
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitVariableValue(this, param);
 }

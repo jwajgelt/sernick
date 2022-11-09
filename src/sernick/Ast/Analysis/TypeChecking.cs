@@ -24,6 +24,14 @@ public sealed class TypeChecking
     // TODO: use correct param and result types
     private class TypeCheckingAstVisitor : AstVisitor<Unit, Unit>
     {
-        protected override Unit VisitAstNode(AstNode node, Unit param) => Unit.I;
+        protected override Unit VisitAstNode(AstNode node, Unit param)
+        {
+            foreach (var child in node.Children)
+            {
+                child.Accept(this, param);
+            }
+
+            return Unit.I;
+        }
     }
 }
