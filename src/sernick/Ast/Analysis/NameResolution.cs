@@ -22,7 +22,7 @@ public sealed class NameResolution
     /// NOTE: Since function parameters are non-assignable,
     /// these can only be variable declarations (`var x`, `const y`)
     /// </summary>
-    public IReadOnlyDictionary<AssignOperator, VariableDeclaration> AssignedVariableDeclarations
+    public IReadOnlyDictionary<Assignment, VariableDeclaration> AssignedVariableDeclarations
     {
         get;
         init;
@@ -47,6 +47,14 @@ public sealed class NameResolution
     // TODO: use correct param and result types
     private class NameResolvingAstVisitor : AstVisitor<Unit, Unit>
     {
+        protected override Unit VisitAstNode(AstNode node, Unit param)
+        {
+            foreach (var child in node.Children)
+            {
+                child.Accept(this, param);
+            }
 
+            return Unit.I;
+        }
     }
 }

@@ -1,9 +1,26 @@
 namespace sernick.Ast.Nodes;
 
-public sealed record PlusOperator(Expression Left, Expression Right) : Operator;
+public sealed record Infix(Expression Left, Expression Right, Infix.Op Operator) : Expression
+{
+    public enum Op
+    {
+        Plus, Minus,
+        Less, Greater,
+        LessOrEquals, GreaterOrEquals,
+        Equals,
+        ScAnd, ScOr
+    }
 
-public sealed record MinusOperator(Expression Left, Expression Right) : Operator;
+    public override IEnumerable<AstNode> Children => new[] { Left, Right };
 
-public sealed record EqualsOperator(Expression Left, Expression Right) : Operator;
+    public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
+        visitor.VisitInfix(this, param);
+}
 
-public sealed record AssignOperator(Identifier Left, Expression Right) : Operator;
+public sealed record Assignment(Identifier Left, Expression Right) : Expression
+{
+    public override IEnumerable<AstNode> Children => new AstNode[] { Left, Right };
+
+    public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
+        visitor.VisitAssignment(this, param);
+}
