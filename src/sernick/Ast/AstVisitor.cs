@@ -13,13 +13,15 @@ using Nodes;
 /// </summary>
 public abstract class AstVisitor<TResult, TParam>
 {
+    protected TResult VisitAstTree(AstNode node, TParam param) => node.Accept(this, param);
+
     protected abstract TResult VisitAstNode(AstNode node, TParam param);
 
-    private TResult VisitExpression(Expression node, TParam param) => VisitAstNode(node, param);
-    private TResult VisitDeclaration(Declaration node, TParam param) => VisitExpression(node, param);
-    private TResult VisitFlowControlStatement(FlowControlStatement node, TParam param) => VisitExpression(node, param);
-    private TResult VisitSimpleValue(SimpleValue node, TParam param) => VisitExpression(node, param);
-    private TResult VisitLiteralValue(LiteralValue node, TParam param) => VisitSimpleValue(node, param);
+    protected virtual TResult VisitExpression(Expression node, TParam param) => VisitAstNode(node, param);
+    protected virtual TResult VisitDeclaration(Declaration node, TParam param) => VisitExpression(node, param);
+    protected virtual TResult VisitFlowControlStatement(FlowControlStatement node, TParam param) => VisitExpression(node, param);
+    protected virtual TResult VisitSimpleValue(SimpleValue node, TParam param) => VisitExpression(node, param);
+    protected virtual TResult VisitLiteralValue(LiteralValue node, TParam param) => VisitSimpleValue(node, param);
 
     public virtual TResult VisitIdentifier(Identifier node, TParam param) => VisitAstNode(node, param);
 
