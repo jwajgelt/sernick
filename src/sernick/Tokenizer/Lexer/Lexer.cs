@@ -26,7 +26,7 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
         var textBuilder = new StringBuilder();
 
         // loop over the input
-        while (!input.CurrentLocation.Equals(input.End))
+        while (true)
         {
             if (_sumDfa.IsDead(currentState))
             {
@@ -58,6 +58,11 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
                 // reset the local state
                 textBuilder.Clear();
                 lastAcceptingState = null;
+            }
+
+            if (input.CurrentLocation.Equals(input.End))
+            {
+                break;
             }
 
             // advance the sum-DFA by the current character
