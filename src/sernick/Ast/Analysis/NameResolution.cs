@@ -40,21 +40,23 @@ public sealed class NameResolution
 
     public NameResolution(AstNode ast, Diagnostics diagnostics)
     {
-        // TODO: create a NameResolvingASTVisitor, walk it over the AST and initialize the properties with the result
-        throw new NotImplementedException();
+        var visitor = new NameResolvingAstVisitor();
+        var result = visitor.VisitAstTree(ast, new NameResolutionVisitorParams());
+        UsedVariableDeclarations = result.PartialResult.UsedVariableDeclarations;
+        AssignedVariableDeclarations = result.PartialResult.AssignedVariableDeclarations;
+        CalledFunctionDeclarations = result.PartialResult.CalledFunctionDeclarations;
     }
 
-    // TODO: use correct param and result types
-    private class NameResolvingAstVisitor : AstVisitor<Unit, Unit>
+    
+    private class NameResolvingAstVisitor : AstVisitor<NameResolutionVisitorResult, NameResolutionVisitorParams>
     {
-        protected override Unit VisitAstNode(AstNode node, Unit param)
+        protected override NameResolutionVisitorResult VisitAstNode(AstNode node, NameResolutionVisitorParams param)
         {
-            foreach (var child in node.Children)
-            {
-                child.Accept(this, param);
-            }
-
-            return Unit.I;
+            var results = node.Children.Select(child => child.Accept(this, param));
+            return new NameResolutionVisitorResult(
+                NameResolutionPartialResult.Join(results.Select(result => result.PartialResult)),
+                    param.Variables
+                    );
         }
     }
 }
