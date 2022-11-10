@@ -192,7 +192,7 @@ public class Lexer
     }
 
     [Fact]
-    public void MatchesAllCategories()
+    public void MatchesHighestPriorityCategory()
     {
         var category1 = 0;
         var category2 = 1;
@@ -236,8 +236,7 @@ public class Lexer
         // is unspecified
         var result = lexer.Process(input, new Mock<IDiagnostics>().Object).ToHashSet();
         var expected = new HashSet<Token<int>> {
-            new(category1, "ababab", input.Start, new FakeInput.Location(6)),
-            new(category2, "ababab", input.Start, new FakeInput.Location(6))
+            new(category1, "ababab", input.Start, new FakeInput.Location(6))
         };
         Assert.Equal(expected, result);
     }
