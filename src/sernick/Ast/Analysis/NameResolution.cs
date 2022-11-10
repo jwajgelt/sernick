@@ -52,11 +52,164 @@ public sealed class NameResolution
     {
         protected override NameResolutionVisitorResult VisitAstNode(AstNode node, NameResolutionVisitorParams param)
         {
-            var results = node.Children.Select(child => child.Accept(this, param));
-            return new NameResolutionVisitorResult(
-                NameResolutionPartialResult.Join(results.Select(result => result.PartialResult)),
-                    param.Variables
-                    );
+            
+            // var firstVisitorResult = node.First.Accept(this, param);
+            // var secondVisitorResult =
+            //     node.Second.Accept(this, new NameResolutionVisitorParams(firstVisitorResult.Variables));
+            // return new NameResolutionVisitorResult(
+            //     NameResolutionPartialResult.Join(firstVisitorResult.PartialResult, secondVisitorResult.PartialResult),
+            //     secondVisitorResult.Variables);
+            
+            // var results = node.Children.Select(child => child.Accept(this, param));
+            // return new NameResolutionVisitorResult(
+            //     NameResolutionPartialResult.Join(results.Select(result => result.PartialResult).ToArray()),
+            //     param.Variables
+            // );
+            
+            var variables = param.Variables;
+            var partialResult = new NameResolutionPartialResult();
+            foreach (var child in node.Children)
+            {
+                var childResult = child.Accept(this, new NameResolutionVisitorParams(variables));
+                partialResult = NameResolutionPartialResult.Join(partialResult, childResult.PartialResult);
+                variables = childResult.Variables;
+            }
+
+            return new NameResolutionVisitorResult(partialResult, variables);
         }
+
+        // protected override NameResolutionVisitorResult VisitExpression(Expression node, NameResolutionVisitorParams param)
+        // {
+        //     return base.VisitExpression(node, param);
+        // }
+
+        // protected override NameResolutionVisitorResult VisitDeclaration(Declaration node, NameResolutionVisitorParams param)
+        // {
+        //     return base.VisitDeclaration(node, param);
+        // }
+
+        // protected override NameResolutionVisitorResult VisitFlowControlStatement(FlowControlStatement node, NameResolutionVisitorParams param)
+        // {
+        //     return base.VisitFlowControlStatement(node, param);
+        // }
+
+        // protected override NameResolutionVisitorResult VisitSimpleValue(SimpleValue node, NameResolutionVisitorParams param)
+        // {
+        //     return base.VisitSimpleValue(node, param);
+        // }
+
+        // protected override NameResolutionVisitorResult VisitLiteralValue(LiteralValue node, NameResolutionVisitorParams param)
+        // {
+        //     return base.VisitLiteralValue(node, param);
+        // }
+
+        // public override NameResolutionVisitorResult VisitIdentifier(Identifier node, NameResolutionVisitorParams param)
+        // {
+        //     return base.VisitIdentifier(node, param);
+        // }
+
+        public override NameResolutionVisitorResult VisitVariableDeclaration(VariableDeclaration node, NameResolutionVisitorParams param)
+        {
+            var visibleVariables = param.Variables.Add(node);
+            return new NameResolutionVisitorResult(new NameResolutionPartialResult(), visibleVariables);
+        }
+
+        public override NameResolutionVisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
+            NameResolutionVisitorParams param)
+        {
+            var visibleVariables = param.Variables.Add(node);
+            return new NameResolutionVisitorResult(new NameResolutionPartialResult(), visibleVariables);
+        }
+
+        public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node, NameResolutionVisitorParams param)
+        {
+            var visibleVariables = param.Variables.Add(node);
+            var variablesInsideFunction = visibleVariables;
+            foreach (var parameter in node.Parameters)
+            {
+                variablesInsideFunction = parameter.Accept(this, new NameResolutionVisitorParams(variablesInsideFunction)).Variables;
+            }
+
+            var visitorResult = node.Body.Accept(this, new NameResolutionVisitorParams(variablesInsideFunction));
+            
+            return new NameResolutionVisitorResult(visitorResult.PartialResult, visibleVariables);
+        }
+
+        public override NameResolutionVisitorResult VisitCodeBlock(CodeBlock node, NameResolutionVisitorParams param)
+        {
+            var visitorResult = node.Inner.Accept(this, param);
+            return new NameResolutionVisitorResult(visitorResult.PartialResult, param.Variables);
+        }
+
+        // public override NameResolutionVisitorResult VisitExpressionJoin(ExpressionJoin node, NameResolutionVisitorParams param)
+        // {
+        //     var firstVisitorResult = node.First.Accept(this, param);
+        //     var secondVisitorResult =
+        //         node.Second.Accept(this, new NameResolutionVisitorParams(firstVisitorResult.Variables));
+        //     return new NameResolutionVisitorResult(
+        //         NameResolutionPartialResult.Join(firstVisitorResult.PartialResult, secondVisitorResult.PartialResult),
+        //         secondVisitorResult.Variables);
+        // }
+
+        public override NameResolutionVisitorResult VisitFunctionCall(FunctionCall node, NameResolutionVisitorParams param)
+        {
+            var declaration = param.Variables.Variables[node.FunctionName.Name];
+            return new NameResolutionVisitorResult(NameResolutionPartialResult.OfCalledFunction(node, declaration),
+                param.Variables);
+        }
+
+        // public override NameResolutionVisitorResult VisitContinueStatement(ContinueStatement node, NameResolutionVisitorParams param)
+        // {
+            // return base.VisitContinueStatement(node, param);
+        // }
+
+        // public override NameResolutionVisitorResult VisitReturnStatement(ReturnStatement node, NameResolutionVisitorParams param)
+        // {
+            // return base.VisitReturnStatement(node, param);
+        // }
+
+        // public override NameResolutionVisitorResult VisitBreakStatement(BreakStatement node, NameResolutionVisitorParams param)
+        // {
+            // return base.VisitBreakStatement(node, param);
+        // }
+
+        // public override NameResolutionVisitorResult VisitIfStatement(IfStatement node, NameResolutionVisitorParams param)
+        // {
+            // return base.VisitIfStatement(node, param);
+        // }
+
+        // public override NameResolutionVisitorResult VisitLoopStatement(LoopStatement node, NameResolutionVisitorParams param)
+        // {
+            // return base.VisitLoopStatement(node, param);
+        // }
+
+        // public override NameResolutionVisitorResult VisitInfix(Infix node, NameResolutionVisitorParams param)
+        // {
+            // return base.VisitInfix(node, param);
+        // }
+
+        public override NameResolutionVisitorResult VisitAssignment(Assignment node, NameResolutionVisitorParams param)
+        {
+            var declaration = param.Variables.Variables[node.Left.Name];
+            return new NameResolutionVisitorResult(NameResolutionPartialResult.OfAssignment(node, declaration),
+                param.Variables);
+        }
+
+        public override NameResolutionVisitorResult VisitVariableValue(VariableValue node, NameResolutionVisitorParams param)
+        {
+            var declaration = param.Variables.Variables[node.Identifier.Name];
+            return new NameResolutionVisitorResult(NameResolutionPartialResult.OfUsedVariable(node, declaration),
+                param.Variables);
+        }
+
+        // public override NameResolutionVisitorResult VisitBoolLiteralValue(BoolLiteralValue node, NameResolutionVisitorParams param)
+        // {
+        //     return base.VisitBoolLiteralValue(node, param);
+        // }
+
+        // public override NameResolutionVisitorResult VisitIntLiteralValue(IntLiteralValue node, NameResolutionVisitorParams param)
+        // {
+        //     return base.VisitIntLiteralValue(node, param);
+        // }
     }
 }

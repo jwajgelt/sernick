@@ -8,4 +8,24 @@ public record NameResolutionLocallyVisibleVariables(ImmutableDictionary<string, 
     public NameResolutionLocallyVisibleVariables() : this(ImmutableDictionary<string, Declaration>.Empty)
     {
     }
+
+    public NameResolutionLocallyVisibleVariables Add(VariableDeclaration declaration)
+    {
+        var newDict = Variables.Add(declaration.Name.Name, declaration);
+        return new NameResolutionLocallyVisibleVariables(newDict);
+    }
+    
+    
+    public NameResolutionLocallyVisibleVariables Add(FunctionParameterDeclaration declaration)
+    {
+        var newDict = Variables.Add(declaration.Name.Name, declaration);
+        return new NameResolutionLocallyVisibleVariables(newDict);
+    }
+    
+    
+    public NameResolutionLocallyVisibleVariables Add(FunctionDefinition declaration)
+    {
+        var newDict = Variables.Add(declaration.Name.Name, declaration);
+        return new NameResolutionLocallyVisibleVariables(newDict);
+    }
 }

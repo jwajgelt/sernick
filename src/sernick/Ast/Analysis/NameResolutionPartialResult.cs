@@ -14,13 +14,12 @@ public record NameResolutionPartialResult(IReadOnlyDictionary<VariableValue, Dec
     {
     }
 
-    public static NameResolutionPartialResult Join(IEnumerable<NameResolutionPartialResult> results)
+    public static NameResolutionPartialResult Join(params NameResolutionPartialResult[] results)
     {
-        var resultsArray = results as NameResolutionPartialResult[] ?? results.ToArray();
         return new NameResolutionPartialResult(
-            MergeDictionaries(resultsArray.Select(result => result.UsedVariableDeclarations)),
-            MergeDictionaries(resultsArray.Select(result => result.AssignedVariableDeclarations)),
-            MergeDictionaries(resultsArray.Select(result => result.CalledFunctionDeclarations))
+            MergeDictionaries(results.Select(result => result.UsedVariableDeclarations)),
+            MergeDictionaries(results.Select(result => result.AssignedVariableDeclarations)),
+            MergeDictionaries(results.Select(result => result.CalledFunctionDeclarations))
 
         );
     }
@@ -29,5 +28,19 @@ public record NameResolutionPartialResult(IReadOnlyDictionary<VariableValue, Dec
     {
         return dictionaries.SelectMany(dict => dict)
             .ToDictionary(pair => pair.Key, pair => pair.Value);
+    }
+
+    public static NameResolutionPartialResult OfUsedVariable(VariableValue node, Declaration declaration)
+    {
+        return null;
+    }
+    public static NameResolutionPartialResult OfAssignment(Assignment node, Declaration declaration)
+    {
+        return null;
+    }
+    
+    public static NameResolutionPartialResult OfCalledFunction(FunctionCall node, Declaration declaration)
+    {
+        return null;
     }
 }
