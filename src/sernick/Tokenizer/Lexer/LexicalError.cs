@@ -5,8 +5,6 @@ using Input;
 
 public sealed record LexicalError(ILocation Start, ILocation End) : IDiagnosticItem
 {
-    public bool Equals(IDiagnosticItem? other) => other is LexicalError && other.ToString() == ToString();
-
     public override string ToString()
     {
         return $"Lexical error starting at {Start} and ending at {End}";
