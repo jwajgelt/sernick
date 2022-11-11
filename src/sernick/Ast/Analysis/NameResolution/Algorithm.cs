@@ -41,7 +41,7 @@ public sealed class Algorithm
     public Algorithm(AstNode ast, IDiagnostics diagnostics)
     {
         var visitor = new NameResolvingAstVisitor(diagnostics);
-        var result = visitor.VisitAstTree(ast, new NameResolutionLocallyVisibleVariables());
+        var result = visitor.VisitAstTree(ast, new NameResolutionLocallyVisibleVariables(diagnostics));
         UsedVariableDeclarations = result.PartialAlgorithmResult.UsedVariableDeclarations;
         AssignedVariableDeclarations = result.PartialAlgorithmResult.AssignedVariableDeclarations;
         CalledFunctionDeclarations = result.PartialAlgorithmResult.CalledFunctionDeclarations;
