@@ -41,6 +41,7 @@ public enum NonTerminalSymbol
     CodeGroup,
     ClosedStatementNoBlock,
     Expression,
+    ReturnExpression,
     LogicalOperand,
     LogicalOperator,
     ComparisonOperand,

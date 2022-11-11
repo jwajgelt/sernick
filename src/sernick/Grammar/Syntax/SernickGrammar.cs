@@ -24,6 +24,7 @@ public static class SernickGrammar
         var codeGroup = Atom(Symbol.Of(NonTerminalSymbol.CodeGroup)); // ()
         var closedStatementNoBlock = Atom(Symbol.Of(NonTerminalSymbol.ClosedStatementNoBlock)); // only E;
         var expression = Atom(Symbol.Of(NonTerminalSymbol.Expression)); // computation with operators; excl "{}"
+        var returnExpression = Atom(Symbol.Of(NonTerminalSymbol.ReturnExpression));
         var logicalOperand = Atom(Symbol.Of(NonTerminalSymbol.LogicalOperand));
         var logicalOperator = Atom(Symbol.Of(NonTerminalSymbol.LogicalOperator));
         var comparisonOperand = Atom(Symbol.Of(NonTerminalSymbol.ComparisonOperand));
@@ -100,8 +101,8 @@ public static class SernickGrammar
                     parClose))
 
             // Expression
-            .Add(expression,
-                Union(assignment, breakKeyword, continueKeyword, Concat(returnKeyword, Optional(expression))))
+            .Add(expression, Union(assignment, breakKeyword, continueKeyword, returnExpression))
+            .Add(returnExpression, Concat(returnKeyword, Optional(expression)))
             .Add(expression, Union(
                 logicalOperand, // anything but an entity ending with a block {}
                 Concat(
