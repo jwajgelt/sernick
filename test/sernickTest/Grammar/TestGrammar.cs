@@ -43,7 +43,7 @@ public class TestGrammar
     private readonly string[] notBracesNotParentheses = { "[", "]", @"\", "123", "/" };
 
     private static void TestCategories(
-        IEnumerable<LexicalGrammarCategoryType> categoriesWhichShouldAccept,
+        IEnumerable<LexicalGrammarCategory> categoriesWhichShouldAccept,
         IEnumerable<string> goodExamples,
         IEnumerable<string> badExamples
     )
@@ -71,7 +71,7 @@ public class TestGrammar
     public void Grammar_categories_priorities_are_distinct()
     {
         var grammar = new LexicalGrammar();
-        var priorities = grammar.GenerateGrammar().Values.ToList().ConvertAll(grammarEntry => grammarEntry.Category.Priority);
+        var priorities = grammar.GenerateGrammar().Values.ToList().ConvertAll(grammarEntry => grammarEntry.Category);
         // hash set size == list size => no two list elements are equal
         Assert.True(priorities.Count == priorities.ToHashSet().Count);
     }
@@ -79,7 +79,7 @@ public class TestGrammar
     [Fact]
     public void Test_keywords_category()
     {
-        TestCategories(new[] { LexicalGrammarCategoryType.Keywords },
+        TestCategories(new[] { LexicalGrammarCategory.Keywords },
          keywords,
          notKeywords);
     }
@@ -87,7 +87,7 @@ public class TestGrammar
     [Fact]
     public void Test_comments_category()
     {
-        TestCategories(new[] { LexicalGrammarCategoryType.Comments },
+        TestCategories(new[] { LexicalGrammarCategory.Comments },
          comments,
          notComments);
     }
@@ -95,7 +95,7 @@ public class TestGrammar
     [Fact]
     public void Test_braces_category()
     {
-        TestCategories(new[] { LexicalGrammarCategoryType.BracesAndParentheses },
+        TestCategories(new[] { LexicalGrammarCategory.BracesAndParentheses },
          bracesAndParentheses,
          notBracesNotParentheses);
     }
@@ -103,7 +103,7 @@ public class TestGrammar
     [Fact]
     public void Test_whitespaces_category()
     {
-        TestCategories(new[] { LexicalGrammarCategoryType.Whitespaces },
+        TestCategories(new[] { LexicalGrammarCategory.Whitespaces },
          whitespaces,
          notWhitespaces);
     }
@@ -111,7 +111,7 @@ public class TestGrammar
     [Fact]
     public void Test_colon_category()
     {
-        TestCategories(new[] { LexicalGrammarCategoryType.Colon },
+        TestCategories(new[] { LexicalGrammarCategory.Colon },
          colon,
          semicolon);
     }
@@ -119,7 +119,7 @@ public class TestGrammar
     [Fact]
     public void Test_semicolon_category()
     {
-        TestCategories(new[] { LexicalGrammarCategoryType.Semicolon },
+        TestCategories(new[] { LexicalGrammarCategory.Semicolon },
          semicolon,
          bracesAndParentheses);
     }
@@ -127,7 +127,7 @@ public class TestGrammar
     [Fact]
     public void Test_type_identifiers_category()
     {
-        TestCategories(new[] { LexicalGrammarCategoryType.TypeIdentifiers },
+        TestCategories(new[] { LexicalGrammarCategory.TypeIdentifiers },
          typeNames,
          variableNames);
     }
@@ -135,7 +135,7 @@ public class TestGrammar
     [Fact]
     public void Test_variable_identifiers_category()
     {
-        TestCategories(new[] { LexicalGrammarCategoryType.VariableIdentifiers },
+        TestCategories(new[] { LexicalGrammarCategory.VariableIdentifiers },
          variableNames,
          typeNames);
     }
@@ -143,7 +143,7 @@ public class TestGrammar
     [Fact]
     public void Test_operators_category()
     {
-        TestCategories(new[] { LexicalGrammarCategoryType.Operators },
+        TestCategories(new[] { LexicalGrammarCategory.Operators },
          operators,
          notOperators);
     }
@@ -151,7 +151,7 @@ public class TestGrammar
     [Fact]
     public void Test_literals_category_integers()
     {
-        TestCategories(new[] { LexicalGrammarCategoryType.Literals },
+        TestCategories(new[] { LexicalGrammarCategory.Literals },
         integerLiterals,
         notIntegerLiterals);
     }
@@ -159,7 +159,7 @@ public class TestGrammar
     [Fact]
     public void Test_literals_category_booleans()
     {
-        TestCategories(new[] { LexicalGrammarCategoryType.Literals },
+        TestCategories(new[] { LexicalGrammarCategory.Literals },
          booleanLiterals,
          notBooleanLiterals);
     }
