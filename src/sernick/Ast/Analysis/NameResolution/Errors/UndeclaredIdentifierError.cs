@@ -1,4 +1,4 @@
-﻿namespace sernick.Ast.Analysis.NameResolution;
+﻿namespace sernick.Ast.Analysis.NameResolution.Errors;
 
 using Diagnostics;
 using Nodes;
