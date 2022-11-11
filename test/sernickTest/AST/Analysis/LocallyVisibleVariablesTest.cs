@@ -4,6 +4,7 @@ using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Nodes;
+using sernick.Diagnostics;
 
 public class LocallyVisibleVariablesTest
 {
@@ -11,7 +12,8 @@ public class LocallyVisibleVariablesTest
     public void AddedVariableIsAccessible()
     {
         var declaration = new VariableDeclaration(new Identifier("x"), new IntType(), null, false);
-        var localVariables = new NameResolutionLocallyVisibleVariables();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var localVariables = new NameResolutionLocallyVisibleVariables(diagnostics.Object);
 
         var newLocalVariables = localVariables.Add(declaration);
         
@@ -22,7 +24,8 @@ public class LocallyVisibleVariablesTest
     public void AddedVariableShadowsOldVariable()
     {
         var oldDeclaration = new VariableDeclaration(new Identifier("x"), new IntType(), null, false);
-        var localVariables = new NameResolutionLocallyVisibleVariables().Add(oldDeclaration);
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var localVariables = new NameResolutionLocallyVisibleVariables(diagnostics.Object).Add(oldDeclaration);
         var newDeclaration = new VariableDeclaration(new Identifier("x"), new IntType(), null, false);
         
         var newLocalVariables = localVariables.Add(newDeclaration);
