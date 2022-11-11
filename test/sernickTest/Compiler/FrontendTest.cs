@@ -1,57 +1,10 @@
 namespace sernickTest.Compiler;
+
 using Helpers;
 using sernick.Tokenizer.Lexer;
 
 public class FrontendTest
 {
-    [Fact]
-    public void CompileCorrectCode_Case1()
-    {
-        var diagnostics = "examples/argument-types/correct/multiple-args.ser".Compile();
-
-        Assert.False(diagnostics.DidErrorOccur);
-    }
-
-    [Fact]
-    public void CompileCorrectCode_Case2()
-    {
-        var diagnostics = "examples/code-blocks/correct/code_blocks_return_values.ser".Compile();
-
-        Assert.False(diagnostics.DidErrorOccur);
-    }
-
-    [Fact]
-    public void CompileCorrectCode_Case3()
-    {
-        var diagnostics = "examples/control_flow/correct/if_else_expression_true.ser".Compile();
-
-        Assert.False(diagnostics.DidErrorOccur);
-    }
-
-    [Fact]
-    public void CompileCorrectCode_Case4()
-    {
-        var diagnostics = "examples/loops/correct/nested.ser".Compile();
-
-        Assert.False(diagnostics.DidErrorOccur);
-    }
-
-    [Fact]
-    public void CompileCorrectCode_Case5()
-    {
-        var diagnostics = "examples/variable-declaration-initialization/correct/var_decl_and_init_no_type.ser".Compile();
-
-        Assert.False(diagnostics.DidErrorOccur);
-    }
-
-    [Fact]
-    public void CompileCorrectCode_Case6()
-    {
-        var diagnostics = "examples/variable-declaration-initialization/correct/const_decl_no_init.ser".Compile();
-
-        Assert.False(diagnostics.DidErrorOccur);
-    }
-
     // '#' and '/' are illegal characters so the lexer shouldn't label them
     [Fact(Skip = "Grammar is not-SLR, causing errors here")]
     public void CompileIncorrectCode_Case1()

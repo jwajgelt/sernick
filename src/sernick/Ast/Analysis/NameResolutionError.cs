@@ -6,7 +6,7 @@ using Nodes;
 
 public sealed record NameResolutionError(Identifier Identifier, ILocation Location) : IDiagnosticItem
 {
-    public bool Equals(IDiagnosticItem? other) => other is NameResolutionError && other.Severity == Severity && other.ToString() == ToString();
+    public bool Equals(IDiagnosticItem? other) => other is NameResolutionError && other.ToString() == ToString();
 
     public override string ToString()
     {

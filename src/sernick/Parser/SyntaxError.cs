@@ -5,7 +5,7 @@ using ParseTree;
 
 public sealed record SyntaxError<TSymbol>(IParseTree<TSymbol>? ParseNode) : IDiagnosticItem
 {
-    public bool Equals(IDiagnosticItem? other) => other is SyntaxError<TSymbol> && other.Severity == Severity && other.ToString() == ToString();
+    public bool Equals(IDiagnosticItem? other) => other is SyntaxError<TSymbol> && other.ToString() == ToString();
 
     public override string ToString()
     {
