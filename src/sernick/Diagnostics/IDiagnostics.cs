@@ -7,7 +7,7 @@ public interface IDiagnostics
     void Report(IDiagnosticItem diagnosticItem);
 }
 
-public interface IDiagnosticItem
+public interface IDiagnosticItem : IEquatable<IDiagnosticItem>
 {
     string ToString();
 
