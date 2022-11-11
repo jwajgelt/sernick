@@ -40,7 +40,7 @@ public sealed class NameResolution
 
     public NameResolution(AstNode ast, IDiagnostics diagnostics)
     {
-        var visitor = new NameResolvingAstVisitor();
+        var visitor = new NameResolvingAstVisitor(diagnostics);
         var result = visitor.VisitAstTree(ast, new NameResolutionVisitorParams());
         UsedVariableDeclarations = result.PartialResult.UsedVariableDeclarations;
         AssignedVariableDeclarations = result.PartialResult.AssignedVariableDeclarations;
@@ -50,8 +50,14 @@ public sealed class NameResolution
     
     private class NameResolvingAstVisitor : AstVisitor<NameResolutionVisitorResult, NameResolutionVisitorParams>
     {
+        private readonly IDiagnostics _diagnostics;
+        public NameResolvingAstVisitor(IDiagnostics diagnostics)
+        {
+            _diagnostics = diagnostics;
+        }
         protected override NameResolutionVisitorResult VisitAstNode(AstNode node, NameResolutionVisitorParams param)
         {
+            
             var variables = param.Variables;
             var partialResult = new NameResolutionPartialResult();
             foreach (var child in node.Children)
@@ -139,7 +145,11 @@ public sealed class NameResolution
 
         public override NameResolutionVisitorResult VisitFunctionCall(FunctionCall node, NameResolutionVisitorParams param)
         {
-            var declaration = param.Variables.Variables[node.FunctionName.Name];
+            var declaration = GetDeclarationAndReportIfMissing(node.FunctionName, param.Variables);
+            if (declaration == null)
+            {
+                return new NameResolutionVisitorResult(param.Variables);
+            }
             return new NameResolutionVisitorResult(NameResolutionPartialResult.OfCalledFunction(node, (FunctionDefinition)declaration),
                 param.Variables);
         }
@@ -176,14 +186,22 @@ public sealed class NameResolution
 
         public override NameResolutionVisitorResult VisitAssignment(Assignment node, NameResolutionVisitorParams param)
         {
-            var declaration = param.Variables.Variables[node.Left.Name];
+            var declaration = GetDeclarationAndReportIfMissing(node.Left, param.Variables);
+            if (declaration == null)
+            {
+                return new NameResolutionVisitorResult(param.Variables);
+            }
             return new NameResolutionVisitorResult(NameResolutionPartialResult.OfAssignment(node, (VariableDeclaration)declaration),
                 param.Variables);
         }
 
         public override NameResolutionVisitorResult VisitVariableValue(VariableValue node, NameResolutionVisitorParams param)
         {
-            var declaration = param.Variables.Variables[node.Identifier.Name];
+            var declaration = GetDeclarationAndReportIfMissing(node.Identifier, param.Variables);
+            if (declaration == null)
+            {
+                return new NameResolutionVisitorResult(param.Variables);
+            }
             return new NameResolutionVisitorResult(NameResolutionPartialResult.OfUsedVariable(node, declaration),
                 param.Variables);
         }
@@ -197,5 +215,19 @@ public sealed class NameResolution
         // {
         //     return base.VisitIntLiteralValue(node, param);
         // }
+
+        private Declaration? GetDeclarationAndReportIfMissing(Identifier identifier, NameResolutionLocallyVisibleVariables variables)
+        {
+            var name = identifier.Name;
+            if (variables.Variables.ContainsKey(name))
+            {
+                return variables.Variables[name];
+            }
+            else
+            {
+                _diagnostics.Report(new UndeclaredIdentifierError(identifier));
+                return null;
+            }
+        }
     }
 }

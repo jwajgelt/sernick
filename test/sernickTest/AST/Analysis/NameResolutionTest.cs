@@ -18,7 +18,7 @@ public class NameResolutionTest
         var variableValue = new VariableValue(new Identifier("x"));
         var infix = new Infix(variableValue, new IntLiteralValue(1), Infix.Op.Equals);
         var tree = new ExpressionJoin(declaration, infix);
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
         
@@ -35,7 +35,7 @@ public class NameResolutionTest
         var variableValue = new VariableValue(new Identifier("x"));
         var infix = new Infix(variableValue, new IntLiteralValue(1), Infix.Op.Equals);
         var tree = new ExpressionJoin(new ExpressionJoin(declaration1, declaration2), new ExpressionJoin(declaration3, infix));
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
         
@@ -50,7 +50,7 @@ public class NameResolutionTest
         var variableValue = new VariableValue(new Identifier("x"));
         var infix = new Infix(variableValue, new IntLiteralValue(1), Infix.Op.Equals);
         var tree = new ExpressionJoin(declaration, new CodeBlock(infix));
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
         
@@ -66,7 +66,7 @@ public class NameResolutionTest
         var variableValue = new VariableValue(new Identifier("x"));
         var infix = new Infix(variableValue, new IntLiteralValue(1), Infix.Op.Equals);
         var tree = new ExpressionJoin(outerDeclaration, new CodeBlock(new ExpressionJoin(innerDeclaration, infix)));
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
         
@@ -81,7 +81,7 @@ public class NameResolutionTest
         var declaration = new VariableDeclaration(new Identifier("x"), null, null, true);
         var assignment = new Assignment(new Identifier("x"), new IntLiteralValue(1));
         var tree = new ExpressionJoin(declaration, assignment);
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
         
@@ -97,7 +97,7 @@ public class NameResolutionTest
         var declaration3 = new VariableDeclaration(new Identifier("z"), null, null, true);
         var assignment = new Assignment(new Identifier("x"), new IntLiteralValue(1));
         var tree = new ExpressionJoin(new ExpressionJoin(declaration1, declaration2), new ExpressionJoin(declaration3, assignment));
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
         
@@ -111,7 +111,7 @@ public class NameResolutionTest
         var declaration = new VariableDeclaration(new Identifier("x"), null, null, true);
         var assignment = new Assignment(new Identifier("x"), new IntLiteralValue(1));
         var tree = new ExpressionJoin(declaration, new CodeBlock(assignment));
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
         
@@ -126,7 +126,7 @@ public class NameResolutionTest
         var innerDeclaration = new VariableDeclaration(new Identifier("x"), null, null, true);
         var assignment = new Assignment(new Identifier("x"), new IntLiteralValue(1));
         var tree = new ExpressionJoin(outerDeclaration, new CodeBlock(new ExpressionJoin(innerDeclaration, assignment)));
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
         
@@ -142,7 +142,7 @@ public class NameResolutionTest
         var declaration = GetZeroArgumentFunctionDefinition("f");
         var call = new FunctionCall(new Identifier("f"), Enumerable.Empty<Expression>());
         var tree = new ExpressionJoin(declaration, call);
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
         
@@ -161,7 +161,7 @@ public class NameResolutionTest
         var declaration3 = GetZeroArgumentFunctionDefinition("h");
         var call = new FunctionCall(new Identifier("f"), Enumerable.Empty<Expression>());
         var tree = new ExpressionJoin(new ExpressionJoin(declaration1, declaration2), new ExpressionJoin(declaration3, call));
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
 
@@ -176,7 +176,7 @@ public class NameResolutionTest
         var declaration = GetZeroArgumentFunctionDefinition("f");
         var call = new FunctionCall(new Identifier("f"), Enumerable.Empty<Expression>());
         var tree = new ExpressionJoin(declaration, new CodeBlock(call));
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
         
@@ -196,7 +196,7 @@ public class NameResolutionTest
         var call = new FunctionCall(new Identifier("f"), Enumerable.Empty<Expression>());
         // var tree = new ExpressionJoin(outerDeclaration, new CodeBlock(new ExpressionJoin(innerDeclaration, call)));
         var tree = new ExpressionJoin( new ExpressionJoin(outerDeclaration, innerDeclaration), call);
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
         
@@ -212,7 +212,7 @@ public class NameResolutionTest
         var use = new VariableValue(new Identifier("a"));
         var block = new CodeBlock(new ReturnStatement(use));
         var function = GetOneArgumentFunctionDefinition("f", parameter, block);
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(function, diagnostics.Object);
         
@@ -231,7 +231,7 @@ public class NameResolutionTest
         var tree = new ExpressionJoin(
             new VariableDeclaration(new Identifier("a"), null, null, false),
             function);
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(tree, diagnostics.Object);
         
@@ -254,11 +254,48 @@ public class NameResolutionTest
         var functionG = GetOneArgumentFunctionDefinition("g", parameterB, blockG);
         var parameterA = GetFunctionParameter("a");
         var functionF = GetOneArgumentFunctionDefinition("f", parameterA, new CodeBlock(functionG));
-        var diagnostics = new Mock<IDiagnostics>();
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new NameResolution(functionF, diagnostics.Object);
         
         Assert.Same(parameterA, nameResolution.UsedVariableDeclarations[use]);
+    }
+    
+    // UndeclaredIdentifier tests
+    [Fact]
+    private void UndefinedIdentifierInVariableUseReported()
+    {
+        // a;
+        var use = new VariableValue(new Identifier("a"));
+        var diagnostics = new Mock<IDiagnostics>();
+        
+        var nameResolution = new NameResolution(use, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()));
+    }
+    
+    [Fact]
+    private void UndefinedIdentifierInVariableAssignmentReported()
+    {
+        // a = 3;
+        var assignment = new Assignment(new Identifier("a"), new IntLiteralValue(3));
+        var diagnostics = new Mock<IDiagnostics>();
+        
+        var nameResolution = new NameResolution(assignment, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()));
+    }
+    
+    [Fact]
+    private void UndefinedIdentifierInFunctionCallReported()
+    {
+        // f();
+        var call = new FunctionCall(new Identifier("f"), Enumerable.Empty<Expression>());
+        var diagnostics = new Mock<IDiagnostics>();
+        
+        var nameResolution = new NameResolution(call, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()));
     }
     
 
