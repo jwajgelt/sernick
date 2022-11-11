@@ -38,8 +38,10 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
     {
         _startSymbol = dfaGrammar.Start;
         _reversedAutomata = reversedAutomata;
-        _startConfig = new Configuration<TSymbol>(dfaGrammar.Productions
-            .Select(production => (production.Value.Start, production.Key)).ToHashSet());
+        _startConfig = Configuration<TSymbol>.Closure(new[]
+        {
+            (dfaGrammar.Productions[_startSymbol].Start, _startSymbol)
+        }.ToHashSet(), dfaGrammar);
 
         var dummyConfiguration = new Configuration<TSymbol>(Enumerable
             .Empty<ValueTuple<SumDfa<Production<TSymbol>, Regex<TSymbol>, TSymbol>.State, TSymbol>>().ToHashSet());
