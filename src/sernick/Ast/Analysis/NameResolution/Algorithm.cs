@@ -92,7 +92,7 @@ public sealed class Algorithm
                 variablesInsideFunction = parameter.Accept(this, variablesInsideFunction).variablesManager;
             }
 
-            var visitorResult = node.Body.Accept(this, variablesInsideFunction);
+            var visitorResult = node.Body.Inner.Accept(this, variablesInsideFunction);
             
             return new VisitorResult(visitorResult.PartialAlgorithmResult, visibleVariables);
         }
