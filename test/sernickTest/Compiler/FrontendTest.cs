@@ -1,5 +1,4 @@
 namespace sernickTest.Compiler;
-
 using Helpers;
 using sernick.Tokenizer.Lexer;
 
@@ -108,4 +107,35 @@ public class FrontendTest
             return lexicalError.Start.ToString() == "line 4, character 2" && lexicalError.End.ToString() == "line 4, character 3";
         });
     }
+
+    [Theory, MemberData(nameof(CorrectExamplesData))]
+    public void TestCorrectExamples(string filePath)
+    {
+        var diagnostics = filePath.Compile();
+
+        Assert.False(diagnostics.DidErrorOccur);
+    }
+
+    public static IEnumerable<object[]> CorrectExamplesData => Directory
+        .GetDirectories("examples", "*", SearchOption.TopDirectoryOnly)
+        .Select(dir => new DirectoryInfo($"{dir}/correct")).SelectMany(dirInfo => dirInfo.GetFiles())
+        .Select(file => new[] { file.FullName });
+
+    /*
+    [Theory, MemberData(nameof(IncorrectExamplesData))]
+    public void TestIncorrectExamples(string filePath, IEnumerable<IDiagnosticItem> expectedErrors)
+    {
+        var diagnostics = filePath.Compile();
+        
+        Assert.True(diagnostics.DidErrorOccur);
+        Assert.Equal(expectedErrors, diagnostics.DiagnosticItems);
+    }
+    
+    public static IEnumerable<object[]> IncorrectExamplesData =>
+        new[]
+        {
+            new object[] { "FilePath1", new[] { new FakeDiagnosticItem(DiagnosticItemSeverity.Info)} },
+            new object[] { "FilePath2", new[] { new FakeDiagnosticItem(DiagnosticItemSeverity.Info)} }
+        };
+    */
 }
