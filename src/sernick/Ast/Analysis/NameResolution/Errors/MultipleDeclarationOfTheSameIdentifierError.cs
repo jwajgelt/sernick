@@ -3,12 +3,12 @@
 using Diagnostics;
 using Nodes;
 
-public record MultipleDeclarationOfTheSameIdentifierError(Identifier Identifier) : IDiagnosticItem
+public record MultipleDeclarationOfTheSameIdentifierError(Declaration Original, Declaration Repeat) : IDiagnosticItem
 {
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
     
     public override string ToString()
     {
-        return $"Multiple declarations of identifier: {Identifier}";
+        return $"Multiple declarations of identifier: {Original}, {Repeat}";
     }
 }

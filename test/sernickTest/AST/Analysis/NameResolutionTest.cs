@@ -195,8 +195,7 @@ public class NameResolutionTest
         var outerDeclaration = GetZeroArgumentFunctionDefinition("f");
         var innerDeclaration = GetZeroArgumentFunctionDefinition("f");
         var call = new FunctionCall(new Identifier("f"), Enumerable.Empty<Expression>());
-        // var tree = new ExpressionJoin(outerDeclaration, new CodeBlock(new ExpressionJoin(innerDeclaration, call)));
-        var tree = new ExpressionJoin( new ExpressionJoin(outerDeclaration, innerDeclaration), call);
+        var tree = new ExpressionJoin(outerDeclaration, new CodeBlock(new ExpressionJoin(innerDeclaration, call)));
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         
         var nameResolution = new Algorithm(tree, diagnostics.Object);
