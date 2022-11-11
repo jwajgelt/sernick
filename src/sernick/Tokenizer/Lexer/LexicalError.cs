@@ -7,7 +7,7 @@ public sealed record LexicalError(ILocation Start, ILocation End) : IDiagnosticI
 {
     public override string ToString()
     {
-        return $"Lexical Error starting at: {Start} and ending at: {End}";
+        return $"Lexical error starting at {Start} and ending at {End}";
     }
 
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
