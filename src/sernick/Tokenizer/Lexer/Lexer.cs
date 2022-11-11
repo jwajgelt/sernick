@@ -32,11 +32,10 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
             {
                 if (lastAcceptingState != null)
                 {
-                    // return all matching token categories for this match
-                    foreach (var category in _sumDfa.AcceptingCategories(lastAcceptingState.DfaStates))
-                    {
-                        yield return new Token<TCat>(category, text, lastAcceptingStart, lastAcceptingState.Location);
-                    }
+                    // return the matching token category with the highest priority for this match
+                    var matchingCategory = _sumDfa.AcceptingCategories(lastAcceptingState.DfaStates).Min()!;
+                    // matching category is non-null, since `_sumDfa` accepted `lastAcceptingState`
+                    yield return new Token<TCat>(matchingCategory, text, lastAcceptingStart, lastAcceptingState.Location);
 
                     // reset the input to the last end of the match
                     input.MoveTo(lastAcceptingState.Location);
@@ -86,14 +85,15 @@ public sealed class Lexer<TCat, TState> : ILexer<TCat>
         }
 
         // return the last match
-        if (lastAcceptingState != null)
+        if (lastAcceptingState == null)
         {
-            // return all matching token categories for this match
-            foreach (var category in _sumDfa.AcceptingCategories(lastAcceptingState.DfaStates))
-            {
-                yield return new Token<TCat>(category, text, lastAcceptingStart, lastAcceptingState.Location);
-            }
+            yield break;
         }
+
+        // return the matching token category with the highest priority for this match
+        var category = _sumDfa.AcceptingCategories(lastAcceptingState.DfaStates).Min()!;
+        // matching category is non-null, since `_sumDfa` accepted `lastAcceptingState`
+        yield return new Token<TCat>(category, text, lastAcceptingStart, lastAcceptingState.Location);
     }
 
     private sealed record LexerProcessingState(SumDfa<TCat, TState, char>.State DfaStates, ILocation Location);
