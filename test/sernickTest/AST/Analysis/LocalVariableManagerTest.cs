@@ -1,4 +1,4 @@
-﻿namespace sernickTest.AST.Analysis;
+namespace sernickTest.AST.Analysis;
 
 using Moq;
 using sernick.Ast;
@@ -19,7 +19,7 @@ public class LocalVariableManagerTest
         var manager = new LocalVariablesManager(diagnostics.Object);
 
         var finalManager = manager.Add(variable).Add(parameter).Add(function);
-        
+
         Assert.Same(variable, finalManager.GetAssignedVariableDeclaration(new Identifier("a")));
         Assert.Same(variable, finalManager.GetUsedVariableDeclaration(new Identifier("a")));
         Assert.Same(parameter, finalManager.GetUsedVariableDeclaration(new Identifier("b")));
@@ -35,7 +35,7 @@ public class LocalVariableManagerTest
         manager.GetAssignedVariableDeclaration(new Identifier("a"));
         manager.GetUsedVariableDeclaration(new Identifier("a"));
         manager.GetCalledFunctionDeclaration(new Identifier("a"));
-        
+
         diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()), Times.Exactly(3));
     }
 
@@ -50,7 +50,7 @@ public class LocalVariableManagerTest
         var manager = new LocalVariablesManager(diagnostics.Object);
 
         var finalManager = manager.Add(firstDeclaration).Add(variable).Add(parameter).Add(function);
-        
+
         diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsOfTheSameIdentifierError>()), Times.Exactly(3));
     }
 
@@ -64,12 +64,12 @@ public class LocalVariableManagerTest
 
         var variableAsFunction = manager.GetCalledFunctionDeclaration(new Identifier("a"));
         var parameterAsFunction = manager.GetCalledFunctionDeclaration(new Identifier("b"));
-        
+
         diagnostics.Verify(d => d.Report(It.IsAny<NotAFunctionError>()), Times.Exactly(2));
         Assert.Null(variableAsFunction);
         Assert.Null(parameterAsFunction);
     }
-    
+
     [Fact]
     public void FunctionUsedAsVariableReported()
     {
@@ -79,7 +79,7 @@ public class LocalVariableManagerTest
 
         var functionAsVariable1 = manager.GetUsedVariableDeclaration(new Identifier("f"));
         var functionAsVariable2 = manager.GetAssignedVariableDeclaration(new Identifier("f"));
-        
+
         diagnostics.Verify(d => d.Report(It.IsAny<NotAVariableError>()), Times.Exactly(2));
         Assert.Null(functionAsVariable1);
         Assert.Null(functionAsVariable2);
@@ -105,7 +105,7 @@ public class LocalVariableManagerTest
             .Add(variable2)
             .Add(parameter2)
             .Add(function2);
-        
+
         Assert.Same(variable2, finalManager.GetAssignedVariableDeclaration(new Identifier("a")));
         Assert.Same(variable2, finalManager.GetUsedVariableDeclaration(new Identifier("a")));
         Assert.Same(parameter2, finalManager.GetUsedVariableDeclaration(new Identifier("b")));

@@ -1,9 +1,7 @@
 namespace sernick.Ast.Analysis.NameResolution;
 
 using Diagnostics;
-using Errors;
 using Nodes;
-using Utility;
 
 public sealed class Algorithm
 {
@@ -48,7 +46,6 @@ public sealed class Algorithm
         CalledFunctionDeclarations = result.PartialAlgorithmResult.CalledFunctionDeclarations;
     }
 
-    
     private class NameResolvingAstVisitor : AstVisitor<VisitorResult, LocalVariablesManager>
     {
         private readonly IDiagnostics _diagnostics;
@@ -56,86 +53,85 @@ public sealed class Algorithm
         {
             _diagnostics = diagnostics;
         }
+
+        /// <summary>
+        /// A default implementation of Visit method, used to resolve names on the AST.
+        /// </summary>
+        /// <param name="node"> The node to call Visitor on. </param>
+        /// <param name="variablesManager"> An immutable manager which holds information about currently visible variables. </param>
+        /// <returns> A VisitorResult, which is a pair of:
+        /// - a PartialAlgorithmResult containing the 3 result dictionaries filled with resolved names from the subtree,
+        /// - a new LocalVariableManager updated with variables defined inside of the subtree. </returns>
         protected override VisitorResult VisitAstNode(AstNode node, LocalVariablesManager variablesManager)
         {
-            var partialResult = new PartialAlgorithmResult();
-            foreach (var child in node.Children)
-            {
-                var childResult = child.Accept(this, variablesManager);
-                partialResult = PartialAlgorithmResult.Join(partialResult, childResult.PartialAlgorithmResult);
-                variablesManager = childResult.variablesManager;
-            }
+            var result = node.Children.Aggregate(
+                (partialResult: new PartialAlgorithmResult(), variablesManager),
+                    (tuple, next) =>
+                    {
+                        var childResult = next.Accept(this, tuple.variablesManager);
+                        return (PartialAlgorithmResult.Join(tuple.partialResult, childResult.PartialAlgorithmResult),
+                            childResult.variablesManager);
+                    });
 
-            return new VisitorResult(partialResult, variablesManager);
+            return new VisitorResult(result.partialResult, result.variablesManager);
         }
-
 
         public override VisitorResult VisitVariableDeclaration(VariableDeclaration node, LocalVariablesManager variablesManager)
         {
-            var visibleVariables = variablesManager.Add(node);
-            return new VisitorResult(new PartialAlgorithmResult(), visibleVariables);
+            return new VisitorResult(new PartialAlgorithmResult(), variablesManager.Add(node));
         }
 
         public override VisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
             LocalVariablesManager variablesManager)
         {
-            var visibleVariables = variablesManager.Add(node);
-            return new VisitorResult(new PartialAlgorithmResult(), visibleVariables);
+            return new VisitorResult(new PartialAlgorithmResult(), variablesManager.Add(node));
         }
 
         public override VisitorResult VisitFunctionDefinition(FunctionDefinition node, LocalVariablesManager variablesManager)
         {
-            var visibleVariables = variablesManager.Add(node);
-            var variablesInsideFunction = visibleVariables.NewScope();
-            foreach (var parameter in node.Parameters)
-            {
-                variablesInsideFunction = parameter.Accept(this, variablesInsideFunction).variablesManager;
-            }
+            var variablesWithFunction = variablesManager.Add(node);
+            var variablesWithParameters = node.Parameters.Aggregate(variablesWithFunction.NewScope(), 
+                (variables, parameter) => parameter.Accept(this, variables).variablesManager);
 
-            var visitorResult = node.Body.Inner.Accept(this, variablesInsideFunction);
-            
-            return new VisitorResult(visitorResult.PartialAlgorithmResult, visibleVariables);
+            var visitorResult = node.Body.Inner.Accept(this, variablesWithParameters);
+            return visitorResult with { variablesManager = variablesWithFunction };
         }
 
         public override VisitorResult VisitCodeBlock(CodeBlock node, LocalVariablesManager variablesManager)
         {
             var visitorResult = node.Inner.Accept(this, variablesManager.NewScope());
-            return new VisitorResult(visitorResult.PartialAlgorithmResult, variablesManager);
+            // ignore variables defined inside the block
+            return visitorResult with { variablesManager = variablesManager };
         }
-
 
         public override VisitorResult VisitFunctionCall(FunctionCall node, LocalVariablesManager variablesManager)
         {
             var declaration = variablesManager.GetCalledFunctionDeclaration(node.FunctionName);
-            if (declaration == null)
-            {
-                return new VisitorResult(variablesManager);
-            }
-            return new VisitorResult(PartialAlgorithmResult.OfCalledFunction(node, (FunctionDefinition)declaration),
-                variablesManager);
+            // if the identifier is not resolved, we can try to continue resolving and possibly find more errors
+            return declaration == null
+                ? new VisitorResult(variablesManager)
+                : new VisitorResult(PartialAlgorithmResult.OfCalledFunction(node, declaration),
+                    variablesManager);
         }
-
 
         public override VisitorResult VisitAssignment(Assignment node, LocalVariablesManager variablesManager)
         {
             var declaration = variablesManager.GetAssignedVariableDeclaration(node.Left);
-            if (declaration == null)
-            {
-                return new VisitorResult(variablesManager);
-            }
-            return new VisitorResult(PartialAlgorithmResult.OfAssignment(node, (VariableDeclaration)declaration),
-                variablesManager);
+            // if the identifier is not resolved, we can try to continue resolving and possibly find more errors
+            return declaration == null
+                ? new VisitorResult(variablesManager)
+                : new VisitorResult(PartialAlgorithmResult.OfAssignment(node, declaration),
+                    variablesManager);
         }
 
         public override VisitorResult VisitVariableValue(VariableValue node, LocalVariablesManager variablesManager)
         {
             var declaration = variablesManager.GetUsedVariableDeclaration(node.Identifier);
-            if (declaration == null)
-            {
-                return new VisitorResult(variablesManager);
-            }
-            return new VisitorResult(PartialAlgorithmResult.OfUsedVariable(node, declaration),
-                variablesManager);
+            // if the identifier is not resolved, we can try to continue resolving and possibly find more errors
+            return declaration == null
+                ? new VisitorResult(variablesManager)
+                : new VisitorResult(PartialAlgorithmResult.OfUsedVariable(node, declaration),
+                    variablesManager);
         }
     }
 }

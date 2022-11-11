@@ -1,7 +1,6 @@
-﻿namespace sernick.Ast.Analysis.NameResolution;
+namespace sernick.Ast.Analysis.NameResolution;
 
 using Nodes;
-
 
 public record PartialAlgorithmResult(IReadOnlyDictionary<VariableValue, Declaration> UsedVariableDeclarations,
     IReadOnlyDictionary<Assignment, VariableDeclaration> AssignedVariableDeclarations,
@@ -31,21 +30,21 @@ public record PartialAlgorithmResult(IReadOnlyDictionary<VariableValue, Declarat
 
     public static PartialAlgorithmResult OfUsedVariable(VariableValue node, Declaration declaration)
     {
-        return new PartialAlgorithmResult(new Dictionary<VariableValue, Declaration>() {{node, declaration}},
+        return new PartialAlgorithmResult(new Dictionary<VariableValue, Declaration>() { { node, declaration } },
             new Dictionary<Assignment, VariableDeclaration>(),
             new Dictionary<FunctionCall, FunctionDefinition>());
     }
     public static PartialAlgorithmResult OfAssignment(Assignment node, VariableDeclaration declaration)
     {
         return new PartialAlgorithmResult(new Dictionary<VariableValue, Declaration>(),
-            new Dictionary<Assignment, VariableDeclaration>() {{node, declaration}},
+            new Dictionary<Assignment, VariableDeclaration>() { { node, declaration } },
             new Dictionary<FunctionCall, FunctionDefinition>());
     }
-    
+
     public static PartialAlgorithmResult OfCalledFunction(FunctionCall node, FunctionDefinition declaration)
     {
         return new PartialAlgorithmResult(new Dictionary<VariableValue, Declaration>(),
             new Dictionary<Assignment, VariableDeclaration>(),
-            new Dictionary<FunctionCall, FunctionDefinition>() {{node, declaration}});
+            new Dictionary<FunctionCall, FunctionDefinition>() { { node, declaration } });
     }
 }
