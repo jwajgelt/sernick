@@ -24,6 +24,7 @@ public static class CompilerFrontend
         var tokens = lexer.Process(input, diagnostics);
         var parseLeaves = tokens
             .Where(token => !token.Category.Equals(LexicalGrammarCategoryType.Whitespaces)) // strip whitespace
+            .Where(token => !token.Category.Equals(LexicalGrammarCategoryType.Comments)) // ignore comments
             .Select(token =>
                 new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.Start, token.End));
         var parser = Parser<Symbol>.FromGrammar(SernickGrammar.Create(), new NonTerminal(NonTerminalSymbol.Start));
@@ -38,7 +39,7 @@ public static class CompilerFrontend
         var categoryDfas =
             grammarDict.ToDictionary(
                 e => e.Key,
-                e => (IDfa<Regex<char>, char>)RegexDfa<char>.FromRegex(e.Value.Regex)
+                e => RegexDfa<char>.FromRegex(e.Value.Regex)
             );
         return new Lexer<LexicalGrammarCategoryType, Regex<char>>(categoryDfas);
     }
