@@ -1,4 +1,4 @@
-﻿namespace sernick.Ast.Analysis.NameResolution;
+namespace sernick.Ast.Analysis.NameResolution;
 
 using System.Collections.Immutable;
 using Diagnostics;
@@ -10,7 +10,7 @@ public class LocalVariablesManager
     private readonly ImmutableDictionary<string, Declaration> _variables;
     private readonly ImmutableHashSet<string> _currentScope;
     private readonly IDiagnostics _diagnostics;
-    
+
     private LocalVariablesManager(ImmutableDictionary<string, Declaration> variables,
         ImmutableHashSet<string> currentScope, IDiagnostics diagnostics)
     {
@@ -26,14 +26,12 @@ public class LocalVariablesManager
     {
         return Add(declaration.Name.Name, declaration);
     }
-    
-    
+
     public LocalVariablesManager Add(FunctionParameterDeclaration declaration)
     {
         return Add(declaration.Name.Name, declaration);
     }
-    
-    
+
     public LocalVariablesManager Add(FunctionDefinition declaration)
     {
         return Add(declaration.Name.Name, declaration);
@@ -51,10 +49,11 @@ public class LocalVariablesManager
         {
             return declaration;
         }
+
         _diagnostics.Report(new NotAVariableError(identifier));
         return null;
     }
-    
+
     public VariableDeclaration? GetAssignedVariableDeclaration(Identifier identifier)
     {
         var declaration = GetDeclaration(identifier);
@@ -62,6 +61,7 @@ public class LocalVariablesManager
         {
             return (VariableDeclaration?)declaration;
         }
+
         _diagnostics.Report(new NotAVariableError(identifier));
         return null;
     }
@@ -73,6 +73,7 @@ public class LocalVariablesManager
         {
             return (FunctionDefinition?)declaration;
         }
+
         _diagnostics.Report(new NotAFunctionError(identifier));
         return null;
     }
@@ -83,6 +84,7 @@ public class LocalVariablesManager
         {
             _diagnostics.Report(new MultipleDeclarationsOfTheSameIdentifierError(_variables[name], declaration));
         }
+
         return new LocalVariablesManager(_variables.Remove(name).Add(name, declaration), _currentScope.Add(name), _diagnostics);
     }
 
@@ -93,6 +95,7 @@ public class LocalVariablesManager
         {
             return _variables[name];
         }
+
         _diagnostics.Report(new UndeclaredIdentifierError(identifier));
         return null;
     }
