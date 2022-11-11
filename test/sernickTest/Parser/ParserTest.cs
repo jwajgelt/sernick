@@ -42,7 +42,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        Assert.Throws<ParsingException>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
+        Assert.Throws<ParsingException<CharCategory>>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
     }
 
     /*  S -> A
@@ -92,7 +92,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        Assert.Throws<ParsingException>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
+        Assert.Throws<ParsingException<CharCategory>>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
     }
 
     /*  S -> A*
@@ -142,7 +142,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        Assert.Throws<ParsingException>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
+        Assert.Throws<ParsingException<CharCategory>>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
     }
 
     /*  S -> AB
@@ -199,7 +199,7 @@ public class ParserTest
         var leaf1 = new ParseTreeLeaf('A'.ToCategory(), location, location);
         var leaves = new[] { leaf1 };
 
-        Assert.Throws<ParsingException>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
+        Assert.Throws<ParsingException<CharCategory>>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
     }
 
     /*  S -> A+B
@@ -255,7 +255,7 @@ public class ParserTest
         var leaf = new ParseTreeLeaf('C'.ToCategory(), location, location);
         var leaves = new[] { leaf };
 
-        Assert.Throws<ParsingException>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
+        Assert.Throws<ParsingException<CharCategory>>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
     }
 
     /*  S -> A
