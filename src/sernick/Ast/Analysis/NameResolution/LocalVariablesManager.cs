@@ -2,6 +2,7 @@
 
 using System.Collections.Immutable;
 using Diagnostics;
+using Errors;
 using Nodes;
 
 public class LocalVariablesManager
@@ -43,8 +44,56 @@ public class LocalVariablesManager
         return new LocalVariablesManager(Variables, ImmutableHashSet<string>.Empty, _diagnostics);
     }
 
+    public Declaration? GetUsedVariableDeclaration(Identifier identifier)
+    {
+        var declaration = GetDeclaration(identifier);
+        if (declaration is null or VariableDeclaration or FunctionParameterDeclaration)
+        {
+            return declaration;
+        }
+        _diagnostics.Report(new NotAVariableError(identifier));
+        return null;
+    }
+    
+    public VariableDeclaration? GetAssignedVariableDeclaration(Identifier identifier)
+    {
+        var declaration = GetDeclaration(identifier);
+        if (declaration is null or VariableDeclaration)
+        {
+            return (VariableDeclaration?)declaration;
+        }
+        _diagnostics.Report(new NotAVariableError(identifier));
+        return null;
+    }
+
+    public FunctionDefinition? GetCalledFunctionDeclaration(Identifier identifier)
+    {
+        var declaration = GetDeclaration(identifier);
+        if (declaration is null or FunctionDefinition)
+        {
+            return (FunctionDefinition?)declaration;
+        }
+        _diagnostics.Report(new NotAFunctionError(identifier));
+        return null;
+    }
+
     private LocalVariablesManager Add(string name, Declaration declaration)
     {
+        if (_currentScope.Contains(name))
+        {
+            _diagnostics.Report(new MultipleDeclarationOfTheSameIdentifierError(Variables[name], declaration));
+        }
         return new LocalVariablesManager(Variables.Remove(name).Add(name, declaration), _currentScope.Add(name), _diagnostics);
+    }
+
+    private Declaration? GetDeclaration(Identifier identifier)
+    {
+        var name = identifier.Name;
+        if (Variables.ContainsKey(name))
+        {
+            return Variables[name];
+        }
+        _diagnostics.Report(new UndeclaredIdentifierError(identifier));
+        return null;
     }
 }

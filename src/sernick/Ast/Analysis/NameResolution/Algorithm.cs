@@ -106,7 +106,7 @@ public sealed class Algorithm
 
         public override VisitorResult VisitFunctionCall(FunctionCall node, LocalVariablesManager variablesManager)
         {
-            var declaration = GetDeclarationAndReportIfMissing(node.FunctionName, variablesManager);
+            var declaration = variablesManager.GetCalledFunctionDeclaration(node.FunctionName);
             if (declaration == null)
             {
                 return new VisitorResult(variablesManager);
@@ -118,7 +118,7 @@ public sealed class Algorithm
 
         public override VisitorResult VisitAssignment(Assignment node, LocalVariablesManager variablesManager)
         {
-            var declaration = GetDeclarationAndReportIfMissing(node.Left, variablesManager);
+            var declaration = variablesManager.GetAssignedVariableDeclaration(node.Left);
             if (declaration == null)
             {
                 return new VisitorResult(variablesManager);
@@ -129,27 +129,13 @@ public sealed class Algorithm
 
         public override VisitorResult VisitVariableValue(VariableValue node, LocalVariablesManager variablesManager)
         {
-            var declaration = GetDeclarationAndReportIfMissing(node.Identifier, variablesManager);
+            var declaration = variablesManager.GetUsedVariableDeclaration(node.Identifier);
             if (declaration == null)
             {
                 return new VisitorResult(variablesManager);
             }
             return new VisitorResult(PartialAlgorithmResult.OfUsedVariable(node, declaration),
                 variablesManager);
-        }
-
-        private Declaration? GetDeclarationAndReportIfMissing(Identifier identifier, LocalVariablesManager variablesManager)
-        {
-            var name = identifier.Name;
-            if (variablesManager.Variables.ContainsKey(name))
-            {
-                return variablesManager.Variables[name];
-            }
-            else
-            {
-                _diagnostics.Report(new UndeclaredIdentifierError(identifier));
-                return null;
-            }
         }
     }
 }

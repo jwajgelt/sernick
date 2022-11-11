@@ -20,16 +20,16 @@ public class LocallyVisibleVariablesTest
         Assert.Same(declaration, newLocalVariables.Variables["x"]);
     }
     
-    [Fact]
-    public void AddedVariableShadowsOldVariable()
-    {
-        var oldDeclaration = new VariableDeclaration(new Identifier("x"), new IntType(), null, false);
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
-        var localVariables = new LocalVariablesManager(diagnostics.Object).Add(oldDeclaration);
-        var newDeclaration = new VariableDeclaration(new Identifier("x"), new IntType(), null, false);
-        
-        var newLocalVariables = localVariables.Add(newDeclaration);
-        
-        Assert.Same(newDeclaration, newLocalVariables.Variables["x"]);
-    }
+    // [Fact]
+    // public void AddedVariableShadowsOldVariable()
+    // {
+    //     var oldDeclaration = new VariableDeclaration(new Identifier("x"), new IntType(), null, false);
+    //     var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+    //     var localVariables = new LocalVariablesManager(diagnostics.Object).Add(oldDeclaration);
+    //     var newDeclaration = new VariableDeclaration(new Identifier("x"), new IntType(), null, false);
+    //     
+    //     var newLocalVariables = localVariables.Add(newDeclaration);
+    //     
+    //     Assert.Same(newDeclaration, newLocalVariables.Variables["x"]);
+    // }
 }
