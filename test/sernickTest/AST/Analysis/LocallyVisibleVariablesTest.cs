@@ -13,7 +13,7 @@ public class LocallyVisibleVariablesTest
     {
         var declaration = new VariableDeclaration(new Identifier("x"), new IntType(), null, false);
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
-        var localVariables = new NameResolutionLocallyVisibleVariables(diagnostics.Object);
+        var localVariables = new LocalVariablesManager(diagnostics.Object);
 
         var newLocalVariables = localVariables.Add(declaration);
         
@@ -25,7 +25,7 @@ public class LocallyVisibleVariablesTest
     {
         var oldDeclaration = new VariableDeclaration(new Identifier("x"), new IntType(), null, false);
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
-        var localVariables = new NameResolutionLocallyVisibleVariables(diagnostics.Object).Add(oldDeclaration);
+        var localVariables = new LocalVariablesManager(diagnostics.Object).Add(oldDeclaration);
         var newDeclaration = new VariableDeclaration(new Identifier("x"), new IntType(), null, false);
         
         var newLocalVariables = localVariables.Add(newDeclaration);
