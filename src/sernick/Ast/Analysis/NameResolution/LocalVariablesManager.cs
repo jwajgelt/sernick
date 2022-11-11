@@ -5,11 +5,19 @@ using Diagnostics;
 using Errors;
 using Nodes;
 
+/// <summary>
+///     Class responsible for managing variables visible from a certain place in code and reporting diagnostics.
+/// </summary>
 public class LocalVariablesManager
 {
-    private readonly ImmutableDictionary<string, Declaration> _variables;
     private readonly ImmutableHashSet<string> _currentScope;
     private readonly IDiagnostics _diagnostics;
+    private readonly ImmutableDictionary<string, Declaration> _variables;
+
+    public LocalVariablesManager(IDiagnostics diagnostics) : this(ImmutableDictionary<string, Declaration>.Empty,
+        ImmutableHashSet<string>.Empty, diagnostics)
+    {
+    }
 
     private LocalVariablesManager(ImmutableDictionary<string, Declaration> variables,
         ImmutableHashSet<string> currentScope, IDiagnostics diagnostics)
@@ -17,9 +25,6 @@ public class LocalVariablesManager
         _variables = variables;
         _currentScope = currentScope;
         _diagnostics = diagnostics;
-    }
-    public LocalVariablesManager(IDiagnostics diagnostics) : this(ImmutableDictionary<string, Declaration>.Empty, ImmutableHashSet<string>.Empty, diagnostics)
-    {
     }
 
     public LocalVariablesManager Add(VariableDeclaration declaration)
@@ -35,11 +40,6 @@ public class LocalVariablesManager
     public LocalVariablesManager Add(FunctionDefinition declaration)
     {
         return Add(declaration.Name.Name, declaration);
-    }
-
-    public LocalVariablesManager NewScope()
-    {
-        return new LocalVariablesManager(_variables, ImmutableHashSet<string>.Empty, _diagnostics);
     }
 
     public Declaration? GetUsedVariableDeclaration(Identifier identifier)
@@ -78,6 +78,11 @@ public class LocalVariablesManager
         return null;
     }
 
+    public LocalVariablesManager NewScope()
+    {
+        return new LocalVariablesManager(_variables, ImmutableHashSet<string>.Empty, _diagnostics);
+    }
+
     private LocalVariablesManager Add(string name, Declaration declaration)
     {
         if (_currentScope.Contains(name))
@@ -85,7 +90,8 @@ public class LocalVariablesManager
             _diagnostics.Report(new MultipleDeclarationsOfTheSameIdentifierError(_variables[name], declaration));
         }
 
-        return new LocalVariablesManager(_variables.Remove(name).Add(name, declaration), _currentScope.Add(name), _diagnostics);
+        return new LocalVariablesManager(_variables.Remove(name).Add(name, declaration), _currentScope.Add(name),
+            _diagnostics);
     }
 
     private Declaration? GetDeclaration(Identifier identifier)

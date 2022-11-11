@@ -237,7 +237,7 @@ public class NameResolutionTest
 
         Assert.Same(parameter, nameResolution.UsedVariableDeclarations[use]);
     }
-    
+
     [Fact]
     public void FunctionNameShadowedByParameterResolved()
     {
@@ -248,7 +248,7 @@ public class NameResolutionTest
         var diagnostics = new Mock<IDiagnostics>();
 
         var nameResolution = new Algorithm(function, diagnostics.Object);
-    
+
         Assert.Same(parameter, nameResolution.UsedVariableDeclarations[use]);
     }
 
