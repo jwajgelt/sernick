@@ -21,7 +21,6 @@ public sealed class Algorithm
     public IReadOnlyDictionary<VariableValue, Declaration> UsedVariableDeclarations
     {
         get;
-        init;
     }
 
     /// <summary>
@@ -33,7 +32,6 @@ public sealed class Algorithm
     public IReadOnlyDictionary<Assignment, VariableDeclaration> AssignedVariableDeclarations
     {
         get;
-        init;
     }
 
     /// <summary>
@@ -43,7 +41,6 @@ public sealed class Algorithm
     public IReadOnlyDictionary<FunctionCall, FunctionDefinition> CalledFunctionDeclarations
     {
         get;
-        init;
     }
 
     private class NameResolvingAstVisitor : AstVisitor<VisitorResult, LocalVariablesManager>

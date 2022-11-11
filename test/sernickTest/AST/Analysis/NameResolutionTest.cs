@@ -203,7 +203,7 @@ public class NameResolutionTest
         Assert.Same(innerDeclaration, nameResolution.CalledFunctionDeclarations[call]);
     }
 
-    // UsedVariable tests where variable is not a function argument
+    // UsedVariable tests where variable is a function argument
     [Fact]
     public void FunctionParameterUseResolved()
     {
