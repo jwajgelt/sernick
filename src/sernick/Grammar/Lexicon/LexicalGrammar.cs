@@ -77,6 +77,8 @@ public class LexicalGrammar
         ["var"] = "var",
         ["const"] = "const",
         ["function"] = "fun",
+        ["if"] = "if",
+        ["else"] = "else",
         ["loop"] = "loop",
         ["break"] = "break",
         ["continue"] = "continue",
