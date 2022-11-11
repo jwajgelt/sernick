@@ -38,7 +38,7 @@ public sealed class NameResolution
         init;
     }
 
-    public NameResolution(AstNode ast, Diagnostics diagnostics)
+    public NameResolution(AstNode ast, IDiagnostics diagnostics)
     {
         var visitor = new NameResolvingAstVisitor();
         var result = visitor.VisitAstTree(ast, new NameResolutionVisitorParams());
@@ -52,20 +52,6 @@ public sealed class NameResolution
     {
         protected override NameResolutionVisitorResult VisitAstNode(AstNode node, NameResolutionVisitorParams param)
         {
-            
-            // var firstVisitorResult = node.First.Accept(this, param);
-            // var secondVisitorResult =
-            //     node.Second.Accept(this, new NameResolutionVisitorParams(firstVisitorResult.Variables));
-            // return new NameResolutionVisitorResult(
-            //     NameResolutionPartialResult.Join(firstVisitorResult.PartialResult, secondVisitorResult.PartialResult),
-            //     secondVisitorResult.Variables);
-            
-            // var results = node.Children.Select(child => child.Accept(this, param));
-            // return new NameResolutionVisitorResult(
-            //     NameResolutionPartialResult.Join(results.Select(result => result.PartialResult).ToArray()),
-            //     param.Variables
-            // );
-            
             var variables = param.Variables;
             var partialResult = new NameResolutionPartialResult();
             foreach (var child in node.Children)
@@ -154,7 +140,7 @@ public sealed class NameResolution
         public override NameResolutionVisitorResult VisitFunctionCall(FunctionCall node, NameResolutionVisitorParams param)
         {
             var declaration = param.Variables.Variables[node.FunctionName.Name];
-            return new NameResolutionVisitorResult(NameResolutionPartialResult.OfCalledFunction(node, declaration),
+            return new NameResolutionVisitorResult(NameResolutionPartialResult.OfCalledFunction(node, (FunctionDefinition)declaration),
                 param.Variables);
         }
 
@@ -191,7 +177,7 @@ public sealed class NameResolution
         public override NameResolutionVisitorResult VisitAssignment(Assignment node, NameResolutionVisitorParams param)
         {
             var declaration = param.Variables.Variables[node.Left.Name];
-            return new NameResolutionVisitorResult(NameResolutionPartialResult.OfAssignment(node, declaration),
+            return new NameResolutionVisitorResult(NameResolutionPartialResult.OfAssignment(node, (VariableDeclaration)declaration),
                 param.Variables);
         }
 
