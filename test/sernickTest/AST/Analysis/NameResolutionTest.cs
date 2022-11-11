@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis.NameResolution;
+using sernick.Ast.Analysis.NameResolution.Errors;
 using sernick.Ast.Nodes;
 using sernick.Diagnostics;
 
