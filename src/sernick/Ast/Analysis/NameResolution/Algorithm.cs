@@ -58,16 +58,16 @@ public sealed class Algorithm
         /// </returns>
         protected override VisitorResult VisitAstNode(AstNode node, LocalVariablesManager variablesManager)
         {
-            var result = node.Children.Aggregate(
-                (partialResult: new PartialAlgorithmResult(), variablesManager),
-                (tuple, next) =>
+            return node.Children.Aggregate(
+                new VisitorResult(variablesManager),
+                (result, next) =>
                 {
-                    var childResult = next.Accept(this, tuple.variablesManager);
-                    return (PartialAlgorithmResult.Join(tuple.partialResult, childResult.PartialAlgorithmResult),
-                        variablesManager: childResult.VariablesManager);
+                    var childResult = next.Accept(this, result.VariablesManager);
+                    return childResult with
+                    {
+                        PartialAlgorithmResult = PartialAlgorithmResult.Join(result.PartialAlgorithmResult, childResult.PartialAlgorithmResult)
+                    };
                 });
-
-            return new VisitorResult(result.partialResult, result.variablesManager);
         }
 
         public override VisitorResult VisitVariableDeclaration(VariableDeclaration node,
