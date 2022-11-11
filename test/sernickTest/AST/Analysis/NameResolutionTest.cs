@@ -298,7 +298,60 @@ public class NameResolutionTest
         diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()));
     }
     
+    // MultipleDeclaration tests
+    [Fact]
+    private void MultipleDeclarationsResolved_Case1()
+    {
+        // var a;
+        // var a;
+        var declaration1 = new VariableDeclaration(new Identifier("a"), null, null, false);
+        var declaration2 = new VariableDeclaration(new Identifier("a"), null, null, false);
+        var tree = new ExpressionJoin(declaration1, declaration2);
+        var diagnostics = new Mock<IDiagnostics>();
 
+        var nameResolution = new Algorithm(tree, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsOfTheSameIdentifierError>()));
+    }
+    
+    [Fact]
+    private void MultipleDeclarationsResolved_Case2()
+    {
+        // fun f(const a : Int) : Int
+        // {
+        //   var a;
+        //   return 0;
+        // }
+        var parameter = GetFunctionParameter("a");
+        var block = new CodeBlock(new ExpressionJoin(GetVariableDeclaration("a"), new ReturnStatement(new IntLiteralValue(0))));
+        var function = GetOneArgumentFunctionDefinition("f", parameter, block);
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var nameResolution = new Algorithm(function, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsOfTheSameIdentifierError>()));
+    }
+    
+    [Fact]
+    private void MultipleDeclarationsResolved_Case3()
+    {
+        //  fun f() : Int { return 0; }
+        //  var f;
+        var function = GetZeroArgumentFunctionDefinition("f");
+        var declaration = new VariableDeclaration(new Identifier("f"), null, null, false);
+        var tree = new ExpressionJoin(function, declaration);
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var nameResolution = new Algorithm(tree, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsOfTheSameIdentifierError>()));
+    }
+
+    private static VariableDeclaration GetVariableDeclaration(string name)
+    {
+        return new VariableDeclaration(new Identifier(name), null, null, false);
+    }
+    
     private static FunctionDefinition GetZeroArgumentFunctionDefinition(string name)
     {
         return new FunctionDefinition(new Identifier(name), 

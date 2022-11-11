@@ -3,7 +3,7 @@
 using Diagnostics;
 using Nodes;
 
-public record MultipleDeclarationOfTheSameIdentifierError(Declaration Original, Declaration Repeat) : IDiagnosticItem
+public record MultipleDeclarationsOfTheSameIdentifierError(Declaration Original, Declaration Repeat) : IDiagnosticItem
 {
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
     
