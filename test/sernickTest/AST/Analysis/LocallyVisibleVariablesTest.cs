@@ -2,7 +2,7 @@
 
 using Moq;
 using sernick.Ast;
-using sernick.Ast.Analysis;
+using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Nodes;
 
 public class LocallyVisibleVariablesTest
