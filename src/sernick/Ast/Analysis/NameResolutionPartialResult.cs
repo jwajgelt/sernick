@@ -2,7 +2,6 @@
 
 using Nodes;
 
-// TODO: replace dicts with immutables
 
 public record NameResolutionPartialResult(IReadOnlyDictionary<VariableValue, Declaration> UsedVariableDeclarations,
     IReadOnlyDictionary<Assignment, VariableDeclaration> AssignedVariableDeclarations,
@@ -32,15 +31,21 @@ public record NameResolutionPartialResult(IReadOnlyDictionary<VariableValue, Dec
 
     public static NameResolutionPartialResult OfUsedVariable(VariableValue node, Declaration declaration)
     {
-        return null;
+        return new NameResolutionPartialResult(new Dictionary<VariableValue, Declaration>() {{node, declaration}},
+            new Dictionary<Assignment, VariableDeclaration>(),
+            new Dictionary<FunctionCall, FunctionDefinition>());
     }
-    public static NameResolutionPartialResult OfAssignment(Assignment node, Declaration declaration)
+    public static NameResolutionPartialResult OfAssignment(Assignment node, VariableDeclaration declaration)
     {
-        return null;
+        return new NameResolutionPartialResult(new Dictionary<VariableValue, Declaration>(),
+            new Dictionary<Assignment, VariableDeclaration>() {{node, declaration}},
+            new Dictionary<FunctionCall, FunctionDefinition>());
     }
     
-    public static NameResolutionPartialResult OfCalledFunction(FunctionCall node, Declaration declaration)
+    public static NameResolutionPartialResult OfCalledFunction(FunctionCall node, FunctionDefinition declaration)
     {
-        return null;
+        return new NameResolutionPartialResult(new Dictionary<VariableValue, Declaration>(),
+            new Dictionary<Assignment, VariableDeclaration>(),
+            new Dictionary<FunctionCall, FunctionDefinition>() {{node, declaration}});
     }
 }
