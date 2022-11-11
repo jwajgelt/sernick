@@ -5,8 +5,17 @@ namespace sernick.Ast;
 /// </summary>
 public abstract record Type { }
 
-public sealed record BoolType : Type { }
+public sealed record BoolType : Type
+{
+    public override string ToString() => "Bool";
+}
 
-public sealed record IntType : Type { }
+public sealed record IntType : Type
+{
+    public override string ToString() => "Int";
+}
 
-public sealed record UnitType : Type { }
+public sealed record UnitType : Type
+{
+    public override string ToString() => "Unit";
+}

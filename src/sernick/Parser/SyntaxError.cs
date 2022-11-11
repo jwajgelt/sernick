@@ -8,7 +8,7 @@ public sealed record SyntaxError<TSymbol>(IParseTree<TSymbol>? ParseNode) : IDia
     public override string ToString()
     {
         return ParseNode is not null ?
-            $"Syntax error: unexpected symbol {ParseNode.Symbol} at {ParseNode.Start}" :
+            $"Syntax error: unexpected symbol \"{ParseNode.Symbol}\" at {ParseNode.Start}" :
             "Syntax error: unexpected EOF";
     }
 
