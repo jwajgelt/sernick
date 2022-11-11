@@ -20,7 +20,8 @@ public static class SernickGrammar
         var statements = Atom(Symbol.Of(NonTerminalSymbol.Statements));
         var closedStatement = Atom(Symbol.Of(NonTerminalSymbol.ClosedStatement)); // doesn't require semicolon
         var openStatement = Atom(Symbol.Of(NonTerminalSymbol.OpenStatement)); // requires semicolon
-        var codeBlock = Atom(Symbol.Of(NonTerminalSymbol.CodeBlock)); // {} or ()
+        var codeBlock = Atom(Symbol.Of(NonTerminalSymbol.CodeBlock)); // {}
+        var codeGroup = Atom(Symbol.Of(NonTerminalSymbol.CodeGroup)); // ()
         var closedStatementNoBlock = Atom(Symbol.Of(NonTerminalSymbol.ClosedStatementNoBlock)); // only E;
         var expression = Atom(Symbol.Of(NonTerminalSymbol.Expression)); // computation with operators; excl "{}"
         var logicalOperand = Atom(Symbol.Of(NonTerminalSymbol.LogicalOperand));
@@ -88,10 +89,10 @@ public static class SernickGrammar
             .Add(statements, Concat(Star(closedStatement), Optional(openStatement)))
             .Add(closedStatementNoBlock, Concat(Union(expression, variableDeclaration), semicolon))
             .Add(closedStatement, closedStatementNoBlock)
-            .Add(closedStatement, Union(codeBlock, ifExpression, loopExpression, functionDeclaration))
+            .Add(closedStatement, Union(codeBlock, codeGroup, ifExpression, loopExpression, functionDeclaration))
             .Add(openStatement, expression)
             .Add(codeBlock, Concat(braceOpen, statements, braceClose))
-            .Add(codeBlock, Concat(
+            .Add(codeGroup, Concat(
                     parOpen,
                     Union(
                         closedStatementNoBlock,
@@ -104,46 +105,46 @@ public static class SernickGrammar
             .Add(expression, Union(
                 logicalOperand, // anything but an entity ending with a block {}
                 Concat(
-                    Star(Union(logicalOperand, codeBlock, ifExpression, loopExpression), logicalOperator),
-                    Union(logicalOperand, codeBlock, ifExpression, loopExpression), logicalOperator,
-                    Union(logicalOperand, codeBlock, ifExpression, loopExpression))))
+                    Star(Union(logicalOperand, codeBlock, codeGroup, ifExpression, loopExpression), logicalOperator),
+                    Union(logicalOperand, codeBlock, codeGroup, ifExpression, loopExpression), logicalOperator,
+                    Union(logicalOperand, codeBlock, codeGroup, ifExpression, loopExpression))))
             .Add(logicalOperator, Union(scAndOperator, scOrOperator))
             .Add(logicalOperand, Union(
                 comparisonOperand, // anything but an entity ending with a block {}
                 Concat(
-                    Star(Union(comparisonOperand, codeBlock, ifExpression, loopExpression), comparisonOperator),
-                    Union(comparisonOperand, codeBlock, ifExpression, loopExpression), comparisonOperator,
-                    Union(comparisonOperand, codeBlock, ifExpression, loopExpression))))
+                    Star(Union(comparisonOperand, codeBlock, codeGroup, ifExpression, loopExpression), comparisonOperator),
+                    Union(comparisonOperand, codeBlock, codeGroup, ifExpression, loopExpression), comparisonOperator,
+                    Union(comparisonOperand, codeBlock, codeGroup, ifExpression, loopExpression))))
             .Add(comparisonOperator,
                 Union(equalsOperator, greaterOperator, lessOperator, greaterOrEqualOperator, lessOrEqualOperator))
             .Add(comparisonOperand, Union(
                 arithmeticOperand, // anything but an entity ending with a block {}
                 Concat(
-                    Star(Union(arithmeticOperand, codeBlock, ifExpression, loopExpression), arithmeticOperator),
-                    Union(arithmeticOperand, codeBlock, ifExpression, loopExpression), arithmeticOperator,
-                    Union(arithmeticOperand, codeBlock, ifExpression, loopExpression))))
+                    Star(Union(arithmeticOperand, codeBlock, codeGroup, ifExpression, loopExpression), arithmeticOperator),
+                    Union(arithmeticOperand, codeBlock, codeGroup, ifExpression, loopExpression), arithmeticOperator,
+                    Union(arithmeticOperand, codeBlock, codeGroup, ifExpression, loopExpression))))
             .Add(arithmeticOperator, Union(plusOperator, minusOperator))
             .Add(arithmeticOperand, simpleExpression)
             .Add(simpleExpression, literalValue)
             .Add(literalValue, Union(trueLiteral, falseLiteral, digitLiteral))
-            .Add(simpleExpression, Concat(parOpen, Union(expression, codeBlock), parClose)) // (E) or ({})
+            .Add(simpleExpression, Concat(parOpen, Union(expression, codeBlock, codeGroup), parClose)) // (E) or ({})
             .Add(simpleExpression, Concat(identifier, Optional(functionCallSuffix))) // x or f()
             .Add(functionCallSuffix, Concat(parOpen, functionArguments, parClose))
             .Add(functionArguments,
-                Optional(Concat(Union(expression, codeBlock), Star(comma, Union(expression, codeBlock)))))
+                Optional(Concat(Union(expression, codeBlock, codeGroup), Star(comma, Union(expression, codeBlock, codeGroup)))))
 
             // Block expressions
             .Add(ifExpression, Concat(
                 ifKeyword, parOpen,
-                Union(expression, codeBlock, closedStatementNoBlock, Concat(closedStatement, Star(closedStatement), openStatement)), // (E) or ({}) or (E;E;E)
+                Union(expression, codeBlock, codeGroup, closedStatementNoBlock, Concat(closedStatement, Star(closedStatement), openStatement)), // (E) or ({}) or (E;E;E)
                 parClose, codeBlock, Optional(Concat(elseKeyword, codeBlock))))
             .Add(loopExpression, Concat(loopKeyword, codeBlock))
 
             // Assignment
             .Add(assignment,
-                Concat(identifier, assignOperator, Union(expression, codeBlock, ifExpression, loopExpression)))
+                Concat(identifier, assignOperator, Union(expression, codeBlock, codeGroup, ifExpression, loopExpression)))
             .Add(typedAssignment,
-                Concat(identifier, typeSpec, assignOperator, Union(expression, codeBlock, ifExpression, loopExpression)))
+                Concat(identifier, typeSpec, assignOperator, Union(expression, codeBlock, codeGroup, ifExpression, loopExpression)))
 
             // Declarations
             .Add(variableDeclaration,

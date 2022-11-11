@@ -38,6 +38,7 @@ public enum NonTerminalSymbol
     ClosedStatement,
     OpenStatement,
     CodeBlock,
+    CodeGroup,
     ClosedStatementNoBlock,
     Expression,
     LogicalOperand,
