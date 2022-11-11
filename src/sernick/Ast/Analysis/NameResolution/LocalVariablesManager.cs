@@ -2,7 +2,6 @@ namespace sernick.Ast.Analysis.NameResolution;
 
 using System.Collections.Immutable;
 using Diagnostics;
-using Errors;
 using Nodes;
 
 /// <summary>

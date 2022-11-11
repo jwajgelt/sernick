@@ -36,7 +36,7 @@ public sealed record FunctionCall(Identifier FunctionName, IEnumerable<Expressio
 /// <summary>
 /// Base class for expressions which represent some type of declaration
 /// </summary>
-public abstract record Declaration : Expression { }
+public abstract record Declaration(Identifier Name) : Expression { }
 
 /// <summary>
 /// Base class for classes representing flow control statements

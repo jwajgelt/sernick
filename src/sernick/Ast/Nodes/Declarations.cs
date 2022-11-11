@@ -3,7 +3,7 @@ namespace sernick.Ast.Nodes;
 public sealed record VariableDeclaration(Identifier Name,
     Type? Type,
     Expression? InitValue,
-    bool IsConst) : Declaration
+    bool IsConst) : Declaration(Name)
 {
     public override IEnumerable<AstNode> Children => new AstNode?[] { Name, InitValue }.OfType<AstNode>();
 
@@ -13,7 +13,7 @@ public sealed record VariableDeclaration(Identifier Name,
 
 public sealed record FunctionParameterDeclaration(Identifier Name,
     Type Type,
-    LiteralValue? DefaultValue) : Declaration
+    LiteralValue? DefaultValue) : Declaration(Name)
 {
     public override IEnumerable<AstNode> Children => new AstNode?[] { Name, DefaultValue }.OfType<AstNode>();
 
@@ -24,7 +24,7 @@ public sealed record FunctionParameterDeclaration(Identifier Name,
 public record FunctionDefinition(Identifier Name,
     IEnumerable<FunctionParameterDeclaration> Parameters,
     Type ReturnType,
-    CodeBlock Body) : Declaration
+    CodeBlock Body) : Declaration(Name)
 {
     public override IEnumerable<AstNode> Children => new AstNode[] { Name }.Concat(Parameters).Append(Body);
 
