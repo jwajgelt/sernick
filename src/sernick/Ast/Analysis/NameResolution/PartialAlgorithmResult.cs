@@ -1,21 +1,21 @@
-﻿namespace sernick.Ast.Analysis;
+﻿namespace sernick.Ast.Analysis.NameResolution;
 
 using Nodes;
 
 
-public record NameResolutionPartialResult(IReadOnlyDictionary<VariableValue, Declaration> UsedVariableDeclarations,
+public record PartialAlgorithmResult(IReadOnlyDictionary<VariableValue, Declaration> UsedVariableDeclarations,
     IReadOnlyDictionary<Assignment, VariableDeclaration> AssignedVariableDeclarations,
     IReadOnlyDictionary<FunctionCall, FunctionDefinition> CalledFunctionDeclarations)
 {
-    public NameResolutionPartialResult() : this(new Dictionary<VariableValue, Declaration>(),
+    public PartialAlgorithmResult() : this(new Dictionary<VariableValue, Declaration>(),
         new Dictionary<Assignment, VariableDeclaration>(),
         new Dictionary<FunctionCall, FunctionDefinition>())
     {
     }
 
-    public static NameResolutionPartialResult Join(params NameResolutionPartialResult[] results)
+    public static PartialAlgorithmResult Join(params PartialAlgorithmResult[] results)
     {
-        return new NameResolutionPartialResult(
+        return new PartialAlgorithmResult(
             MergeDictionaries(results.Select(result => result.UsedVariableDeclarations)),
             MergeDictionaries(results.Select(result => result.AssignedVariableDeclarations)),
             MergeDictionaries(results.Select(result => result.CalledFunctionDeclarations))
@@ -29,22 +29,22 @@ public record NameResolutionPartialResult(IReadOnlyDictionary<VariableValue, Dec
             .ToDictionary(pair => pair.Key, pair => pair.Value);
     }
 
-    public static NameResolutionPartialResult OfUsedVariable(VariableValue node, Declaration declaration)
+    public static PartialAlgorithmResult OfUsedVariable(VariableValue node, Declaration declaration)
     {
-        return new NameResolutionPartialResult(new Dictionary<VariableValue, Declaration>() {{node, declaration}},
+        return new PartialAlgorithmResult(new Dictionary<VariableValue, Declaration>() {{node, declaration}},
             new Dictionary<Assignment, VariableDeclaration>(),
             new Dictionary<FunctionCall, FunctionDefinition>());
     }
-    public static NameResolutionPartialResult OfAssignment(Assignment node, VariableDeclaration declaration)
+    public static PartialAlgorithmResult OfAssignment(Assignment node, VariableDeclaration declaration)
     {
-        return new NameResolutionPartialResult(new Dictionary<VariableValue, Declaration>(),
+        return new PartialAlgorithmResult(new Dictionary<VariableValue, Declaration>(),
             new Dictionary<Assignment, VariableDeclaration>() {{node, declaration}},
             new Dictionary<FunctionCall, FunctionDefinition>());
     }
     
-    public static NameResolutionPartialResult OfCalledFunction(FunctionCall node, FunctionDefinition declaration)
+    public static PartialAlgorithmResult OfCalledFunction(FunctionCall node, FunctionDefinition declaration)
     {
-        return new NameResolutionPartialResult(new Dictionary<VariableValue, Declaration>(),
+        return new PartialAlgorithmResult(new Dictionary<VariableValue, Declaration>(),
             new Dictionary<Assignment, VariableDeclaration>(),
             new Dictionary<FunctionCall, FunctionDefinition>() {{node, declaration}});
     }

@@ -1,10 +1,10 @@
-namespace sernick.Ast.Analysis;
+namespace sernick.Ast.Analysis.NameResolution;
 
 using Diagnostics;
 using Nodes;
 using Utility;
 
-public sealed class NameResolution
+public sealed class Algorithm
 {
     /// <summary>
     /// Maps uses of variables to the declarations
@@ -38,51 +38,51 @@ public sealed class NameResolution
         init;
     }
 
-    public NameResolution(AstNode ast, IDiagnostics diagnostics)
+    public Algorithm(AstNode ast, IDiagnostics diagnostics)
     {
         var visitor = new NameResolvingAstVisitor(diagnostics);
         var result = visitor.VisitAstTree(ast, new NameResolutionLocallyVisibleVariables());
-        UsedVariableDeclarations = result.PartialResult.UsedVariableDeclarations;
-        AssignedVariableDeclarations = result.PartialResult.AssignedVariableDeclarations;
-        CalledFunctionDeclarations = result.PartialResult.CalledFunctionDeclarations;
+        UsedVariableDeclarations = result.PartialAlgorithmResult.UsedVariableDeclarations;
+        AssignedVariableDeclarations = result.PartialAlgorithmResult.AssignedVariableDeclarations;
+        CalledFunctionDeclarations = result.PartialAlgorithmResult.CalledFunctionDeclarations;
     }
 
     
-    private class NameResolvingAstVisitor : AstVisitor<NameResolutionVisitorResult, NameResolutionLocallyVisibleVariables>
+    private class NameResolvingAstVisitor : AstVisitor<VisitorResult, NameResolutionLocallyVisibleVariables>
     {
         private readonly IDiagnostics _diagnostics;
         public NameResolvingAstVisitor(IDiagnostics diagnostics)
         {
             _diagnostics = diagnostics;
         }
-        protected override NameResolutionVisitorResult VisitAstNode(AstNode node, NameResolutionLocallyVisibleVariables variables)
+        protected override VisitorResult VisitAstNode(AstNode node, NameResolutionLocallyVisibleVariables variables)
         {
-            var partialResult = new NameResolutionPartialResult();
+            var partialResult = new PartialAlgorithmResult();
             foreach (var child in node.Children)
             {
                 var childResult = child.Accept(this, variables);
-                partialResult = NameResolutionPartialResult.Join(partialResult, childResult.PartialResult);
+                partialResult = PartialAlgorithmResult.Join(partialResult, childResult.PartialAlgorithmResult);
                 variables = childResult.Variables;
             }
 
-            return new NameResolutionVisitorResult(partialResult, variables);
+            return new VisitorResult(partialResult, variables);
         }
 
 
-        public override NameResolutionVisitorResult VisitVariableDeclaration(VariableDeclaration node, NameResolutionLocallyVisibleVariables variables)
+        public override VisitorResult VisitVariableDeclaration(VariableDeclaration node, NameResolutionLocallyVisibleVariables variables)
         {
             var visibleVariables = variables.Add(node);
-            return new NameResolutionVisitorResult(new NameResolutionPartialResult(), visibleVariables);
+            return new VisitorResult(new PartialAlgorithmResult(), visibleVariables);
         }
 
-        public override NameResolutionVisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
+        public override VisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
             NameResolutionLocallyVisibleVariables variables)
         {
             var visibleVariables = variables.Add(node);
-            return new NameResolutionVisitorResult(new NameResolutionPartialResult(), visibleVariables);
+            return new VisitorResult(new PartialAlgorithmResult(), visibleVariables);
         }
 
-        public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node, NameResolutionLocallyVisibleVariables variables)
+        public override VisitorResult VisitFunctionDefinition(FunctionDefinition node, NameResolutionLocallyVisibleVariables variables)
         {
             var visibleVariables = variables.Add(node);
             var variablesInsideFunction = visibleVariables;
@@ -93,47 +93,47 @@ public sealed class NameResolution
 
             var visitorResult = node.Body.Accept(this, variablesInsideFunction);
             
-            return new NameResolutionVisitorResult(visitorResult.PartialResult, visibleVariables);
+            return new VisitorResult(visitorResult.PartialAlgorithmResult, visibleVariables);
         }
 
-        public override NameResolutionVisitorResult VisitCodeBlock(CodeBlock node, NameResolutionLocallyVisibleVariables variables)
+        public override VisitorResult VisitCodeBlock(CodeBlock node, NameResolutionLocallyVisibleVariables variables)
         {
             var visitorResult = node.Inner.Accept(this, variables);
-            return new NameResolutionVisitorResult(visitorResult.PartialResult, variables);
+            return new VisitorResult(visitorResult.PartialAlgorithmResult, variables);
         }
 
 
-        public override NameResolutionVisitorResult VisitFunctionCall(FunctionCall node, NameResolutionLocallyVisibleVariables variables)
+        public override VisitorResult VisitFunctionCall(FunctionCall node, NameResolutionLocallyVisibleVariables variables)
         {
             var declaration = GetDeclarationAndReportIfMissing(node.FunctionName, variables);
             if (declaration == null)
             {
-                return new NameResolutionVisitorResult(variables);
+                return new VisitorResult(variables);
             }
-            return new NameResolutionVisitorResult(NameResolutionPartialResult.OfCalledFunction(node, (FunctionDefinition)declaration),
+            return new VisitorResult(PartialAlgorithmResult.OfCalledFunction(node, (FunctionDefinition)declaration),
                 variables);
         }
 
 
-        public override NameResolutionVisitorResult VisitAssignment(Assignment node, NameResolutionLocallyVisibleVariables variables)
+        public override VisitorResult VisitAssignment(Assignment node, NameResolutionLocallyVisibleVariables variables)
         {
             var declaration = GetDeclarationAndReportIfMissing(node.Left, variables);
             if (declaration == null)
             {
-                return new NameResolutionVisitorResult(variables);
+                return new VisitorResult(variables);
             }
-            return new NameResolutionVisitorResult(NameResolutionPartialResult.OfAssignment(node, (VariableDeclaration)declaration),
+            return new VisitorResult(PartialAlgorithmResult.OfAssignment(node, (VariableDeclaration)declaration),
                 variables);
         }
 
-        public override NameResolutionVisitorResult VisitVariableValue(VariableValue node, NameResolutionLocallyVisibleVariables variables)
+        public override VisitorResult VisitVariableValue(VariableValue node, NameResolutionLocallyVisibleVariables variables)
         {
             var declaration = GetDeclarationAndReportIfMissing(node.Identifier, variables);
             if (declaration == null)
             {
-                return new NameResolutionVisitorResult(variables);
+                return new VisitorResult(variables);
             }
-            return new NameResolutionVisitorResult(NameResolutionPartialResult.OfUsedVariable(node, declaration),
+            return new VisitorResult(PartialAlgorithmResult.OfUsedVariable(node, declaration),
                 variables);
         }
 
