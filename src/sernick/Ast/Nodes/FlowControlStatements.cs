@@ -1,12 +1,15 @@
 namespace sernick.Ast.Nodes;
 
-public sealed record ContinueStatement : FlowControlStatement
+using Input;
+using Utility;
+
+public sealed record ContinueStatement(Range<ILocation> LocationRange) : FlowControlStatement(LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitContinueStatement(this, param);
 }
 
-public sealed record ReturnStatement(Expression ReturnValue) : FlowControlStatement
+public sealed record ReturnStatement(Expression ReturnValue, Range<ILocation> LocationRange) : FlowControlStatement(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new[] { ReturnValue };
 
@@ -14,13 +17,13 @@ public sealed record ReturnStatement(Expression ReturnValue) : FlowControlStatem
         visitor.VisitReturnStatement(this, param);
 }
 
-public sealed record BreakStatement : FlowControlStatement
+public sealed record BreakStatement(Range<ILocation> LocationRange) : FlowControlStatement(LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitBreakStatement(this, param);
 }
 
-public sealed record IfStatement(Expression Condition, CodeBlock IfBlock, CodeBlock? ElseBlock) : FlowControlStatement
+public sealed record IfStatement(Expression Condition, CodeBlock IfBlock, CodeBlock? ElseBlock, Range<ILocation> LocationRange) : FlowControlStatement(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode?[] { Condition, IfBlock, ElseBlock }.OfType<AstNode>();
 
@@ -28,7 +31,7 @@ public sealed record IfStatement(Expression Condition, CodeBlock IfBlock, CodeBl
         visitor.VisitIfStatement(this, param);
 }
 
-public sealed record LoopStatement(CodeBlock Inner) : FlowControlStatement
+public sealed record LoopStatement(CodeBlock Inner, Range<ILocation> LocationRange) : FlowControlStatement(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new[] { Inner };
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>

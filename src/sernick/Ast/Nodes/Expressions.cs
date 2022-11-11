@@ -1,9 +1,12 @@
 namespace sernick.Ast.Nodes;
 
+using Input;
+using Utility;
+
 /// <summary>
 /// Class for code blocks (introducing new scope)
 /// </summary>
-public sealed record CodeBlock(Expression Inner) : Expression
+public sealed record CodeBlock(Expression Inner, Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new[] { Inner };
 
@@ -14,7 +17,7 @@ public sealed record CodeBlock(Expression Inner) : Expression
 /// <summary>
 /// Class representing expressions which consist of many expressions (use of ;)
 /// </summary>
-public sealed record ExpressionJoin(Expression First, Expression Second) : Expression
+public sealed record ExpressionJoin(Expression First, Expression Second, Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new[] { First, Second };
 
@@ -25,7 +28,7 @@ public sealed record ExpressionJoin(Expression First, Expression Second) : Expre
 /// <summary>
 /// Class representing function calls
 /// </summary>
-public sealed record FunctionCall(Identifier FunctionName, IEnumerable<Expression> Arguments) : Expression
+public sealed record FunctionCall(Identifier FunctionName, IEnumerable<Expression> Arguments, Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode[] { FunctionName }.Concat(Arguments);
 
@@ -36,15 +39,15 @@ public sealed record FunctionCall(Identifier FunctionName, IEnumerable<Expressio
 /// <summary>
 /// Base class for expressions which represent some type of declaration
 /// </summary>
-public abstract record Declaration : Expression { }
+public abstract record Declaration(Range<ILocation> LocationRange) : Expression(LocationRange);
 
 /// <summary>
 /// Base class for classes representing flow control statements
 /// </summary>
-public abstract record FlowControlStatement : Expression { }
+public abstract record FlowControlStatement(Range<ILocation> LocationRange) : Expression(LocationRange);
 
 /// <summary>
 /// Base class for classes representing "simple value" expressions
 /// eg. values of variables, literals
 /// </summary>
-public abstract record SimpleValue : Expression { }
+public abstract record SimpleValue(Range<ILocation> LocationRange) : Expression(LocationRange);
