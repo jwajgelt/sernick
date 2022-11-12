@@ -24,7 +24,14 @@ public sealed class IdentifiersNamespace
 
     public IdentifiersNamespace Add(Declaration declaration)
     {
-        return Add(declaration.Name.Name, declaration);
+        var name = declaration.Name.Name;
+        if (_currentScope.Contains(name))
+        {
+            _diagnostics.Report(new MultipleDeclarationsError(_variables[name], declaration));
+        }
+
+        return new IdentifiersNamespace(_variables.Remove(name).Add(name, declaration), _currentScope.Add(name),
+            _diagnostics);
     }
 
     public Declaration? GetUsedVariableDeclaration(Identifier identifier)
@@ -66,17 +73,6 @@ public sealed class IdentifiersNamespace
     public IdentifiersNamespace NewScope()
     {
         return new IdentifiersNamespace(_variables, ImmutableHashSet<string>.Empty, _diagnostics);
-    }
-
-    private IdentifiersNamespace Add(string name, Declaration declaration)
-    {
-        if (_currentScope.Contains(name))
-        {
-            _diagnostics.Report(new MultipleDeclarationsError(_variables[name], declaration));
-        }
-
-        return new IdentifiersNamespace(_variables.Remove(name).Add(name, declaration), _currentScope.Add(name),
-            _diagnostics);
     }
 
     private Declaration? GetDeclaration(Identifier identifier)
