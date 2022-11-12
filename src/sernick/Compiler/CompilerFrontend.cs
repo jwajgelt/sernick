@@ -23,7 +23,8 @@ public static class CompilerFrontend
         var lexer = PrepareLexer();
         var tokens = lexer.Process(input, diagnostics);
         var parseLeaves = tokens
-            .Where(token => !token.Category.Equals(LexicalGrammarCategoryType.Whitespaces)) // strip whitespace
+            .Where(token => !token.Category.Equals(LexicalGrammarCategory.Whitespaces)) // strip whitespace
+            .Where(token => !token.Category.Equals(LexicalGrammarCategory.Comments)) // ignore comments
             .Select(token =>
                 new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.Start, token.End));
         var parser = Parser<Symbol>.FromGrammar(SernickGrammar.Create(), new NonTerminal(NonTerminalSymbol.Start));
@@ -31,16 +32,16 @@ public static class CompilerFrontend
         ThrowIfErrorsOccurred(diagnostics);
     }
 
-    private static ILexer<LexicalGrammarCategoryType> PrepareLexer()
+    private static ILexer<LexicalGrammarCategory> PrepareLexer()
     {
         var grammar = new LexicalGrammar();
         var grammarDict = grammar.GenerateGrammar();
         var categoryDfas =
             grammarDict.ToDictionary(
                 e => e.Key,
-                e => (IDfa<Regex<char>, char>)RegexDfa<char>.FromRegex(e.Value.Regex)
+                e => RegexDfa<char>.FromRegex(e.Value.Regex)
             );
-        return new Lexer<LexicalGrammarCategoryType, Regex<char>>(categoryDfas);
+        return new Lexer<LexicalGrammarCategory, Regex<char>>(categoryDfas);
     }
 
     private static void ThrowIfErrorsOccurred(IDiagnostics diagnostics)

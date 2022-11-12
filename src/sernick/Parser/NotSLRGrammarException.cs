@@ -14,12 +14,12 @@ public sealed class NotSLRGrammarException : Exception
     }
 
     public static NotSLRGrammarException ReduceReduceConflict<TSymbol>(
-        TSymbol symbol,
+        TSymbol? symbol,
         Production<TSymbol> production1,
         Production<TSymbol> production2)
         where TSymbol : IEquatable<TSymbol>
     {
         return new NotSLRGrammarException(
-            $"Reduce/reduce conflict for symbol {symbol} between production {production1} and production {production2}");
+            $"Reduce/reduce conflict for next symbol {symbol} between production {production1} and production {production2}");
     }
 }
