@@ -10,7 +10,7 @@ public sealed class NameResolution
         var visitor = new NameResolvingAstVisitor();
         var result = visitor.VisitAstTree(ast, new IdentifiersNamespace(diagnostics));
         (UsedVariableDeclarations, AssignedVariableDeclarations, CalledFunctionDeclarations) =
-            result.PartialAlgorithmResult;
+            result.PartialResult;
     }
 
     /// <summary>
@@ -52,7 +52,7 @@ public sealed class NameResolution
         /// <param name="identifiersNamespace"> An immutable class which holds information about currently visible identifiers. </param>
         /// <returns>
         ///     A VisitorResult, which is a pair of:
-        ///     - a PartialAlgorithmResult containing the 3 result dictionaries filled with resolved names from the subtree,
+        ///     - a PartialNameResolutionResult containing the 3 result dictionaries filled with resolved names from the subtree,
         ///     - a new IdentifiersNamespace updated with identifiers defined inside of the subtree.
         /// </returns>
         protected override VisitorResult VisitAstNode(AstNode node, IdentifiersNamespace identifiersNamespace)
@@ -64,7 +64,7 @@ public sealed class NameResolution
                     var childResult = next.Accept(this, result.IdentifiersNamespace);
                     return childResult with
                     {
-                        PartialAlgorithmResult = PartialAlgorithmResult.Join(result.PartialAlgorithmResult, childResult.PartialAlgorithmResult)
+                        PartialResult = PartialNameResolutionResult.Join(result.PartialResult, childResult.PartialResult)
                     };
                 });
         }
@@ -75,7 +75,7 @@ public sealed class NameResolution
         public override VisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
             IdentifiersNamespace identifiersNamespace)
         {
-            return new VisitorResult(new PartialAlgorithmResult(), identifiersNamespace.Add(node));
+            return new VisitorResult(new PartialNameResolutionResult(), identifiersNamespace.Add(node));
         }
 
         public override VisitorResult VisitFunctionDefinition(FunctionDefinition node,
@@ -102,7 +102,7 @@ public sealed class NameResolution
             // if the identifier is not resolved, we can try to continue resolving and possibly find more errors
             return declaration == null
                 ? new VisitorResult(identifiersNamespace)
-                : new VisitorResult(PartialAlgorithmResult.OfFunctionCall(node, declaration),
+                : new VisitorResult(PartialNameResolutionResult.OfFunctionCall(node, declaration),
                     identifiersNamespace);
         }
 
@@ -112,7 +112,7 @@ public sealed class NameResolution
             // if the identifier is not resolved, we can try to continue resolving and possibly find more errors
             return declaration == null
                 ? new VisitorResult(identifiersNamespace)
-                : new VisitorResult(PartialAlgorithmResult.OfAssignment(node, declaration),
+                : new VisitorResult(PartialNameResolutionResult.OfAssignment(node, declaration),
                     identifiersNamespace);
         }
 
@@ -122,7 +122,7 @@ public sealed class NameResolution
             // if the identifier is not resolved, we can try to continue resolving and possibly find more errors
             return declaration == null
                 ? new VisitorResult(identifiersNamespace)
-                : new VisitorResult(PartialAlgorithmResult.OfVariableUse(node, declaration),
+                : new VisitorResult(PartialNameResolutionResult.OfVariableUse(node, declaration),
                     identifiersNamespace);
         }
     }
