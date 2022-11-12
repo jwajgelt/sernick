@@ -4,7 +4,9 @@ using Helpers;
 using Input;
 using Moq;
 using sernick.Diagnostics;
+using sernick.Input;
 using sernick.Parser;
+using sernick.Utility;
 using Grammar = sernick.Grammar.Syntax.Grammar<Helpers.CharCategory>;
 using IParseTree = sernick.Parser.ParseTree.IParseTree<Helpers.CharCategory>;
 using Parser = sernick.Parser.Parser<Helpers.CharCategory>;
@@ -15,6 +17,8 @@ using Regex = sernick.Common.Regex.Regex<Helpers.CharCategory>;
 
 public class ParserTest
 {
+    private readonly Range<ILocation> _location = new(new FakeLocation(), new FakeLocation());
+
     // Checked sequence is equal to start symbol
     [Fact]
     public void EmptyGrammarInstantlyAccepting()
@@ -22,8 +26,7 @@ public class ParserTest
         var grammar = new Grammar('S'.ToCategory(), Array.Empty<Production>());
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf = new ParseTreeLeaf('S'.ToCategory(), location, location);
+        var leaf = new ParseTreeLeaf('S'.ToCategory(), _location);
         var leaves = new[] { leaf };
 
         var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
@@ -38,8 +41,7 @@ public class ParserTest
         var grammar = new Grammar('S'.ToCategory(), Array.Empty<Production>());
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
+        var leaf = new ParseTreeLeaf('A'.ToCategory(), _location);
         var leaves = new[] { leaf };
 
         Assert.Throws<ParsingException<CharCategory>>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
@@ -62,14 +64,13 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
+        var leaf = new ParseTreeLeaf('A'.ToCategory(), _location);
         var leaves = new[] { leaf };
 
         var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
-        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production, new[] { leaf });
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), production, new[] { leaf }, _location);
 
         Assert.Equal(expectedRoot, result);
     }
@@ -88,8 +89,7 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
+        var leaf = new ParseTreeLeaf('B'.ToCategory(), _location);
         var leaves = new[] { leaf };
 
         Assert.Throws<ParsingException<CharCategory>>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
@@ -112,14 +112,13 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
+        var leaf = new ParseTreeLeaf('A'.ToCategory(), _location);
         var leaves = new[] { leaf, leaf };
 
         var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
-        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production, new[] { leaf, leaf });
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), production, new[] { leaf, leaf }, _location);
 
         Assert.Equal(expectedRoot, result);
     }
@@ -138,8 +137,7 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
+        var leaf = new ParseTreeLeaf('B'.ToCategory(), _location);
         var leaves = new[] { leaf };
 
         Assert.Throws<ParsingException<CharCategory>>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
@@ -165,15 +163,14 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf1 = new ParseTreeLeaf('A'.ToCategory(), location, location);
-        var leaf2 = new ParseTreeLeaf('B'.ToCategory(), location, location);
+        var leaf1 = new ParseTreeLeaf('A'.ToCategory(), _location);
+        var leaf2 = new ParseTreeLeaf('B'.ToCategory(), _location);
         var leaves = new[] { leaf1, leaf2 };
 
         var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
-        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production, new[] { leaf1, leaf2 });
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), production, new[] { leaf1, leaf2 }, _location);
 
         Assert.Equal(expectedRoot, result);
     }
@@ -195,8 +192,7 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf1 = new ParseTreeLeaf('A'.ToCategory(), location, location);
+        var leaf1 = new ParseTreeLeaf('A'.ToCategory(), _location);
         var leaves = new[] { leaf1 };
 
         Assert.Throws<ParsingException<CharCategory>>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
@@ -222,14 +218,13 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
+        var leaf = new ParseTreeLeaf('B'.ToCategory(), _location);
         var leaves = new[] { leaf };
 
         var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
-        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production, new[] { leaf });
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), production, new[] { leaf }, _location);
 
         Assert.Equal(expectedRoot, result);
     }
@@ -251,8 +246,7 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf = new ParseTreeLeaf('C'.ToCategory(), location, location);
+        var leaf = new ParseTreeLeaf('C'.ToCategory(), _location);
         var leaves = new[] { leaf };
 
         Assert.Throws<ParsingException<CharCategory>>(() => parser.Process(leaves, new Mock<IDiagnostics>().Object));
@@ -291,17 +285,16 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf = new ParseTreeLeaf('D'.ToCategory(), location, location);
+        var leaf = new ParseTreeLeaf('D'.ToCategory(), _location);
         var leaves = new[] { leaf };
 
         var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
-        var expectedNodeC = new ParseTreeNode('C'.ToCategory(), location, location, production4, new[] { leaf });
-        var expectedNodeB = new ParseTreeNode('B'.ToCategory(), location, location, production3, new[] { expectedNodeC });
-        var expectedNodeA = new ParseTreeNode('A'.ToCategory(), location, location, production2, new[] { expectedNodeB });
-        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production1, new[] { expectedNodeA });
+        var expectedNodeC = new ParseTreeNode('C'.ToCategory(), production4, new[] { leaf }, _location);
+        var expectedNodeB = new ParseTreeNode('B'.ToCategory(), production3, new[] { expectedNodeC }, _location);
+        var expectedNodeA = new ParseTreeNode('A'.ToCategory(), production2, new[] { expectedNodeB }, _location);
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), production1, new[] { expectedNodeA }, _location);
 
         Assert.Equal(expectedRoot, result);
     }
@@ -335,15 +328,14 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf = new ParseTreeLeaf('B'.ToCategory(), location, location);
+        var leaf = new ParseTreeLeaf('B'.ToCategory(), _location);
         var leaves = new[] { leaf };
 
         var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
-        var expectedNodeA = new ParseTreeNode('A'.ToCategory(), location, location, production2, new[] { leaf });
-        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production1, new[] { expectedNodeA });
+        var expectedNodeA = new ParseTreeNode('A'.ToCategory(), production2, new[] { leaf }, _location);
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), production1, new[] { expectedNodeA }, _location);
 
         Assert.Equal(expectedRoot, result);
     }
@@ -376,16 +368,15 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf = new ParseTreeLeaf('A'.ToCategory(), location, location);
+        var leaf = new ParseTreeLeaf('A'.ToCategory(), _location);
         var leaves = new[] { leaf, leaf, leaf };
 
         var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);
 
         // expected result
-        var expectedNode2 = new ParseTreeNode('S'.ToCategory(), location, location, production1, new[] { leaf });
-        var expectedNode1 = new ParseTreeNode('S'.ToCategory(), location, location, production2, new IParseTree[] { expectedNode2, leaf });
-        var expectedRoot = new ParseTreeNode('S'.ToCategory(), location, location, production2, new IParseTree[] { expectedNode1, leaf });
+        var expectedNode2 = new ParseTreeNode('S'.ToCategory(), production1, new[] { leaf }, _location);
+        var expectedNode1 = new ParseTreeNode('S'.ToCategory(), production2, new IParseTree[] { expectedNode2, leaf }, _location);
+        var expectedRoot = new ParseTreeNode('S'.ToCategory(), production2, new IParseTree[] { expectedNode1, leaf }, _location);
 
         Assert.Equal(expectedRoot, result);
     }
@@ -438,13 +429,12 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf1 = new ParseTreeLeaf('P'.ToCategory(), location, location);
-        var leaf2 = new ParseTreeLeaf('a'.ToCategory(), location, location);
-        var leaf3 = new ParseTreeLeaf('r'.ToCategory(), location, location);
-        var leaf4 = new ParseTreeLeaf('s'.ToCategory(), location, location);
-        var leaf5 = new ParseTreeLeaf('e'.ToCategory(), location, location);
-        var leaf6 = new ParseTreeLeaf('r'.ToCategory(), location, location);
+        var leaf1 = new ParseTreeLeaf('P'.ToCategory(), _location);
+        var leaf2 = new ParseTreeLeaf('a'.ToCategory(), _location);
+        var leaf3 = new ParseTreeLeaf('r'.ToCategory(), _location);
+        var leaf4 = new ParseTreeLeaf('s'.ToCategory(), _location);
+        var leaf5 = new ParseTreeLeaf('e'.ToCategory(), _location);
+        var leaf6 = new ParseTreeLeaf('r'.ToCategory(), _location);
 
         var leaves = new[] { leaf1, leaf2, leaf3, leaf4, leaf5, leaf6 };
 
@@ -453,22 +443,22 @@ public class ParserTest
         // expected result
         // (Y -> Pa)
         var expectedLeftNode3 =
-            new ParseTreeNode('Y'.ToCategory(), location, location, production4, new[] { leaf1, leaf2 });
+            new ParseTreeNode('Y'.ToCategory(), production4, new[] { leaf1, leaf2 }, _location);
         // (X -> Yr)
         var expectedLeftNode2 =
-            new ParseTreeNode('X'.ToCategory(), location, location, production3, new IParseTree[] { expectedLeftNode3, leaf3 });
+            new ParseTreeNode('X'.ToCategory(), production3, new IParseTree[] { expectedLeftNode3, leaf3 }, _location);
         // (S -> X)
         var expectedLeftNode1 =
-            new ParseTreeNode('S'.ToCategory(), location, location, production1, new[] { expectedLeftNode2 });
+            new ParseTreeNode('S'.ToCategory(), production1, new[] { expectedLeftNode2 }, _location);
         // (Y -> se)
         var expectedRightNode2 =
-            new ParseTreeNode('Y'.ToCategory(), location, location, production5, new[] { leaf4, leaf5 });
+            new ParseTreeNode('Y'.ToCategory(), production5, new[] { leaf4, leaf5 }, _location);
         // (X -> Yr)
         var expectedRightNode1 =
-            new ParseTreeNode('X'.ToCategory(), location, location, production3, new IParseTree[] { expectedRightNode2, leaf6 });
+            new ParseTreeNode('X'.ToCategory(), production3, new IParseTree[] { expectedRightNode2, leaf6 }, _location);
         // (S -> SX)
         var expectedRoot =
-            new ParseTreeNode('S'.ToCategory(), location, location, production2, new[] { expectedLeftNode1, expectedRightNode1 });
+            new ParseTreeNode('S'.ToCategory(), production2, new[] { expectedLeftNode1, expectedRightNode1 }, _location);
 
         Assert.Equal(expectedRoot, result);
     }
@@ -496,11 +486,9 @@ public class ParserTest
         var grammar = new Grammar('S'.ToCategory(), new[] { production });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-
         // ()(()())()
-        var leafLeft = new ParseTreeLeaf('('.ToCategory(), location, location);
-        var leafRight = new ParseTreeLeaf(')'.ToCategory(), location, location);
+        var leafLeft = new ParseTreeLeaf('('.ToCategory(), _location);
+        var leafRight = new ParseTreeLeaf(')'.ToCategory(), _location);
 
         var leaves = new[]
         {
@@ -521,22 +509,22 @@ public class ParserTest
         // expected result
         // (S -> eps)
         var emptySProductionNode =
-            new ParseTreeNode('S'.ToCategory(), location, location, production, Array.Empty<IParseTree>());
+            new ParseTreeNode('S'.ToCategory(), production, Array.Empty<IParseTree>(), _location);
         // (S -> (S)(S)) 
         var expectedMiddleNode =
-            new ParseTreeNode('S'.ToCategory(), location, location, production, new IParseTree[]
+            new ParseTreeNode('S'.ToCategory(), production, new IParseTree[]
             {
                 leafLeft, emptySProductionNode, leafRight,
                 leafLeft, emptySProductionNode, leafRight
-            });
+            }, _location);
         // (S -> (S)(S)(S))
         var expectedRoot =
-            new ParseTreeNode('S'.ToCategory(), location, location, production, new IParseTree[]
+            new ParseTreeNode('S'.ToCategory(), production, new IParseTree[]
             {
                 leafLeft, emptySProductionNode, leafRight,
                 leafLeft, expectedMiddleNode, leafRight,
                 leafLeft, emptySProductionNode, leafRight
-            });
+            }, _location);
 
         Assert.Equal(expectedRoot, result);
     }
@@ -637,8 +625,7 @@ public class ParserTest
         });
         var parser = Parser.FromGrammar(grammar, '\0'.ToCategory());
 
-        var location = new FakeLocation();
-        var leaf = new ParseTreeLeaf('S'.ToCategory(), location, location);
+        var leaf = new ParseTreeLeaf('S'.ToCategory(), _location);
         var leaves = new[] { leaf };
 
         var result = parser.Process(leaves, new Mock<IDiagnostics>().Object);

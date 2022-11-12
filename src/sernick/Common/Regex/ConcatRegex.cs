@@ -1,5 +1,7 @@
 namespace sernick.Common.Regex;
 
+using Utility;
+
 internal sealed class ConcatRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<TAtom>
 {
     public ConcatRegex(IEnumerable<Regex<TAtom>> children)
@@ -38,13 +40,7 @@ internal sealed class ConcatRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable
         return Concat(Children.Reverse().Select(child => child.Reverse()));
     }
 
-    public override int GetHashCode()
-    {
-        return Children.Aggregate(
-            Children.Count,
-            (hashCode, child) => unchecked(hashCode * 17 + child.GetHashCode())
-            );
-    }
+    public override int GetHashCode() => Children.GetCombinedHashCode();
 
     public override bool Equals(Regex<TAtom>? other)
     {

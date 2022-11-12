@@ -126,10 +126,7 @@ public sealed class SumDfa<TCat, TState, TSymbol> : IDfa<SumDfa<TCat, TState, TS
             return other is State state && Equals(state);
         }
 
-        public override int GetHashCode()
-        {
-            return this.Aggregate(0, (current, kv) => current ^ kv.Key.GetHashCode() ^ kv.Value!.GetHashCode());
-        }
+        public override int GetHashCode() => this.GetCombinedSetHashCode();
 
         public override string ToString() => string.Join("; ", this.Select(kv => $"{kv.Key}: {kv.Value}"));
     }
