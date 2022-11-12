@@ -71,20 +71,14 @@ public sealed class NameResolution
 
         public override NameResolutionVisitorResult VisitVariableDeclaration(VariableDeclaration node,
             IdentifiersNamespace identifiersNamespace) => new(identifiersNamespace.Add(node));
-
-        public override NameResolutionVisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
-            IdentifiersNamespace identifiersNamespace)
-        {
-            return new NameResolutionVisitorResult(new PartialNameResolutionResult(), identifiersNamespace.Add(node));
-        }
-
+        
         public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node,
             IdentifiersNamespace identifiersNamespace)
         {
             var variablesWithFunction = identifiersNamespace.Add(node);
             var variablesWithParameters = node.Parameters.Aggregate(variablesWithFunction.NewScope(),
-                (variables, parameter) => parameter.Accept(this, variables).IdentifiersNamespace);
-
+                (variables, parameter) => variables.Add(parameter));
+            
             var visitorResult = node.Body.Inner.Accept(this, variablesWithParameters);
             return visitorResult with { IdentifiersNamespace = variablesWithFunction };
         }
