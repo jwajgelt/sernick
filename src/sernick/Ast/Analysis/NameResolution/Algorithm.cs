@@ -9,9 +9,8 @@ public sealed class Algorithm
     {
         var visitor = new NameResolvingAstVisitor();
         var result = visitor.VisitAstTree(ast, new LocalVariablesManager(diagnostics));
-        UsedVariableDeclarations = result.PartialAlgorithmResult.UsedVariableDeclarations;
-        AssignedVariableDeclarations = result.PartialAlgorithmResult.AssignedVariableDeclarations;
-        CalledFunctionDeclarations = result.PartialAlgorithmResult.CalledFunctionDeclarations;
+        (UsedVariableDeclarations, AssignedVariableDeclarations, CalledFunctionDeclarations) =
+            result.PartialAlgorithmResult;
     }
 
     /// <summary>
