@@ -70,10 +70,7 @@ public sealed class Algorithm
         }
 
         public override VisitorResult VisitVariableDeclaration(VariableDeclaration node,
-            LocalVariablesManager variablesManager)
-        {
-            return new VisitorResult(new PartialAlgorithmResult(), variablesManager.Add(node));
-        }
+            LocalVariablesManager variablesManager) => new(variablesManager.Add(node));
 
         public override VisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
             LocalVariablesManager variablesManager)
