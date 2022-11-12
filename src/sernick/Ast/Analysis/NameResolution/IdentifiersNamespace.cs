@@ -5,34 +5,24 @@ using Diagnostics;
 using Nodes;
 
 /// <summary>
-///     Class responsible for managing variables visible from a certain place in code and reporting diagnostics.
+///     Class responsible for managing identifiers visible from a certain place in code and reporting diagnostics.
 /// </summary>
-public sealed class LocalVariablesManager
+public sealed class IdentifiersNamespace
 {
     private readonly ImmutableHashSet<string> _currentScope;
     private readonly IDiagnostics _diagnostics;
     private readonly ImmutableDictionary<string, Declaration> _variables;
 
-    public LocalVariablesManager(IDiagnostics diagnostics) : this(ImmutableDictionary<string, Declaration>.Empty,
+    public IdentifiersNamespace(IDiagnostics diagnostics) : this(ImmutableDictionary<string, Declaration>.Empty,
         ImmutableHashSet<string>.Empty, diagnostics)
     {
     }
 
-    private LocalVariablesManager(ImmutableDictionary<string, Declaration> variables,
+    private IdentifiersNamespace(ImmutableDictionary<string, Declaration> variables,
         ImmutableHashSet<string> currentScope, IDiagnostics diagnostics) =>
         (_variables, _currentScope, _diagnostics) = (variables, currentScope, diagnostics);
 
-    public LocalVariablesManager Add(VariableDeclaration declaration)
-    {
-        return Add(declaration.Name.Name, declaration);
-    }
-
-    public LocalVariablesManager Add(FunctionParameterDeclaration declaration)
-    {
-        return Add(declaration.Name.Name, declaration);
-    }
-
-    public LocalVariablesManager Add(FunctionDefinition declaration)
+    public IdentifiersNamespace Add(Declaration declaration)
     {
         return Add(declaration.Name.Name, declaration);
     }
@@ -73,19 +63,19 @@ public sealed class LocalVariablesManager
         return null;
     }
 
-    public LocalVariablesManager NewScope()
+    public IdentifiersNamespace NewScope()
     {
-        return new LocalVariablesManager(_variables, ImmutableHashSet<string>.Empty, _diagnostics);
+        return new IdentifiersNamespace(_variables, ImmutableHashSet<string>.Empty, _diagnostics);
     }
 
-    private LocalVariablesManager Add(string name, Declaration declaration)
+    private IdentifiersNamespace Add(string name, Declaration declaration)
     {
         if (_currentScope.Contains(name))
         {
             _diagnostics.Report(new MultipleDeclarationsOfTheSameIdentifierError(_variables[name], declaration));
         }
 
-        return new LocalVariablesManager(_variables.Remove(name).Add(name, declaration), _currentScope.Add(name),
+        return new IdentifiersNamespace(_variables.Remove(name).Add(name, declaration), _currentScope.Add(name),
             _diagnostics);
     }
 

@@ -8,7 +8,7 @@ public sealed class NameResolution
     public NameResolution(AstNode ast, IDiagnostics diagnostics)
     {
         var visitor = new NameResolvingAstVisitor();
-        var result = visitor.VisitAstTree(ast, new LocalVariablesManager(diagnostics));
+        var result = visitor.VisitAstTree(ast, new IdentifiersNamespace(diagnostics));
         (UsedVariableDeclarations, AssignedVariableDeclarations, CalledFunctionDeclarations) =
             result.PartialAlgorithmResult;
     }
@@ -42,26 +42,26 @@ public sealed class NameResolution
         get;
     }
 
-    private class NameResolvingAstVisitor : AstVisitor<VisitorResult, LocalVariablesManager>
+    private class NameResolvingAstVisitor : AstVisitor<VisitorResult, IdentifiersNamespace>
     {
 
         /// <summary>
         ///     A default implementation of Visit method, used to resolve names on the AST.
         /// </summary>
         /// <param name="node"> The node to call Visitor on. </param>
-        /// <param name="variablesManager"> An immutable manager which holds information about currently visible variables. </param>
+        /// <param name="identifiersNamespace"> An immutable class which holds information about currently visible identifiers. </param>
         /// <returns>
         ///     A VisitorResult, which is a pair of:
         ///     - a PartialAlgorithmResult containing the 3 result dictionaries filled with resolved names from the subtree,
-        ///     - a new LocalVariableManager updated with variables defined inside of the subtree.
+        ///     - a new IdentifiersNamespace updated with identifiers defined inside of the subtree.
         /// </returns>
-        protected override VisitorResult VisitAstNode(AstNode node, LocalVariablesManager variablesManager)
+        protected override VisitorResult VisitAstNode(AstNode node, IdentifiersNamespace identifiersNamespace)
         {
             return node.Children.Aggregate(
-                new VisitorResult(variablesManager),
+                new VisitorResult(identifiersNamespace),
                 (result, next) =>
                 {
-                    var childResult = next.Accept(this, result.VariablesManager);
+                    var childResult = next.Accept(this, result.IdentifiersNamespace);
                     return childResult with
                     {
                         PartialAlgorithmResult = PartialAlgorithmResult.Join(result.PartialAlgorithmResult, childResult.PartialAlgorithmResult)
@@ -70,60 +70,60 @@ public sealed class NameResolution
         }
 
         public override VisitorResult VisitVariableDeclaration(VariableDeclaration node,
-            LocalVariablesManager variablesManager) => new(variablesManager.Add(node));
+            IdentifiersNamespace identifiersNamespace) => new(identifiersNamespace.Add(node));
 
         public override VisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
-            LocalVariablesManager variablesManager)
+            IdentifiersNamespace identifiersNamespace)
         {
-            return new VisitorResult(new PartialAlgorithmResult(), variablesManager.Add(node));
+            return new VisitorResult(new PartialAlgorithmResult(), identifiersNamespace.Add(node));
         }
 
         public override VisitorResult VisitFunctionDefinition(FunctionDefinition node,
-            LocalVariablesManager variablesManager)
+            IdentifiersNamespace identifiersNamespace)
         {
-            var variablesWithFunction = variablesManager.Add(node);
+            var variablesWithFunction = identifiersNamespace.Add(node);
             var variablesWithParameters = node.Parameters.Aggregate(variablesWithFunction.NewScope(),
-                (variables, parameter) => parameter.Accept(this, variables).VariablesManager);
+                (variables, parameter) => parameter.Accept(this, variables).IdentifiersNamespace);
 
             var visitorResult = node.Body.Inner.Accept(this, variablesWithParameters);
-            return visitorResult with { VariablesManager = variablesWithFunction };
+            return visitorResult with { IdentifiersNamespace = variablesWithFunction };
         }
 
-        public override VisitorResult VisitCodeBlock(CodeBlock node, LocalVariablesManager variablesManager)
+        public override VisitorResult VisitCodeBlock(CodeBlock node, IdentifiersNamespace identifiersNamespace)
         {
-            var visitorResult = node.Inner.Accept(this, variablesManager.NewScope());
+            var visitorResult = node.Inner.Accept(this, identifiersNamespace.NewScope());
             // ignore variables defined inside the block
-            return visitorResult with { VariablesManager = variablesManager };
+            return visitorResult with { IdentifiersNamespace = identifiersNamespace };
         }
 
-        public override VisitorResult VisitFunctionCall(FunctionCall node, LocalVariablesManager variablesManager)
+        public override VisitorResult VisitFunctionCall(FunctionCall node, IdentifiersNamespace identifiersNamespace)
         {
-            var declaration = variablesManager.GetCalledFunctionDeclaration(node.FunctionName);
+            var declaration = identifiersNamespace.GetCalledFunctionDeclaration(node.FunctionName);
             // if the identifier is not resolved, we can try to continue resolving and possibly find more errors
             return declaration == null
-                ? new VisitorResult(variablesManager)
+                ? new VisitorResult(identifiersNamespace)
                 : new VisitorResult(PartialAlgorithmResult.OfFunctionCall(node, declaration),
-                    variablesManager);
+                    identifiersNamespace);
         }
 
-        public override VisitorResult VisitAssignment(Assignment node, LocalVariablesManager variablesManager)
+        public override VisitorResult VisitAssignment(Assignment node, IdentifiersNamespace identifiersNamespace)
         {
-            var declaration = variablesManager.GetAssignedVariableDeclaration(node.Left);
+            var declaration = identifiersNamespace.GetAssignedVariableDeclaration(node.Left);
             // if the identifier is not resolved, we can try to continue resolving and possibly find more errors
             return declaration == null
-                ? new VisitorResult(variablesManager)
+                ? new VisitorResult(identifiersNamespace)
                 : new VisitorResult(PartialAlgorithmResult.OfAssignment(node, declaration),
-                    variablesManager);
+                    identifiersNamespace);
         }
 
-        public override VisitorResult VisitVariableValue(VariableValue node, LocalVariablesManager variablesManager)
+        public override VisitorResult VisitVariableValue(VariableValue node, IdentifiersNamespace identifiersNamespace)
         {
-            var declaration = variablesManager.GetUsedVariableDeclaration(node.Identifier);
+            var declaration = identifiersNamespace.GetUsedVariableDeclaration(node.Identifier);
             // if the identifier is not resolved, we can try to continue resolving and possibly find more errors
             return declaration == null
-                ? new VisitorResult(variablesManager)
+                ? new VisitorResult(identifiersNamespace)
                 : new VisitorResult(PartialAlgorithmResult.OfVariableUse(node, declaration),
-                    variablesManager);
+                    identifiersNamespace);
         }
     }
 }

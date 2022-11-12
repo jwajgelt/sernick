@@ -1,9 +1,9 @@
 namespace sernick.Ast.Analysis.NameResolution;
 
-public record VisitorResult(PartialAlgorithmResult PartialAlgorithmResult, LocalVariablesManager VariablesManager)
+public record VisitorResult(PartialAlgorithmResult PartialAlgorithmResult, IdentifiersNamespace IdentifiersNamespace)
 {
-    public VisitorResult(LocalVariablesManager variablesManager) : this(
-        new PartialAlgorithmResult(), variablesManager)
+    public VisitorResult(IdentifiersNamespace identifiersNamespace) : this(
+        new PartialAlgorithmResult(), identifiersNamespace)
     {
     }
 }

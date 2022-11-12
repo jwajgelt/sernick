@@ -7,7 +7,7 @@ using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Nodes;
 using sernick.Diagnostics;
 
-public class LocalVariableManagerTest
+public class IdentifiersNamespaceTest
 {
     [Fact]
     public void IdentifiersAreVisibleAfterAddingThem()
@@ -16,7 +16,7 @@ public class LocalVariableManagerTest
         var parameter = GetParameter("b");
         var function = GetFunction("c");
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
-        var manager = new LocalVariablesManager(diagnostics.Object);
+        var manager = new IdentifiersNamespace(diagnostics.Object);
 
         var finalManager = manager.Add(variable).Add(parameter).Add(function);
 
@@ -30,7 +30,7 @@ public class LocalVariableManagerTest
     public void NotDeclaredIdentifiersAreReported()
     {
         var diagnostics = new Mock<IDiagnostics>();
-        var manager = new LocalVariablesManager(diagnostics.Object);
+        var manager = new IdentifiersNamespace(diagnostics.Object);
 
         manager.GetAssignedVariableDeclaration(new Identifier("a"));
         manager.GetUsedVariableDeclaration(new Identifier("a"));
@@ -47,7 +47,7 @@ public class LocalVariableManagerTest
         var parameter = GetParameter("a");
         var function = GetFunction("a");
         var diagnostics = new Mock<IDiagnostics>();
-        var manager = new LocalVariablesManager(diagnostics.Object);
+        var manager = new IdentifiersNamespace(diagnostics.Object);
 
         var finalManager = manager.Add(firstDeclaration).Add(variable).Add(parameter).Add(function);
 
@@ -60,7 +60,7 @@ public class LocalVariableManagerTest
         var variable = GetVariable("a");
         var parameter = GetParameter("b");
         var diagnostics = new Mock<IDiagnostics>();
-        var manager = new LocalVariablesManager(diagnostics.Object).Add(variable).Add(parameter);
+        var manager = new IdentifiersNamespace(diagnostics.Object).Add(variable).Add(parameter);
 
         var variableAsFunction = manager.GetCalledFunctionDeclaration(new Identifier("a"));
         var parameterAsFunction = manager.GetCalledFunctionDeclaration(new Identifier("b"));
@@ -75,7 +75,7 @@ public class LocalVariableManagerTest
     {
         var function = GetFunction("f");
         var diagnostics = new Mock<IDiagnostics>();
-        var manager = new LocalVariablesManager(diagnostics.Object).Add(function);
+        var manager = new IdentifiersNamespace(diagnostics.Object).Add(function);
 
         var functionAsVariable1 = manager.GetUsedVariableDeclaration(new Identifier("f"));
         var functionAsVariable2 = manager.GetAssignedVariableDeclaration(new Identifier("f"));
@@ -95,7 +95,7 @@ public class LocalVariableManagerTest
         var parameter2 = GetParameter("b");
         var function2 = GetFunction("c");
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
-        var manager = new LocalVariablesManager(diagnostics.Object);
+        var manager = new IdentifiersNamespace(diagnostics.Object);
 
         var finalManager = manager
             .Add(variable1)
