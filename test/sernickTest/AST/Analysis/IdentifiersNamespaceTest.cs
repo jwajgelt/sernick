@@ -51,7 +51,7 @@ public class IdentifiersNamespaceTest
 
         var finalManager = manager.Add(firstDeclaration).Add(variable).Add(parameter).Add(function);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsOfTheSameIdentifierError>()), Times.Exactly(3));
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()), Times.Exactly(3));
     }
 
     [Fact]

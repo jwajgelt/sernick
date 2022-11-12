@@ -325,7 +325,7 @@ public class NameResolutionTest
 
         var nameResolution = new NameResolution(tree, diagnostics.Object);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsOfTheSameIdentifierError>()));
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
     }
 
     [Fact]
@@ -343,7 +343,7 @@ public class NameResolutionTest
 
         var nameResolution = new NameResolution(function, diagnostics.Object);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsOfTheSameIdentifierError>()));
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
     }
 
     [Fact]
@@ -358,7 +358,7 @@ public class NameResolutionTest
 
         var nameResolution = new NameResolution(tree, diagnostics.Object);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsOfTheSameIdentifierError>()));
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
     }
 
     // NotAFunction tests

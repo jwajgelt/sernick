@@ -8,7 +8,7 @@ public record NameResolutionError(Identifier Identifier) : IDiagnosticItem
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
 }
 
-public record MultipleDeclarationsOfTheSameIdentifierError(Declaration Original, Declaration Repeat) : NameResolutionError(Repeat.Name)
+public record MultipleDeclarationsError(Declaration Original, Declaration Repeat) : NameResolutionError(Repeat.Name)
 {
     public override string ToString()
     {

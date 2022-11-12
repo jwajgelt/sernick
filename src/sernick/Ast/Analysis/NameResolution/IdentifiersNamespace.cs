@@ -72,7 +72,7 @@ public sealed class IdentifiersNamespace
     {
         if (_currentScope.Contains(name))
         {
-            _diagnostics.Report(new MultipleDeclarationsOfTheSameIdentifierError(_variables[name], declaration));
+            _diagnostics.Report(new MultipleDeclarationsError(_variables[name], declaration));
         }
 
         return new IdentifiersNamespace(_variables.Remove(name).Add(name, declaration), _currentScope.Add(name),
