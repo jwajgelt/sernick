@@ -28,8 +28,8 @@ public class CompilerFrontendTest
         CompilerFrontend.Process(input, diagnostics.Object);
     }
 
-    /* DO NOT UNCOMMENT WHEN PUSHING: it will overload Github Actions
-    [Theory]
+    // NOTE: DO NOT UNSKIP WHEN PUSHING: it will overload Github Actions
+    [Theory(Skip = "Too large performance hit on Github Workflow")]
     [InlineData("a")]
     [InlineData("5")]
     [InlineData("{x}")]
@@ -77,5 +77,4 @@ public class CompilerFrontendTest
 
         CompilerFrontend.Process(input, diagnostics.Object);
     }
-    */
 }
