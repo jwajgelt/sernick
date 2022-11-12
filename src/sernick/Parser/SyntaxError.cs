@@ -8,7 +8,7 @@ public sealed record SyntaxError<TSymbol>
 {
     public override string ToString()
     {
-        return NextParseNode == null || NextParseNode!.Symbol == null 
+        return NextParseNode == null || NextParseNode!.Symbol == null
                 ? "Syntax error: unexpected symbol EOF."
                 : $"Syntax error: unexpected symbol {NextParseNode?.Symbol?.ToString()} beginning at {NextParseNode?.LocationRange.Start} and ending at {NextParseNode?.LocationRange.End}.";
     }
