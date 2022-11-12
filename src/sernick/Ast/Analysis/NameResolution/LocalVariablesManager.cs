@@ -19,12 +19,8 @@ public sealed class LocalVariablesManager
     }
 
     private LocalVariablesManager(ImmutableDictionary<string, Declaration> variables,
-        ImmutableHashSet<string> currentScope, IDiagnostics diagnostics)
-    {
-        _variables = variables;
-        _currentScope = currentScope;
-        _diagnostics = diagnostics;
-    }
+        ImmutableHashSet<string> currentScope, IDiagnostics diagnostics) =>
+        (_variables, _currentScope, _diagnostics) = (variables, currentScope, diagnostics);
 
     public LocalVariablesManager Add(VariableDeclaration declaration)
     {
