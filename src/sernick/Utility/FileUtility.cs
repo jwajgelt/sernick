@@ -10,7 +10,12 @@ public static class FileUtility
         return new FileInput(lines);
     }
 
-    private sealed class FileInput : IInput
+    internal static FileInput.FileLocation LocationAt(uint line, uint character)
+    {
+        return new FileInput.FileLocation(line - 1, character - 1);
+    }
+
+    internal sealed class FileInput : IInput
     {
         internal FileInput(string[] lines)
         {
@@ -84,7 +89,7 @@ public static class FileUtility
         public ILocation Start { get; }
         public ILocation End { get; }
 
-        private sealed record FileLocation(uint Line, uint Character) : ILocation
+        internal sealed record FileLocation(uint Line, uint Character) : ILocation
         {
             public override string ToString()
             {
