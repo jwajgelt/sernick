@@ -13,7 +13,7 @@ using Nodes;
 /// </summary>
 public abstract class AstVisitor<TResult, TParam>
 {
-    protected TResult VisitAstTree(AstNode node, TParam param) => node.Accept(this, param);
+    public TResult VisitAstTree(AstNode node, TParam param) => node.Accept(this, param);
 
     protected abstract TResult VisitAstNode(AstNode node, TParam param);
 

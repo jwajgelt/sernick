@@ -1,6 +1,7 @@
 namespace sernick.Ast.Analysis;
 
 using Diagnostics;
+using NameResolution;
 using Nodes;
 using Utility;
 
@@ -15,7 +16,7 @@ public sealed class TypeChecking
         init;
     }
 
-    public TypeChecking(AstNode ast, NameResolution nameResolution, Diagnostics diagnostics)
+    public TypeChecking(AstNode ast, NameResolutionResult nameResolution, Diagnostics diagnostics)
     {
         // TODO: implement a TypeCheckingASTVisitor, walk it over the AST and initialize the property with the result
         throw new NotImplementedException();

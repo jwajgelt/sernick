@@ -39,7 +39,7 @@ public sealed record FunctionCall(Identifier FunctionName, IEnumerable<Expressio
 /// <summary>
 /// Base class for expressions which represent some type of declaration
 /// </summary>
-public abstract record Declaration(Range<ILocation> LocationRange) : Expression(LocationRange);
+public abstract record Declaration(Identifier Name, Range<ILocation> LocationRange) : Expression(LocationRange);
 
 /// <summary>
 /// Base class for classes representing flow control statements
