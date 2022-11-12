@@ -12,7 +12,7 @@ public record MultipleDeclarationsError(Declaration Original, Declaration Repeat
 {
     public override string ToString()
     {
-        return $"Multiple declarations of identifier: {Original}, {Repeat}";
+        return $"Multiple declarations of identifier: {Original.Name}, locations: {Original.LocationRange.Start}, {Repeat.LocationRange.End}";
     }
 }
 
@@ -20,7 +20,7 @@ public record NotAFunctionError(Identifier Identifier) : NameResolutionError(Ide
 {
     public override string ToString()
     {
-        return $"Identifier does not represent a function: {Identifier}";
+        return $"Identifier does not represent a function: {Identifier.Name}, location: {Identifier.LocationRange.Start}";
     }
 }
 
@@ -28,7 +28,7 @@ public record NotAVariableError(Identifier Identifier) : NameResolutionError(Ide
 {
     public override string ToString()
     {
-        return $"Identifier does not represent a variable: {Identifier}";
+        return $"Identifier does not represent a variable: {Identifier.Name}, location: {Identifier.LocationRange.Start}";
     }
 }
 
@@ -36,6 +36,6 @@ public record UndeclaredIdentifierError(Identifier Identifier) : NameResolutionE
 {
     public override string ToString()
     {
-        return $"Undeclared identifier: {Identifier}";
+        return $"Undeclared identifier: {Identifier.Name}, location: {Identifier.LocationRange.Start}";
     }
 }

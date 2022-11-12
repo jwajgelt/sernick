@@ -2,9 +2,14 @@ namespace sernickTest.AST.Analysis;
 
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Nodes;
+using sernick.Input;
+using sernick.Utility;
+using Tokenizer.Lexer.Helpers;
 
 public class IdentifiersNamespaceTest
 {
+    private static readonly Range<ILocation> loc = new(new FakeInput.Location(0), new FakeInput.Location(0));
+    
     [Fact]
     public void IdentifiersAreVisibleAfterAddingThem()
     {
@@ -13,8 +18,8 @@ public class IdentifiersNamespaceTest
 
         var identifiers = new IdentifiersNamespace().Add(declaration1).Add(declaration2);
 
-        Assert.Same(declaration1, identifiers.GetDeclaration(new Identifier("a")));
-        Assert.Same(declaration2, identifiers.GetDeclaration(new Identifier("b")));
+        Assert.Same(declaration1, identifiers.GetDeclaration(GetSimpleIdentifier("a")));
+        Assert.Same(declaration2, identifiers.GetDeclaration(GetSimpleIdentifier("b")));
     }
 
     [Fact]
@@ -22,7 +27,7 @@ public class IdentifiersNamespaceTest
     {
         var identifiers = new IdentifiersNamespace();
 
-        Assert.Throws<IdentifiersNamespace.NoSuchIdentifierException>(() => identifiers.GetDeclaration(new Identifier("a")));
+        Assert.Throws<IdentifiersNamespace.NoSuchIdentifierException>(() => identifiers.GetDeclaration(GetSimpleIdentifier("a")));
     }
 
     [Fact]
@@ -42,7 +47,7 @@ public class IdentifiersNamespaceTest
 
         var identifiers = new IdentifiersNamespace().Add(declaration1).NewScope();
 
-        Assert.Same(declaration1, identifiers.GetDeclaration(new Identifier("a")));
+        Assert.Same(declaration1, identifiers.GetDeclaration(GetSimpleIdentifier("a")));
     }
 
     [Fact]
@@ -53,11 +58,16 @@ public class IdentifiersNamespaceTest
 
         var identifiers = new IdentifiersNamespace().Add(declaration1).NewScope().Add(declaration2);
 
-        Assert.Same(declaration2, identifiers.GetDeclaration(new Identifier("a")));
+        Assert.Same(declaration2, identifiers.GetDeclaration(GetSimpleIdentifier("a")));
+    }
+
+    private static Identifier GetSimpleIdentifier(string name)
+    {
+        return new Identifier(name, loc);
     }
 
     private static Declaration GetSimpleDeclaration(string name)
     {
-        return new VariableDeclaration(new Identifier(name), null, null, false);
+        return new VariableDeclaration(GetSimpleIdentifier(name), null, null, false, loc);
     }
 }
