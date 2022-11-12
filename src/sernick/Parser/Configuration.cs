@@ -35,7 +35,7 @@ public sealed record Configuration<TSymbol>(
         return new Configuration<TSymbol>(statesSet);
     }
 
-    public bool Equals(Configuration<TSymbol>? other) => other is not null && States.SequenceEqual(other.States);
+    public bool Equals(Configuration<TSymbol>? other) => other is not null && States.SetEquals(other.States);
 
     public override int GetHashCode() => States.GetCombinedSetHashCode();
 
