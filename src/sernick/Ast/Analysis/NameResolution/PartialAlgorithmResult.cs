@@ -2,7 +2,7 @@ namespace sernick.Ast.Analysis.NameResolution;
 
 using Nodes;
 
-public record PartialAlgorithmResult(IReadOnlyDictionary<VariableValue, Declaration> UsedVariableDeclarations,
+public sealed record PartialAlgorithmResult(IReadOnlyDictionary<VariableValue, Declaration> UsedVariableDeclarations,
     IReadOnlyDictionary<Assignment, VariableDeclaration> AssignedVariableDeclarations,
     IReadOnlyDictionary<FunctionCall, FunctionDefinition> CalledFunctionDeclarations)
 {
