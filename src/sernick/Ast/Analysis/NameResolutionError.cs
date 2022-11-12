@@ -12,7 +12,7 @@ public record MultipleDeclarationsError(Declaration Original, Declaration Repeat
 {
     public override string ToString()
     {
-        return $"Multiple declarations of identifier: {Original.Name}, locations: {Original.LocationRange.Start}, {Repeat.LocationRange.End}";
+        return $"Multiple declarations of identifier: {Original.Name}, locations: {Original.LocationRange.Start}, {Repeat.LocationRange.Start}";
     }
 }
 
