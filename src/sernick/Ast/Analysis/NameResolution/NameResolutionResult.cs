@@ -23,9 +23,9 @@ public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Dec
     IReadOnlyDictionary<Assignment, VariableDeclaration> AssignedVariableDeclarations,
     IReadOnlyDictionary<FunctionCall, FunctionDefinition> CalledFunctionDeclarations)
 {
-    public NameResolutionResult() : this(new Dictionary<VariableValue, Declaration>(),
-        new Dictionary<Assignment, VariableDeclaration>(),
-        new Dictionary<FunctionCall, FunctionDefinition>())
+    public NameResolutionResult() : this(new Dictionary<VariableValue, Declaration>(ReferenceEqualityComparer.Instance),
+        new Dictionary<Assignment, VariableDeclaration>(ReferenceEqualityComparer.Instance),
+        new Dictionary<FunctionCall, FunctionDefinition>(ReferenceEqualityComparer.Instance))
     {
     }
 
