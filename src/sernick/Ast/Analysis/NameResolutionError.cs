@@ -3,12 +3,12 @@ namespace sernick.Ast.Analysis;
 using Diagnostics;
 using Nodes;
 
-public record NameResolutionError(Identifier Identifier) : IDiagnosticItem
+public abstract record NameResolutionError(Identifier Identifier) : IDiagnosticItem
 {
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
 }
 
-public record MultipleDeclarationsError(Declaration Original, Declaration Repeat) : NameResolutionError(Repeat.Name)
+public sealed record MultipleDeclarationsError(Declaration Original, Declaration Repeat) : NameResolutionError(Repeat.Name)
 {
     public override string ToString()
     {
@@ -16,7 +16,7 @@ public record MultipleDeclarationsError(Declaration Original, Declaration Repeat
     }
 }
 
-public record NotAFunctionError(Identifier Identifier) : NameResolutionError(Identifier)
+public sealed record NotAFunctionError(Identifier Identifier) : NameResolutionError(Identifier)
 {
     public override string ToString()
     {
@@ -24,7 +24,7 @@ public record NotAFunctionError(Identifier Identifier) : NameResolutionError(Ide
     }
 }
 
-public record NotAVariableError(Identifier Identifier) : NameResolutionError(Identifier)
+public sealed record NotAVariableError(Identifier Identifier) : NameResolutionError(Identifier)
 {
     public override string ToString()
     {
@@ -32,7 +32,7 @@ public record NotAVariableError(Identifier Identifier) : NameResolutionError(Ide
     }
 }
 
-public record UndeclaredIdentifierError(Identifier Identifier) : NameResolutionError(Identifier)
+public sealed record UndeclaredIdentifierError(Identifier Identifier) : NameResolutionError(Identifier)
 {
     public override string ToString()
     {
