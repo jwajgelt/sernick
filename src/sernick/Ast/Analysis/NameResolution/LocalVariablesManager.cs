@@ -7,7 +7,7 @@ using Nodes;
 /// <summary>
 ///     Class responsible for managing variables visible from a certain place in code and reporting diagnostics.
 /// </summary>
-public class LocalVariablesManager
+public sealed class LocalVariablesManager
 {
     private readonly ImmutableHashSet<string> _currentScope;
     private readonly IDiagnostics _diagnostics;
