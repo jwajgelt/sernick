@@ -1,5 +1,5 @@
 namespace sernick.Grammar.Syntax;
-using LexicalCategory = Lexicon.LexicalGrammarCategoryType;
+using LexicalCategory = Lexicon.LexicalGrammarCategory;
 
 public abstract record Symbol;
 

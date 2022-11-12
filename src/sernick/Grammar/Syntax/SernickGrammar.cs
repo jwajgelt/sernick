@@ -1,6 +1,6 @@
 namespace sernick.Grammar.Syntax;
 
-using LexicalCategory = Lexicon.LexicalGrammarCategoryType;
+using LexicalCategory = Lexicon.LexicalGrammarCategory;
 using Regex = Common.Regex.Regex<Symbol>;
 
 public static class SernickGrammar
