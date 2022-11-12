@@ -29,9 +29,9 @@ public class FrontendTest
         .Select(file => new[] { file.FullName });
 
     [Theory, MemberData(nameof(IncorrectExamplesData))]
-    public void TestIncorrectExamples(string filePath, IEnumerable<IDiagnosticItem> expectedErrors)
+    public void TestIncorrectExamples(string directory, string fileName, IEnumerable<IDiagnosticItem> expectedErrors)
     {
-        var diagnostics = filePath.Compile();
+        var diagnostics = $"examples/{directory}/incorrect/{fileName}.ser".Compile();
 
         Assert.True(diagnostics.DidErrorOccur);
         Assert.Equal(expectedErrors, diagnostics.DiagnosticItems);
@@ -41,11 +41,11 @@ public class FrontendTest
         new[]
         {
             // argument-types
-            new object?[] { "examples/argument-types/incorrect/call-type-conflict.ser", new[]
+            new object?[] { "argument-types", "call-type-conflict", new[]
             {
                 new TypeCheckingError(new IntType(), new BoolType(), FileUtility.LocationAt(7, 14) )
             }},
-            new object?[] { "examples/argument-types/incorrect/no-types.ser", new[]
+            new object?[] { "argument-types", "no-types", new[]
             {
                 new SyntaxError<Symbol>
                 (
@@ -60,13 +60,13 @@ public class FrontendTest
                     )
                 )
             }},
-            new object?[] { "examples/argument-types/incorrect/return-value-conflict.ser", new[]
+            new object?[] { "argument-types", "return-value-conflict", new[]
             {
                 new TypeCheckingError(new UnitType(), new BoolType(), FileUtility.LocationAt(4, 5) )
             }},
             
             // code-blocks
-            new object?[] { "examples/code-blocks/incorrect/access_outside_braces.ser", new[]
+            new object?[] { "code-blocks", "access_outside_braces", new[]
             {
                 new NameResolutionError
                 (
@@ -74,7 +74,7 @@ public class FrontendTest
                     FileUtility.LocationAt(5, 1)
                 )
             }},
-            new object?[] { "examples/code-blocks/incorrect/mixed_brackets.ser", new[]
+            new object?[] { "code-blocks", "mixed_brackets", new[]
             {
                 new SyntaxError<Symbol>
                 (
@@ -89,7 +89,7 @@ public class FrontendTest
                     )
                 )
             }},
-            new object?[] { "examples/code-blocks/incorrect/redeclare_after_declaration_in_function_call.ser", new[]
+            new object?[] { "code-blocks", "redeclare_after_declaration_in_function_call", new[]
             {
                 new NameResolutionError
                 (
@@ -97,7 +97,7 @@ public class FrontendTest
                     FileUtility.LocationAt(7, 7)
                 )
             }},
-            new object?[] { "examples/code-blocks/incorrect/redeclare_outside_parentheses.ser", new[]
+            new object?[] { "code-blocks", "redeclare_outside_parentheses", new[]
             {
                 new NameResolutionError
                 (
@@ -105,15 +105,15 @@ public class FrontendTest
                     FileUtility.LocationAt(5, 7)
                 )
             }},
-            new object?[] { "examples/code-blocks/incorrect/unclosed_braces.ser", new[]
+            new object?[] { "code-blocks", "unclosed_braces", new[]
             {
                 new SyntaxError<Symbol>(null)
             }},
-            new object?[] { "examples/code-blocks/incorrect/unclosed_parentheses.ser", new[]
+            new object?[] { "code-blocks", "unclosed_parentheses", new[]
             {
                 new SyntaxError<Symbol>(null)
             }},
-            new object?[] { "examples/code-blocks/incorrect/undeclared_after_nested_if.ser", new[]
+            new object?[] { "code-blocks", "undeclared_after_nested_if", new[]
             {
                 new NameResolutionError
                 (
@@ -121,7 +121,7 @@ public class FrontendTest
                     FileUtility.LocationAt(7, 21)
                 )
             }},
-            new object?[] { "examples/code-blocks/incorrect/usage_before_declaration.ser", new[]
+            new object?[] { "code-blocks", "usage_before_declaration", new[]
             {
                 new NameResolutionError
                 (
@@ -129,7 +129,7 @@ public class FrontendTest
                     FileUtility.LocationAt(7, 21)
                 )
             }},
-            new object?[] { "examples/code-blocks/incorrect/variable_overshadow_in_braces.ser", new[]
+            new object?[] { "code-blocks", "variable_overshadow_in_braces", new[]
             {
                 new NameResolutionError
                 (
@@ -139,7 +139,7 @@ public class FrontendTest
             }},
             
             // comments-and-separators
-            new object?[] { "examples/comments-and-separators/incorrect/commented_multi_line_comment.ser", new IDiagnosticItem[]
+            new object?[] { "comments-and-separators", "commented_multi_line_comment", new IDiagnosticItem[]
             {
                 new SyntaxError<Symbol>
                 (
@@ -156,12 +156,12 @@ public class FrontendTest
                 new LexicalError(FileUtility.LocationAt(2, 17), FileUtility.LocationAt(2, 18)),
                 new LexicalError(FileUtility.LocationAt(2, 18), FileUtility.LocationAt(3, 1))
             }},
-            new object?[] { "examples/comments-and-separators/incorrect/double_end_of_comment.ser", new IDiagnosticItem[]
+            new object?[] { "comments-and-separators", "double_end_of_comment", new IDiagnosticItem[]
             {
                 new LexicalError(FileUtility.LocationAt(4, 1), FileUtility.LocationAt(4, 2)),
                 new LexicalError(FileUtility.LocationAt(4, 2), FileUtility.LocationAt(5, 1))
             }},
-            new object?[] { "examples/comments-and-separators/incorrect/illegal_one_line_comment.ser", new IDiagnosticItem[]
+            new object?[] { "comments-and-separators", "illegal_one_line_comment", new IDiagnosticItem[]
             {
                 new LexicalError(FileUtility.LocationAt(1, 1), FileUtility.LocationAt(1, 2)),
                 new SyntaxError<Symbol>
@@ -178,16 +178,16 @@ public class FrontendTest
                 ),
                 new LexicalError(FileUtility.LocationAt(2, 1), FileUtility.LocationAt(2, 3))
             }},
-            new object?[] { "examples/comments-and-separators/incorrect/illegally_nested_comment.ser", new IDiagnosticItem[]
+            new object?[] { "comments-and-separators", "illegally_nested_comment", new IDiagnosticItem[]
             {
                 new LexicalError(FileUtility.LocationAt(5, 1), FileUtility.LocationAt(4, 2)),
                 new LexicalError(FileUtility.LocationAt(5, 2), FileUtility.LocationAt(6, 1))
             }},
-            new object?[] { "examples/comments-and-separators/incorrect/line_without_separator.ser", new IDiagnosticItem[]
+            new object?[] { "comments-and-separators", "line_without_separator", new IDiagnosticItem[]
             {
                 new SyntaxError<Symbol>(null)
             }},
-            new object?[] { "examples/comments-and-separators/incorrect/separarator_in_the_middle.ser", new IDiagnosticItem[]
+            new object?[] { "comments-and-separators", "separarator_in_the_middle", new IDiagnosticItem[]
             {
                 new SyntaxError<Symbol>
                 (
@@ -202,7 +202,7 @@ public class FrontendTest
                     )
                 )
             }},
-            new object?[] { "examples/comments-and-separators/incorrect/unclosed_multi_line_comment.ser", new IDiagnosticItem[]
+            new object?[] { "comments-and-separators", "unclosed_multi_line_comment", new IDiagnosticItem[]
             {
                 new LexicalError(FileUtility.LocationAt(1, 1), FileUtility.LocationAt(1, 3)),
                 new LexicalError(FileUtility.LocationAt(1, 2), FileUtility.LocationAt(1, 3)),
@@ -219,7 +219,7 @@ public class FrontendTest
                     )
                 )
             }},
-            new object?[] { "examples/comments-and-separators/incorrect/unopened_multi_line_comment.ser", new IDiagnosticItem[]
+            new object?[] { "comments-and-separators", "unopened_multi_line_comment", new IDiagnosticItem[]
             {
                 new SyntaxError<Symbol>
                 (
@@ -238,7 +238,7 @@ public class FrontendTest
             }},
             
             // control_flow
-            new object?[] { "examples/control_flow/incorrect/else_no_if.ser", new IDiagnosticItem[]
+            new object?[] { "control_flow", "else_no_if", new IDiagnosticItem[]
             {
                 new SyntaxError<Symbol>
                 (
@@ -253,17 +253,17 @@ public class FrontendTest
                     )
                 ),
             }},
-            new object?[] { "examples/control_flow/incorrect/if_else_expression.ser", new IDiagnosticItem[]
+            new object?[] { "control_flow", "if_else_expression", new IDiagnosticItem[]
             {
                 // Is this correct?
                 new TypeCheckingError(new IntType(), new BoolType(), FileUtility.LocationAt(8, 5))
             }},
-            new object?[] { "examples/control_flow/incorrect/if_else_expression_unit.ser", new IDiagnosticItem[]
+            new object?[] { "control_flow", "if_else_expression_unit", new IDiagnosticItem[]
             {
                 // Is this correct?
                 new TypeCheckingError(new IntType(), new UnitType(), FileUtility.LocationAt(10, 1))
             }},
-            new object?[] { "examples/control_flow/incorrect/if_syntax.ser", new IDiagnosticItem[]
+            new object?[] { "control_flow", "if_syntax", new IDiagnosticItem[]
             {
                 new SyntaxError<Symbol>
                 (
@@ -280,7 +280,7 @@ public class FrontendTest
             }},
             
             // default-arguments
-            new object?[] { "examples/default-arguments/incorrect/non-default-call.ser", new IDiagnosticItem[]
+            new object?[] { "default-arguments", "non-default-call", new IDiagnosticItem[]
             {
                 // not sure what kind of error should there be
                 new NameResolutionError
@@ -289,7 +289,7 @@ public class FrontendTest
                     FileUtility.LocationAt(6, 1)
                 )
             }},
-            new object?[] { "examples/default-arguments/incorrect/non-suffix.ser", new IDiagnosticItem[]
+            new object?[] { "default-arguments", "non-suffix", new IDiagnosticItem[]
             {
                 new SyntaxError<Symbol>
                 (
@@ -304,7 +304,7 @@ public class FrontendTest
                     )
                 ),
             }},
-            new object?[] { "examples/default-arguments/incorrect/non-suffix-2.ser", new IDiagnosticItem[]
+            new object?[] { "default-arguments", "non-suffix-2", new IDiagnosticItem[]
             {
                 new SyntaxError<Symbol>
                 (
@@ -319,7 +319,7 @@ public class FrontendTest
                     )
                 ),
             }},
-            new object?[] { "examples/default-arguments/incorrect/type-conflict.ser", new IDiagnosticItem[]
+            new object?[] { "default-arguments", "type-conflict", new IDiagnosticItem[]
             {
                 new TypeCheckingError(new IntType(), new BoolType(), FileUtility.LocationAt(3, 53))
             }},
