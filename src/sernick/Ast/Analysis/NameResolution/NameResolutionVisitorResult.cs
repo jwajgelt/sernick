@@ -1,9 +1,9 @@
 namespace sernick.Ast.Analysis.NameResolution;
 
-public record struct NameResolutionVisitorResult(PartialNameResolutionResult PartialResult, IdentifiersNamespace IdentifiersNamespace)
+public record struct NameResolutionVisitorResult(NameResolutionResult Result, IdentifiersNamespace IdentifiersNamespace)
 {
     public NameResolutionVisitorResult(IdentifiersNamespace identifiersNamespace) : this(
-        new PartialNameResolutionResult(), identifiersNamespace)
+        new NameResolutionResult(), identifiersNamespace)
     {
     }
 }

@@ -3,45 +3,14 @@ namespace sernick.Ast.Analysis.NameResolution;
 using Diagnostics;
 using Nodes;
 
-public sealed class NameResolutionAlgorithm
+public static class NameResolutionAlgorithm
 {
-    public NameResolutionAlgorithm(AstNode ast, IDiagnostics diagnostics)
+    public static NameResolutionResult Process(AstNode ast, IDiagnostics diagnostics)
     {
         var visitor = new NameResolvingAstVisitor();
-        var result = visitor.VisitAstTree(ast, new IdentifiersNamespace(diagnostics));
-        (UsedVariableDeclarations, AssignedVariableDeclarations, CalledFunctionDeclarations) =
-            result.PartialResult;
+        return visitor.VisitAstTree(ast, new IdentifiersNamespace(diagnostics)).Result;
     }
-
-    /// <summary>
-    ///     Maps uses of variables to the declarations
-    ///     of these variables
-    /// </summary>
-    public IReadOnlyDictionary<VariableValue, Declaration> UsedVariableDeclarations
-    {
-        get;
-    }
-
-    /// <summary>
-    ///     Maps left-hand sides of assignments to variables
-    ///     to the declarations of these variables.
-    ///     NOTE: Since function parameters are non-assignable,
-    ///     these can only be variable declarations (`var x`, `const y`)
-    /// </summary>
-    public IReadOnlyDictionary<Assignment, VariableDeclaration> AssignedVariableDeclarations
-    {
-        get;
-    }
-
-    /// <summary>
-    ///     Maps AST nodes for function calls
-    ///     to that function's declaration
-    /// </summary>
-    public IReadOnlyDictionary<FunctionCall, FunctionDefinition> CalledFunctionDeclarations
-    {
-        get;
-    }
-
+    
     private class NameResolvingAstVisitor : AstVisitor<NameResolutionVisitorResult, IdentifiersNamespace>
     {
 
@@ -52,7 +21,7 @@ public sealed class NameResolutionAlgorithm
         /// <param name="identifiersNamespace"> An immutable class which holds information about currently visible identifiers. </param>
         /// <returns>
         ///     A VisitorResult, which is a pair of:
-        ///     - a PartialNameResolutionResult containing the 3 result dictionaries filled with resolved names from the subtree,
+        ///     - a NameResolutionResult containing the 3 result dictionaries filled with resolved names from the subtree,
         ///     - a new IdentifiersNamespace updated with identifiers defined inside of the subtree.
         /// </returns>
         protected override NameResolutionVisitorResult VisitAstNode(AstNode node, IdentifiersNamespace identifiersNamespace)
@@ -64,7 +33,7 @@ public sealed class NameResolutionAlgorithm
                     var childResult = next.Accept(this, result.IdentifiersNamespace);
                     return childResult with
                     {
-                        PartialResult = result.PartialResult.JoinWith(childResult.PartialResult)
+                        Result = result.Result.JoinWith(childResult.Result)
                     };
                 });
         }
@@ -96,7 +65,7 @@ public sealed class NameResolutionAlgorithm
             // if the identifier is not resolved, we can try to continue resolving and possibly find more errors
             return declaration == null
                 ? new NameResolutionVisitorResult(identifiersNamespace)
-                : new NameResolutionVisitorResult(PartialNameResolutionResult.OfFunctionCall(node, declaration),
+                : new NameResolutionVisitorResult(NameResolutionResult.OfFunctionCall(node, declaration),
                     identifiersNamespace);
         }
 
@@ -106,7 +75,7 @@ public sealed class NameResolutionAlgorithm
             // if the identifier is not resolved, we can try to continue resolving and possibly find more errors
             return declaration == null
                 ? new NameResolutionVisitorResult(identifiersNamespace)
-                : new NameResolutionVisitorResult(PartialNameResolutionResult.OfAssignment(node, declaration),
+                : new NameResolutionVisitorResult(NameResolutionResult.OfAssignment(node, declaration),
                     identifiersNamespace);
         }
 
@@ -116,7 +85,7 @@ public sealed class NameResolutionAlgorithm
             // if the identifier is not resolved, we can try to continue resolving and possibly find more errors
             return declaration == null
                 ? new NameResolutionVisitorResult(identifiersNamespace)
-                : new NameResolutionVisitorResult(PartialNameResolutionResult.OfVariableUse(node, declaration),
+                : new NameResolutionVisitorResult(NameResolutionResult.OfVariableUse(node, declaration),
                     identifiersNamespace);
         }
     }
