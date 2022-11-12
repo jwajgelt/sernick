@@ -4,10 +4,8 @@ using Helpers;
 using Moq;
 using sernick.Common.Dfa;
 using sernick.Diagnostics;
-using sernick.Input;
 using sernick.Tokenizer;
 using sernick.Tokenizer.Lexer;
-using sernick.Utility;
 
 public class Lexer
 {

@@ -18,7 +18,7 @@ using Regex = sernick.Common.Regex.Regex<Helpers.CharCategory>;
 public class ParserTest
 {
     private readonly Range<ILocation> _location = new(new FakeLocation(), new FakeLocation());
-    
+
     // Checked sequence is equal to start symbol
     [Fact]
     public void EmptyGrammarInstantlyAccepting()

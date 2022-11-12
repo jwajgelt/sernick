@@ -4,7 +4,6 @@ using System.Text;
 using Common.Dfa;
 using Diagnostics;
 using Input;
-using Utility;
 
 public sealed class Lexer<TCat, TState> : ILexer<TCat>
     where TCat : notnull

@@ -13,7 +13,7 @@ using Regex = sernick.Common.Regex.Regex<Helpers.CharCategory>;
 public class ParseTreeNodeTest
 {
     private readonly Range<ILocation> _location = new(new FakeLocation(), new FakeLocation());
-    
+
     [Fact]
     public void EqualEmptyNodes()
     {
