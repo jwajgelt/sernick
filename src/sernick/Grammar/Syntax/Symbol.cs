@@ -1,7 +1,12 @@
 namespace sernick.Grammar.Syntax;
+
 using LexicalCategory = Lexicon.LexicalGrammarCategory;
 
-public abstract record Symbol;
+public abstract record Symbol
+{
+    public static Symbol Of(LexicalCategory category, string text = "") => new Terminal(category, text);
+    public static Symbol Of(NonTerminalSymbol symbol) => new NonTerminal(symbol);
+}
 
 public sealed record Terminal(LexicalCategory Category, string Text) : Symbol
 {
@@ -16,30 +21,45 @@ public sealed record Terminal(LexicalCategory Category, string Text) : Symbol
         LexicalCategory.BracesAndParentheses or LexicalCategory.Operators or LexicalCategory.Keywords => HashCode.Combine(Category, Text),
         _ => Category.GetHashCode()
     };
+
+    public override string ToString() => $"{Category}({Text})";
 }
 
-public sealed record NonTerminal(NonTerminalSymbol Inner) : Symbol;
+public sealed record NonTerminal(NonTerminalSymbol Inner) : Symbol
+{
+    public override string ToString() => Inner.ToString();
+}
 
 public enum NonTerminalSymbol
 {
     Start,
     Program,
-    Expression,
-    JoinableExpression,
+    Statements,
+    ClosedStatement,
+    OpenStatement,
     CodeBlock,
-    IfStatement,
-    LoopStatement,
-    VariableDeclaration,
-    ConstDeclaration,
-    FunctionDefinition,
-    FunctionCall,
+    CodeGroup,
+    ClosedStatementNoBlock,
+    Expression,
+    ReturnExpression,
+    LogicalOperand,
+    LogicalOperator,
+    ComparisonOperand,
+    ComparisonOperator,
+    ArithmeticOperand,
+    ArithmeticOperator,
+    SimpleExpression,
+    LiteralValue,
     Assignment,
-    ElseBlock,
-    // lower number == lower priority
-    BinaryOperatorPriority1,
-    X1,
-    BinaryOperatorPriority2,
-    X2,
-    BinaryOperatorPriority3,
-    X3,
+    TypedAssignment,
+    IfExpression,
+    LoopExpression,
+    Modifier,
+    TypeSpecification,
+    VariableDeclaration,
+    FunctionDeclaration,
+    FunctionParameters,
+    FunctionParameter,
+    FunctionCallSuffix,
+    FunctionArguments
 }

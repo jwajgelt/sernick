@@ -42,14 +42,20 @@ public class LexicalGrammar
             ["rightParentheses"] = @"\)",
         });
 
-    private readonly LexicalGrammarEntry semicolon = new(LexicalGrammarCategory.Semicolon,
-        new CategoryItems { ["semicolon"] = ";" });
+    private readonly LexicalGrammarEntry semicolon = new(LexicalGrammarCategory.Semicolon, new CategoryItems
+    {
+        ["semicolon"] = ";"
+    });
 
-    private readonly LexicalGrammarEntry colon = new(LexicalGrammarCategory.Colon,
-        new CategoryItems { ["colon"] = ":" });
+    private readonly LexicalGrammarEntry colon = new(LexicalGrammarCategory.Colon, new CategoryItems
+    {
+        ["colon"] = ":"
+    });
 
-    private readonly LexicalGrammarEntry comma = new(LexicalGrammarCategory.Comma,
-        new CategoryItems { ["comma"] = "," });
+    private readonly LexicalGrammarEntry comma = new(LexicalGrammarCategory.Comma, new CategoryItems
+    {
+        ["comma"] = ","
+    });
 
     private readonly LexicalGrammarEntry keywords = new(LexicalGrammarCategory.Keywords, new CategoryItems
     {
@@ -72,32 +78,43 @@ public class LexicalGrammar
         ["typeNames"] = "[[:upper:]][[:alnum:]]*",
     });
 
-    private readonly LexicalGrammarEntry operators = new(LexicalGrammarCategory.Operators,
-        new CategoryItems
-        {
-            ["plus"] = @"\+",
-            ["minus"] = "-",
-            ["shortCircuitOr"] = @"\|\|",
-            ["shortCircuitAnd"] = "&&",
-            ["assignment"] = "=",
-            ["equality"] = "==",
-            ["greater"] = ">",
-            ["less"] = "<",
-            ["greaterOrEqual"] = ">=",
-            ["lessOrEqual"] = "<="
-        });
+    private readonly LexicalGrammarEntry operators = new(LexicalGrammarCategory.Operators, new CategoryItems
+    {
+        ["plus"] = @"\+",
+        ["minus"] = "-",
+        ["shortCircuitOr"] = @"\|\|",
+        ["shortCircuitAnd"] = "&&",
+        ["assignment"] = "=",
+        ["equality"] = "==",
+        ["greater"] = ">",
+        ["less"] = "<",
+        ["greaterOrEqual"] = ">=",
+        ["lessOrEqual"] = "<="
+    });
 
-    private readonly LexicalGrammarEntry whitespaces = new(LexicalGrammarCategory.Whitespaces,
-        new CategoryItems { ["blankCharacter"] = "[[:space:]]+" });
+    private readonly LexicalGrammarEntry whitespaces = new(LexicalGrammarCategory.Whitespaces, new CategoryItems
+    {
+        ["blankCharacter"] = "[[:space:]]+"
+    });
 
-    private readonly LexicalGrammarEntry variableIdentifiers = new(LexicalGrammarCategory.VariableIdentifiers,
-        new CategoryItems { ["variableNames"] = "[[:lower:]][[:alnum:]]*", });
+    private readonly LexicalGrammarEntry variableIdentifiers = new(LexicalGrammarCategory.VariableIdentifiers, new CategoryItems
+    {
 
-    private readonly LexicalGrammarEntry literals = new(LexicalGrammarCategory.Literals,
-        new CategoryItems { ["integers"] = "[[:digit:]]+", ["true"] = "true", ["false"] = "false", });
+        ["variableNames"] = "[[:lower:]][[:alnum:]]*",
+    });
 
-    private readonly LexicalGrammarEntry comments = new(LexicalGrammarCategory.Comments,
-        new CategoryItems { ["singleLineComment"] = "//.*", ["multiLineComment"] = @"/\*(.|[[:space:]])*\*/" });
+    private readonly LexicalGrammarEntry literals = new(LexicalGrammarCategory.Literals, new CategoryItems
+    {
+        ["integers"] = "[[:digit:]]+",
+        ["true"] = "true",
+        ["false"] = "false",
+    });
+
+    private readonly LexicalGrammarEntry comments = new(LexicalGrammarCategory.Comments, new CategoryItems
+    {
+        ["singleLineComment"] = "//.*",
+        ["multiLineComment"] = @"/\*(.|[[:space:]])*\*/"
+    });
 
     public Dictionary<LexicalGrammarCategory, LexicalGrammarEntry> GenerateGrammar()
     {
