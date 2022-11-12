@@ -1,6 +1,7 @@
 namespace sernick.Ast.Analysis.NameResolution;
 
 using Nodes;
+using Utility;
 
 public sealed record PartialNameResolutionResult(IReadOnlyDictionary<VariableValue, Declaration> UsedVariableDeclarations,
     IReadOnlyDictionary<Assignment, VariableDeclaration> AssignedVariableDeclarations,
@@ -12,12 +13,12 @@ public sealed record PartialNameResolutionResult(IReadOnlyDictionary<VariableVal
     {
     }
 
-    public static PartialNameResolutionResult Join(params PartialNameResolutionResult[] results)
+    public PartialNameResolutionResult JoinWith(PartialNameResolutionResult other)
     {
         return new PartialNameResolutionResult(
-            MergeDictionaries(results.Select(result => result.UsedVariableDeclarations)),
-            MergeDictionaries(results.Select(result => result.AssignedVariableDeclarations)),
-            MergeDictionaries(results.Select(result => result.CalledFunctionDeclarations))
+            UsedVariableDeclarations.JoinWith(other.UsedVariableDeclarations),
+            AssignedVariableDeclarations.JoinWith(other.AssignedVariableDeclarations),
+            CalledFunctionDeclarations.JoinWith(other.CalledFunctionDeclarations)
         );
     }
 
@@ -40,12 +41,5 @@ public sealed record PartialNameResolutionResult(IReadOnlyDictionary<VariableVal
         return new PartialNameResolutionResult(new Dictionary<VariableValue, Declaration>(),
             new Dictionary<Assignment, VariableDeclaration>(),
             new Dictionary<FunctionCall, FunctionDefinition> { { node, declaration } });
-    }
-
-    private static IReadOnlyDictionary<K, V> MergeDictionaries<K, V>(
-        IEnumerable<IReadOnlyDictionary<K, V>> dictionaries) where K : notnull
-    {
-        return dictionaries.SelectMany(dict => dict)
-            .ToDictionary(pair => pair.Key, pair => pair.Value);
     }
 }

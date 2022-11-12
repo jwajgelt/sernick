@@ -64,7 +64,7 @@ public sealed class NameResolution
                     var childResult = next.Accept(this, result.IdentifiersNamespace);
                     return childResult with
                     {
-                        PartialResult = PartialNameResolutionResult.Join(result.PartialResult, childResult.PartialResult)
+                        PartialResult = result.PartialResult.JoinWith(childResult.PartialResult)
                     };
                 });
         }
