@@ -1,6 +1,9 @@
 namespace sernick.Ast.Nodes;
 
-public sealed record Infix(Expression Left, Expression Right, Infix.Op Operator) : Expression
+using Input;
+using Utility;
+
+public sealed record Infix(Expression Left, Expression Right, Infix.Op Operator, Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public enum Op
     {
@@ -17,7 +20,7 @@ public sealed record Infix(Expression Left, Expression Right, Infix.Op Operator)
         visitor.VisitInfix(this, param);
 }
 
-public sealed record Assignment(Identifier Left, Expression Right) : Expression
+public sealed record Assignment(Identifier Left, Expression Right, Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode[] { Left, Right };
 

@@ -1,303 +1,182 @@
 namespace sernick.Grammar.Syntax;
 
-using LexicalCategory = Lexicon.LexicalGrammarCategoryType;
+using System.Diagnostics;
+using Common.Regex;
+using static Common.Regex.Regex<Symbol>;
+using LexicalCategory = Lexicon.LexicalGrammarCategory;
+using Production = Production<Symbol>;
 using Regex = Common.Regex.Regex<Symbol>;
 
 public static class SernickGrammar
 {
     public static Grammar<Symbol> Create()
     {
-        var productions = new List<Production<Symbol>>();
+        var productions = new List<Production>();
 
         // Symbols of our grammar
 
         // Non-terminal
-        var program = new NonTerminal(NonTerminalSymbol.Program);
-        var expression = new NonTerminal(NonTerminalSymbol.Expression);
-        var joinableExpression = new NonTerminal(NonTerminalSymbol.JoinableExpression);
-        var codeBlock = new NonTerminal(NonTerminalSymbol.CodeBlock);
-        var ifStatement = new NonTerminal(NonTerminalSymbol.IfStatement);
-        var loopStatement = new NonTerminal(NonTerminalSymbol.LoopStatement);
-        var elseBlock = new NonTerminal(NonTerminalSymbol.ElseBlock);
-        var functionCall = new NonTerminal(NonTerminalSymbol.FunctionCall);
-        var assignment = new NonTerminal(NonTerminalSymbol.Assignment);
-        var variableDeclaration = new NonTerminal(NonTerminalSymbol.VariableDeclaration);
-        var functionDefinition = new NonTerminal(NonTerminalSymbol.FunctionDefinition);
-        var binaryOperatorPriority1 = new NonTerminal(NonTerminalSymbol.BinaryOperatorPriority1); // ==, <, >, <=, >= 
-        var binaryOperatorPriority2 = new NonTerminal(NonTerminalSymbol.BinaryOperatorPriority2); // &&, ||
-        var binaryOperatorPriority3 = new NonTerminal(NonTerminalSymbol.BinaryOperatorPriority3); // +, -
-        var x1 = new NonTerminal(NonTerminalSymbol.X1); // ==, <, >, <=, >= 
-        var x2 = new NonTerminal(NonTerminalSymbol.X2); // &&, ||
-        var x3 = new NonTerminal(NonTerminalSymbol.X3); // +, -
+        var program = Symbol.Of(NonTerminalSymbol.Program);
+        var statements = Atom(Symbol.Of(NonTerminalSymbol.Statements));
+        var closedStatement = Atom(Symbol.Of(NonTerminalSymbol.ClosedStatement)); // doesn't require semicolon
+        var openStatement = Atom(Symbol.Of(NonTerminalSymbol.OpenStatement)); // requires semicolon
+        var codeBlock = Atom(Symbol.Of(NonTerminalSymbol.CodeBlock)); // {}
+        var codeGroup = Atom(Symbol.Of(NonTerminalSymbol.CodeGroup)); // ()
+        var closedStatementNoBlock = Atom(Symbol.Of(NonTerminalSymbol.ClosedStatementNoBlock)); // only E;
+        var expression = Atom(Symbol.Of(NonTerminalSymbol.Expression)); // computation with operators; excl "{}"
+        var returnExpression = Atom(Symbol.Of(NonTerminalSymbol.ReturnExpression));
+        var logicalOperand = Atom(Symbol.Of(NonTerminalSymbol.LogicalOperand));
+        var logicalOperator = Atom(Symbol.Of(NonTerminalSymbol.LogicalOperator));
+        var comparisonOperand = Atom(Symbol.Of(NonTerminalSymbol.ComparisonOperand));
+        var comparisonOperator = Atom(Symbol.Of(NonTerminalSymbol.ComparisonOperator));
+        var arithmeticOperand = Atom(Symbol.Of(NonTerminalSymbol.ArithmeticOperand));
+        var arithmeticOperator = Atom(Symbol.Of(NonTerminalSymbol.ArithmeticOperator));
+        var simpleExpression = Atom(Symbol.Of(NonTerminalSymbol.SimpleExpression)); // (E) or x or f() or 5
+        var literalValue = Atom(Symbol.Of(NonTerminalSymbol.LiteralValue));
+        var assignment = Atom(Symbol.Of(NonTerminalSymbol.Assignment));
+        var typedAssignment = Atom(Symbol.Of(NonTerminalSymbol.TypedAssignment)); // x: Int = 5
+        var ifExpression = Atom(Symbol.Of(NonTerminalSymbol.IfExpression));
+        var loopExpression = Atom(Symbol.Of(NonTerminalSymbol.LoopExpression));
+        var modifier = Atom(Symbol.Of(NonTerminalSymbol.Modifier)); // var or const
+        var typeSpec = Atom(Symbol.Of(NonTerminalSymbol.TypeSpecification)); // ": Type"
+        var variableDeclaration = Atom(Symbol.Of(NonTerminalSymbol.VariableDeclaration));
+        var functionCallSuffix = Atom(Symbol.Of(NonTerminalSymbol.FunctionCallSuffix)); // (...)
+        var functionArguments = Atom(Symbol.Of(NonTerminalSymbol.FunctionArguments));
+        var functionDeclaration = Atom(Symbol.Of(NonTerminalSymbol.FunctionDeclaration));
+        var functionParameters = Atom(Symbol.Of(NonTerminalSymbol.FunctionParameters));
+        var functionParameterDeclaration = Atom(Symbol.Of(NonTerminalSymbol.FunctionParameter));
 
         // Terminal
-        var semicolon = new Terminal(LexicalCategory.Semicolon, ";");
-        var comma = new Terminal(LexicalCategory.Comma, ",");
-        var colon = new Terminal(LexicalCategory.Colon, ":");
-        var bracesOpen = new Terminal(LexicalCategory.BracesAndParentheses, "{");
-        var bracesClose = new Terminal(LexicalCategory.BracesAndParentheses, "}");
-        var parenthesesOpen = new Terminal(LexicalCategory.BracesAndParentheses, "(");
-        var parenthesesClose = new Terminal(LexicalCategory.BracesAndParentheses, ")");
+        var semicolon = Atom(Symbol.Of(LexicalCategory.Semicolon));
+        var comma = Atom(Symbol.Of(LexicalCategory.Comma));
+        var colon = Atom(Symbol.Of(LexicalCategory.Colon));
 
-        var loopKeyword = new Terminal(LexicalCategory.Keywords, "loop");
-        var ifKeyword = new Terminal(LexicalCategory.Keywords, "if");
-        var elseKeyword = new Terminal(LexicalCategory.Keywords, "else");
-        var breakKeyword = new Terminal(LexicalCategory.Keywords, "break");
-        var continueKeyword = new Terminal(LexicalCategory.Keywords, "continue");
-        var returnKeyword = new Terminal(LexicalCategory.Keywords, "return");
-        var varKeyword = new Terminal(LexicalCategory.Keywords, "var");
-        var constKeyword = new Terminal(LexicalCategory.Keywords, "const");
-        var funKeyword = new Terminal(LexicalCategory.Keywords, "fun");
+        var braceOpen = Atom(Symbol.Of(LexicalCategory.BracesAndParentheses, "{"));
+        var braceClose = Atom(Symbol.Of(LexicalCategory.BracesAndParentheses, "}"));
+        var parOpen = Atom(Symbol.Of(LexicalCategory.BracesAndParentheses, "("));
+        var parClose = Atom(Symbol.Of(LexicalCategory.BracesAndParentheses, ")"));
 
-        var trueLiteral = new Terminal(LexicalCategory.Literals, "true");
-        var falseLiteral = new Terminal(LexicalCategory.Literals, "false");
-        var digitLiteral = new Terminal(LexicalCategory.Literals, "");
+        var identifier = Atom(Symbol.Of(LexicalCategory.VariableIdentifiers));
+        var typeIdentifier = Atom(Symbol.Of(LexicalCategory.TypeIdentifiers));
+        var trueLiteral = Atom(Symbol.Of(LexicalCategory.Literals, "true"));
+        var falseLiteral = Atom(Symbol.Of(LexicalCategory.Literals, "false"));
+        var digitLiteral = Atom(Symbol.Of(LexicalCategory.Literals));
 
-        var identifier = new Terminal(LexicalCategory.VariableIdentifiers, "");
-        var typeIdentifier = new Terminal(LexicalCategory.TypeIdentifiers, "");
+        var ifKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "if"));
+        var elseKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "else"));
+        var loopKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "loop"));
+        var breakKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "break"));
+        var continueKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "continue"));
+        var returnKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "return"));
+        var varKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "var"));
+        var constKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "const"));
+        var funKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "fun"));
 
-        var assignmentOperator = new Terminal(LexicalCategory.Operators, "=");
-        var equalsOperator = new Terminal(LexicalCategory.Operators, "==");
-        var plusOperator = new Terminal(LexicalCategory.Operators, "+");
-        var minusOperator = new Terminal(LexicalCategory.Operators, "-");
-        var shortCircuitAndOperator = new Terminal(LexicalCategory.Operators, "&&");
-        var shortCircuitOrOperator = new Terminal(LexicalCategory.Operators, "||");
-        var greaterOperator = new Terminal(LexicalCategory.Operators, ">");
-        var lessOperator = new Terminal(LexicalCategory.Operators, "<");
-        var greaterOrEqualOperator = new Terminal(LexicalCategory.Operators, ">=");
-        var lessOrEqualOperator = new Terminal(LexicalCategory.Operators, "<=");
+        var scAndOperator = Atom(Symbol.Of(LexicalCategory.Operators, "&&"));
+        var scOrOperator = Atom(Symbol.Of(LexicalCategory.Operators, "||"));
+        var equalsOperator = Atom(Symbol.Of(LexicalCategory.Operators, "=="));
+        var greaterOperator = Atom(Symbol.Of(LexicalCategory.Operators, ">"));
+        var lessOperator = Atom(Symbol.Of(LexicalCategory.Operators, "<"));
+        var greaterOrEqualOperator = Atom(Symbol.Of(LexicalCategory.Operators, ">="));
+        var lessOrEqualOperator = Atom(Symbol.Of(LexicalCategory.Operators, "<="));
+        var plusOperator = Atom(Symbol.Of(LexicalCategory.Operators, "+"));
+        var minusOperator = Atom(Symbol.Of(LexicalCategory.Operators, "-"));
+        var assignOperator = Atom(Symbol.Of(LexicalCategory.Operators, "="));
 
-        // Atomic regular expressions representing symbols
+        productions
+            .Add(program, statements)
 
-        // For non-terminal
-        var regExpression = Regex.Atom(expression);
-        var regJoinableExpression = Regex.Atom(joinableExpression);
-        var regCodeBlock = Regex.Atom(codeBlock);
-        var regElseBlock = Regex.Atom(elseBlock);
-        var regIfStatement = Regex.Atom(ifStatement);
-        var regLoopStatement = Regex.Atom(loopStatement);
-        var regVarDeclaration = Regex.Atom(variableDeclaration);
-        var regFunctionDefinition = Regex.Atom(functionDefinition);
-        var regAssignment = Regex.Atom(assignment);
-        var regBinaryOperatorPriority1 = Regex.Atom(binaryOperatorPriority1);
-        var regBinaryOperatorPriority2 = Regex.Atom(binaryOperatorPriority2);
-        var regBinaryOperatorPriority3 = Regex.Atom(binaryOperatorPriority3);
-        var regX1 = Regex.Atom(x1);
-        var regX2 = Regex.Atom(x2);
-        var regX3 = Regex.Atom(x3);
+            // Statements
+            .Add(statements, Concat(Star(closedStatement), Optional(openStatement)))
+            .Add(closedStatementNoBlock, Concat(Union(expression, variableDeclaration), semicolon))
+            .Add(closedStatement, closedStatementNoBlock)
+            .Add(closedStatement, Union(codeBlock, codeGroup, ifExpression, loopExpression, functionDeclaration))
+            .Add(openStatement, expression)
+            .Add(codeBlock, Concat(braceOpen, statements, braceClose))
+            .Add(codeGroup, Concat(
+                    parOpen,
+                    Union(
+                        closedStatementNoBlock,
+                        Concat(closedStatement, Star(closedStatement), openStatement)),
+                    parClose))
 
-        // For terminal
-        var regSemicolon = Regex.Atom(semicolon);
-        var regComma = Regex.Atom(comma);
-        var regColon = Regex.Atom(colon);
-        var regBracesOpen = Regex.Atom(bracesOpen);
-        var regBracesClose = Regex.Atom(bracesClose);
-        var regParenthesesOpen = Regex.Atom(parenthesesOpen);
-        var regParenthesesClose = Regex.Atom(parenthesesClose);
+            // Expression
+            .Add(expression, Union(assignment, breakKeyword, continueKeyword, returnExpression))
+            .Add(returnExpression, Concat(returnKeyword, Optional(expression)))
+            .Add(expression, Union(
+                logicalOperand, // anything but an entity ending with a block {}
+                Concat(
+                    Star(Union(logicalOperand, codeBlock, codeGroup, ifExpression, loopExpression), logicalOperator),
+                    Union(logicalOperand, codeBlock, codeGroup, ifExpression, loopExpression), logicalOperator,
+                    Union(logicalOperand, codeBlock, codeGroup, ifExpression, loopExpression))))
+            .Add(logicalOperator, Union(scAndOperator, scOrOperator))
+            .Add(logicalOperand, Union(
+                comparisonOperand, // anything but an entity ending with a block {}
+                Concat(
+                    Star(Union(comparisonOperand, codeBlock, codeGroup, ifExpression, loopExpression), comparisonOperator),
+                    Union(comparisonOperand, codeBlock, codeGroup, ifExpression, loopExpression), comparisonOperator,
+                    Union(comparisonOperand, codeBlock, codeGroup, ifExpression, loopExpression))))
+            .Add(comparisonOperator,
+                Union(equalsOperator, greaterOperator, lessOperator, greaterOrEqualOperator, lessOrEqualOperator))
+            .Add(comparisonOperand, Union(
+                arithmeticOperand, // anything but an entity ending with a block {}
+                Concat(
+                    Star(Union(arithmeticOperand, codeBlock, codeGroup, ifExpression, loopExpression), arithmeticOperator),
+                    Union(arithmeticOperand, codeBlock, codeGroup, ifExpression, loopExpression), arithmeticOperator,
+                    Union(arithmeticOperand, codeBlock, codeGroup, ifExpression, loopExpression))))
+            .Add(arithmeticOperator, Union(plusOperator, minusOperator))
+            .Add(arithmeticOperand, simpleExpression)
+            .Add(simpleExpression, literalValue)
+            .Add(literalValue, Union(trueLiteral, falseLiteral, digitLiteral))
+            .Add(simpleExpression, Concat(parOpen, Union(expression, codeBlock, codeGroup), parClose)) // (E) or ({})
+            .Add(simpleExpression, Concat(identifier, Optional(functionCallSuffix))) // x or f()
+            .Add(functionCallSuffix, Concat(parOpen, functionArguments, parClose))
+            .Add(functionArguments,
+                Optional(Concat(Union(expression, codeBlock, codeGroup), Star(comma, Union(expression, codeBlock, codeGroup)))))
 
-        var regLoopKeyword = Regex.Atom(loopKeyword);
-        var regFunKeyword = Regex.Atom(funKeyword);
-        var regIfKeyword = Regex.Atom(ifKeyword);
-        var regElseKeyword = Regex.Atom(elseKeyword);
-        var regVarKeyword = Regex.Atom(varKeyword);
-        var regBreakKeyword = Regex.Atom(breakKeyword);
-        var regConstKeyword = Regex.Atom(constKeyword);
-        var regContinueKeyword = Regex.Atom(continueKeyword);
-        var regReturnKeyword = Regex.Atom(returnKeyword);
+            // Block expressions
+            .Add(ifExpression, Concat(
+                ifKeyword, parOpen,
+                Union(expression, codeBlock, codeGroup, closedStatementNoBlock, Concat(closedStatement, Star(closedStatement), openStatement)), // (E) or ({}) or (E;E;E)
+                parClose, codeBlock, Optional(Concat(elseKeyword, codeBlock))))
+            .Add(loopExpression, Concat(loopKeyword, codeBlock))
 
-        var regTrueLiteral = Regex.Atom(trueLiteral);
-        var regFalseLiteral = Regex.Atom(falseLiteral);
-        var regDigitLiteral = Regex.Atom(digitLiteral);
-        var regIdentifier = Regex.Atom(identifier);
-        var regTypeIdentifier = Regex.Atom(typeIdentifier);
-        var regAssignmentOperator = Regex.Atom(assignmentOperator);
-        var regEqualsOperator = Regex.Atom(equalsOperator);
-        var regPlusOperator = Regex.Atom(plusOperator);
-        var regMinusOperator = Regex.Atom(minusOperator);
-        var regShortCircuitAndOperator = Regex.Atom(shortCircuitAndOperator);
-        var regShortCircuitOrOperator = Regex.Atom(shortCircuitOrOperator);
-        var regGreaterOperator = Regex.Atom(greaterOperator);
-        var regLessOperator = Regex.Atom(lessOperator);
-        var regGreaterOrEqualOperator = Regex.Atom(greaterOrEqualOperator);
-        var regLessOrEqualOperator = Regex.Atom(lessOrEqualOperator);
+            // Assignment
+            .Add(assignment,
+                Concat(identifier, assignOperator, Union(expression, codeBlock, codeGroup, ifExpression, loopExpression)))
+            .Add(typedAssignment,
+                Concat(identifier, typeSpec, assignOperator, Union(expression, codeBlock, codeGroup, ifExpression, loopExpression)))
 
-        // Production: the whole program can be seen as an expression
-        productions.Add(new Production<Symbol>(
-            program,
-            regExpression
-        ));
+            // Declarations
+            .Add(variableDeclaration,
+                Concat(modifier, Union(assignment, typedAssignment, Concat(identifier, typeSpec))))
+            .Add(modifier, Union(varKeyword, constKeyword))
+            .Add(typeSpec, Concat(colon, typeIdentifier))
+            .Add(functionDeclaration,
+                Concat(funKeyword, identifier, parOpen, functionParameters, parClose, Optional(typeSpec), codeBlock))
+            .Add(functionParameters, Optional(Union(
+                Concat(typedAssignment, Star(comma, typedAssignment)),
+                Concat(functionParameterDeclaration, Star(comma, functionParameterDeclaration),
+                    Optional(Concat(comma, typedAssignment, Star(comma, typedAssignment)))) // only suffix with default values
+                )))
+            .Add(functionParameterDeclaration, Concat(identifier, typeSpec));
 
-        // Expression can be a join of two expressions
-        productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Concat(Regex.Concat(Regex.Star(regJoinableExpression), regJoinableExpression), regExpression)
-        ));
+        return new Grammar<Symbol>(program, productions);
+    }
 
-        productions.Add(new Production<Symbol>(
-            expression,
-            regJoinableExpression
-        ));
+    private static Regex Optional(Regex regex) => Union(Epsilon, regex);
+    private static Regex Star(params Regex[] regexRest) => Regex.Star(Concat(regexRest));
 
-        productions.Add(new Production<Symbol>(
-            joinableExpression,
-            Regex.Union(
-                regLoopStatement,
-                regIfStatement,
-                regFunctionDefinition
-            )
-        ));
+    private static List<Production> Add(this List<Production> list, Symbol lhs, Regex rhs)
+    {
+        list.Add(new Production(lhs, rhs));
+        return list;
+    }
 
-        productions.Add(new Production<Symbol>(
-            joinableExpression,
-            Regex.Concat(regExpression, regSemicolon)
-        ));
-
-        // Production for code block
-        productions.Add(new Production<Symbol>(
-            codeBlock,
-            Regex.Concat(regBracesOpen, regExpression, regBracesClose)
-        ));
-
-        // All non-terminals that can be directly "casted" to expression
-        productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Union(
-                regCodeBlock,
-                regVarDeclaration,
-                regAssignment,
-                regBreakKeyword,
-                regContinueKeyword,
-                regReturnKeyword
-            )
-        ));
-
-        // Production for loop
-        // we decided not to take break/return/continue into account at this point
-        // and do analysis based on AST later
-        productions.Add(new Production<Symbol>(
-            loopStatement,
-            Regex.Concat(regLoopKeyword, regCodeBlock)
-        ));
-
-        // Production for if statement
-        productions.Add(new Production<Symbol>(
-            ifStatement,
-            Regex.Concat(regIfKeyword, regParenthesesOpen, regExpression, regParenthesesClose, regCodeBlock, regElseBlock)
-        ));
-
-        // Empty - else block is optional
-        productions.Add(new Production<Symbol>(
-            elseBlock,
-            Regex.Epsilon
-        ));
-
-        productions.Add(new Production<Symbol>(
-            elseBlock,
-            Regex.Concat(regElseKeyword, regCodeBlock)
-        ));
-
-        // Production for "variable : Type"
-        var regIdentifierWithType = Regex.Concat(regIdentifier, regColon, regTypeIdentifier);
-        var regIdentifierWithTypeStarred = Regex.Star(Regex.Concat(regIdentifierWithType, regComma));
-        var regArgumentListNoArguments = Regex.Epsilon;
-        var regArgumentListAtLeastOneArgument = Regex.Concat(regIdentifierWithTypeStarred, regIdentifierWithType);
-        var regArgDeclList = Regex.Union(regArgumentListNoArguments, regArgumentListAtLeastOneArgument);
-
-        // function declaration
-        productions.Add(new Production<Symbol>(
-            functionDefinition,
-            Regex.Concat(
-                regFunKeyword,
-                regIdentifier,
-                regParenthesesOpen,
-                regArgDeclList,
-                regParenthesesClose,
-                regColon,
-                regTypeIdentifier,
-                regCodeBlock
-            )
-        ));
-
-        // function call
-        var argStarred = Regex.Star(Regex.Concat(regExpression, regComma));
-        var regArgList = Regex.Union(Regex.Concat(argStarred, regExpression), Regex.Epsilon);
-
-        productions.Add(new Production<Symbol>(
-            functionCall,
-            Regex.Concat(regIdentifier, regParenthesesOpen, regArgList, regParenthesesClose)
-        ));
-
-        // Production for assignment
-        var regUntypedAssignment = Regex.Concat(regIdentifier, regAssignmentOperator, regExpression);
-        var regTypedAssignment = Regex.Concat(regIdentifierWithType, regAssignmentOperator, regExpression);
-
-        productions.Add(new Production<Symbol>(
-            assignment,
-            regUntypedAssignment
-        ));
-
-        // variable declaration 
-        productions.Add(new Production<Symbol>(
-            variableDeclaration,
-            Regex.Union(
-                // both with var or const, we may or may not specify a type
-                Regex.Concat(
-                    Regex.Union(regVarKeyword, regConstKeyword),
-                    Regex.Union(regUntypedAssignment, regTypedAssignment)
-                )
-            )
-        ));
-
-        // Binary and unary operators and parentheses
-
-        // parentheses
-        productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Union(regX1, Regex.Concat(regParenthesesOpen, regExpression, regParenthesesClose))
-        ));
-
-        // lowest priority (priority 1) -- comparisons "==, <, >, <=, >="
-        productions.Add(new Production<Symbol>(
-            binaryOperatorPriority1,
-            Regex.Union(regEqualsOperator, regLessOperator, regLessOrEqualOperator, regGreaterOperator, regGreaterOrEqualOperator)
-        ));
-
-        productions.Add(new Production<Symbol>(
-            x1,
-            Regex.Union(regX2, Regex.Concat(regX1, regBinaryOperatorPriority1, regX2))
-        ));
-
-        // priority 2 -- short-circuit and (&&) and or (||)
-        productions.Add(new Production<Symbol>(
-            binaryOperatorPriority2,
-            Regex.Union(regShortCircuitAndOperator, regShortCircuitOrOperator)
-        ));
-
-        productions.Add(new Production<Symbol>(
-            x2,
-            Regex.Union(regX3, Regex.Concat(regX2, regBinaryOperatorPriority2, regX3))
-        ));
-
-        // priority 3 (highest) -- + and -
-        productions.Add(new Production<Symbol>(
-            binaryOperatorPriority3,
-            Regex.Union(regPlusOperator, regMinusOperator)
-        ));
-
-        productions.Add(new Production<Symbol>(
-            x3,
-            Regex.Union(regExpression, Regex.Concat(regX3, regBinaryOperatorPriority3, regExpression))
-        ));
-
-        // expression can be a literal
-        productions.Add(new Production<Symbol>(
-            expression,
-            Regex.Union(regTrueLiteral, regFalseLiteral, regDigitLiteral)
-        ));
-
-        return new Grammar<Symbol>(
-            new NonTerminal(NonTerminalSymbol.Program),
-            productions
-        );
+    private static List<Production> Add(this List<Production> list, Regex lhs, Regex rhs)
+    {
+        var atomRegex = lhs as AtomRegex<Symbol>;
+        Debug.Assert(atomRegex is not null);
+        return list.Add(atomRegex.Atom, rhs);
     }
 }

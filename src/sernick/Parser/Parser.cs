@@ -114,7 +114,7 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
                             case ParseActionShift<TSymbol>:
                                 throw NotSLRGrammarException.ShiftReduceConflict(followingSymbol, production);
                             case ParseActionReduce<TSymbol> reduce:
-                                throw NotSLRGrammarException.ReduceReduceConflict(symbol, production,
+                                throw NotSLRGrammarException.ReduceReduceConflict(followingSymbol, production,
                                     reduce.Production);
                         }
                     }
@@ -133,16 +133,16 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
         var lookAhead = leavesEnumerator.Next();
 
         [DoesNotReturn]
-        void ReportError(IParseTree<TSymbol>? parseNode, string message)
+        void ReportError(IParseTree<TSymbol>? previous, IParseTree<TSymbol>? next, string message)
         {
-            diagnostics.Report(new SyntaxError<TSymbol>(parseNode));
+            diagnostics.Report(new SyntaxError<TSymbol>(previous, next));
             // consume the `leaves` Enumerable
             // to force Lexer to report any remaining errors
             while (leavesEnumerator.MoveNext())
             {
             }
 
-            throw new ParsingException(message);
+            throw new ParsingException<TSymbol>(message, previous?.Symbol, next?.Symbol);
         }
 
         while (true)
@@ -151,7 +151,7 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
             switch (parseAction)
             {
                 case null:
-                    ReportError(lookAhead, "No parsing action available at current state");
+                    ReportError(state.Tree, lookAhead, "No parsing action available at current state");
                     break;
 
                 case ParseActionShift<TSymbol> shiftAction:
@@ -171,26 +171,26 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
                             out var children,
                             out var nextConfig))
                     {
-                        ReportError(state.TreeStack.FirstOrDefault(), "The subsequence of tokens cannot be parsed");
+                        ReportError(state.Tree, lookAhead, "The subsequence of tokens cannot be reduced");
                     }
 
                     // Reduce to start symbol => end of parsing
                     if (reduceAction.Production.Left.Equals(_startSymbol))
                     {
                         Debug.Assert(children.Count == 1);
-                        if (lookAhead is null && state.TreeStack.Count == 0)
+                        if (lookAhead is null && state.Tree is null)
                         {
                             return children.Single();
                         }
 
-                        ReportError(lookAhead, "Some tokens cannot be parsed");
+                        ReportError(state.Tree, lookAhead, "Some tokens cannot be parsed");
                     }
 
                     state.Push(nextConfig,
                         new ParseTreeNode<TSymbol>(
                             Symbol: reduceAction.Production.Left,
-                            Start: children.FirstOrDefault()?.Start ?? state.Tree.End,
-                            End: children.LastOrDefault()?.End ?? state.Tree.End,
+                            Start: children.FirstOrDefault()?.Start ?? state.Tree?.End,
+                            End: children.LastOrDefault()?.End ?? state.Tree?.End,
                             Production: reduceAction.Production,
                             Children: children));
 
@@ -254,7 +254,7 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
         internal Stack<IParseTree<TSymbol>> TreeStack { get; } = new();
 
         internal Configuration<TSymbol> Configuration => ConfigStack.Peek();
-        internal IParseTree<TSymbol> Tree => TreeStack.Peek();
+        internal IParseTree<TSymbol>? Tree => TreeStack.FirstOrDefault();
 
         internal void Push(Configuration<TSymbol> configuration, IParseTree<TSymbol> tree)
         {
@@ -270,7 +270,11 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
     }
 }
 
-public sealed class ParsingException : Exception
+public sealed class ParsingException<TSymbol> : Exception
+    where TSymbol : class
 {
-    public ParsingException(string message) : base(message) { }
+    public ParsingException(string message, TSymbol? previousSymbol, TSymbol? nextSymbol) : base(
+        $"{message}. Last parsed symbol: {previousSymbol?.ToString()}. Next symbol: {nextSymbol?.ToString() ?? "EOF"}.")
+    {
+    }
 }
