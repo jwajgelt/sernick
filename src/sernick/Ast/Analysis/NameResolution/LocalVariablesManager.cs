@@ -96,9 +96,9 @@ public sealed class LocalVariablesManager
     private Declaration? GetDeclaration(Identifier identifier)
     {
         var name = identifier.Name;
-        if (_variables.ContainsKey(name))
+        if (_variables.TryGetValue(name, out var declaration))
         {
-            return _variables[name];
+            return declaration;
         }
 
         _diagnostics.Report(new UndeclaredIdentifierError(identifier));
