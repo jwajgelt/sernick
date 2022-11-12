@@ -7,14 +7,11 @@ public interface IDiagnostics
     void Report(IDiagnosticItem diagnosticItem);
 }
 
-public interface IDiagnosticItem : IEquatable<IDiagnosticItem>
+public interface IDiagnosticItem
 {
     string ToString();
 
     DiagnosticItemSeverity Severity { get; }
-
-    bool IEquatable<IDiagnosticItem>.Equals(IDiagnosticItem? other) =>
-        other is not null && GetType() == other.GetType() && ToString() == other.ToString();
 }
 
 public enum DiagnosticItemSeverity : byte

@@ -12,4 +12,7 @@ public sealed record NameResolutionError(Identifier Identifier, ILocation Locati
     }
 
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
+
+    public bool Equals(NameResolutionError? other) => other is not null && ToString() == other.ToString();
+    public override int GetHashCode() => (Identifier.Name, Location).GetHashCode();
 }

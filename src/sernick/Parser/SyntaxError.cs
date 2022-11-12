@@ -14,4 +14,7 @@ public sealed record SyntaxError<TSymbol>
     }
 
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
+
+    public bool Equals(SyntaxError<TSymbol>? other) => other is not null && ToString() == other.ToString();
+    public override int GetHashCode() => NextParseNode?.GetHashCode() ?? 0;
 }
