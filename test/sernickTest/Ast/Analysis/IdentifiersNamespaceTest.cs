@@ -1,115 +1,65 @@
 namespace sernickTest.AST.Analysis;
 
-using Moq;
 using sernick.Ast;
-using sernick.Ast.Analysis;
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Nodes;
-using sernick.Diagnostics;
 
 public class IdentifiersNamespaceTest
 {
     [Fact]
     public void IdentifiersAreVisibleAfterAddingThem()
     {
-        var variable = GetVariable("a");
-        var parameter = GetParameter("b");
-        var function = GetFunction("c");
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
-        var manager = new IdentifiersNamespace(diagnostics.Object);
+        var declaration1 = GetSimpleDeclaration("a");
+        var declaration2 = GetSimpleDeclaration("b");
 
-        var finalManager = manager.Add(variable).Add(parameter).Add(function);
-
-        Assert.Same(variable, finalManager.GetAssignedVariableDeclaration(new Identifier("a")));
-        Assert.Same(variable, finalManager.GetUsedVariableDeclaration(new Identifier("a")));
-        Assert.Same(parameter, finalManager.GetUsedVariableDeclaration(new Identifier("b")));
-        Assert.Same(function, finalManager.GetCalledFunctionDeclaration(new Identifier("c")));
+        var identifiers = new IdentifiersNamespace2().Add(declaration1).Add(declaration2);
+        
+        Assert.Same(declaration1, identifiers.GetDeclaration(new Identifier("a")));
+        Assert.Same(declaration2, identifiers.GetDeclaration(new Identifier("b")));
     }
-
+    
     [Fact]
-    public void NotDeclaredIdentifiersAreReported()
+    public void NotDeclaredIdentifierThrows()
     {
-        var diagnostics = new Mock<IDiagnostics>();
-        var manager = new IdentifiersNamespace(diagnostics.Object);
-
-        manager.GetAssignedVariableDeclaration(new Identifier("a"));
-        manager.GetUsedVariableDeclaration(new Identifier("a"));
-        manager.GetCalledFunctionDeclaration(new Identifier("a"));
-
-        diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()), Times.Exactly(3));
+        var identifiers = new IdentifiersNamespace2();
+        
+        Assert.Throws<IdentifiersNamespace2.NoSuchIdentifierException>(() => identifiers.GetDeclaration(new Identifier("a")));
     }
-
+    
     [Fact]
-    public void MultipleDeclarationsAreReported()
+    public void DuplicateDeclarationThrows()
     {
-        var firstDeclaration = GetFunction("a");
-        var variable = GetVariable("a");
-        var parameter = GetParameter("a");
-        var function = GetFunction("a");
-        var diagnostics = new Mock<IDiagnostics>();
-        var manager = new IdentifiersNamespace(diagnostics.Object);
+        var declaration1 = GetSimpleDeclaration("a");
+        var declaration2 = GetSimpleDeclaration("a");
+        var identifiers = new IdentifiersNamespace2().Add(declaration1);
 
-        var finalManager = manager.Add(firstDeclaration).Add(variable).Add(parameter).Add(function);
-
-        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()), Times.Exactly(3));
+        Assert.Throws<IdentifiersNamespace2.IdentifierCollisionException>(() => identifiers.Add(declaration2));
     }
-
+    
     [Fact]
-    public void VariableUsedAsFunctionReported()
+    public void NewScopePreservesIdentifiers()
     {
-        var variable = GetVariable("a");
-        var parameter = GetParameter("b");
-        var diagnostics = new Mock<IDiagnostics>();
-        var manager = new IdentifiersNamespace(diagnostics.Object).Add(variable).Add(parameter);
-
-        var variableAsFunction = manager.GetCalledFunctionDeclaration(new Identifier("a"));
-        var parameterAsFunction = manager.GetCalledFunctionDeclaration(new Identifier("b"));
-
-        diagnostics.Verify(d => d.Report(It.IsAny<NotAFunctionError>()), Times.Exactly(2));
-        Assert.Null(variableAsFunction);
-        Assert.Null(parameterAsFunction);
-    }
-
-    [Fact]
-    public void FunctionUsedAsVariableReported()
-    {
-        var function = GetFunction("f");
-        var diagnostics = new Mock<IDiagnostics>();
-        var manager = new IdentifiersNamespace(diagnostics.Object).Add(function);
-
-        var functionAsVariable1 = manager.GetUsedVariableDeclaration(new Identifier("f"));
-        var functionAsVariable2 = manager.GetAssignedVariableDeclaration(new Identifier("f"));
-
-        diagnostics.Verify(d => d.Report(It.IsAny<NotAVariableError>()), Times.Exactly(2));
-        Assert.Null(functionAsVariable1);
-        Assert.Null(functionAsVariable2);
+        var declaration1 = GetSimpleDeclaration("a");
+        
+        var identifiers = new IdentifiersNamespace2().Add(declaration1).NewScope();
+        
+        Assert.Same(declaration1, identifiers.GetDeclaration(new Identifier("a")));
     }
 
     [Fact]
     public void NewScopeAllowsShadowing()
     {
-        var variable1 = GetVariable("a");
-        var parameter1 = GetParameter("b");
-        var function1 = GetFunction("c");
-        var variable2 = GetVariable("a");
-        var parameter2 = GetParameter("b");
-        var function2 = GetFunction("c");
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
-        var manager = new IdentifiersNamespace(diagnostics.Object);
-
-        var finalManager = manager
-            .Add(variable1)
-            .Add(parameter1)
-            .Add(function1)
-            .NewScope()
-            .Add(variable2)
-            .Add(parameter2)
-            .Add(function2);
-
-        Assert.Same(variable2, finalManager.GetAssignedVariableDeclaration(new Identifier("a")));
-        Assert.Same(variable2, finalManager.GetUsedVariableDeclaration(new Identifier("a")));
-        Assert.Same(parameter2, finalManager.GetUsedVariableDeclaration(new Identifier("b")));
-        Assert.Same(function2, finalManager.GetCalledFunctionDeclaration(new Identifier("c")));
+        var declaration1 = GetSimpleDeclaration("a");
+        var declaration2 = GetSimpleDeclaration("a");
+        
+        var identifiers = new IdentifiersNamespace2().Add(declaration1).NewScope().Add(declaration2);
+        
+        Assert.Same(declaration2, identifiers.GetDeclaration(new Identifier("a")));
+    }
+    
+    private static Declaration GetSimpleDeclaration(string name)
+    {
+        return new VariableDeclaration(new Identifier(name), null, null, false);
     }
 
     private static VariableDeclaration GetVariable(string name)
