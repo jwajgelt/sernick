@@ -26,7 +26,7 @@ public static class CompilerFrontend
             .Where(token => !token.Category.Equals(LexicalGrammarCategory.Whitespaces)) // strip whitespace
             .Where(token => !token.Category.Equals(LexicalGrammarCategory.Comments)) // ignore comments
             .Select(token =>
-                new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.Start, token.End));
+                new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.LocationRange));
         var parser = Parser<Symbol>.FromGrammar(SernickGrammar.Create(), new NonTerminal(NonTerminalSymbol.Start));
         var parseTree = parser.Process(parseLeaves, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);

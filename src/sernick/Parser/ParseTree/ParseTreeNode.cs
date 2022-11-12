@@ -2,13 +2,13 @@ namespace sernick.Parser.ParseTree;
 
 using Grammar.Syntax;
 using Input;
+using Utility;
 
 public sealed record ParseTreeNode<TSymbol>(
     TSymbol Symbol,
-    ILocation Start,
-    ILocation End,
     Production<TSymbol> Production,
-    IEnumerable<IParseTree<TSymbol>> Children
+    IEnumerable<IParseTree<TSymbol>> Children,
+    Range<ILocation> LocationRange
 ) : IParseTree<TSymbol>
     where TSymbol : IEquatable<TSymbol>
 {

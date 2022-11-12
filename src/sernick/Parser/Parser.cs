@@ -7,6 +7,7 @@ using Common.Regex;
 using Diagnostics;
 using Grammar.Dfa;
 using Grammar.Syntax;
+using Input;
 using ParseTree;
 using Utility;
 
@@ -189,10 +190,11 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
                     state.Push(nextConfig,
                         new ParseTreeNode<TSymbol>(
                             Symbol: reduceAction.Production.Left,
-                            Start: children.FirstOrDefault()?.Start ?? state.Tree?.End,
-                            End: children.LastOrDefault()?.End ?? state.Tree?.End,
                             Production: reduceAction.Production,
-                            Children: children));
+                            Children: children,
+                            LocationRange: new Range<ILocation>(
+                                Start: children.FirstOrDefault()?.LocationRange.Start ?? state.Tree?.LocationRange.End,
+                                End: children.LastOrDefault()?.LocationRange.End ?? state.Tree?.LocationRange.End)));
 
                     break;
             }

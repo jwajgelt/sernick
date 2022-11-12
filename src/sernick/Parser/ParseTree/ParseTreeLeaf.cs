@@ -1,11 +1,11 @@
 namespace sernick.Parser.ParseTree;
 
 using Input;
+using Utility;
 
 public sealed record ParseTreeLeaf<TSymbol>(
     TSymbol Symbol,
-    ILocation Start,
-    ILocation End
+    Range<ILocation> LocationRange
 ) : IParseTree<TSymbol>
     where TSymbol : class, IEquatable<TSymbol>
 {

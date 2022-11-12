@@ -4,8 +4,10 @@ using Helpers;
 using Moq;
 using sernick.Common.Dfa;
 using sernick.Diagnostics;
+using sernick.Input;
 using sernick.Tokenizer;
 using sernick.Tokenizer.Lexer;
+using sernick.Utility;
 
 public class Lexer
 {
@@ -31,7 +33,7 @@ public class Lexer
         var lexer = new Lexer<string, int>(categoryDfas);
 
         var result = lexer.Process(input, new Mock<IDiagnostics>().Object).ToList();
-        Assert.Single(result, new Token<string>(categoryName, "a", input.Start, input.End));
+        Assert.Single(result, new Token<string>(categoryName, "a", (input.Start, input.End)));
     }
 
     [Fact]
@@ -80,7 +82,7 @@ public class Lexer
         var lexer = new Lexer<string, int>(categoryDfas);
 
         var result = lexer.Process(input, new Mock<IDiagnostics>().Object);
-        Assert.Single(result, new Token<string>(categoryName, "aaaa", input.Start, new FakeInput.Location(4)));
+        Assert.Single(result, new Token<string>(categoryName, "aaaa", (input.Start, new FakeInput.Location(4))));
     }
 
     [Fact]
@@ -108,8 +110,8 @@ public class Lexer
 
         var result = lexer.Process(input, new Mock<IDiagnostics>().Object);
         var expected = new List<Token<string>> {
-            new(categoryName, "ab", input.Start, new FakeInput.Location(2)),
-            new(categoryName, "ab", new FakeInput.Location(2), new FakeInput.Location(4))
+            new(categoryName, "ab", (input.Start, new FakeInput.Location(2))),
+            new(categoryName, "ab", (new FakeInput.Location(2), new FakeInput.Location(4)))
         };
         Assert.Equal(expected, result);
     }
@@ -140,8 +142,8 @@ public class Lexer
 
         var result = lexer.Process(input, new Mock<IDiagnostics>().Object);
         var expected = new List<Token<string>> {
-            new(categoryName, "ab", input.Start, new FakeInput.Location(2)),
-            new(categoryName, "ab", new FakeInput.Location(3), new FakeInput.Location(5))
+            new(categoryName, "ab", (input.Start, new FakeInput.Location(2))),
+            new(categoryName, "ab", (new FakeInput.Location(3), new FakeInput.Location(5)))
         };
         Assert.Equal(expected, result);
     }
@@ -188,7 +190,7 @@ public class Lexer
         var lexer = new Lexer<int, int>(categoryDfas);
 
         var result = lexer.Process(input, new Mock<IDiagnostics>().Object);
-        Assert.Single(result, new Token<int>(category1, "ababab", input.Start, new FakeInput.Location(6)));
+        Assert.Single(result, new Token<int>(category1, "ababab", (input.Start, new FakeInput.Location(6))));
     }
 
     [Fact]
@@ -236,7 +238,7 @@ public class Lexer
         // is unspecified
         var result = lexer.Process(input, new Mock<IDiagnostics>().Object).ToHashSet();
         var expected = new HashSet<Token<int>> {
-            new(category1, "ababab", input.Start, new FakeInput.Location(6))
+            new(category1, "ababab", (input.Start, new FakeInput.Location(6)))
         };
         Assert.Equal(expected, result);
     }
