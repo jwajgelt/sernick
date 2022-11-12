@@ -1,5 +1,7 @@
 namespace sernick.Common.Regex;
 
+using Utility;
+
 internal sealed class UnionRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<TAtom>
 {
     public UnionRegex(IEnumerable<Regex<TAtom>> children)
@@ -21,10 +23,7 @@ internal sealed class UnionRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<
         return Union(Children.Select(child => child.Reverse()));
     }
 
-    public override int GetHashCode()
-    {
-        return Children.Aggregate(Children.Count, (hashCode, child) => unchecked(hashCode + child.GetHashCode()));
-    }
+    public override int GetHashCode() => Children.GetCombinedSetHashCode();
 
     public override bool Equals(Regex<TAtom>? other)
     {

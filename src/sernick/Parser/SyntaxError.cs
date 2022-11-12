@@ -10,7 +10,7 @@ public sealed record SyntaxError<TSymbol>
     {
         return NextParseNode == null || NextParseNode!.Symbol == null 
                 ? "Syntax error: unexpected symbol EOF."
-                : $"Syntax error: unexpected symbol {NextParseNode?.Symbol?.ToString()} beginning at {NextParseNode?.Start} and ending at {NextParseNode?.End}.";
+                : $"Syntax error: unexpected symbol {NextParseNode?.Symbol?.ToString()} beginning at {NextParseNode?.LocationRange.Start} and ending at {NextParseNode?.LocationRange.End}.";
     }
 
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;

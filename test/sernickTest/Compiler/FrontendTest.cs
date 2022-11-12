@@ -54,8 +54,11 @@ public class FrontendTest
                     new ParseTreeLeaf<Symbol>
                     (
                         new Terminal(LexicalGrammarCategory.Comma, ","),
-                        FileUtility.LocationAt(2, 19), 
-                        FileUtility.LocationAt(2, 20)
+                        new Range<ILocation>
+                        (
+                            FileUtility.LocationAt(2, 19), 
+                            FileUtility.LocationAt(2, 20)
+                        )
                     )
                 )
             }},
@@ -80,8 +83,11 @@ public class FrontendTest
                     new ParseTreeLeaf<Symbol>
                     (
                         new Terminal(LexicalGrammarCategory.BracesAndParentheses, ")"),
+                        new Range<ILocation>
+                        (
                         FileUtility.LocationAt(6, 5), 
                         FileUtility.LocationAt(6, 6)
+                        )
                     )
                 )
             }},
@@ -142,8 +148,11 @@ public class FrontendTest
                     new ParseTreeLeaf<Symbol>
                     (
                         new Terminal(LexicalGrammarCategory.VariableIdentifiers, "comment"), 
+                        new Range<ILocation>
+                        (
                         FileUtility.LocationAt(2, 9), 
                         FileUtility.LocationAt(2, 16)
+                        )
                     )
                 ),
                 new LexicalError(FileUtility.LocationAt(2, 17), FileUtility.LocationAt(2, 18)),
@@ -162,8 +171,11 @@ public class FrontendTest
                     new ParseTreeLeaf<Symbol>
                     (
                         new Terminal(LexicalGrammarCategory.TypeIdentifiers, "This"), 
+                        new Range<ILocation>
+                        (
                         FileUtility.LocationAt(1, 3), 
                         FileUtility.LocationAt(1, 7)
+                        )
                     )
                 ),
                 new LexicalError(FileUtility.LocationAt(2, 1), FileUtility.LocationAt(2, 3))
@@ -184,8 +196,11 @@ public class FrontendTest
                     new ParseTreeLeaf<Symbol>
                     (
                         new Terminal(LexicalGrammarCategory.Semicolon, ";"), 
+                        new Range<ILocation>
+                        (
                         FileUtility.LocationAt(1, 6), 
                         FileUtility.LocationAt(1, 7)
+                        )
                     )
                 )
             }},
@@ -198,8 +213,11 @@ public class FrontendTest
                     new ParseTreeLeaf<Symbol>
                     (
                         new Terminal(LexicalGrammarCategory.TypeIdentifiers, "This"), 
+                        new Range<ILocation>
+                        (
                         FileUtility.LocationAt(1, 4), 
                         FileUtility.LocationAt(1, 8)
+                        )
                     )
                 )
             }},
@@ -210,8 +228,11 @@ public class FrontendTest
                     new ParseTreeLeaf<Symbol>
                     (
                         new Terminal(LexicalGrammarCategory.TypeIdentifiers, "This"), 
+                        new Range<ILocation>
+                        (
                         FileUtility.LocationAt(1, 1), 
                         FileUtility.LocationAt(1, 5)
+                        )
                     )
                 ),
                 new LexicalError(FileUtility.LocationAt(1, 29), FileUtility.LocationAt(1, 30)),
@@ -226,8 +247,11 @@ public class FrontendTest
                     new ParseTreeLeaf<Symbol>
                     (
                         new Terminal(LexicalGrammarCategory.Keywords, "else"), 
+                        new Range<ILocation>
+                        (
                         FileUtility.LocationAt(5, 1), 
                         FileUtility.LocationAt(5, 5)
+                        )
                     )
                 ),
             }},
@@ -248,8 +272,11 @@ public class FrontendTest
                     new ParseTreeLeaf<Symbol>
                     (
                         new Terminal(LexicalGrammarCategory.VariableIdentifiers, "condition"), 
+                        new Range<ILocation>
+                        (
                         FileUtility.LocationAt(4, 4), 
                         FileUtility.LocationAt(4, 13)
+                        )
                     )
                 ),
             }},
@@ -271,8 +298,11 @@ public class FrontendTest
                     new ParseTreeLeaf<Symbol>
                     (
                         new Terminal(LexicalGrammarCategory.BracesAndParentheses, ")"), 
+                        new Range<ILocation>
+                        (
                         FileUtility.LocationAt(3, 66), 
                         FileUtility.LocationAt(3, 67)
+                        )
                     )
                 ),
             }},
@@ -283,8 +313,11 @@ public class FrontendTest
                     new ParseTreeLeaf<Symbol>
                     (
                         new Terminal(LexicalGrammarCategory.Comma, ","), 
+                        new Range<ILocation>
+                        (
                         FileUtility.LocationAt(3, 51), 
                         FileUtility.LocationAt(3, 52)
+                        )
                     )
                 ),
             }},
