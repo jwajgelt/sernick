@@ -456,7 +456,7 @@ public class NameResolutionTest
             block,
             loc);
     }
-    
+
     private static Identifier GetIdentifier(string name)
     {
         return new Identifier(name, loc);
@@ -474,7 +474,7 @@ public class NameResolutionTest
 
     private static Infix GetSimpleInfix(Expression e1, Expression e2, Infix.Op op)
     {
-        return new Infix(e1, e2, Infix.Op.Plus, loc);
+        return new Infix(e1, e2, op, loc);
     }
 
     private static ExpressionJoin GetExpressionJoin(Expression e1, Expression e2)
@@ -486,12 +486,12 @@ public class NameResolutionTest
     {
         return new CodeBlock(e, loc);
     }
-    
+
     private static Assignment GetAssignment(Identifier identifier, Expression e)
     {
         return new Assignment(identifier, e, loc);
     }
-    
+
     private static FunctionCall GetFunctionCall(Identifier identifier, IEnumerable<Expression> args)
     {
         return new FunctionCall(identifier, args, loc);

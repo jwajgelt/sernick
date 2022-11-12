@@ -9,7 +9,7 @@ using Tokenizer.Lexer.Helpers;
 public class IdentifiersNamespaceTest
 {
     private static readonly Range<ILocation> loc = new(new FakeInput.Location(0), new FakeInput.Location(0));
-    
+
     [Fact]
     public void IdentifiersAreVisibleAfterAddingThem()
     {
