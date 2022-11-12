@@ -16,7 +16,7 @@ public sealed class TypeChecking
         init;
     }
 
-    public TypeChecking(AstNode ast, Algorithm nameResolution, Diagnostics diagnostics)
+    public TypeChecking(AstNode ast, NameResolution.NameResolution nameResolution, Diagnostics diagnostics)
     {
         // TODO: implement a TypeCheckingASTVisitor, walk it over the AST and initialize the property with the result
         throw new NotImplementedException();

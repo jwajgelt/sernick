@@ -3,9 +3,9 @@ namespace sernick.Ast.Analysis.NameResolution;
 using Diagnostics;
 using Nodes;
 
-public sealed class Algorithm
+public sealed class NameResolution
 {
-    public Algorithm(AstNode ast, IDiagnostics diagnostics)
+    public NameResolution(AstNode ast, IDiagnostics diagnostics)
     {
         var visitor = new NameResolvingAstVisitor();
         var result = visitor.VisitAstTree(ast, new LocalVariablesManager(diagnostics));
