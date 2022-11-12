@@ -4,6 +4,7 @@ using Common.Dfa;
 using Common.Regex;
 using Grammar.Dfa;
 using Grammar.Syntax;
+using Utility;
 
 public sealed record Configuration<TSymbol>(
     IReadOnlySet<ValueTuple<SumDfa<Production<TSymbol>, Regex<TSymbol>, TSymbol>.State, TSymbol>> States
@@ -34,18 +35,9 @@ public sealed record Configuration<TSymbol>(
         return new Configuration<TSymbol>(statesSet);
     }
 
-    public bool Equals(Configuration<TSymbol>? other)
-    {
-        return other is not null &&
-               States.Count == other.States.Count &&
-               States.Zip(other.States)
-                   .All(statePair => statePair.First.Equals(statePair.Second));
-    }
+    public bool Equals(Configuration<TSymbol>? other) => other is not null && States.SequenceEqual(other.States);
 
-    public override int GetHashCode()
-    {
-        return States.Aggregate(0, (hashCode, state) => hashCode ^ state.GetHashCode());
-    }
+    public override int GetHashCode() => States.GetCombinedSetHashCode();
 
     public override string ToString() => string.Join(", ", States);
 }

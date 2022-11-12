@@ -19,24 +19,11 @@ public sealed record ParseTreeNode<TSymbol>(
             return true;
         }
 
-        if (!Equals(Symbol, other!.Symbol) ||
-            Children.Count() != other.Children.Count() ||
-            Production != other.Production)
-        {
-            return false;
-        }
-
-        var zipped = Children.Zip(other.Children, (first, second) => (First: first, Second: second));
-        return zipped.All(pair => Equals(pair.First, pair.Second));
+        return other is not null &&
+               (Symbol, Production).Equals((other.Symbol, other.Production)) &&
+               Children.SequenceEqual(other.Children);
     }
 
     public bool Equals(IParseTree<TSymbol>? other) => Equals(other as ParseTreeNode<TSymbol>);
-    public override int GetHashCode()
-    {
-        var childrenHashCode = Children.Aggregate(
-            Children.Count(),
-            (hashCode, child) => unchecked(hashCode * 17 + child.GetHashCode())
-        );
-        return (Symbol, Production, childrenHashCode).GetHashCode();
-    }
+    public override int GetHashCode() => HashCode.Combine(Symbol, Production, Children.GetCombinedHashCode());
 }
