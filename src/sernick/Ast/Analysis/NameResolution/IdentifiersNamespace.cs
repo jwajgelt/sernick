@@ -70,20 +70,25 @@ public sealed class IdentifiersNamespace
         return null;
     }
 
+    public Declaration GetDeclaration(Identifier identifier)
+    {
+        return null;
+    }
+
     public IdentifiersNamespace NewScope()
     {
         return new IdentifiersNamespace(_variables, ImmutableHashSet<string>.Empty, _diagnostics);
     }
 
-    private Declaration? GetDeclaration(Identifier identifier)
-    {
-        var name = identifier.Name;
-        if (_variables.TryGetValue(name, out var declaration))
-        {
-            return declaration;
-        }
-
-        _diagnostics.Report(new UndeclaredIdentifierError(identifier));
-        return null;
-    }
+    // private Declaration? GetDeclaration(Identifier identifier)
+    // {
+    //     var name = identifier.Name;
+    //     if (_variables.TryGetValue(name, out var declaration))
+    //     {
+    //         return declaration;
+    //     }
+    //
+    //     _diagnostics.Report(new UndeclaredIdentifierError(identifier));
+    //     return null;
+    // }
 }
