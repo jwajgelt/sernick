@@ -69,10 +69,13 @@ public class FrontendTest
             // code-blocks
             new object[] { "code-blocks", "access_outside_braces", new IDiagnosticItem[]
             {
-                new NameResolutionError
+                new UndeclaredIdentifierError
                 (
-                    new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(5, 1), FileUtility.LocationAt(5, 3))),
-                    FileUtility.LocationAt(5, 1)
+                    new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(5, 1), FileUtility.LocationAt(5, 2)))
+                ),
+                new UndeclaredIdentifierError
+                (
+                    new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(5, 5), FileUtility.LocationAt(5, 6)))
                 )
             }},
             new object[] { "code-blocks", "mixed_brackets", new IDiagnosticItem[]
@@ -88,18 +91,42 @@ public class FrontendTest
             }},
             new object[] { "code-blocks", "redeclare_after_declaration_in_function_call", new IDiagnosticItem[]
             {
-                new NameResolutionError
+                new MultipleDeclarationsError
                 (
-                    new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(7, 7), FileUtility.LocationAt(7, 8))),
-                    FileUtility.LocationAt(7, 7)
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(5, 12), FileUtility.LocationAt(5, 13))),
+                        new IntType(), 
+                        new IntLiteralValue(1, new Range<ILocation>(FileUtility.LocationAt(5, 21), FileUtility.LocationAt(5, 22))),
+                        true, 
+                        new Range<ILocation>(FileUtility.LocationAt(5, 6), FileUtility.LocationAt(5, 22))
+                    ),
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(7, 7), FileUtility.LocationAt(7, 8))),
+                        new IntType(), 
+                        new IntLiteralValue(2, new Range<ILocation>(FileUtility.LocationAt(7, 16), FileUtility.LocationAt(7, 17))),
+                        true, 
+                        new Range<ILocation>(FileUtility.LocationAt(7, 1), FileUtility.LocationAt(7, 17))
+                    )
                 )
             }},
             new object[] { "code-blocks", "redeclare_outside_parentheses", new IDiagnosticItem[]
             {
-                new NameResolutionError
+                new MultipleDeclarationsError
                 (
-                    new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(5, 7), FileUtility.LocationAt(5, 8))),
-                    FileUtility.LocationAt(5, 7)
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(2, 9), FileUtility.LocationAt(2, 10))),
+                        new IntType(), 
+                        new IntLiteralValue(0, new Range<ILocation>(FileUtility.LocationAt(2, 18), FileUtility.LocationAt(2, 19))),
+                        false, 
+                        new Range<ILocation>(FileUtility.LocationAt(2, 5), FileUtility.LocationAt(2, 19))
+                    ),
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(5, 7), FileUtility.LocationAt(5, 8))),
+                        new IntType(), 
+                        new IntLiteralValue(1, new Range<ILocation>(FileUtility.LocationAt(5, 16), FileUtility.LocationAt(5, 17))),
+                        true, 
+                        new Range<ILocation>(FileUtility.LocationAt(5, 1), FileUtility.LocationAt(5, 17))
+                    )
                 )
             }},
             new object[] { "code-blocks", "unclosed_braces", new IDiagnosticItem[]
@@ -112,26 +139,36 @@ public class FrontendTest
             }},
             new object[] { "code-blocks", "undeclared_after_nested_if", new IDiagnosticItem[]
             {
-                new NameResolutionError
+                new UndeclaredIdentifierError
                 (
-                    new Identifier("x2", new Range<ILocation>(FileUtility.LocationAt(7, 21), FileUtility.LocationAt(7, 23))),
-                    FileUtility.LocationAt(7, 21)
+                    new Identifier("x2", new Range<ILocation>(FileUtility.LocationAt(7, 21), FileUtility.LocationAt(7, 23)))
                 )
             }},
             new object[] { "code-blocks", "usage_before_declaration", new IDiagnosticItem[]
             {
-                new NameResolutionError
+                new UndeclaredIdentifierError
                 (
-                    new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(2, 16), FileUtility.LocationAt(2, 17))),
-                    FileUtility.LocationAt(7, 21)
+                    new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(2, 16), FileUtility.LocationAt(2, 17)))
                 )
             }},
             new object[] { "code-blocks", "variable_overshadow_in_braces", new IDiagnosticItem[]
             {
-                new NameResolutionError
+                new MultipleDeclarationsError
                 (
-                    new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(4, 9), FileUtility.LocationAt(4, 10))),
-                    FileUtility.LocationAt(4, 9)
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(1, 7), FileUtility.LocationAt(1, 8))),
+                        new IntType(), 
+                        new IntLiteralValue(0, new Range<ILocation>(FileUtility.LocationAt(1, 16), FileUtility.LocationAt(1, 17))),
+                        true, 
+                        new Range<ILocation>(FileUtility.LocationAt(1, 1), FileUtility.LocationAt(1, 17))
+                    ),
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(4, 9), FileUtility.LocationAt(4, 10))),
+                        new BoolType(), 
+                        new BoolLiteralValue(false, new Range<ILocation>(FileUtility.LocationAt(4, 19), FileUtility.LocationAt(4, 24))),
+                        false, 
+                        new Range<ILocation>(FileUtility.LocationAt(4, 5), FileUtility.LocationAt(4, 24))
+                    )
                 )
             }},
             
@@ -228,12 +265,10 @@ public class FrontendTest
             }},
             new object[] { "control_flow", "if_else_expression", new IDiagnosticItem[]
             {
-                // Is this correct?
                 new TypeCheckingError(new IntType(), new BoolType(), FileUtility.LocationAt(8, 5))
             }},
             new object[] { "control_flow", "if_else_expression_unit", new IDiagnosticItem[]
             {
-                // Is this correct?
                 new TypeCheckingError(new IntType(), new UnitType(), FileUtility.LocationAt(10, 1))
             }},
             new object[] { "control_flow", "if_syntax", new IDiagnosticItem[]
@@ -251,12 +286,7 @@ public class FrontendTest
             // default-arguments
             new object[] { "default-arguments", "non-default-call", new IDiagnosticItem[]
             {
-                // not sure what kind of error should there be
-                new NameResolutionError
-                (
-                    new Identifier("nonDefaultCall()", new Range<ILocation>(FileUtility.LocationAt(6, 1), FileUtility.LocationAt(6, 17))),
-                    FileUtility.LocationAt(6, 1)
-                )
+                new TypeCheckingError(new BoolType(), new UnitType(), FileUtility.LocationAt(6, 16))
             }},
             new object[] { "default-arguments", "non-suffix", new IDiagnosticItem[]
             {
