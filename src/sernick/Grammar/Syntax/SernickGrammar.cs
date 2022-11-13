@@ -33,7 +33,6 @@ public static class SernickGrammar
         var functionCall = Atom(Symbol.Of(NonTerminalSymbol.FunctionCall));
         var functionArguments = Atom(Symbol.Of(NonTerminalSymbol.FunctionArguments));
         var assignment = Atom(Symbol.Of(NonTerminalSymbol.Assignment));
-        var typedAssignment = Atom(Symbol.Of(NonTerminalSymbol.TypedAssignment)); // x: Int = 5
         var ifExpression = Atom(Symbol.Of(NonTerminalSymbol.IfExpression));
         var loopExpression = Atom(Symbol.Of(NonTerminalSymbol.LoopExpression));
         var modifier = Atom(Symbol.Of(NonTerminalSymbol.Modifier)); // var or const
@@ -42,6 +41,7 @@ public static class SernickGrammar
         var functionDeclaration = Atom(Symbol.Of(NonTerminalSymbol.FunctionDeclaration));
         var functionParameters = Atom(Symbol.Of(NonTerminalSymbol.FunctionParameters));
         var functionParameterDeclaration = Atom(Symbol.Of(NonTerminalSymbol.FunctionParameter));
+        var functionParameterDeclarationDefVal = Atom(Symbol.Of(NonTerminalSymbol.FunctionParameterWithDefaultValue));
 
         // Terminal
         var semicolon = Atom(Symbol.Of(LexicalCategory.Semicolon));
@@ -149,22 +149,21 @@ public static class SernickGrammar
             // Assignment
             .Add(assignment,
                 Concat(identifier, assignOperator, aliasExpression))
-            .Add(typedAssignment,
-                Concat(identifier, typeSpec, assignOperator, aliasExpression))
 
             // Declarations
-            .Add(variableDeclaration,
-                Concat(modifier, Union(assignment, typedAssignment, Concat(identifier, typeSpec))))
             .Add(modifier, Union(varKeyword, constKeyword))
             .Add(typeSpec, Concat(colon, typeIdentifier))
+            .Add(variableDeclaration,
+                Concat(modifier, Union(assignment, Concat(identifier, typeSpec, Optional(Concat(assignOperator, aliasExpression))))))
             .Add(functionDeclaration,
                 Concat(funKeyword, identifier, parOpen, functionParameters, parClose, Optional(typeSpec), codeBlock))
             .Add(functionParameters, Optional(Union(
-                Concat(typedAssignment, Star(comma, typedAssignment)),
+                Concat(functionParameterDeclarationDefVal, Star(comma, functionParameterDeclarationDefVal)),
                 Concat(functionParameterDeclaration, Star(comma, functionParameterDeclaration),
-                    Optional(Concat(comma, typedAssignment, Star(comma, typedAssignment)))) // only suffix with default values
+                    Optional(Concat(comma, functionParameterDeclarationDefVal, Star(comma, functionParameterDeclarationDefVal)))) // only suffix with default values
                 )))
-            .Add(functionParameterDeclaration, Concat(identifier, typeSpec));
+            .Add(functionParameterDeclaration, Concat(identifier, typeSpec))
+            .Add(functionParameterDeclarationDefVal, Concat(functionParameterDeclaration, assignOperator, literalValue));
 
         return new Grammar<Symbol>(program, productions);
     }

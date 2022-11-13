@@ -50,7 +50,6 @@ public enum NonTerminalSymbol
     FunctionCall,
     FunctionArguments,
     Assignment,
-    TypedAssignment,
     IfExpression,
     LoopExpression,
     Modifier,
@@ -58,5 +57,6 @@ public enum NonTerminalSymbol
     VariableDeclaration,
     FunctionDeclaration,
     FunctionParameters,
-    FunctionParameter
+    FunctionParameter,
+    FunctionParameterWithDefaultValue
 }
