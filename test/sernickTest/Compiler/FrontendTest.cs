@@ -412,7 +412,7 @@ public class FrontendTest
             }},
             new object[] { "types-and-naming", "nonexistent-type", new IDiagnosticItem[]
             {
-                // no error I guess? but we can't define new types
+                // nonexistent type, error not detected yet
             }},
 
             //variable-declaration-initialization
@@ -456,20 +456,30 @@ public class FrontendTest
             }},
             new object[] { "variable-declaration-initialization", "const_redeclaration_grouping", new IDiagnosticItem[]
             {
-                // redeclaration
-                new NameResolutionError
+                new MultipleDeclarationsError
                 (
-                    new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 9))),
-                    FileUtility.LocationAt(3, 8)
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(2, 7), FileUtility.LocationAt(2, 8))),
+                        new IntType(), null, true, new Range<ILocation>(FileUtility.LocationAt(2, 1), FileUtility.LocationAt(2, 13))
+                    ),
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 9))),
+                        new IntType(), null, true, new Range<ILocation>(FileUtility.LocationAt(3, 2), FileUtility.LocationAt(3, 14))
+                    )
                 )
             }},
             new object[] { "variable-declaration-initialization", "const_redeclaration", new IDiagnosticItem[]
             {
-                // redeclaration
-                new NameResolutionError
+                new MultipleDeclarationsError
                 (
-                    new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(3, 7), FileUtility.LocationAt(3, 8))),
-                    FileUtility.LocationAt(3, 7)
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(2, 7), FileUtility.LocationAt(2, 8))),
+                        new IntType(), null, true, new Range<ILocation>(FileUtility.LocationAt(2, 1), FileUtility.LocationAt(2, 13))
+                    ),
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(3, 7), FileUtility.LocationAt(3, 8))),
+                        new IntType(), null, true, new Range<ILocation>(FileUtility.LocationAt(3, 1), FileUtility.LocationAt(3, 13))
+                    )
                 )
             }},
             new object[] { "variable-declaration-initialization", "identifier_decl_no_var_or_const_keyword", new IDiagnosticItem[]
@@ -515,20 +525,30 @@ public class FrontendTest
             }},
             new object[] { "variable-declaration-initialization", "var_redeclaration_grouping", new IDiagnosticItem[]
             {
-                // redeclaration
-                new NameResolutionError
+                new MultipleDeclarationsError
                 (
-                    new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(3, 6), FileUtility.LocationAt(3, 7))),
-                    FileUtility.LocationAt(3, 6)
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(2, 5), FileUtility.LocationAt(2, 6))),
+                        new IntType(), null, false, new Range<ILocation>(FileUtility.LocationAt(2, 1), FileUtility.LocationAt(2, 11))
+                    ),
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(3, 6), FileUtility.LocationAt(3, 7))),
+                        new IntType(), null, false, new Range<ILocation>(FileUtility.LocationAt(3, 2), FileUtility.LocationAt(3, 12))
+                    )
                 )
             }},
             new object[] { "variable-declaration-initialization", "var_redeclaration", new IDiagnosticItem[]
             {
-                // redeclaration
-                new NameResolutionError
+                new MultipleDeclarationsError
                 (
-                    new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(3, 5), FileUtility.LocationAt(3, 6))),
-                    FileUtility.LocationAt(3, 5)
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(2, 5), FileUtility.LocationAt(2, 6))),
+                        new IntType(), null, false, new Range<ILocation>(FileUtility.LocationAt(2, 1), FileUtility.LocationAt(2, 11))
+                    ),
+                    new VariableDeclaration(
+                        new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(3, 5), FileUtility.LocationAt(3, 6))),
+                        new IntType(), null, false, new Range<ILocation>(FileUtility.LocationAt(3, 1), FileUtility.LocationAt(3, 11))
+                    )
                 )
             }},
         };
