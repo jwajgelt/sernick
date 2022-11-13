@@ -289,7 +289,14 @@ public class CompilerFrontendTest
             // }},
             new object[] { "comments-and-separators", "line_without_separator", new IDiagnosticItem[]
             {
-                new SyntaxError<Symbol>(null)
+                new SyntaxError<Symbol>
+                (
+                    new ParseTreeLeaf<Symbol>
+                    (
+                        new Terminal(LexicalGrammarCategory.Keywords, "const"),
+                        (FileUtility.LocationAt(2, 1), FileUtility.LocationAt(2, 6))
+                    )
+                )
             }},
             new object[] { "comments-and-separators", "separarator_in_the_middle", new IDiagnosticItem[]
             {
