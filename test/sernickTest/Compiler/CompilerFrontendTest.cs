@@ -100,6 +100,10 @@ public class CompilerFrontendTest
     [InlineData("loop { a } + 2")]
     [InlineData("loop { break; continue; return a }")]
     [InlineData("{var x = 1; x} + 5")]
+    [InlineData("{var x: Int}")]
+    [InlineData("var x: Int = 5 + 5")]
+    [InlineData("(var x: Int;);")]
+    [InlineData("(fun f() {};);")]
     public void TestCorrectShortPrograms(string program)
     {
         var diagnostics = program.CompileText();

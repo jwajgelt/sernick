@@ -34,13 +34,10 @@ public enum NonTerminalSymbol
 {
     Start,
     Program,
-    Statements,
-    ClosedStatement,
-    OpenStatement,
+    ExpressionSeq,
+    OpenExpression,
     CodeBlock,
     CodeGroup,
-    ClosedStatementNoBlock,
-    Expression,
     ReturnExpression,
     LogicalOperand,
     LogicalOperator,
@@ -50,8 +47,9 @@ public enum NonTerminalSymbol
     ArithmeticOperator,
     SimpleExpression,
     LiteralValue,
+    FunctionCall,
+    FunctionArguments,
     Assignment,
-    TypedAssignment,
     IfExpression,
     LoopExpression,
     Modifier,
@@ -60,6 +58,5 @@ public enum NonTerminalSymbol
     FunctionDeclaration,
     FunctionParameters,
     FunctionParameter,
-    FunctionCallSuffix,
-    FunctionArguments
+    FunctionParameterWithDefaultValue
 }
