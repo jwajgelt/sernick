@@ -90,7 +90,9 @@ public static class SernickGrammar
             .Add(statements, Concat(Star(closedStatement), Optional(openStatement)))
             .Add(closedStatementNoBlock, Concat(Union(expression, variableDeclaration), semicolon))
             .Add(closedStatement, closedStatementNoBlock)
-            .Add(closedStatement, Union(codeBlock, codeGroup, ifExpression, loopExpression, functionDeclaration))
+            .Add(closedStatement, Concat(
+                Union(codeBlock, codeGroup, ifExpression, loopExpression, functionDeclaration),
+                Optional(semicolon)))
             .Add(openStatement, expression)
             .Add(codeBlock, Concat(braceOpen, statements, braceClose))
             .Add(codeGroup, Concat(
