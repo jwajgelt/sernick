@@ -16,17 +16,18 @@ using sernick.Utility;
 public class FrontendTest
 {
     [Theory, MemberData(nameof(CorrectExamplesData))]
-    public void TestCorrectExamples(string filePath)
+    public void TestCorrectExamples(string directory, string fileName)
     {
-        var diagnostics = filePath.Compile();
+        var diagnostics = $"examples/{directory}/correct/{fileName}.ser".Compile();
 
         Assert.False(diagnostics.DidErrorOccur);
     }
 
     public static IEnumerable<object[]> CorrectExamplesData => Directory
         .GetDirectories("examples", "*", SearchOption.TopDirectoryOnly)
-        .Select(dir => new DirectoryInfo($"{dir}/correct")).SelectMany(dirInfo => dirInfo.GetFiles())
-        .Select(file => new[] { file.FullName });
+        .Select(dir =>
+            new DirectoryInfo($"{dir}/correct").GetFiles().Select(fileInfo => (dir[9..], fileInfo.Name)))
+        .SelectMany(e => e.Select(fileInfo => new[] { fileInfo.Item1, fileInfo.Name[..^4] }));
 
     [Theory, MemberData(nameof(IncorrectExamplesData))]
     public void TestIncorrectExamples(string directory, string fileName, IEnumerable<IDiagnosticItem> expectedErrors)
