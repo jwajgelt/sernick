@@ -286,9 +286,20 @@ public class FrontendTest
             }},
 
             //function_naming_readonly_arguments
-            new object[] { "function_naming_readonly_arguments", "const_argument_modified", new IDiagnosticItem[]
+            new object[] { "function_naming_readonly_arguments", "argument_modified", new IDiagnosticItem[]
             {
                 // modifying const, not detected yet
+            }},
+            new object[] { "function_naming_readonly_arguments", "const_argument", new IDiagnosticItem[]
+            {
+                new SyntaxError<Symbol>
+                (
+                    new ParseTreeLeaf<Symbol>
+                    (
+                        new Terminal(LexicalGrammarCategory.Keywords, "const"),
+                        new Range<ILocation>(FileUtility.LocationAt(2, 14), FileUtility.LocationAt(2, 19))
+                    )
+                )
             }},
             new object[] { "function_naming_readonly_arguments", "invalid_character_in_name", new IDiagnosticItem[]
             {
@@ -306,10 +317,6 @@ public class FrontendTest
                 // modifying const, not detected yet
             }},
             new object[] { "function_naming_readonly_arguments", "nested_function_modifying_const_outer_scoped", new IDiagnosticItem[]
-            {
-                // modifying const, not detected yet
-            }},
-            new object[] { "function_naming_readonly_arguments", "non_const_argument_modified", new IDiagnosticItem[]
             {
                 // modifying const, not detected yet
             }},

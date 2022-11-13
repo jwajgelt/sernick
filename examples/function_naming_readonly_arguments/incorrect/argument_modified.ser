@@ -1,4 +1,4 @@
-fun function(const argument : Int) : Unit {
+fun function(argument : Int) : Unit {
 	// argument is const and modification should not be allowed
 	argument = 2;
 	return;
