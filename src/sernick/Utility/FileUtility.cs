@@ -10,12 +10,12 @@ public static class FileUtility
         return new FileInput(lines);
     }
 
-    internal static FileInput.FileLocation LocationAt(uint line, uint character)
+    internal static ILocation LocationAt(uint line, uint character)
     {
         return new FileInput.FileLocation(line - 1, character - 1);
     }
 
-    internal sealed class FileInput : IInput
+    private sealed class FileInput : IInput
     {
         internal FileInput(string[] lines)
         {
