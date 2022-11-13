@@ -95,16 +95,16 @@ public class FrontendTest
                 (
                     new VariableDeclaration(
                         new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(5, 12), FileUtility.LocationAt(5, 13))),
-                        new IntType(), 
+                        new IntType(),
                         new IntLiteralValue(1, new Range<ILocation>(FileUtility.LocationAt(5, 21), FileUtility.LocationAt(5, 22))),
-                        true, 
+                        true,
                         new Range<ILocation>(FileUtility.LocationAt(5, 6), FileUtility.LocationAt(5, 22))
                     ),
                     new VariableDeclaration(
                         new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(7, 7), FileUtility.LocationAt(7, 8))),
-                        new IntType(), 
+                        new IntType(),
                         new IntLiteralValue(2, new Range<ILocation>(FileUtility.LocationAt(7, 16), FileUtility.LocationAt(7, 17))),
-                        true, 
+                        true,
                         new Range<ILocation>(FileUtility.LocationAt(7, 1), FileUtility.LocationAt(7, 17))
                     )
                 )
@@ -115,16 +115,16 @@ public class FrontendTest
                 (
                     new VariableDeclaration(
                         new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(2, 9), FileUtility.LocationAt(2, 10))),
-                        new IntType(), 
+                        new IntType(),
                         new IntLiteralValue(0, new Range<ILocation>(FileUtility.LocationAt(2, 18), FileUtility.LocationAt(2, 19))),
-                        false, 
+                        false,
                         new Range<ILocation>(FileUtility.LocationAt(2, 5), FileUtility.LocationAt(2, 19))
                     ),
                     new VariableDeclaration(
                         new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(5, 7), FileUtility.LocationAt(5, 8))),
-                        new IntType(), 
+                        new IntType(),
                         new IntLiteralValue(1, new Range<ILocation>(FileUtility.LocationAt(5, 16), FileUtility.LocationAt(5, 17))),
-                        true, 
+                        true,
                         new Range<ILocation>(FileUtility.LocationAt(5, 1), FileUtility.LocationAt(5, 17))
                     )
                 )
@@ -157,16 +157,16 @@ public class FrontendTest
                 (
                     new VariableDeclaration(
                         new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(1, 7), FileUtility.LocationAt(1, 8))),
-                        new IntType(), 
+                        new IntType(),
                         new IntLiteralValue(0, new Range<ILocation>(FileUtility.LocationAt(1, 16), FileUtility.LocationAt(1, 17))),
-                        true, 
+                        true,
                         new Range<ILocation>(FileUtility.LocationAt(1, 1), FileUtility.LocationAt(1, 17))
                     ),
                     new VariableDeclaration(
                         new Identifier("x", new Range<ILocation>(FileUtility.LocationAt(4, 9), FileUtility.LocationAt(4, 10))),
-                        new BoolType(), 
+                        new BoolType(),
                         new BoolLiteralValue(false, new Range<ILocation>(FileUtility.LocationAt(4, 19), FileUtility.LocationAt(4, 24))),
-                        false, 
+                        false,
                         new Range<ILocation>(FileUtility.LocationAt(4, 5), FileUtility.LocationAt(4, 24))
                     )
                 )
