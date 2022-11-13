@@ -29,7 +29,7 @@ public class CompilerFrontendTest
     }
 
     // NOTE: DO NOT UNSKIP WHEN PUSHING: it will overload Github Actions
-    [Theory(Skip = "Too large performance hit on Github Workflow")]
+    [Theory/*(Skip = "Too large performance hit on Github Workflow")*/]
     [InlineData("a")]
     [InlineData("5")]
     [InlineData("{x}")]
@@ -72,6 +72,7 @@ public class CompilerFrontendTest
     [InlineData("{var x: Int}")]
     [InlineData("var x: Int = 5 + 5")]
     [InlineData("(var x: Int;);")]
+    [InlineData("(fun f() {};);")]
     public void CorrectPrograms(string program)
     {
         IInput input = new StringInput(program);

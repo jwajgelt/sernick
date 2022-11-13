@@ -83,6 +83,9 @@ public static class SernickGrammar
         var minusOperator = Atom(Symbol.Of(LexicalCategory.Operators, "-"));
         var assignOperator = Atom(Symbol.Of(LexicalCategory.Operators, "="));
 
+        // Aliases
+        var aliasBlockExpression = Union(codeBlock, codeGroup, ifExpression, loopExpression, functionDeclaration);
+
         productions
             .Add(program, statements)
 
@@ -90,15 +93,14 @@ public static class SernickGrammar
             .Add(statements, Concat(Star(closedStatement), Optional(openStatement)))
             .Add(closedStatementNoBlock, Concat(expression, semicolon))
             .Add(closedStatement, closedStatementNoBlock)
-            .Add(closedStatement, Concat(
-                Union(codeBlock, codeGroup, ifExpression, loopExpression, functionDeclaration),
-                Optional(semicolon)))
+            .Add(closedStatement, Concat(aliasBlockExpression, Optional(semicolon)))
             .Add(openStatement, expression)
             .Add(codeBlock, Concat(braceOpen, statements, braceClose))
             .Add(codeGroup, Concat(
                     parOpen,
                     Union(
                         closedStatementNoBlock,
+                        Concat(aliasBlockExpression, semicolon),
                         Concat(closedStatement, Star(closedStatement), openStatement)),
                     parClose))
 
@@ -108,33 +110,33 @@ public static class SernickGrammar
             .Add(expression, Union(
                 logicalOperand, // anything but an entity ending with a block {}
                 Concat(
-                    Star(Union(logicalOperand, codeBlock, codeGroup, ifExpression, loopExpression), logicalOperator),
-                    Union(logicalOperand, codeBlock, codeGroup, ifExpression, loopExpression), logicalOperator,
-                    Union(logicalOperand, codeBlock, codeGroup, ifExpression, loopExpression))))
+                    Star(Union(logicalOperand, aliasBlockExpression), logicalOperator),
+                    Union(logicalOperand, aliasBlockExpression), logicalOperator,
+                    Union(logicalOperand, aliasBlockExpression))))
             .Add(logicalOperator, Union(scAndOperator, scOrOperator))
             .Add(logicalOperand, Union(
                 comparisonOperand, // anything but an entity ending with a block {}
                 Concat(
-                    Star(Union(comparisonOperand, codeBlock, codeGroup, ifExpression, loopExpression), comparisonOperator),
-                    Union(comparisonOperand, codeBlock, codeGroup, ifExpression, loopExpression), comparisonOperator,
-                    Union(comparisonOperand, codeBlock, codeGroup, ifExpression, loopExpression))))
+                    Star(Union(comparisonOperand, aliasBlockExpression), comparisonOperator),
+                    Union(comparisonOperand, aliasBlockExpression), comparisonOperator,
+                    Union(comparisonOperand, aliasBlockExpression))))
             .Add(comparisonOperator,
                 Union(equalsOperator, greaterOperator, lessOperator, greaterOrEqualOperator, lessOrEqualOperator))
             .Add(comparisonOperand, Union(
                 arithmeticOperand, // anything but an entity ending with a block {}
                 Concat(
-                    Star(Union(arithmeticOperand, codeBlock, codeGroup, ifExpression, loopExpression), arithmeticOperator),
-                    Union(arithmeticOperand, codeBlock, codeGroup, ifExpression, loopExpression), arithmeticOperator,
-                    Union(arithmeticOperand, codeBlock, codeGroup, ifExpression, loopExpression))))
+                    Star(Union(arithmeticOperand, aliasBlockExpression), arithmeticOperator),
+                    Union(arithmeticOperand, aliasBlockExpression), arithmeticOperator,
+                    Union(arithmeticOperand, aliasBlockExpression))))
             .Add(arithmeticOperator, Union(plusOperator, minusOperator))
             .Add(arithmeticOperand, simpleExpression)
             .Add(simpleExpression, literalValue)
             .Add(literalValue, Union(trueLiteral, falseLiteral, digitLiteral))
-            .Add(simpleExpression, Concat(parOpen, Union(expression, codeBlock, codeGroup), parClose)) // (E) or ({})
+            .Add(simpleExpression, Concat(parOpen, Union(expression, aliasBlockExpression), parClose)) // (E) or ({})
             .Add(simpleExpression, Concat(identifier, Optional(functionCallSuffix))) // x or f()
             .Add(functionCallSuffix, Concat(parOpen, functionArguments, parClose))
             .Add(functionArguments,
-                Optional(Concat(Union(expression, codeBlock, codeGroup), Star(comma, Union(expression, codeBlock, codeGroup)))))
+                Optional(Concat(Union(expression, aliasBlockExpression), Star(comma, Union(expression, aliasBlockExpression)))))
 
             // Block expressions
             .Add(ifExpression, Concat(
@@ -145,9 +147,9 @@ public static class SernickGrammar
 
             // Assignment
             .Add(assignment,
-                Concat(identifier, assignOperator, Union(expression, codeBlock, codeGroup, ifExpression, loopExpression)))
+                Concat(identifier, assignOperator, Union(expression, aliasBlockExpression)))
             .Add(typedAssignment,
-                Concat(identifier, typeSpec, assignOperator, Union(expression, codeBlock, codeGroup, ifExpression, loopExpression)))
+                Concat(identifier, typeSpec, assignOperator, Union(expression, aliasBlockExpression)))
 
             // Declarations
             .Add(variableDeclaration,
