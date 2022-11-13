@@ -17,13 +17,10 @@ public static class SernickGrammar
 
         // Non-terminal
         var program = Symbol.Of(NonTerminalSymbol.Program);
-        var statements = Atom(Symbol.Of(NonTerminalSymbol.Statements));
-        var closedStatement = Atom(Symbol.Of(NonTerminalSymbol.ClosedStatement)); // doesn't require semicolon
-        var openStatement = Atom(Symbol.Of(NonTerminalSymbol.OpenStatement)); // requires semicolon
+        var expressionSeq = Atom(Symbol.Of(NonTerminalSymbol.ExpressionSeq));
+        var openExpression = Atom(Symbol.Of(NonTerminalSymbol.OpenExpression)); // requires semicolon
         var codeBlock = Atom(Symbol.Of(NonTerminalSymbol.CodeBlock)); // {}
         var codeGroup = Atom(Symbol.Of(NonTerminalSymbol.CodeGroup)); // ()
-        var closedStatementNoBlock = Atom(Symbol.Of(NonTerminalSymbol.ClosedStatementNoBlock)); // only E;
-        var expression = Atom(Symbol.Of(NonTerminalSymbol.Expression)); // computation with operators; excl "{}"
         var returnExpression = Atom(Symbol.Of(NonTerminalSymbol.ReturnExpression));
         var logicalOperand = Atom(Symbol.Of(NonTerminalSymbol.LogicalOperand));
         var logicalOperator = Atom(Symbol.Of(NonTerminalSymbol.LogicalOperator));
@@ -85,37 +82,35 @@ public static class SernickGrammar
 
         // Aliases
         var aliasBlockExpression = Union(codeBlock, codeGroup, ifExpression, loopExpression, functionDeclaration);
+        var aliasClosedExpression =
+            Union(Concat(openExpression, semicolon), Concat(aliasBlockExpression, Optional(semicolon)));
+        var aliasExpression = Union(openExpression, aliasBlockExpression);
 
         productions
-            .Add(program, statements)
+            .Add(program, expressionSeq)
 
             // Statements
-            .Add(statements, Concat(Star(closedStatement), Optional(openStatement)))
-            .Add(closedStatementNoBlock, Concat(expression, semicolon))
-            .Add(closedStatement, closedStatementNoBlock)
-            .Add(closedStatement, Concat(aliasBlockExpression, Optional(semicolon)))
-            .Add(openStatement, expression)
-            .Add(codeBlock, Concat(braceOpen, statements, braceClose))
+            .Add(expressionSeq, Concat(Star(aliasClosedExpression), Optional(openExpression)))
+            .Add(codeBlock, Concat(braceOpen, expressionSeq, braceClose))
             .Add(codeGroup, Concat(
                     parOpen,
                     Union(
-                        closedStatementNoBlock,
-                        Concat(aliasBlockExpression, semicolon),
-                        Concat(closedStatement, Star(closedStatement), openStatement)),
+                        Concat(aliasExpression, semicolon),
+                        Concat(aliasClosedExpression, Star(aliasClosedExpression), Union(openExpression, aliasClosedExpression))),
                     parClose))
 
             // Expression
-            .Add(expression, Union(variableDeclaration, assignment, breakKeyword, continueKeyword, returnExpression))
-            .Add(returnExpression, Concat(returnKeyword, Optional(expression)))
-            .Add(expression, Union(
-                logicalOperand, // anything but an entity ending with a block {}
+            .Add(openExpression, Union(variableDeclaration, assignment, breakKeyword, continueKeyword, returnExpression))
+            .Add(returnExpression, Concat(returnKeyword, Optional(aliasExpression)))
+            .Add(openExpression, Union(
+                logicalOperand, // anything but a block-expression
                 Concat(
                     Star(Union(logicalOperand, aliasBlockExpression), logicalOperator),
                     Union(logicalOperand, aliasBlockExpression), logicalOperator,
                     Union(logicalOperand, aliasBlockExpression))))
             .Add(logicalOperator, Union(scAndOperator, scOrOperator))
             .Add(logicalOperand, Union(
-                comparisonOperand, // anything but an entity ending with a block {}
+                comparisonOperand, // anything but a block-expression
                 Concat(
                     Star(Union(comparisonOperand, aliasBlockExpression), comparisonOperator),
                     Union(comparisonOperand, aliasBlockExpression), comparisonOperator,
@@ -123,7 +118,7 @@ public static class SernickGrammar
             .Add(comparisonOperator,
                 Union(equalsOperator, greaterOperator, lessOperator, greaterOrEqualOperator, lessOrEqualOperator))
             .Add(comparisonOperand, Union(
-                arithmeticOperand, // anything but an entity ending with a block {}
+                arithmeticOperand, // anything but a block-expression
                 Concat(
                     Star(Union(arithmeticOperand, aliasBlockExpression), arithmeticOperator),
                     Union(arithmeticOperand, aliasBlockExpression), arithmeticOperator,
@@ -132,24 +127,26 @@ public static class SernickGrammar
             .Add(arithmeticOperand, simpleExpression)
             .Add(simpleExpression, literalValue)
             .Add(literalValue, Union(trueLiteral, falseLiteral, digitLiteral))
-            .Add(simpleExpression, Concat(parOpen, Union(expression, aliasBlockExpression), parClose)) // (E) or ({})
+            .Add(simpleExpression, Concat(parOpen, aliasExpression, parClose)) // (E) or ({})
             .Add(simpleExpression, Concat(identifier, Optional(functionCallSuffix))) // x or f()
             .Add(functionCallSuffix, Concat(parOpen, functionArguments, parClose))
             .Add(functionArguments,
-                Optional(Concat(Union(expression, aliasBlockExpression), Star(comma, Union(expression, aliasBlockExpression)))))
+                Optional(Concat(aliasExpression, Star(comma, aliasExpression))))
 
             // Block expressions
             .Add(ifExpression, Concat(
-                ifKeyword, parOpen,
-                Union(expression, codeBlock, codeGroup, closedStatementNoBlock, Concat(closedStatement, Star(closedStatement), openStatement)), // (E) or ({}) or (E;E;E)
-                parClose, codeBlock, Optional(Concat(elseKeyword, codeBlock))))
+                ifKeyword,
+                Union(
+                    codeGroup, // (E;E;E)
+                    Concat(parOpen, aliasExpression, parClose)), // (E) or ({})
+                codeBlock, Optional(Concat(elseKeyword, codeBlock))))
             .Add(loopExpression, Concat(loopKeyword, codeBlock))
 
             // Assignment
             .Add(assignment,
-                Concat(identifier, assignOperator, Union(expression, aliasBlockExpression)))
+                Concat(identifier, assignOperator, aliasExpression))
             .Add(typedAssignment,
-                Concat(identifier, typeSpec, assignOperator, Union(expression, aliasBlockExpression)))
+                Concat(identifier, typeSpec, assignOperator, aliasExpression))
 
             // Declarations
             .Add(variableDeclaration,
