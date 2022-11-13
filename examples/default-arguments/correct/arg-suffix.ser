@@ -1,5 +1,5 @@
 fun defaultSuffix(argOne: Int, argTwo: Int = 1, argThree: Int = 1) : Int {
-	(argOne * argTwo) + argThree
+	(argOne - argTwo) + argThree
 }
 
 // This should return 6
