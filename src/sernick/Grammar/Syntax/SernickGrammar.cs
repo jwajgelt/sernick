@@ -88,7 +88,7 @@ public static class SernickGrammar
 
             // Statements
             .Add(statements, Concat(Star(closedStatement), Optional(openStatement)))
-            .Add(closedStatementNoBlock, Concat(Union(expression, variableDeclaration), semicolon))
+            .Add(closedStatementNoBlock, Concat(expression, semicolon))
             .Add(closedStatement, closedStatementNoBlock)
             .Add(closedStatement, Concat(
                 Union(codeBlock, codeGroup, ifExpression, loopExpression, functionDeclaration),
@@ -103,7 +103,7 @@ public static class SernickGrammar
                     parClose))
 
             // Expression
-            .Add(expression, Union(assignment, breakKeyword, continueKeyword, returnExpression))
+            .Add(expression, Union(variableDeclaration, assignment, breakKeyword, continueKeyword, returnExpression))
             .Add(returnExpression, Concat(returnKeyword, Optional(expression)))
             .Add(expression, Union(
                 logicalOperand, // anything but an entity ending with a block {}
