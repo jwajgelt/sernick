@@ -7,7 +7,7 @@ public sealed record VariableDeclaration(Identifier Name,
     Type? Type,
     Expression? InitValue,
     bool IsConst,
-    Range<ILocation> LocationRange) : Declaration(LocationRange)
+    Range<ILocation> LocationRange) : Declaration(Name, LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode?[] { Name, InitValue }.OfType<AstNode>();
 
@@ -18,7 +18,7 @@ public sealed record VariableDeclaration(Identifier Name,
 public sealed record FunctionParameterDeclaration(Identifier Name,
     Type Type,
     LiteralValue? DefaultValue,
-    Range<ILocation> LocationRange) : Declaration(LocationRange)
+    Range<ILocation> LocationRange) : Declaration(Name, LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode?[] { Name, DefaultValue }.OfType<AstNode>();
 
@@ -30,7 +30,7 @@ public record FunctionDefinition(Identifier Name,
     IEnumerable<FunctionParameterDeclaration> Parameters,
     Type ReturnType,
     CodeBlock Body,
-    Range<ILocation> LocationRange) : Declaration(LocationRange)
+    Range<ILocation> LocationRange) : Declaration(Name, LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode[] { Name }.Concat(Parameters).Append(Body);
 

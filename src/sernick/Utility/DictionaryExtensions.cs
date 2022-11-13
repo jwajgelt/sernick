@@ -8,4 +8,10 @@ public static class DictionaryExtensions
         dictionary.TryAdd(key, new TValue());
         return dictionary[key];
     }
+
+    public static IReadOnlyDictionary<K, V> JoinWith<K, V>(this IReadOnlyDictionary<K, V> dict, IReadOnlyDictionary<K, V> other) where K : notnull
+    {
+        return new[] { dict, other }.SelectMany(d => d)
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
+    }
 }
