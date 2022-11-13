@@ -11,7 +11,7 @@ public static class NameResolutionAlgorithm
         return visitor.VisitAstTree(ast, new IdentifiersNamespace()).Result;
     }
 
-    private class NameResolvingAstVisitor : AstVisitor<NameResolutionVisitorResult, IdentifiersNamespace>
+    private sealed class NameResolvingAstVisitor : AstVisitor<NameResolutionVisitorResult, IdentifiersNamespace>
     {
         private readonly IDiagnostics _diagnostics;
 

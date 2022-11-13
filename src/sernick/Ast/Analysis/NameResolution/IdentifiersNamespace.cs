@@ -8,11 +8,11 @@ using Nodes;
 /// </summary>
 public sealed class IdentifiersNamespace
 {
-    public class NoSuchIdentifierException : Exception
+    public sealed class NoSuchIdentifierException : Exception
     {
     }
 
-    public class IdentifierCollisionException : Exception
+    public sealed class IdentifierCollisionException : Exception
     {
     }
 
@@ -24,9 +24,13 @@ public sealed class IdentifiersNamespace
     {
     }
 
-    private IdentifiersNamespace(ImmutableDictionary<string, Declaration> variables,
-        ImmutableHashSet<string> currentScope) =>
-        (_variables, _currentScope) = (variables, currentScope);
+    private IdentifiersNamespace(
+        ImmutableDictionary<string, Declaration> variables,
+        ImmutableHashSet<string> currentScope)
+    {
+        _variables = variables.WithComparers(null, ReferenceEqualityComparer.Instance);
+        _currentScope = currentScope;
+    }
 
     public IdentifiersNamespace Add(Declaration declaration)
     {
@@ -36,7 +40,7 @@ public sealed class IdentifiersNamespace
             throw new IdentifierCollisionException();
         }
 
-        return new IdentifiersNamespace(_variables.Remove(name).Add(name, declaration), _currentScope.Add(name));
+        return new IdentifiersNamespace(_variables.SetItem(name, declaration), _currentScope.Add(name));
     }
 
     public Declaration GetDeclaration(Identifier identifier)
