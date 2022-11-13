@@ -100,8 +100,10 @@ public static class SernickGrammar
                     parClose))
 
             // Expression
-            .Add(openExpression, Union(variableDeclaration, assignment, breakKeyword, continueKeyword, returnExpression))
+            .Add(openExpression,
+                Union(variableDeclaration, assignment, breakKeyword, continueKeyword, returnExpression))
             .Add(returnExpression, Concat(returnKeyword, Optional(aliasExpression)))
+
             .Add(openExpression, Union(
                 logicalOperand, // anything but a block-expression
                 Concat(
@@ -125,6 +127,8 @@ public static class SernickGrammar
                     Union(arithmeticOperand, aliasBlockExpression))))
             .Add(arithmeticOperator, Union(plusOperator, minusOperator))
             .Add(arithmeticOperand, simpleExpression)
+
+            // Simple expression
             .Add(simpleExpression, literalValue)
             .Add(literalValue, Union(trueLiteral, falseLiteral, digitLiteral))
             .Add(simpleExpression, Concat(parOpen, aliasExpression, parClose)) // (E) or ({})
