@@ -47,6 +47,8 @@ public enum NonTerminalSymbol
     ArithmeticOperator,
     SimpleExpression,
     LiteralValue,
+    FunctionCall,
+    FunctionArguments,
     Assignment,
     TypedAssignment,
     IfExpression,
@@ -56,7 +58,5 @@ public enum NonTerminalSymbol
     VariableDeclaration,
     FunctionDeclaration,
     FunctionParameters,
-    FunctionParameter,
-    FunctionCallSuffix,
-    FunctionArguments
+    FunctionParameter
 }

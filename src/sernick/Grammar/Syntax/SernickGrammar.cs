@@ -30,6 +30,8 @@ public static class SernickGrammar
         var arithmeticOperator = Atom(Symbol.Of(NonTerminalSymbol.ArithmeticOperator));
         var simpleExpression = Atom(Symbol.Of(NonTerminalSymbol.SimpleExpression)); // (E) or x or f() or 5
         var literalValue = Atom(Symbol.Of(NonTerminalSymbol.LiteralValue));
+        var functionCall = Atom(Symbol.Of(NonTerminalSymbol.FunctionCall));
+        var functionArguments = Atom(Symbol.Of(NonTerminalSymbol.FunctionArguments));
         var assignment = Atom(Symbol.Of(NonTerminalSymbol.Assignment));
         var typedAssignment = Atom(Symbol.Of(NonTerminalSymbol.TypedAssignment)); // x: Int = 5
         var ifExpression = Atom(Symbol.Of(NonTerminalSymbol.IfExpression));
@@ -37,8 +39,6 @@ public static class SernickGrammar
         var modifier = Atom(Symbol.Of(NonTerminalSymbol.Modifier)); // var or const
         var typeSpec = Atom(Symbol.Of(NonTerminalSymbol.TypeSpecification)); // ": Type"
         var variableDeclaration = Atom(Symbol.Of(NonTerminalSymbol.VariableDeclaration));
-        var functionCallSuffix = Atom(Symbol.Of(NonTerminalSymbol.FunctionCallSuffix)); // (...)
-        var functionArguments = Atom(Symbol.Of(NonTerminalSymbol.FunctionArguments));
         var functionDeclaration = Atom(Symbol.Of(NonTerminalSymbol.FunctionDeclaration));
         var functionParameters = Atom(Symbol.Of(NonTerminalSymbol.FunctionParameters));
         var functionParameterDeclaration = Atom(Symbol.Of(NonTerminalSymbol.FunctionParameter));
@@ -128,8 +128,8 @@ public static class SernickGrammar
             .Add(simpleExpression, literalValue)
             .Add(literalValue, Union(trueLiteral, falseLiteral, digitLiteral))
             .Add(simpleExpression, Concat(parOpen, aliasExpression, parClose)) // (E) or ({})
-            .Add(simpleExpression, Concat(identifier, Optional(functionCallSuffix))) // x or f()
-            .Add(functionCallSuffix, Concat(parOpen, functionArguments, parClose))
+            .Add(simpleExpression, Union(identifier, functionCall)) // x or f()
+            .Add(functionCall, Concat(identifier, parOpen, functionArguments, parClose))
             .Add(functionArguments,
                 Optional(Concat(aliasExpression, Star(comma, aliasExpression))))
 
