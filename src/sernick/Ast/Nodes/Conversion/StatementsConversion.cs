@@ -11,22 +11,23 @@ public static class StatementsConversion
     /// 1. start -> program
     /// 2. program -> expressionSeq
     /// </summary>
-    public static Expression ToProgramEGetExpression(this IParseTree<Symbol> node) => node switch
+    public static Expression ToProgramEGetExpression(this IParseTree<Symbol> node) => node.Children.Count switch
     {
-        { Children: var children } when children.Count == 1 => children[1].ToExpression(),
+        1 => node.Children[0].ToExpression(),
         _ => throw new ArgumentException("Expected single child")
     };
 
     /// <summary>
     /// Requires that the top production is of type:
     /// 1. expressionSeq -> Star(aliasClosedExpression) * openExpression?
+    /// Returns noop expression when empty.
     /// </summary>
     public static Expression ToExpressionSeq(this IParseTree<Symbol> node) => node switch
     {
         {
             Symbol: NonTerminal { Inner: NonTerminalSymbol.ExpressionSeq },
             Children: var children
-        } => children.SelectExpressions().Join(),
+        } => children.Any() ? children.SkipSemicolons().SelectExpressions().Join() : node.ToNoopExpression(),
         _ => throw new ArgumentException("Invalid ParseTree for ExpressionSeq")
     };
 
@@ -39,12 +40,13 @@ public static class StatementsConversion
     public static Expression ToSimpleExpression(this IParseTree<Symbol> node) => node switch
     {
         { Symbol: NonTerminal { Inner: NonTerminalSymbol.SimpleExpression }, Children: var children }
-            when children.Count == 1 => children[0].ToExpression(),
+            when children.Count == 1
+            => children[0].ToExpression(),
 
         // 2. simpleExpression -> parOpen * aliasExpression * parClose
         { Symbol: NonTerminal { Inner: NonTerminalSymbol.SimpleExpression }, Children: var children }
             when children.Count == 3 => children[1].ToExpression(),
-        _ => throw new ArgumentException("Expected single child")
+        _ => throw new ArgumentException("Invalid ParseTree for SimpleExpression")
     };
 
     /// <summary>

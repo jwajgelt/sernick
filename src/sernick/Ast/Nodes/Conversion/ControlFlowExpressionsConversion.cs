@@ -12,7 +12,7 @@ public static class ControlFlowExpressionsConversion
     /// </summary>
     public static CodeBlock ToCodeBlock(this IParseTree<Symbol> node)
     {
-        var innerExpression = node.Children.SkipBraces().SelectExpressions().Join();
+        var innerExpression = node.Children.SkipBraces().SkipSemicolons().SelectExpressions().Join();
         return new CodeBlock(innerExpression, node.LocationRange);
     }
 
@@ -29,7 +29,7 @@ public static class ControlFlowExpressionsConversion
         {
             Symbol: NonTerminal { Inner: NonTerminalSymbol.CodeGroup },
             Children: var children
-        } => children.SkipBraces().SelectExpressions().Join(),
+        } => children.SkipBraces().SkipSemicolons().SelectExpressions().Join(),
         _ => throw new ArgumentException("Invalid ParseTree for CodeGroup"),
     };
 
@@ -65,7 +65,7 @@ public static class ControlFlowExpressionsConversion
         {
             Symbol: NonTerminal { Inner: NonTerminalSymbol.IfExpression }, Children: var children
         } when children.Count == 5
-            => new IfStatement(children[1].ToExpression(), children[2].ToCodeBlock(), children[5].ToCodeBlock(), node.LocationRange),
+            => new IfStatement(children[1].ToExpression(), children[2].ToCodeBlock(), children[4].ToCodeBlock(), node.LocationRange),
 
         _ => throw new ArgumentException("Invalid ParseTree for IfStatement"),
     };
@@ -81,7 +81,7 @@ public static class ControlFlowExpressionsConversion
         {
             Symbol: NonTerminal { Inner: NonTerminalSymbol.IfCondition }, Children: var children
         } when children.Count == 1
-            => children[0].Children.SkipBraces().SelectExpressions().Join(),
+            => children[0].Children.SkipBraces().SkipSemicolons().SelectExpressions().Join(),
 
         // 2. ifCondition -> parOpen * aliasExpression * parClose
         {

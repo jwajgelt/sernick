@@ -18,6 +18,12 @@ public static class Helpers
     };
 
     /// <summary>
+    /// Ignores parse tree content and returns expression which doesn't do anything.
+    /// </summary>
+    public static Expression ToNoopExpression(this IParseTree<Symbol> node) =>
+        new BoolLiteralValue(false, node.LocationRange);
+
+    /// <summary>
     /// Skips first and last elements of nodes.
     /// Used to extract content from node list of the form:
     /// [bracket, ..., bracket]
@@ -33,12 +39,12 @@ public static class Helpers
     public static IEnumerable<IParseTree<Symbol>> SkipCommas(this IEnumerable<IParseTree<Symbol>> nodes)
         => nodes.Where((_, index) => index % 2 == 0);
 
+    public static IEnumerable<IParseTree<Symbol>> SkipSemicolons(this IEnumerable<IParseTree<Symbol>> nodes)
+        => nodes.Where(node => node.Symbol is not Terminal { Category: LexicalGrammarCategory.Semicolon, Text: ";" });
+
     public static IEnumerable<Expression> SelectExpressions(this IEnumerable<IParseTree<Symbol>> trees)
         => trees.Select(ExpressionConversion.ToExpression);
 
     public static Expression Join(this IEnumerable<Expression> expressions)
         => expressions.Aggregate((left, right) => new ExpressionJoin(left, right));
-
-    public static IReadOnlyList<IParseTree<Symbol>> ChildrenList(this IParseTree<Symbol> node)
-        => node.Children.ToList();
 }

@@ -40,6 +40,9 @@ public static class InfixConversion
         Terminal { Category: LexicalGrammarCategory.Operators, Text: "<=" } => Infix.Op.LessOrEquals,
         Terminal { Category: LexicalGrammarCategory.Operators, Text: "+" } => Infix.Op.Plus,
         Terminal { Category: LexicalGrammarCategory.Operators, Text: "-" } => Infix.Op.Minus,
+        NonTerminal { Inner: NonTerminalSymbol.LogicalOperator } => node.Children[0].ToOperator(),
+        NonTerminal { Inner: NonTerminalSymbol.ComparisonOperator } => node.Children[0].ToOperator(),
+        NonTerminal { Inner: NonTerminalSymbol.ArithmeticOperator } => node.Children[0].ToOperator(),
         _ => throw new ArgumentException("Invalid ParseTree for Operator")
     };
 }

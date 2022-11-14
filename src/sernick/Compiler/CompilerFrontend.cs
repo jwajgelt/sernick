@@ -1,5 +1,6 @@
 namespace sernick.Compiler;
 
+using Ast.Nodes;
 using Common.Dfa;
 using Common.Regex;
 using Diagnostics;
@@ -29,6 +30,7 @@ public static class CompilerFrontend
                 new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.LocationRange));
         var parser = Parser<Symbol>.FromGrammar(SernickGrammar.Create(), new NonTerminal(NonTerminalSymbol.Start));
         var parseTree = parser.Process(parseLeaves, diagnostics);
+        var ast = AstNode.From(parseTree);
         ThrowIfErrorsOccurred(diagnostics);
     }
 
