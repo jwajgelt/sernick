@@ -12,12 +12,6 @@ public sealed record ParseTreeNode<TSymbol>(
 ) : IParseTree<TSymbol>
     where TSymbol : IEquatable<TSymbol>
 {
-    public ParseTreeNode(
-        TSymbol symbol,
-        Production<TSymbol> production,
-        IEnumerable<IParseTree<TSymbol>> children,
-        Range<ILocation> locationRange
-        ) : this(symbol, production, children.ToList(), locationRange) { }
     public bool Equals(ParseTreeNode<TSymbol>? other)
     {
         if (ReferenceEquals(this, other))
