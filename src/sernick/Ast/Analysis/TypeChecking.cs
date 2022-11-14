@@ -45,6 +45,15 @@ public sealed class TypeChecking
             this._diagnostics = diagnostics;
         }
 
+        public override TypeInformation VisitVariableDeclaration(VariableDeclaration node, TypeInformation param)
+        {
+            // all necessary checking should be performed in "Visit assignment", so just return Unit here
+            var result = new TypeInformation(param);
+            result.Add(node, new UnitType());
+            return result;
+
+        }
+
         public override TypeInformation VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, TypeInformation param)
         {
             var result = new TypeInformation(param);
@@ -158,7 +167,6 @@ public sealed class TypeChecking
 
         public override TypeInformation VisitAssignment(Assignment node, TypeInformation partialExpressionTypes)
         {
-            
             var typeOfLeftSide = partialExpressionTypes[node.LeftSide];
             var typeOfRightSide = partialExpressionTypes[node.RightSide];
             if (typeOfLeftSide.ToString() != typeOfLeftSide.ToString())
