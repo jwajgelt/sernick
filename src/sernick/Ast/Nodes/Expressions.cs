@@ -57,3 +57,12 @@ public abstract record FlowControlStatement(Range<ILocation> LocationRange) : Ex
 /// eg. values of variables, literals
 /// </summary>
 public abstract record SimpleValue(Range<ILocation> LocationRange) : Expression(LocationRange);
+
+/// <summary>
+/// Class representing expression which don't do anything, like: '{}'
+/// </summary>
+public sealed record EmptyExpression(Range<ILocation> LocationRange) : Expression(LocationRange)
+{
+    public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param)
+        => visitor.VisitEmptyExpression(this, param);
+}

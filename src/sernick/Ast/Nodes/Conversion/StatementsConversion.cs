@@ -27,7 +27,7 @@ public static class StatementsConversion
         {
             Symbol: NonTerminal { Inner: NonTerminalSymbol.ExpressionSeq },
             Children: var children
-        } => children.Any() ? children.SkipSemicolons().SelectExpressions().Join() : node.ToNoopExpression(),
+        } => children.Any() ? children.SkipSemicolons().SelectExpressions().Join() : node.ToEmptyExpression(),
         _ => throw new ArgumentException("Invalid ParseTree for ExpressionSeq")
     };
 

@@ -20,8 +20,8 @@ public static class Helpers
     /// <summary>
     /// Ignores parse tree content and returns expression which doesn't do anything.
     /// </summary>
-    public static Expression ToNoopExpression(this IParseTree<Symbol> node) =>
-        new BoolLiteralValue(false, node.LocationRange);
+    public static Expression ToEmptyExpression(this IParseTree<Symbol> node) =>
+        new EmptyExpression(node.LocationRange);
 
     /// <summary>
     /// Skips first and last elements of nodes.
