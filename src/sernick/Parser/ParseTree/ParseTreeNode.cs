@@ -13,11 +13,11 @@ public sealed record ParseTreeNode<TSymbol>(
     where TSymbol : IEquatable<TSymbol>
 {
     public ParseTreeNode(
-        TSymbol Symbol,
-        Production<TSymbol> Production,
-        IEnumerable<IParseTree<TSymbol>> Children,
-        Range<ILocation> LocationRange
-        ) : this(Symbol, Production, Children.ToList(), LocationRange) { }
+        TSymbol symbol,
+        Production<TSymbol> production,
+        IEnumerable<IParseTree<TSymbol>> children,
+        Range<ILocation> locationRange
+        ) : this(symbol, production, children.ToList(), locationRange) { }
     public bool Equals(ParseTreeNode<TSymbol>? other)
     {
         if (ReferenceEquals(this, other))
