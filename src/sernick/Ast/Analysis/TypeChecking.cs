@@ -1,5 +1,6 @@
 namespace sernick.Ast.Analysis;
 
+using System.Data;
 using Diagnostics;
 using NameResolution;
 using Nodes;
@@ -54,7 +55,29 @@ public sealed class TypeChecking
         }
 
 
-        
+        public override TypeInformation VisitInfix(Infix node, TypeInformation partialTypeInformation)
+        {
+            var typeOfLeftOperand = partialTypeInformation[node.LeftSide];
+            var typeOfRightOperand = partialTypeInformation[node.RightSide];
+
+            if(typeOfLeftOperand.ToString() != typeOfRightOperand.ToString())
+            {
+                // TODO we probably should create a separate error class for operator type mismatch
+                this._diagnostics.Report(new TypeCheckingError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+
+                // TODO does it make sense to return anything here? maybe a Unit type? But it could propagate the error up the tree 
+                var result = new TypeInformation(partialTypeInformation);
+                result.Add(node, new UnitType());
+                return result;
+            }
+            else
+            {
+                var commonType = typeOfLeftOperand;
+                var result = new TypeInformation(partialTypeInformation);
+                result.Add(node, commonType);
+                return result;
+            }
+        }
 
         public override TypeInformation VisitAssignment(Assignment node, TypeInformation partialExpressiontypes)
         {
