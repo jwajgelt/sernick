@@ -44,14 +44,41 @@ public sealed class TypeChecking
             this._diagnostics = diagnostics;
         }
 
-        protected override TypeInformation VisitAstNode(AstNode node, Dictionary<Expression, Type> partialExpressionTypes)
+        public override TypeInformation VisitContinueStatement(ContinueStatement node, TypeInformation param)
         {
-            foreach (var child in node.Children)
-            {
-                child.Accept(this, param);
-            }
+            var result = new TypeInformation(param);
+            result.Add(node, new UnitType());
+            return result;
+        }
 
-            return Unit.I;
+        public override TypeInformation VisitReturnStatement(ReturnStatement node, TypeInformation param)
+        {
+            var result = new TypeInformation(param);
+            // Return Value is in a subtree, so its type should be already calculated by now
+            result.Add(node, param[node.ReturnValue]);
+            return result;
+        }
+
+        public override TypeInformation VisitBreakStatement(BreakStatement node, TypeInformation partialExpressionTypes)
+        {
+            var result = new TypeInformation(partialExpressionTypes);
+            result.Add(node, new UnitType());
+            return result;
+        }
+
+
+        public override TypeInformation VisitIfStatement(IfStatement node, TypeInformation param)
+        {
+            // TODO
+            return null;
+        }
+
+        public override TypeInformation VisitLoopStatement(LoopStatement node, TypeInformation partialExpressionTypes)
+        {
+            // TODO what if Loop contains a "return 12;"?
+            var result = new TypeInformation(partialExpressionTypes);
+            result.Add(node, new UnitType());
+            return result;
         }
 
 
@@ -79,18 +106,18 @@ public sealed class TypeChecking
             }
         }
 
-        public override TypeInformation VisitAssignment(Assignment node, TypeInformation partialExpressiontypes)
+        public override TypeInformation VisitAssignment(Assignment node, TypeInformation partialExpressionTypes)
         {
             
-            var typeOfLeftSide = partialExpressiontypes[node.LeftSide];
-            var typeOfRightSide = partialExpressiontypes[node.RightSide];
+            var typeOfLeftSide = partialExpressionTypes[node.LeftSide];
+            var typeOfRightSide = partialExpressionTypes[node.RightSide];
             if (typeOfLeftSide.ToString() != typeOfLeftSide.ToString())
             {
                 this._diagnostics.Report(new TypeCheckingError(typeOfLeftSide, typeOfRightSide, node.LocationRange.Start));
             }
 
             // Regardless of the error, let's return a Unit type for assignment and get more type checking information
-            var result = new TypeInformation(partialExpressiontypes);
+            var result = new TypeInformation(partialExpressionTypes);
             result.Add(node, new UnitType());
             return result;
         }
