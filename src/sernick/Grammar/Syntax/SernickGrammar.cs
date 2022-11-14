@@ -164,7 +164,7 @@ public static class SernickGrammar
                     Optional(Concat(comma, functionParameterDeclarationDefVal, Star(comma, functionParameterDeclarationDefVal)))) // only suffix with default values
                 )))
             .Add(functionParameterDeclaration, Concat(identifier, typeSpec))
-            .Add(functionParameterDeclarationDefVal, Concat(functionParameterDeclaration, assignOperator, literalValue));
+            .Add(functionParameterDeclarationDefVal, Concat(identifier, typeSpec, assignOperator, literalValue));
 
         return new Grammar<Symbol>(program, productions);
     }
