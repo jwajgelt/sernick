@@ -17,8 +17,13 @@ public sealed record CodeBlock(Expression Inner, Range<ILocation> LocationRange)
 /// <summary>
 /// Class representing expressions which consist of many expressions (use of ;)
 /// </summary>
-public sealed record ExpressionJoin(Expression First, Expression Second, Range<ILocation> LocationRange) : Expression(LocationRange)
+public sealed record ExpressionJoin
+    (Expression First, Expression Second, Range<ILocation> LocationRange) : Expression(LocationRange)
 {
+    public ExpressionJoin(Expression first, Expression second) : this(first, second,
+        (first.LocationRange.Start, second.LocationRange.End))
+    { }
+
     public override IEnumerable<AstNode> Children => new[] { First, Second };
 
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
@@ -28,7 +33,8 @@ public sealed record ExpressionJoin(Expression First, Expression Second, Range<I
 /// <summary>
 /// Class representing function calls
 /// </summary>
-public sealed record FunctionCall(Identifier FunctionName, IEnumerable<Expression> Arguments, Range<ILocation> LocationRange) : Expression(LocationRange)
+public sealed record FunctionCall(Identifier FunctionName, IEnumerable<Expression> Arguments,
+    Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode[] { FunctionName }.Concat(Arguments);
 

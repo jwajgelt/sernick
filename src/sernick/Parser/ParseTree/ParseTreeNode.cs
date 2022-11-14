@@ -7,11 +7,17 @@ using Utility;
 public sealed record ParseTreeNode<TSymbol>(
     TSymbol Symbol,
     Production<TSymbol> Production,
-    IEnumerable<IParseTree<TSymbol>> Children,
+    IReadOnlyList<IParseTree<TSymbol>> Children,
     Range<ILocation> LocationRange
 ) : IParseTree<TSymbol>
     where TSymbol : IEquatable<TSymbol>
 {
+    public ParseTreeNode(
+        TSymbol Symbol,
+        Production<TSymbol> Production,
+        IEnumerable<IParseTree<TSymbol>> Children,
+        Range<ILocation> LocationRange
+        ) : this(Symbol, Production, Children.ToList(), LocationRange) { }
     public bool Equals(ParseTreeNode<TSymbol>? other)
     {
         if (ReferenceEquals(this, other))
