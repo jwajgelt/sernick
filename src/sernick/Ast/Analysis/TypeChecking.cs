@@ -45,9 +45,15 @@ public sealed class TypeChecking
             this._diagnostics = diagnostics;
         }
 
+        public override TypeInformation VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, TypeInformation param)
+        {
+            var result = new TypeInformation(param);
+            result.Add(node, new UnitType());
+            return result;
+        }
+
         public override TypeInformation VisitFunctionDefinition(FunctionDefinition node, TypeInformation param)
         {
-            // simply return what expression inside returns?
             var result = new TypeInformation(param);
             result.Add(node, new UnitType());
             return result;
