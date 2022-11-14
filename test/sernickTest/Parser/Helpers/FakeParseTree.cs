@@ -36,7 +36,7 @@ public sealed record FakeParseTreeNode(Symbol Symbol, int ProductionIndex, IEnum
         new ParseTreeNode<Symbol>(
             Symbol,
             productions[Symbol][ProductionIndex],
-            Children.Select(child => child.Convert(productions)),
+            Children.Select(child => child.Convert(productions)).ToList(),
             IFakeParseTree.Locations);
 }
 
