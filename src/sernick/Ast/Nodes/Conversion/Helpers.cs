@@ -40,7 +40,7 @@ public static class Helpers
         => nodes.Where((_, index) => index % 2 == 0);
 
     public static IEnumerable<IParseTree<Symbol>> SkipSemicolons(this IEnumerable<IParseTree<Symbol>> nodes)
-        => nodes.Where(node => node.Symbol is not Terminal { Category: LexicalGrammarCategory.Semicolon, Text: ";" });
+        => nodes.Where(node => node.Symbol is not Terminal { Category: LexicalGrammarCategory.Semicolon });
 
     public static IEnumerable<Expression> SelectExpressions(this IEnumerable<IParseTree<Symbol>> trees)
         => trees.Select(ExpressionConversion.ToExpression);
