@@ -45,6 +45,13 @@ public sealed class TypeChecking
             this._diagnostics = diagnostics;
         }
 
+        public override TypeInformation VisitExpressionJoin(ExpressionJoin node, TypeInformation param)
+        {
+            var result = new TypeInformation(param);
+            result.Add(node, param[node.Second]); // just return the last expressions' type
+            return result;
+        }
+
         public override TypeInformation VisitFunctionCall(FunctionCall functionCallNode, TypeInformation param)
         {
             var functionDeclarationNode = nameResolution.CalledFunctionDeclarations[functionCallNode];
