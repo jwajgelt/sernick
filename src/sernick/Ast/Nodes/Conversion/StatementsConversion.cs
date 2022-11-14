@@ -11,7 +11,7 @@ public static class StatementsConversion
     /// 1. start -> program
     /// 2. program -> expressionSeq
     /// </summary>
-    public static Expression ToProgramEGetExpression(this IParseTree<Symbol> node) => node.Children.Count switch
+    public static Expression ToProgramExpression(this IParseTree<Symbol> node) => node.Children.Count switch
     {
         1 => node.Children[0].ToExpression(),
         _ => throw new ArgumentException("Expected single child")

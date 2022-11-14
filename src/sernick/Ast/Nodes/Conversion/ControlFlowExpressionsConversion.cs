@@ -24,7 +24,7 @@ public static class ControlFlowExpressionsConversion
     ///         | (aliasClosedExpression * Star(aliasClosedExpression) * (openExpression | aliasClosedExpression))
     ///     ) * braceClose
     /// </summary>
-    public static Expression ConvertCodeGroup(this IParseTree<Symbol> node) => node switch
+    public static Expression ToCodeGroup(this IParseTree<Symbol> node) => node switch
     {
         {
             Symbol: NonTerminal { Inner: NonTerminalSymbol.CodeGroup },

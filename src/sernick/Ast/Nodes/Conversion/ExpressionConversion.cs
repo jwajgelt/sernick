@@ -43,9 +43,8 @@ public static class ExpressionConversion
                 switch (nonTerminal.Inner)
                 {
                     // Starter symbols
-                    case NonTerminalSymbol.Start:
                     case NonTerminalSymbol.Program:
-                        return node.ToProgramEGetExpression();
+                        return node.ToProgramExpression();
 
                     case NonTerminalSymbol.ExpressionSeq:
                         return node.ToExpressionSeq();
@@ -69,7 +68,7 @@ public static class ExpressionConversion
                     case NonTerminalSymbol.CodeBlock:
                         return node.ToCodeBlock();
                     case NonTerminalSymbol.CodeGroup:
-                        return node.ConvertCodeGroup();
+                        return node.ToCodeGroup();
                     case NonTerminalSymbol.IfCondition:
                         return node.ToIfCondition();
                     case NonTerminalSymbol.IfExpression:
@@ -90,6 +89,7 @@ public static class ExpressionConversion
                         return node.ToFunctionParameterDeclaration();
 
                     // Following expression can't be converted to AST node without more context
+                    case NonTerminalSymbol.Start:
                     case NonTerminalSymbol.ArithmeticOperator:
                     case NonTerminalSymbol.ComparisonOperator:
                     case NonTerminalSymbol.FunctionArguments:
