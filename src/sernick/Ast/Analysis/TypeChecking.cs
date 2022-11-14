@@ -1,6 +1,7 @@
 namespace sernick.Ast.Analysis;
 
 using System.Data;
+using System.Xml.Linq;
 using Diagnostics;
 using NameResolution;
 using Nodes;
@@ -42,6 +43,25 @@ public sealed class TypeChecking
             this.nameResolution = nameResolution;
             this.partialExpressionTypes = new TypeInformation();
             this._diagnostics = diagnostics;
+        }
+
+        public override TypeInformation VisitFunctionCall(FunctionCall functionCallNode, TypeInformation param)
+        {
+            var functionDeclarationNode = nameResolution.CalledFunctionDeclarations[functionCallNode];
+            var declaredReturnType = functionDeclarationNode.ReturnType;
+
+            var inferredReturnType = new UnitType(); // TODO
+
+            if(inferredReturnType.ToString() != declaredReturnType.ToString())
+            {
+                this._diagnostics.Report(new TypeCheckingError(declaredReturnType, inferredReturnType, functionCallNode.LocationRange.Start));
+                return param; // not sure here
+            }
+
+            var result = new TypeInformation(param);
+            result.Add(functionCallNode, new UnitType()); // function call returns a unit, not a function return type
+            return result;
+
         }
 
         public override TypeInformation VisitContinueStatement(ContinueStatement node, TypeInformation param)
