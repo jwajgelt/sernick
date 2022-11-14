@@ -3,19 +3,20 @@ namespace sernick.Ast;
 /// <summary>
 /// Base class for Sernick types
 /// </summary>
-public abstract record Type { }
+public abstract class Type { }
 
-public sealed record BoolType : Type
+public class BoolType : Type
 {
     public override string ToString() => "Bool";
 }
 
-public sealed record IntType : Type
+
+public class IntType : Type
 {
     public override string ToString() => "Int";
 }
 
-public sealed record UnitType : Type
+public class UnitType : Type
 {
     public override string ToString() => "Unit";
 }
