@@ -96,34 +96,35 @@ public static class StatementsConversion
 
         var isConst = children[0].IsConst();
 
-        if (children.Count == 2)
+        switch (children.Count)
         {
-            // 1. variableDeclaration -> modifier * assignment
-            var assignment = children[1];
-            // assignment -> identifier * assignOperator * aliasExpression
-            var name = assignment.Children[0].ToIdentifier();
-            var expression = assignment.Children[2].ToExpression();
-            return new VariableDeclaration(name, null, expression, isConst, node.LocationRange);
+            case 2:
+                {
+                    // 1. variableDeclaration -> modifier * assignment
+                    var assignment = children[1];
+                    // assignment -> identifier * assignOperator * aliasExpression
+                    var name = assignment.Children[0].ToIdentifier();
+                    var expression = assignment.Children[2].ToExpression();
+                    return new VariableDeclaration(name, null, expression, isConst, node.LocationRange);
+                }
+            case 3:
+                {
+                    // 2. variableDeclaration -> modifier * identifier * typeSpec
+                    var name = children[1].ToIdentifier();
+                    var type = children[2].ToType();
+                    return new VariableDeclaration(name, type, null, isConst, node.LocationRange);
+                }
+            case 5:
+                {
+                    // 3. variableDeclaration -> modifier * identifier * typeSpec * assignOperator * aliasExpression
+                    var name = children[1].ToIdentifier();
+                    var type = children[2].ToType();
+                    var expression = children[4].ToExpression();
+                    return new VariableDeclaration(name, type, expression, isConst, node.LocationRange);
+                }
+            default:
+                throw new ArgumentException("Invalid ParseTree for VariableDeclaration");
         }
-
-        if (children.Count == 3)
-        {
-            // 2. variableDeclaration -> modifier * identifier * typeSpec
-            var name = children[1].ToIdentifier();
-            var type = children[2].ToType();
-            return new VariableDeclaration(name, type, null, isConst, node.LocationRange);
-        }
-
-        if (children.Count == 5)
-        {
-            // 3. variableDeclaration -> modifier * identifier * typeSpec * assignOperator * aliasExpression
-            var name = children[1].ToIdentifier();
-            var type = children[2].ToType();
-            var expression = children[4].ToExpression();
-            return new VariableDeclaration(name, type, expression, isConst, node.LocationRange);
-        }
-
-        throw new ArgumentException("Invalid ParseTree for VariableDeclaration");
     }
 
     /// <returns>
