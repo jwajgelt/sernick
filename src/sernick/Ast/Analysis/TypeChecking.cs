@@ -45,6 +45,15 @@ public sealed class TypeChecking
             this._diagnostics = diagnostics;
         }
 
+        public override TypeInformation VisitCodeBlock(CodeBlock node, TypeInformation param)
+        {
+            // simply return what expression inside returns?
+            var result = new TypeInformation(param);
+            result.Add(node, param[node.Inner]);
+            return result;
+
+        }
+
         public override TypeInformation VisitExpressionJoin(ExpressionJoin node, TypeInformation param)
         {
             var result = new TypeInformation(param);
