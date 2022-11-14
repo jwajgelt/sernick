@@ -8,23 +8,19 @@ using Parser.ParseTree;
 public static class InfixConversion
 {
     /// <summary>
-    /// Builds expression from list of format:
-    /// (expression, operator, expression, operator, ..., operator, expression)
+    /// Builds expression assuming the top production has format:
+    /// nonTerminal -> (expression, operator, expression, operator, ..., operator, expression)
     /// </summary>
-    public static Expression ToInfix(this IReadOnlyList<IParseTree<Symbol>> trees)
+    public static Expression ToInfix(this IParseTree<Symbol> node)
     {
-        Debug.Assert(trees.Count % 2 == 1);
-        var firstExpression = trees[0].ToExpression();
-        var pairsOperatorExpression = trees.Skip(1).Chunk(2)
+        var children = node.Children;
+        Debug.Assert(children.Count % 2 == 1);
+        var firstExpression = children[0].ToExpression();
+        var pairsOperatorExpression = children.Skip(1).Chunk(2)
             .Select(pair => (Op: pair[0].ToOperator(), Right: pair[1].ToExpression()));
         return pairsOperatorExpression.Aggregate(firstExpression,
             (left, pair) => new Infix(left, pair.Right, pair.Op));
     }
-
-    /// <summary>
-    /// Builds Infix expression from nodes children.
-    /// </summary>
-    public static Expression ToInfix(this IParseTree<Symbol> node) => node.Children.ToInfix();
 
     /// <summary>
     /// Returns Infix Operator matching given ParseTree or throws an exception
