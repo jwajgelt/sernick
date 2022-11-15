@@ -32,7 +32,7 @@ public static class CompilerFrontend
         var parser = Parser<Symbol>.FromGrammar(SernickGrammar.Create(), new NonTerminal(NonTerminalSymbol.Start));
         var parseTree = parser.Process(parseLeaves, diagnostics);
         var ast = AstNode.From(parseTree);
-        var _ = NameResolutionAlgorithm.Process(ast, diagnostics);
+        var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
     }
 

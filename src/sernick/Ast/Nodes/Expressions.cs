@@ -64,5 +64,5 @@ public abstract record SimpleValue(Range<ILocation> LocationRange) : Expression(
 public sealed record UnitExpression(Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param)
-        => visitor.VisitEmptyExpression(this, param);
+        => visitor.VisitUnitExpression(this, param);
 }
