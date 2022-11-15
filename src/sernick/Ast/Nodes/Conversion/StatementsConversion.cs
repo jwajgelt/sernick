@@ -20,12 +20,12 @@ public static class StatementsConversion
 
     /// <summary>
     /// Joins list of expressions.
-    /// If the last expressions is closed then adds a special UnitExpression at the end.
+    /// If the last expressions is closed then adds a special EmptyExpression at the end.
     /// </summary>
     /// <param name="nodes"></param>
     /// <param name="endLocation">
     /// End location of the fragment,
-    /// it is used to create a UnitExpression if necessary
+    /// it is used to create a EmptyExpression if necessary
     /// </param>
     /// <returns></returns>
     public static Expression ToExpressionJoin(this IEnumerable<IParseTree<Symbol>> nodes, ILocation endLocation)
@@ -39,7 +39,7 @@ public static class StatementsConversion
         {
             // If list of statements is closed, insert a unit expression at the end.
             // The joined list will have a Unit type
-            expressions.Add(new UnitExpression((endLocation, endLocation)));
+            expressions.Add(new EmptyExpression((endLocation, endLocation)));
         }
 
         return expressions.Join();

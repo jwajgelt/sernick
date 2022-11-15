@@ -22,7 +22,7 @@ public class ConversionTest
             Node(NonTerminalSymbol.ExpressionSeq, Array.Empty<IFakeParseTree>())
         ).Convert();
 
-        Assert.True(AstNode.From(parseTree) is UnitExpression);
+        Assert.True(AstNode.From(parseTree) is EmptyExpression);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class ConversionTest
             Inner: ExpressionJoin
             {
                 First: VariableValue { Identifier.Name: "x" },
-                Second: UnitExpression
+                Second: EmptyExpression
             }
         });
     }
