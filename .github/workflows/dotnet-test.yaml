@@ -26,3 +26,5 @@ jobs:
         dotnet-version: '6.0.x'
     - name: Test with the dotnet CLI
       run: dotnet test
+      env:
+        SkipPerformanceHeavy: true

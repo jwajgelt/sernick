@@ -15,6 +15,7 @@ using sernick.Parser;
 using sernick.Parser.ParseTree;
 using sernick.Tokenizer.Lexer;
 using sernick.Utility;
+using Utility;
 
 public class CompilerFrontendTest
 {
@@ -60,7 +61,7 @@ public class CompilerFrontendTest
     }
 
     // NOTE: DO NOT UNSKIP WHEN PUSHING: it will overload Github Actions
-    [Theory(Skip = "Too large performance hit on Github Workflow")]
+    [PerformanceHeavyTheory]
     [InlineData("a")]
     [InlineData("5")]
     [InlineData("{x}")]

@@ -9,9 +9,9 @@ public sealed record ContinueStatement(Range<ILocation> LocationRange) : FlowCon
         visitor.VisitContinueStatement(this, param);
 }
 
-public sealed record ReturnStatement(Expression ReturnValue, Range<ILocation> LocationRange) : FlowControlStatement(LocationRange)
+public sealed record ReturnStatement(Expression? ReturnValue, Range<ILocation> LocationRange) : FlowControlStatement(LocationRange)
 {
-    public override IEnumerable<AstNode> Children => new[] { ReturnValue };
+    public override IEnumerable<AstNode> Children => ReturnValue != null ? new[] { ReturnValue } : Enumerable.Empty<AstNode>();
 
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitReturnStatement(this, param);
