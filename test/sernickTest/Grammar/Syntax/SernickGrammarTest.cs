@@ -9,6 +9,7 @@ using sernick.Grammar.Syntax;
 using sernick.Input;
 using sernick.Parser.ParseTree;
 using sernick.Utility;
+using static Parser.Helpers.ParseTreeDsl;
 using Parser = sernick.Parser.Parser<sernick.Grammar.Syntax.Symbol>;
 
 public class SernickGrammarTest
@@ -17,7 +18,7 @@ public class SernickGrammarTest
 
     [Theory]
     [MemberData(nameof(TestData))]
-    public void TestEdgeCases(IEnumerable<Symbol> leaves, IFakeParseTree expectedParseTree)
+    public void TestEdgeCases(IEnumerable<Symbol> leaves, IParseTree<Symbol> expectedParseTree)
     {
         var grammar = SernickGrammar.Create();
         var parser = Parser.FromGrammar(grammar, Symbol.Of(NonTerminalSymbol.Start));
@@ -25,10 +26,7 @@ public class SernickGrammarTest
             leaves.Select(symbol => new ParseTreeLeaf<Symbol>(symbol, locations)),
             new Mock<IDiagnostics>().Object);
 
-        var productions = grammar.Productions
-            .GroupBy(production => production.Left)
-            .ToDictionary(group => group.Key, group => group.ToList());
-        Assert.Equal(expectedParseTree.Convert(productions), parseTree);
+        Assert.Equal(expectedParseTree, parseTree, new ParseTreeStructuralComparer());
     }
 
     public static readonly IEnumerable<object[]> TestData = new[]
@@ -47,37 +45,25 @@ public class SernickGrammarTest
                 Symbol.Of(LexicalGrammarCategory.Literals, "2")
             },
             // Output
-            new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.Program),
-                new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.ExpressionSeq),
-                    new[]
-                    {
-                        new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.CodeBlock),
-                            new IFakeParseTree[]
-                            {
-                                new FakeParseTreeLeaf(Symbol.Of(LexicalGrammarCategory.BracesAndParentheses, "{")),
-                                new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.ExpressionSeq)),
-                                new FakeParseTreeLeaf(Symbol.Of(LexicalGrammarCategory.BracesAndParentheses, "}"))
-                            }),
-                        new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.OpenExpression), 1,
-                            new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.LogicalOperand),
-                                new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.ComparisonOperand),
-                                    new IFakeParseTree[]
-                                    {
-                                        new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.CodeBlock),
-                                            new IFakeParseTree[]
-                                            {
-                                                new FakeParseTreeLeaf(Symbol.Of(LexicalGrammarCategory.BracesAndParentheses, "{")),
-                                                new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.ExpressionSeq)),
-                                                new FakeParseTreeLeaf(Symbol.Of(LexicalGrammarCategory.BracesAndParentheses, "}"))
-                                            }),
-                                        new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.ArithmeticOperator),
-                                            new FakeParseTreeLeaf(Symbol.Of(LexicalGrammarCategory.Operators, "+"))),
-                                        new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.ArithmeticOperand),
-                                            new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.SimpleExpression),
-                                                    new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.LiteralValue),
-                                                            new FakeParseTreeLeaf(Symbol.Of(LexicalGrammarCategory.Literals, "2")))))
-                                    })))
-                    }))
+            PT.Program(
+                PT.ExpressionSeq(
+                    PT.CodeBlock(
+                        PT.BracesAndParentheses("{"),
+                        PT.ExpressionSeq(),
+                        PT.BracesAndParentheses("}")),
+                    PT.OpenExpression(
+                        PT.LogicalOperand(
+                            PT.ComparisonOperand(
+                                PT.CodeBlock(
+                                    PT.BracesAndParentheses("{"),
+                                    PT.ExpressionSeq,
+                                    PT.BracesAndParentheses("}")),
+                                PT.ArithmeticOperator(
+                                    PT.Operators("+")),
+                                PT.ArithmeticOperand(
+                                    PT.SimpleExpression(
+                                        PT.LiteralValue(
+                                            PT.Literals("2")))))))))
         },
         // var x = 5 + 5
         new object[]
@@ -93,37 +79,28 @@ public class SernickGrammarTest
                 Symbol.Of(LexicalGrammarCategory.Literals, "5")
             },
             // Output
-            new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.Program),
-                new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.ExpressionSeq),
-                    new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.OpenExpression),
-                        new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.VariableDeclaration),
-                            new[]
-                            {
-                                new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.Modifier),
-                                    new FakeParseTreeLeaf(Symbol.Of(LexicalGrammarCategory.Keywords, "var"))),
-                                new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.Assignment),
-                                    new IFakeParseTree[]
-                                    {
-                                        new FakeParseTreeLeaf(Symbol.Of(LexicalGrammarCategory.VariableIdentifiers, "x")),
-                                        new FakeParseTreeLeaf(Symbol.Of(LexicalGrammarCategory.Operators, "=")),
-                                        new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.OpenExpression), 1,
-                                            new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.LogicalOperand),
-                                                new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.ComparisonOperand),
-                                                    new IFakeParseTree[]
-                                                    {
-                                                        new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.ArithmeticOperand),
-                                                            new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.SimpleExpression),
-                                                                new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.LiteralValue),
-                                                                    new FakeParseTreeLeaf(Symbol.Of(LexicalGrammarCategory.Literals, "5"))))),
-                                                        new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.ArithmeticOperator),
-                                                            new FakeParseTreeLeaf(Symbol.Of(LexicalGrammarCategory.Operators, "+"))),
-                                                        new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.ArithmeticOperand),
-                                                            new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.SimpleExpression),
-                                                                new FakeParseTreeNode(Symbol.Of(NonTerminalSymbol.LiteralValue),
-                                                                    new FakeParseTreeLeaf(Symbol.Of(LexicalGrammarCategory.Literals, "5")))))
-                                                    })))
-                                    })
-                            }))))
+            PT.Program(
+                PT.ExpressionSeq(
+                    PT.OpenExpression(
+                        PT.VariableDeclaration(
+                            PT.Modifier(
+                                PT.Keywords("var")),
+                            PT.Assignment(
+                                PT.VariableIdentifiers("x"),
+                                PT.Operators("="),
+                                PT.OpenExpression(
+                                    PT.LogicalOperand(
+                                        PT.ComparisonOperand(
+                                            PT.ArithmeticOperand(
+                                                PT.SimpleExpression(
+                                                    PT.LiteralValue(
+                                                        PT.Literals("5")))),
+                                            PT.ArithmeticOperator(
+                                                PT.Operators("+")),
+                                            PT.ArithmeticOperand(
+                                                PT.SimpleExpression(
+                                                    PT.LiteralValue(
+                                                        PT.Literals("5"))))))))))))
         }
     };
 }
