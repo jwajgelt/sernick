@@ -14,10 +14,8 @@ public sealed class VariableAccessMap
     ///     For a given function, it returns all variables accessed by this function
     ///     along with type of access (Read/Write)
     /// </summary>
-    public IEnumerable<(Declaration, VariableAccessMode)> GetFunctionsVariableAccesses(FunctionDefinition fun)
-    {
+    public IEnumerable<(Declaration, VariableAccessMode)> this[FunctionDefinition fun] =>
         throw new NotImplementedException();
-    }
 
     /// <summary>
     ///     Given function and a variable it checks whether this is the only function
