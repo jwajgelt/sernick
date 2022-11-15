@@ -14,7 +14,7 @@ public class ConversionTest
 
     private static FakeParseTreeLeaf Leaf(LexicalGrammarCategory category, string text)
         => new(Symbol.Of(category, text));
-    
+
     [Fact]
     public void EmptyExpression_Conversion()
     {
@@ -63,7 +63,7 @@ public class ConversionTest
                                     )))))),
             Leaf(LexicalGrammarCategory.BracesAndParentheses, "}")
             ).Convert();
-        
+
         Assert.True(AstNode.From(input) is CodeBlock { Inner: VariableValue { Identifier.Name: "x" } });
     }
 
@@ -87,11 +87,14 @@ public class ConversionTest
         ).Convert();
 
         // Converter should add Unit type after "x" so that the CodeBlock has the right type
-        Assert.True(AstNode.From(input) is CodeBlock { Inner: ExpressionJoin
+        Assert.True(AstNode.From(input) is CodeBlock
         {
-            First: VariableValue { Identifier.Name: "x" },
-            Second: UnitExpression
-        }});
+            Inner: ExpressionJoin
+            {
+                First: VariableValue { Identifier.Name: "x" },
+                Second: UnitExpression
+            }
+        });
     }
 
     [Fact]
@@ -114,7 +117,7 @@ public class ConversionTest
         Assert.True(AstNode.From(input) is Infix
         {
             Left: IntLiteralValue { Value: 1 },
-            Right:  IntLiteralValue { Value: 2 },
+            Right: IntLiteralValue { Value: 2 },
             Operator: Infix.Op.Plus
         });
     }
@@ -158,7 +161,7 @@ public class ConversionTest
             ReturnType: UnitType,
             Body.Inner: VariableValue { Identifier.Name: "x" }
         });
-        
+
         var funAstNode = (FunctionDefinition)astNode;
         Assert.Single(funAstNode.Parameters);
         Assert.True(funAstNode.Parameters.First() is
