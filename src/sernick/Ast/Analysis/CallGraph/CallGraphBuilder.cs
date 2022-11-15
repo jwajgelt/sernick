@@ -11,7 +11,7 @@ public sealed record CallGraph(
 
 /// <summary>
 ///     Static class with Process method, which extracts the call graph from a given AST.
-///     Wrapps CallGraphVisitor.
+///     Wraps CallGraphVisitor.
 /// </summary>
 public static class CallGraphBuilder
 {
