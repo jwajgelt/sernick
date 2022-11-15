@@ -1,6 +1,6 @@
 namespace sernick.Compiler.Fun;
 
-public class FunImplementor : FunCaller
+public abstract class FunImplementor : FunCaller
 {
     public void addLocal(bool usedElsewhere)
     {

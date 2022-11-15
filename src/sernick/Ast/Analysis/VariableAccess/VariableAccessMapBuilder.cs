@@ -2,7 +2,7 @@ namespace sernick.Ast.Analysis.VariableAccess;
 
 using sernick.Ast.Nodes;
 
-public enum VariableAccess
+public enum VariableAccessMode
 {
     Read,
     Write
@@ -14,7 +14,7 @@ public sealed class VariableAccessMap
     ///     For a given function, it returns all variables accessed by this function
     ///     along with type of access (Read/Write)
     /// </summary>
-    public IEnumerable<(Declaration, VariableAccess)> GetFunctionsVariableAccesses(FunctionDefinition fun)
+    public IEnumerable<(Declaration, VariableAccessMode)> GetFunctionsVariableAccesses(FunctionDefinition fun)
     {
         throw new NotImplementedException();
     }
@@ -29,7 +29,7 @@ public sealed class VariableAccessMap
     }
 }
 
-public sealed class VariableAccessMapBuilder
+public static class VariableAccessMapBuilder
 {
     public static VariableAccessMap Process(AstNode ast)
     {

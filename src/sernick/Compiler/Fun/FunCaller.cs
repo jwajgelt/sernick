@@ -1,3 +1,3 @@
 namespace sernick.Compiler.Fun;
 
-public class FunCaller { }
+public abstract class FunCaller { }
