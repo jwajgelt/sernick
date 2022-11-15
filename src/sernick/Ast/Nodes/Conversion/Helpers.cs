@@ -18,12 +18,6 @@ public static class Helpers
     };
 
     /// <summary>
-    /// Ignores parse tree content and returns expression which doesn't do anything.
-    /// </summary>
-    public static Expression ToEmptyExpression(this IParseTree<Symbol> node) =>
-        new EmptyExpression(node.LocationRange);
-
-    /// <summary>
     /// Skips first and last elements of nodes.
     /// Used to extract content from node list of the form:
     /// [bracket, ..., bracket]
@@ -38,6 +32,24 @@ public static class Helpers
     /// </summary>
     public static IEnumerable<IParseTree<Symbol>> SkipCommas(this IEnumerable<IParseTree<Symbol>> nodes)
         => nodes.Where((_, index) => index % 2 == 0);
+
+    /// <summary>
+    /// Return true if node is a Semicolon terminal or one of closed Expressions:
+    ///  CodeBlock, CodeGroup, IfExpression, LoopExpression, FunctionDeclaration
+    /// </summary>
+    public static bool IsSemicolonOrClosed(this IParseTree<Symbol> node) => node.Symbol switch
+    {
+        Terminal { Category: LexicalGrammarCategory.Semicolon } => true,
+        NonTerminal
+        {
+            Inner: NonTerminalSymbol.CodeBlock
+            or NonTerminalSymbol.CodeGroup
+            or NonTerminalSymbol.IfExpression
+            or NonTerminalSymbol.LoopExpression
+            or NonTerminalSymbol.FunctionDeclaration
+        } => true,
+        _ => false
+    };
 
     public static IEnumerable<IParseTree<Symbol>> SkipSemicolons(this IEnumerable<IParseTree<Symbol>> nodes)
         => nodes.Where(node => node.Symbol is not Terminal { Category: LexicalGrammarCategory.Semicolon });

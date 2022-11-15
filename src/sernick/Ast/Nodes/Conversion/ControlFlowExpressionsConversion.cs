@@ -10,11 +10,13 @@ public static class ControlFlowExpressionsConversion
     /// Assumes that the root used a valid CodeBlock production:
     /// 1. codeBlock -> braceOpen * statements * braceClose
     /// </summary>
-    public static CodeBlock ToCodeBlock(this IParseTree<Symbol> node)
+    public static CodeBlock ToCodeBlock(this IParseTree<Symbol> node) => node switch
     {
-        var innerExpression = node.Children.SkipBraces().SkipSemicolons().SelectExpressions().Join();
-        return new CodeBlock(innerExpression, node.LocationRange);
-    }
+        { Symbol: NonTerminal { Inner: NonTerminalSymbol.CodeBlock }, Children: var children }
+            when children.Count == 3
+            => new CodeBlock(children[1].ToExpressionSeq(), node.LocationRange),
+        _ => throw new ArgumentException("Invalid ParseTree for CodeBlock")
+    };
 
     /// <summary>
     /// Creates Expression from CodeGroup ParseTree,
@@ -29,7 +31,7 @@ public static class ControlFlowExpressionsConversion
         {
             Symbol: NonTerminal { Inner: NonTerminalSymbol.CodeGroup },
             Children: var children
-        } => children.SkipBraces().SkipSemicolons().SelectExpressions().Join(),
+        } => children.SkipBraces().ToExpressionJoin(node.LocationRange.End),
         _ => throw new ArgumentException("Invalid ParseTree for CodeGroup"),
     };
 
@@ -81,9 +83,9 @@ public static class ControlFlowExpressionsConversion
         {
             Symbol: NonTerminal { Inner: NonTerminalSymbol.IfCondition }, Children: var children
         } when children.Count == 1
-            => children[0].Children.SkipBraces().SkipSemicolons().SelectExpressions().Join(),
+            => children[0].ToCodeGroup(),
 
-        // 2. ifCondition -> parOpen * aliasExpression * parClose
+        // 2. ifCondition -> parOpen * expression * parClose
         {
             Symbol: NonTerminal { Inner: NonTerminalSymbol.IfCondition }, Children: var children
         } when children.Count == 3 => children[1].ToExpression(),

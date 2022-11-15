@@ -144,7 +144,7 @@ public static class SernickGrammar
                 Optional(Concat(elseKeyword, codeBlock))))
             .Add(ifCondition, Union(
                 codeGroup, // (E;E;E)
-                Concat(parOpen, aliasExpression, parClose)))// (E) or ({}))
+                Concat(parOpen, aliasExpression, parClose)))// (E) or ({})
             .Add(loopExpression, Concat(loopKeyword, codeBlock))
 
             // Assignment

@@ -14,7 +14,7 @@ public class ConversionTest
         var parseTree = Fake.Node(NonTerminalSymbol.Program,
             Fake.Node(NonTerminalSymbol.ExpressionSeq, Array.Empty<IFakeParseTree>())
         ).Convert();
-        Assert.Equal(new EmptyExpression(IFakeParseTree.Locations), AstNode.From(parseTree));
+        Assert.Equal(new UnitExpression(IFakeParseTree.Locations), AstNode.From(parseTree));
     }
 
     [Fact]
@@ -43,8 +43,62 @@ public class ConversionTest
     }
 
     [Fact]
+    public void Bracketed_OpenedExpression_Conversion()
+    {
+        // { x }
+        var input = Fake.Node(NonTerminalSymbol.CodeBlock,
+            Fake.Leaf(LexicalGrammarCategory.BracesAndParentheses, "{"),
+            Fake.Node(NonTerminalSymbol.ExpressionSeq,
+                Fake.Node(NonTerminalSymbol.OpenExpression,
+                    Fake.Node(NonTerminalSymbol.LogicalOperand,
+                        Fake.Node(NonTerminalSymbol.ComparisonOperand,
+                            Fake.Node(NonTerminalSymbol.ArithmeticOperand,
+                                Fake.Node(NonTerminalSymbol.SimpleExpression,
+                                    Fake.Leaf(LexicalGrammarCategory.VariableIdentifiers, "x")
+                                    )))))),
+            Fake.Leaf(LexicalGrammarCategory.BracesAndParentheses, "}")
+            ).Convert();
+
+        var ast = (CodeBlock)AstNode.From(input);
+        var variableValue = new VariableValue(new Identifier("x", IFakeParseTree.Locations),
+            IFakeParseTree.Locations);
+
+        Assert.Equal(variableValue, ast.Inner);
+    }
+
+    [Fact]
+    public void Bracketed_ClosedExpression_Conversion()
+    {
+        // { x; }
+        var input = Fake.Node(NonTerminalSymbol.CodeBlock,
+            Fake.Leaf(LexicalGrammarCategory.BracesAndParentheses, "{"),
+            Fake.Node(NonTerminalSymbol.ExpressionSeq,
+                Fake.Node(NonTerminalSymbol.OpenExpression,
+                    Fake.Node(NonTerminalSymbol.LogicalOperand,
+                        Fake.Node(NonTerminalSymbol.ComparisonOperand,
+                            Fake.Node(NonTerminalSymbol.ArithmeticOperand,
+                                Fake.Node(NonTerminalSymbol.SimpleExpression,
+                                    Fake.Leaf(LexicalGrammarCategory.VariableIdentifiers, "x")
+                                ))))),
+                Fake.Leaf(LexicalGrammarCategory.Semicolon, ";")
+                ),
+            Fake.Leaf(LexicalGrammarCategory.BracesAndParentheses, "}")
+        ).Convert();
+        var ast = (CodeBlock)AstNode.From(input);
+        var innerExpression = (ExpressionJoin)ast.Inner;
+
+        // Converter should add Unit type after "x" so that the CodeBlock has the right type
+        var variableValue = new VariableValue(new Identifier("x", IFakeParseTree.Locations),
+            IFakeParseTree.Locations);
+        var unit = new UnitExpression((IFakeParseTree.Locations.End, IFakeParseTree.Locations.End));
+        Assert.Equal(variableValue, innerExpression.First);
+        Assert.Equal(unit, innerExpression.Second);
+    }
+
+    [Fact]
     public void ArithmeticExpression_Conversion()
     {
+        // 1 + 2
         var input = Fake.Node(NonTerminalSymbol.ComparisonOperand,
             Fake.Node(NonTerminalSymbol.ArithmeticOperand,
                 Fake.Node(NonTerminalSymbol.SimpleExpression,

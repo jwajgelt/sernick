@@ -2,6 +2,7 @@ namespace sernick.Ast.Nodes.Conversion;
 
 using Grammar.Lexicon;
 using Grammar.Syntax;
+using Input;
 using Parser.ParseTree;
 
 public static class StatementsConversion
@@ -18,6 +19,33 @@ public static class StatementsConversion
     };
 
     /// <summary>
+    /// Joins list of expressions.
+    /// If the last expressions is closed then adds a special UnitExpression at the end.
+    /// </summary>
+    /// <param name="nodes"></param>
+    /// <param name="endLocation">
+    /// End location of the fragment,
+    /// it is used to create a UnitExpression if necessary
+    /// </param>
+    /// <returns></returns>
+    public static Expression ToExpressionJoin(this IEnumerable<IParseTree<Symbol>> nodes, ILocation endLocation)
+    {
+        var nodesList = nodes.ToList();
+        var isClosed = nodesList.LastOrDefault()?.IsSemicolonOrClosed() ?? false;
+
+        var expressions = nodesList.SkipSemicolons().SelectExpressions().ToList();
+
+        if (isClosed || !expressions.Any())
+        {
+            // If list of statements is closed, insert a unit expression at the end.
+            // The joined list will have a Unit type
+            expressions.Add(new UnitExpression((endLocation, endLocation)));
+        }
+
+        return expressions.Join();
+    }
+
+    /// <summary>
     /// Requires that the top production is of type:
     /// 1. expressionSeq -> Star(aliasClosedExpression) * openExpression?
     /// Returns noop expression when empty.
@@ -27,7 +55,7 @@ public static class StatementsConversion
         {
             Symbol: NonTerminal { Inner: NonTerminalSymbol.ExpressionSeq },
             Children: var children
-        } => children.Any() ? children.SkipSemicolons().SelectExpressions().Join() : node.ToEmptyExpression(),
+        } => children.ToExpressionJoin(node.LocationRange.End),
         _ => throw new ArgumentException("Invalid ParseTree for ExpressionSeq")
     };
 
