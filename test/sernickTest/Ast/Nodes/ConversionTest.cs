@@ -14,7 +14,7 @@ public class ConversionTest
         var parseTree = Fake.Node(NonTerminalSymbol.Program,
             Fake.Node(NonTerminalSymbol.ExpressionSeq, Array.Empty<IFakeParseTree>())
         ).Convert();
-        
+
         var unit = new UnitExpression((IFakeParseTree.Locations.End, IFakeParseTree.Locations.End));
         Assert.Equal(unit, AstNode.From(parseTree));
     }
