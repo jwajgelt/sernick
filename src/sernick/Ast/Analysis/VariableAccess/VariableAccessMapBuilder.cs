@@ -10,7 +10,20 @@ public enum VariableAccess
 
 public sealed class VariableAccessMap
 {
+    /// <summary>
+    ///     For a given function, it returns all variables accessed by this function
+    ///     along with type of access (Read/Write)
+    /// </summary>
     public IEnumerable<(Declaration, VariableAccess)> GetFunctionsVariableAccesses(FunctionDefinition fun)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <summary>
+    ///     Given function and a variable it checks whether this is the only function
+    ///     with write access to the specified variable
+    /// </summary>
+    public bool HasExclusiveWriteAccess(FunctionDefinition fun, Declaration variable)
     {
         throw new NotImplementedException();
     }

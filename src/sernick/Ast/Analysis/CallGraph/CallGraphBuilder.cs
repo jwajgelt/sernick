@@ -3,7 +3,7 @@ namespace sernick.Ast.Analysis.CallGraph;
 using sernick.Ast.Nodes;
 
 /// <summary>
-///     Class used represent the call graph.
+///     Class used to represent the call graph.
 /// </summary>
 public sealed record CallGraph(
     IReadOnlyDictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> graph
