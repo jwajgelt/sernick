@@ -7,7 +7,7 @@ using Utility;
 public sealed record ParseTreeNode<TSymbol>(
     TSymbol Symbol,
     Production<TSymbol> Production,
-    IEnumerable<IParseTree<TSymbol>> Children,
+    IReadOnlyList<IParseTree<TSymbol>> Children,
     Range<ILocation> LocationRange
 ) : IParseTree<TSymbol>
     where TSymbol : IEquatable<TSymbol>

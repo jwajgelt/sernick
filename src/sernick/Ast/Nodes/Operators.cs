@@ -3,8 +3,13 @@ namespace sernick.Ast.Nodes;
 using Input;
 using Utility;
 
-public sealed record Infix(Expression Left, Expression Right, Infix.Op Operator, Range<ILocation> LocationRange) : Expression(LocationRange)
+public sealed record Infix
+    (Expression Left, Expression Right, Infix.Op Operator, Range<ILocation> LocationRange) : Expression(LocationRange)
 {
+    public Infix(Expression left, Expression right, Infix.Op op) : this(left, right, op,
+        (left.LocationRange.Start, right.LocationRange.End))
+    { }
+
     public enum Op
     {
         Plus, Minus,

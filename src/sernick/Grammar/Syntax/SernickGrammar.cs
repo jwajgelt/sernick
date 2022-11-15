@@ -33,6 +33,7 @@ public static class SernickGrammar
         var functionCall = Atom(Symbol.Of(NonTerminalSymbol.FunctionCall));
         var functionArguments = Atom(Symbol.Of(NonTerminalSymbol.FunctionArguments));
         var assignment = Atom(Symbol.Of(NonTerminalSymbol.Assignment));
+        var ifCondition = Atom(Symbol.Of(NonTerminalSymbol.IfCondition));
         var ifExpression = Atom(Symbol.Of(NonTerminalSymbol.IfExpression));
         var loopExpression = Atom(Symbol.Of(NonTerminalSymbol.LoopExpression));
         var modifier = Atom(Symbol.Of(NonTerminalSymbol.Modifier)); // var or const
@@ -139,11 +140,11 @@ public static class SernickGrammar
 
             // Block expressions
             .Add(ifExpression, Concat(
-                ifKeyword,
-                Union(
-                    codeGroup, // (E;E;E)
-                    Concat(parOpen, aliasExpression, parClose)), // (E) or ({})
-                codeBlock, Optional(Concat(elseKeyword, codeBlock))))
+                ifKeyword, ifCondition, codeBlock,
+                Optional(Concat(elseKeyword, codeBlock))))
+            .Add(ifCondition, Union(
+                codeGroup, // (E;E;E)
+                Concat(parOpen, aliasExpression, parClose)))// (E) or ({})
             .Add(loopExpression, Concat(loopKeyword, codeBlock))
 
             // Assignment
@@ -163,7 +164,7 @@ public static class SernickGrammar
                     Optional(Concat(comma, functionParameterDeclarationDefVal, Star(comma, functionParameterDeclarationDefVal)))) // only suffix with default values
                 )))
             .Add(functionParameterDeclaration, Concat(identifier, typeSpec))
-            .Add(functionParameterDeclarationDefVal, Concat(functionParameterDeclaration, assignOperator, literalValue));
+            .Add(functionParameterDeclarationDefVal, Concat(identifier, typeSpec, assignOperator, literalValue));
 
         return new Grammar<Symbol>(program, productions);
     }
