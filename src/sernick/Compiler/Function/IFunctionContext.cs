@@ -4,5 +4,5 @@ public abstract record FunctionVariable;
 
 public interface IFunctionContext : IFunctionCaller
 {
-    public abstract void AddLocal(FunctionVariable variable, bool usedElsewhere);
+    public void AddLocal(FunctionVariable variable, bool usedElsewhere);
 }
