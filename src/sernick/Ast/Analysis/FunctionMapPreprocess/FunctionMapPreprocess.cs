@@ -4,8 +4,8 @@ using sernick.Ast.Nodes;
 using sernick.Compiler.Function;
 
 /// <summary>
-///     Static class with Process method, which constructs FunImplementors for each
-///     function declaration in a given AST. Wraps FunPreprocessVisitor.
+///     Static class with Process method, which constructs FunctionContext for each
+///     function declaration in a given AST. Wraps FunctionPreprocessVisitor.
 /// </summary>
 public static class FunctionMapPreprocess
 {
@@ -18,7 +18,7 @@ public static class FunctionMapPreprocess
     private sealed class FunctionPreprocessVisitorParam { }
 
     /// <summary>
-    ///     Visitor class used to prepare FunImplementors for each function declaration from the AST.
+    ///     Visitor class used to prepare FunctionContext for each function declaration from the AST.
     /// </summary>
     private sealed class FunctionPreprocessVisitor : AstVisitor<IDictionary<FunctionDefinition, IFunctionContext>, FunctionPreprocessVisitorParam>
     {
