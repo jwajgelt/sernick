@@ -4,5 +4,5 @@ public abstract record FunctionParam;
 
 public interface IFunctionFactory
 {
-    public IFunctionContext MoreFun(IFunctionContext? parent, IReadOnlyCollection<FunctionParam> parameters, bool hasResult);
+    public IFunctionContext MoreFun(IFunctionContext? parent, IReadOnlyCollection<FunctionParam> parameters, bool returnsValue);
 }
