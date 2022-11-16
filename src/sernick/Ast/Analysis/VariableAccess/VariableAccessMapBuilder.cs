@@ -27,7 +27,7 @@ public sealed class VariableAccessMap
     }
 }
 
-public static class VariableAccessMapBuilder
+public static class VariableAccessMapPreprocess
 {
     public static VariableAccessMap Process(AstNode ast)
     {
