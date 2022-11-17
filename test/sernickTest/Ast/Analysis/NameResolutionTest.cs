@@ -1,15 +1,14 @@
 namespace sernickTest.Ast.Analysis;
 
-using System.Collections.Immutable;
 using Input;
 using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis;
 using sernick.Ast.Analysis.NameResolution;
-using sernick.Ast.Nodes;
 using sernick.Diagnostics;
 using sernick.Input;
 using sernick.Utility;
+using static Helpers.AstNodesExtensions;
 
 public class NameResolutionTest
 {
@@ -19,11 +18,11 @@ public class NameResolutionTest
     [Fact]
     public void VariableUseFromTheSameScopeResolved()
     {
-        // var x; x+1;
-        var declaration = GetVariableDeclaration("x");
-        var variableValue = GetVariableValue(GetIdentifier("x"));
-        var infix = GetSimpleInfix(variableValue, GetIntLiteral(1), Infix.Op.Plus);
-        var tree = GetExpressionJoin(declaration, infix);
+        // var x; x + 1
+        var tree = Program(
+            Var("x", out var declaration),
+            Value("x", out var variableValue).Plus(1)
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -35,27 +34,29 @@ public class NameResolutionTest
     public void VariableUseAmongDifferentDeclarationsResolved()
     {
         // var y; var x; var z; x+1;
-        var declaration1 = GetVariableDeclaration("y");
-        var declaration2 = GetVariableDeclaration("x");
-        var declaration3 = GetVariableDeclaration("z");
-        var variableValue = GetVariableValue(GetIdentifier("x"));
-        var infix = GetSimpleInfix(variableValue, GetIntLiteral(1), Infix.Op.Plus);
-        var tree = GetExpressionJoin(GetExpressionJoin(declaration1, declaration2), GetExpressionJoin(declaration3, infix));
+        var tree = Program(
+            Var("y"),
+            Var("x", out var declarationX),
+            Var("z"),
+            Value("x", out var variableValue).Plus(1)
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
-        Assert.Same(declaration2, result.UsedVariableDeclarations[variableValue]);
+        Assert.Same(declarationX, result.UsedVariableDeclarations[variableValue]);
     }
 
     [Fact]
     public void VariableUseFromOuterScopeResolved()
     {
         // var x; {x+1;}
-        var declaration = GetVariableDeclaration("x");
-        var variableValue = GetVariableValue(GetIdentifier("x"));
-        var infix = GetSimpleInfix(variableValue, GetIntLiteral(1), Infix.Op.Plus);
-        var tree = GetExpressionJoin(declaration, GetCodeBlock(infix));
+        var tree = Program(
+            Var("x", out var declaration),
+            Block(
+                Value("x", out var variableValue).Plus(1)
+            )
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -67,11 +68,13 @@ public class NameResolutionTest
     public void VariableUseFromOuterScopeShadowedResolved()
     {
         // var x; {var x; x+1;}
-        var outerDeclaration = GetVariableDeclaration("x");
-        var innerDeclaration = GetVariableDeclaration("x");
-        var variableValue = GetVariableValue(GetIdentifier("x"));
-        var infix = GetSimpleInfix(variableValue, GetIntLiteral(1), Infix.Op.Plus);
-        var tree = GetExpressionJoin(outerDeclaration, GetCodeBlock(GetExpressionJoin(innerDeclaration, infix)));
+        var tree = Program(
+            Var("x"),
+            Block(
+                Var("x", out var innerDeclaration),
+                Value("x", out var variableValue).Plus(1)
+            )
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -84,9 +87,10 @@ public class NameResolutionTest
     public void VariableAssignmentFromTheSameScopeResolved()
     {
         // var x; x=1;
-        var declaration = GetVariableDeclaration("x");
-        var assignment = GetAssignment(GetIdentifier("x"), GetIntLiteral(1));
-        var tree = GetExpressionJoin(declaration, assignment);
+        var tree = Program(
+            Var("x", out var declaration),
+            "x".Assign(1, out var assignment)
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -98,25 +102,29 @@ public class NameResolutionTest
     public void VariableAssignmentAmongDifferentDeclarationsResolved()
     {
         // var y; var x; var z; x=1;
-        var declaration1 = GetVariableDeclaration("y");
-        var declaration2 = GetVariableDeclaration("x");
-        var declaration3 = GetVariableDeclaration("z");
-        var assignment = GetAssignment(GetIdentifier("x"), GetIntLiteral(1));
-        var tree = GetExpressionJoin(GetExpressionJoin(declaration1, declaration2), GetExpressionJoin(declaration3, assignment));
+        var tree = Program(
+            Var("y"),
+            Var("x", out var declarationX),
+            Var("z"),
+            "x".Assign(1, out var assignment)
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
-        Assert.Same(declaration2, result.AssignedVariableDeclarations[assignment]);
+        Assert.Same(declarationX, result.AssignedVariableDeclarations[assignment]);
     }
 
     [Fact]
     public void VariableAssignmentFromOuterScopeResolved()
     {
         // var x; {x=1;}
-        var declaration = GetVariableDeclaration("x");
-        var assignment = GetAssignment(GetIdentifier("x"), GetIntLiteral(1));
-        var tree = GetExpressionJoin(declaration, GetCodeBlock(assignment));
+        var tree = Program(
+            Var("x", out var declaration),
+            Block(
+                "x".Assign(1, out var assignment)
+            )
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -128,10 +136,13 @@ public class NameResolutionTest
     public void VariableAssignmentFromOuterScopeShadowedResolved()
     {
         // var x; {var x; x=1;}
-        var outerDeclaration = GetVariableDeclaration("x");
-        var innerDeclaration = GetVariableDeclaration("x");
-        var assignment = GetAssignment(GetIdentifier("x"), GetIntLiteral(1));
-        var tree = GetExpressionJoin(outerDeclaration, GetCodeBlock(GetExpressionJoin(innerDeclaration, assignment)));
+        var tree = Program(
+            Var("x"),
+            Block(
+                Var("x", out var innerDeclaration),
+                "x".Assign(1, out var assignment)
+            )
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -145,9 +156,12 @@ public class NameResolutionTest
     {
         // fun f() : Int { return 0; }
         // f();
-        var declaration = GetZeroArgumentFunctionDefinition("f");
-        var call = GetFunctionCall(GetIdentifier("f"), Enumerable.Empty<Expression>());
-        var tree = GetExpressionJoin(declaration, call);
+        var tree = Program(
+            Fun<IntType>("f").Body(
+                Return(0), Close
+            ).Get(out var declaration),
+            "f".Call(out var call)
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -162,16 +176,23 @@ public class NameResolutionTest
         // fun f() : Int { return 0; }
         // fun h() : Int { return 0; }
         // f();
-        var declaration1 = GetZeroArgumentFunctionDefinition("g");
-        var declaration2 = GetZeroArgumentFunctionDefinition("f");
-        var declaration3 = GetZeroArgumentFunctionDefinition("h");
-        var call = GetFunctionCall(GetIdentifier("f"), Enumerable.Empty<Expression>());
-        var tree = GetExpressionJoin(GetExpressionJoin(declaration1, declaration2), GetExpressionJoin(declaration3, call));
+        var tree = Program(
+            Fun<IntType>("g").Body(
+                Return(0), Close
+            ).Get(),
+            Fun<IntType>("f").Body(
+                Return(0), Close
+            ).Get(out var declarationF),
+            Fun<IntType>("h").Body(
+                Return(0), Close
+            ).Get(),
+            "f".Call(out var call)
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
-        Assert.Same(declaration2, result.CalledFunctionDeclarations[call]);
+        Assert.Same(declarationF, result.CalledFunctionDeclarations[call]);
     }
 
     [Fact]
@@ -179,9 +200,14 @@ public class NameResolutionTest
     {
         // fun f() : Int { return 0; }
         // { f(); }
-        var declaration = GetZeroArgumentFunctionDefinition("f");
-        var call = GetFunctionCall(GetIdentifier("f"), Enumerable.Empty<Expression>());
-        var tree = GetExpressionJoin(declaration, GetCodeBlock(call));
+        var tree = Program(
+            Fun<IntType>("f").Body(
+                Return(0), Close
+            ).Get(out var declaration),
+            Block(
+                "f".Call(out var call)
+            )
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -197,10 +223,17 @@ public class NameResolutionTest
         //   fun f() : Int { return 0; }
         //   f();
         // }
-        var outerDeclaration = GetZeroArgumentFunctionDefinition("f");
-        var innerDeclaration = GetZeroArgumentFunctionDefinition("f");
-        var call = GetFunctionCall(GetIdentifier("f"), Enumerable.Empty<Expression>());
-        var tree = GetExpressionJoin(outerDeclaration, GetCodeBlock(GetExpressionJoin(innerDeclaration, call)));
+        var tree = Program(
+            Fun<IntType>("f").Body(
+                Return(0), Close
+            ).Get(),
+            Block(
+                Fun<IntType>("f").Body(
+                    Return(0), Close
+                ).Get(out var innerDeclaration),
+                "f".Call(out var call)
+            )
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -213,10 +246,9 @@ public class NameResolutionTest
     public void FunctionParameterUseResolved()
     {
         // fun f(const a : Int) : Int { return a; }
-        var parameter = GetFunctionParameter("a");
-        var use = GetVariableValue(GetIdentifier("a"));
-        var block = GetCodeBlock(GetReturnStatement(use));
-        var tree = GetOneArgumentFunctionDefinition("f", parameter, block);
+        var tree = Fun<IntType>("f").Parameter<IntType>("a", out var parameter).Body(
+            Return(Value("a", out var use)), Close
+        ).Get();
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -229,13 +261,12 @@ public class NameResolutionTest
     {
         // var a;
         // fun f(const a : Int) : Int { return a; }
-        var parameter = GetFunctionParameter("a");
-        var use = GetVariableValue(GetIdentifier("a"));
-        var block = GetCodeBlock(GetReturnStatement(use));
-        var function = GetOneArgumentFunctionDefinition("f", parameter, block);
-        var tree = GetExpressionJoin(
-            GetVariableDeclaration("a"),
-            function);
+        var tree = Program(
+            Var("a"),
+            Fun<IntType>("f").Parameter<IntType>("a", out var parameter).Body(
+                Return(Value("a", out var use)), Close
+            ).Get()
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -247,9 +278,9 @@ public class NameResolutionTest
     public void FunctionNameShadowedByParameterResolved()
     {
         //  fun f(const f : Int) : Int { return f; }
-        var parameter = GetFunctionParameter("f");
-        var use = GetVariableValue(GetIdentifier("f"));
-        var tree = GetOneArgumentFunctionDefinition("f", parameter, GetCodeBlock(GetReturnStatement(use)));
+        var tree = Fun<IntType>("f").Parameter<IntType>("f", out var parameter).Body(
+            Return(Value("f", out var use)), Close
+        ).Get();
         var diagnostics = new Mock<IDiagnostics>();
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -267,12 +298,11 @@ public class NameResolutionTest
         //     return a;
         //   }
         // }
-        var parameterB = GetFunctionParameter("b");
-        var use = GetVariableValue(GetIdentifier("a"));
-        var blockG = GetCodeBlock(GetReturnStatement(use));
-        var functionG = GetOneArgumentFunctionDefinition("g", parameterB, blockG);
-        var parameterA = GetFunctionParameter("a");
-        var tree = GetOneArgumentFunctionDefinition("f", parameterA, GetCodeBlock(functionG));
+        var tree = Fun<IntType>("f").Parameter<IntType>("a", out var parameterA).Body(
+            Fun<IntType>("g").Parameter<IntType>("b").Body(
+                Return(Value("a", out var use)), Close
+            ).Get()
+        ).Get();
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -285,7 +315,7 @@ public class NameResolutionTest
     public void UndefinedIdentifierInVariableUseReported()
     {
         // a;
-        var tree = GetVariableValue(GetIdentifier("a"));
+        var tree = Value("a");
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -297,7 +327,7 @@ public class NameResolutionTest
     public void UndefinedIdentifierInVariableAssignmentReported()
     {
         // a = 3;
-        var tree = GetAssignment(GetIdentifier("a"), GetIntLiteral(3));
+        var tree = "a".Assign(3);
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -309,7 +339,7 @@ public class NameResolutionTest
     public void UndefinedIdentifierInFunctionCallReported()
     {
         // f();
-        var tree = GetFunctionCall(GetIdentifier("f"), Enumerable.Empty<Expression>());
+        var tree = "f".Call();
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -323,9 +353,10 @@ public class NameResolutionTest
     {
         // var a;
         // var a;
-        var declaration1 = GetVariableDeclaration("a");
-        var declaration2 = GetVariableDeclaration("a");
-        var tree = GetExpressionJoin(declaration1, declaration2);
+        var tree = Program(
+            Var("a"),
+            Var("a")
+        );
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -341,9 +372,10 @@ public class NameResolutionTest
         //   var a;
         //   return 0;
         // }
-        var parameter = GetFunctionParameter("a");
-        var block = GetCodeBlock(GetExpressionJoin(GetVariableDeclaration("a"), GetReturnStatement(GetIntLiteral(0))));
-        var tree = GetOneArgumentFunctionDefinition("f", parameter, block);
+        var tree = Fun<IntType>("f").Parameter<IntType>("a").Body(
+            Var("a"),
+            Return(0), Close
+        ).Get();
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -356,9 +388,12 @@ public class NameResolutionTest
     {
         //  fun f() : Int { return 0; }
         //  var f;
-        var function = GetZeroArgumentFunctionDefinition("f");
-        var declaration = GetVariableDeclaration("f");
-        var tree = GetExpressionJoin(function, declaration);
+        var tree = Program(
+            Fun<IntType>("f").Body(
+                Return(0), Close
+            ).Get(),
+            Var("f")
+        );
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -372,9 +407,7 @@ public class NameResolutionTest
     {
         //  var f;
         //  f();
-        var declaration = GetVariableDeclaration("f");
-        var call = GetFunctionCall(GetIdentifier("f"), Enumerable.Empty<Expression>());
-        var tree = GetExpressionJoin(declaration, call);
+        var tree = Program(Var("f"), "f".Call());
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -389,9 +422,9 @@ public class NameResolutionTest
         //  {
         //      return a();
         //  }
-        var body = GetCodeBlock(GetReturnStatement(GetFunctionCall(GetIdentifier("a"), Enumerable.Empty<Expression>())));
-        var parameter = GetFunctionParameter("a");
-        var tree = GetOneArgumentFunctionDefinition("f", parameter, body);
+        var tree = Fun<IntType>("f").Parameter<IntType>("a").Body(
+            Return("a".Call()), Close
+        ).Get();
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -405,9 +438,12 @@ public class NameResolutionTest
     {
         // fun f() : Int { return 0; }
         // f+1;
-        var function = GetZeroArgumentFunctionDefinition("f");
-        var tree = GetExpressionJoin(function,
-            GetSimpleInfix(GetVariableValue(GetIdentifier("f")), GetIntLiteral(1), Infix.Op.Plus));
+        var tree = Program(
+            Fun<IntType>("f").Body(
+                Return(0), Close
+            ).Get(),
+            "f".Plus(1)
+        );
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -420,85 +456,16 @@ public class NameResolutionTest
     {
         // fun f() : Int { return 0; }
         // f=1;
-        var function = GetZeroArgumentFunctionDefinition("f");
-        var tree = GetExpressionJoin(function, GetAssignment(GetIdentifier("f"), GetIntLiteral(1)));
+        var tree = Program(
+            Fun<IntType>("f").Body(
+                Return(0), Close
+            ).Get(),
+            "f".Assign(1)
+        );
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<NotAVariableError>()));
-    }
-
-    private static VariableDeclaration GetVariableDeclaration(string name)
-    {
-        return new VariableDeclaration(GetIdentifier(name), null, null, false, loc);
-    }
-
-    private static FunctionDefinition GetZeroArgumentFunctionDefinition(string name)
-    {
-        return new FunctionDefinition(GetIdentifier(name),
-            ImmutableArray<FunctionParameterDeclaration>.Empty,
-            new IntType(),
-            GetCodeBlock(GetReturnStatement(GetIntLiteral(0))),
-            loc);
-    }
-
-    private static FunctionParameterDeclaration GetFunctionParameter(string name)
-    {
-        return new FunctionParameterDeclaration(GetIdentifier(name), new IntType(), null, loc);
-    }
-
-    private static FunctionDefinition GetOneArgumentFunctionDefinition(string functionName, FunctionParameterDeclaration parameter, CodeBlock block)
-    {
-        return new FunctionDefinition(GetIdentifier(functionName),
-            new[] { parameter },
-            new IntType(),
-            block,
-            loc);
-    }
-
-    private static Identifier GetIdentifier(string name)
-    {
-        return new Identifier(name, loc);
-    }
-
-    private static LiteralValue GetIntLiteral(int n)
-    {
-        return new IntLiteralValue(n, loc);
-    }
-
-    private static VariableValue GetVariableValue(Identifier identifier)
-    {
-        return new VariableValue(identifier, loc);
-    }
-
-    private static Infix GetSimpleInfix(Expression e1, Expression e2, Infix.Op op)
-    {
-        return new Infix(e1, e2, op, loc);
-    }
-
-    private static ExpressionJoin GetExpressionJoin(Expression e1, Expression e2)
-    {
-        return new ExpressionJoin(e1, e2, loc);
-    }
-
-    private static CodeBlock GetCodeBlock(Expression e)
-    {
-        return new CodeBlock(e, loc);
-    }
-
-    private static Assignment GetAssignment(Identifier identifier, Expression e)
-    {
-        return new Assignment(identifier, e, loc);
-    }
-
-    private static FunctionCall GetFunctionCall(Identifier identifier, IEnumerable<Expression> args)
-    {
-        return new FunctionCall(identifier, args, loc);
-    }
-
-    private static ReturnStatement GetReturnStatement(Expression e)
-    {
-        return new ReturnStatement(e, loc);
     }
 }
