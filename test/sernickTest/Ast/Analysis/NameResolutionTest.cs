@@ -1,6 +1,7 @@
-namespace sernickTest.AST.Analysis;
+namespace sernickTest.Ast.Analysis;
 
 using System.Collections.Immutable;
+using Input;
 using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis;
@@ -9,11 +10,10 @@ using sernick.Ast.Nodes;
 using sernick.Diagnostics;
 using sernick.Input;
 using sernick.Utility;
-using Tokenizer.Lexer.Helpers;
 
 public class NameResolutionTest
 {
-    private static readonly Range<ILocation> loc = new(new FakeInput.Location(0), new FakeInput.Location(0));
+    private static readonly Range<ILocation> loc = new(new FakeLocation(), new FakeLocation());
 
     // UsedVariable tests where variable is not a function argument
     [Fact]

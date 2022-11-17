@@ -1,4 +1,4 @@
-namespace sernickTest.AST.Analysis;
+namespace sernickTest.Ast.Analysis;
 
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Nodes;
