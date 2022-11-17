@@ -1,24 +1,19 @@
 namespace sernickTest.Ast.Analysis;
 
-using Input;
 using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis;
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Diagnostics;
-using sernick.Input;
-using sernick.Utility;
 using static Helpers.AstNodesExtensions;
 
 public class NameResolutionTest
 {
-    private static readonly Range<ILocation> loc = new(new FakeLocation(), new FakeLocation());
-
     // UsedVariable tests where variable is not a function argument
     [Fact]
     public void VariableUseFromTheSameScopeResolved()
     {
-        // var x; x + 1
+        // var x; x+1
         var tree = Program(
             Var("x", out var declaration),
             Value("x", out var variableValue).Plus(1)
@@ -33,7 +28,7 @@ public class NameResolutionTest
     [Fact]
     public void VariableUseAmongDifferentDeclarationsResolved()
     {
-        // var y; var x; var z; x+1;
+        // var y; var x; var z; x+1
         var tree = Program(
             Var("y"),
             Var("x", out var declarationX),
@@ -50,7 +45,7 @@ public class NameResolutionTest
     [Fact]
     public void VariableUseFromOuterScopeResolved()
     {
-        // var x; {x+1;}
+        // var x; {x+1}
         var tree = Program(
             Var("x", out var declaration),
             Block(
@@ -67,7 +62,7 @@ public class NameResolutionTest
     [Fact]
     public void VariableUseFromOuterScopeShadowedResolved()
     {
-        // var x; {var x; x+1;}
+        // var x; {var x; x+1}
         var tree = Program(
             Var("x"),
             Block(
@@ -86,7 +81,7 @@ public class NameResolutionTest
     [Fact]
     public void VariableAssignmentFromTheSameScopeResolved()
     {
-        // var x; x=1;
+        // var x; x=1
         var tree = Program(
             Var("x", out var declaration),
             "x".Assign(1, out var assignment)
@@ -101,7 +96,7 @@ public class NameResolutionTest
     [Fact]
     public void VariableAssignmentAmongDifferentDeclarationsResolved()
     {
-        // var y; var x; var z; x=1;
+        // var y; var x; var z; x=1
         var tree = Program(
             Var("y"),
             Var("x", out var declarationX),
@@ -118,7 +113,7 @@ public class NameResolutionTest
     [Fact]
     public void VariableAssignmentFromOuterScopeResolved()
     {
-        // var x; {x=1;}
+        // var x; {x=1}
         var tree = Program(
             Var("x", out var declaration),
             Block(
@@ -135,7 +130,7 @@ public class NameResolutionTest
     [Fact]
     public void VariableAssignmentFromOuterScopeShadowedResolved()
     {
-        // var x; {var x; x=1;}
+        // var x; {var x; x=1}
         var tree = Program(
             Var("x"),
             Block(
@@ -155,7 +150,7 @@ public class NameResolutionTest
     public void CalledFunctionFromTheSameScopeResolved()
     {
         // fun f() : Int { return 0; }
-        // f();
+        // f()
         var tree = Program(
             Fun<IntType>("f").Body(
                 Return(0), Close
@@ -175,17 +170,17 @@ public class NameResolutionTest
         // fun g() : Int { return 0; }
         // fun f() : Int { return 0; }
         // fun h() : Int { return 0; }
-        // f();
+        // f()
         var tree = Program(
             Fun<IntType>("g").Body(
                 Return(0), Close
-            ).Get(),
+            ),
             Fun<IntType>("f").Body(
                 Return(0), Close
             ).Get(out var declarationF),
             Fun<IntType>("h").Body(
                 Return(0), Close
-            ).Get(),
+            ),
             "f".Call(out var call)
         );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
@@ -199,7 +194,7 @@ public class NameResolutionTest
     public void CalledFunctionFromOuterScopeResolved()
     {
         // fun f() : Int { return 0; }
-        // { f(); }
+        // { f() }
         var tree = Program(
             Fun<IntType>("f").Body(
                 Return(0), Close
@@ -221,12 +216,12 @@ public class NameResolutionTest
         // fun f() : Int { return 0; }
         // {
         //   fun f() : Int { return 0; }
-        //   f();
+        //   f()
         // }
         var tree = Program(
             Fun<IntType>("f").Body(
                 Return(0), Close
-            ).Get(),
+            ),
             Block(
                 Fun<IntType>("f").Body(
                     Return(0), Close
@@ -245,10 +240,10 @@ public class NameResolutionTest
     [Fact]
     public void FunctionParameterUseResolved()
     {
-        // fun f(const a : Int) : Int { return a; }
+        // fun f(a : Int) : Int { return a; }
         var tree = Fun<IntType>("f").Parameter<IntType>("a", out var parameter).Body(
             Return(Value("a", out var use)), Close
-        ).Get();
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -260,12 +255,12 @@ public class NameResolutionTest
     public void FunctionParameterShadowUseResolved()
     {
         // var a;
-        // fun f(const a : Int) : Int { return a; }
+        // fun f(a : Int) : Int { return a; }
         var tree = Program(
             Var("a"),
             Fun<IntType>("f").Parameter<IntType>("a", out var parameter).Body(
                 Return(Value("a", out var use)), Close
-            ).Get()
+            )
         );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
@@ -277,10 +272,10 @@ public class NameResolutionTest
     [Fact]
     public void FunctionNameShadowedByParameterResolved()
     {
-        //  fun f(const f : Int) : Int { return f; }
+        //  fun f(f : Int) : Int { return f; }
         var tree = Fun<IntType>("f").Parameter<IntType>("f", out var parameter).Body(
             Return(Value("f", out var use)), Close
-        ).Get();
+        );
         var diagnostics = new Mock<IDiagnostics>();
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -291,9 +286,9 @@ public class NameResolutionTest
     [Fact]
     public void FunctionParameterFromOuterScopeResolved()
     {
-        // fun f(const a : Int) : Int
+        // fun f(a : Int) : Int
         // {
-        //   fun g(const b : Int) : Int
+        //   fun g(b : Int) : Int
         //   {
         //     return a;
         //   }
@@ -301,8 +296,8 @@ public class NameResolutionTest
         var tree = Fun<IntType>("f").Parameter<IntType>("a", out var parameterA).Body(
             Fun<IntType>("g").Parameter<IntType>("b").Body(
                 Return(Value("a", out var use)), Close
-            ).Get()
-        ).Get();
+            )
+        );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -314,7 +309,7 @@ public class NameResolutionTest
     [Fact]
     public void UndefinedIdentifierInVariableUseReported()
     {
-        // a;
+        // a
         var tree = Value("a");
         var diagnostics = new Mock<IDiagnostics>();
 
@@ -326,7 +321,7 @@ public class NameResolutionTest
     [Fact]
     public void UndefinedIdentifierInVariableAssignmentReported()
     {
-        // a = 3;
+        // a = 3
         var tree = "a".Assign(3);
         var diagnostics = new Mock<IDiagnostics>();
 
@@ -338,7 +333,7 @@ public class NameResolutionTest
     [Fact]
     public void UndefinedIdentifierInFunctionCallReported()
     {
-        // f();
+        // f()
         var tree = "f".Call();
         var diagnostics = new Mock<IDiagnostics>();
 
@@ -352,7 +347,7 @@ public class NameResolutionTest
     public void MultipleDeclarationsReported_Case1()
     {
         // var a;
-        // var a;
+        // var a
         var tree = Program(
             Var("a"),
             Var("a")
@@ -367,7 +362,7 @@ public class NameResolutionTest
     [Fact]
     public void MultipleDeclarationsReported_Case2()
     {
-        // fun f(const a : Int) : Int
+        // fun f(a : Int) : Int
         // {
         //   var a;
         //   return 0;
@@ -375,7 +370,7 @@ public class NameResolutionTest
         var tree = Fun<IntType>("f").Parameter<IntType>("a").Body(
             Var("a"),
             Return(0), Close
-        ).Get();
+        );
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -387,11 +382,11 @@ public class NameResolutionTest
     public void MultipleDeclarationsReported_Case3()
     {
         //  fun f() : Int { return 0; }
-        //  var f;
+        //  var f
         var tree = Program(
             Fun<IntType>("f").Body(
                 Return(0), Close
-            ).Get(),
+            ),
             Var("f")
         );
         var diagnostics = new Mock<IDiagnostics>();
@@ -406,7 +401,7 @@ public class NameResolutionTest
     public void NotAFunctionReported_Case1()
     {
         //  var f;
-        //  f();
+        //  f()
         var tree = Program(Var("f"), "f".Call());
         var diagnostics = new Mock<IDiagnostics>();
 
@@ -418,13 +413,13 @@ public class NameResolutionTest
     [Fact]
     public void NotAFunctionReported_Case2()
     {
-        //  fun f(var a : Int) : Int
+        //  fun f(a : Int) : Int
         //  {
         //      return a();
         //  }
         var tree = Fun<IntType>("f").Parameter<IntType>("a").Body(
             Return("a".Call()), Close
-        ).Get();
+        );
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -437,11 +432,11 @@ public class NameResolutionTest
     public void NotAVariableReported_Case1()
     {
         // fun f() : Int { return 0; }
-        // f+1;
+        // f+1
         var tree = Program(
             Fun<IntType>("f").Body(
                 Return(0), Close
-            ).Get(),
+            ),
             "f".Plus(1)
         );
         var diagnostics = new Mock<IDiagnostics>();
@@ -455,11 +450,11 @@ public class NameResolutionTest
     public void NotAVariableReported_Case2()
     {
         // fun f() : Int { return 0; }
-        // f=1;
+        // f=1
         var tree = Program(
             Fun<IntType>("f").Body(
                 Return(0), Close
-            ).Get(),
+            ),
             "f".Assign(1)
         );
         var diagnostics = new Mock<IDiagnostics>();

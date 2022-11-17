@@ -1,19 +1,23 @@
 namespace sernickTest.Ast.Helpers;
 
+using Input;
 using sernick.Ast;
 using sernick.Ast.Nodes;
 using sernick.Input;
 using sernick.Utility;
-using Tokenizer.Lexer.Helpers;
 
-public static class AstNodesExtensions {
-    private static readonly Range<ILocation> loc = new(new FakeInput.Location(0), new FakeInput.Location(0));
+public static class AstNodesExtensions
+{
 
-    public static Identifier Ident(string name) => new(name, loc);
+    private static readonly Range<ILocation> loc = new(new FakeLocation(), new FakeLocation());
+
+    private static Identifier Ident(string name) => new(name, loc);
+
+    #region Variable
 
     public static VariableDeclaration Var(string name) => Var(name, out _);
 
-    public static VariableDeclaration Var(string name, out VariableDeclaration result) => result = new(
+    public static VariableDeclaration Var(string name, out VariableDeclaration result) => result = new VariableDeclaration(
         Ident(name),
         Type: null,
         InitValue: null,
@@ -22,56 +26,73 @@ public static class AstNodesExtensions {
 
     public static VariableValue Value(string name) => Value(name, out _);
 
-    public static VariableValue Value(string name, out VariableValue result) => result = new(Ident(name), loc);
+    public static VariableValue Value(string name, out VariableValue result) =>
+        result = new VariableValue(Ident(name), loc);
+
+    #endregion
+
+    #region Function Call
 
     public static FunctionCall Call(this string name) => name.Call(out _);
 
     public static FunctionCall Call(this string name, out FunctionCall result) =>
-        result = new(Ident(name), Array.Empty<Expression>(), loc);
+        result = new FunctionCall(Ident(name), Array.Empty<Expression>(), loc);
 
-    public static Infix Plus(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.Plus, loc);
+    #endregion
 
-    public static IntLiteralValue Literal(int value) => new(value, loc);
+    #region Operators
 
-    public static Infix Plus(this Expression e1, int v2) => new(e1, Literal(v2), Infix.Op.Plus, loc);
+    private static IntLiteralValue Literal(int value) => new(value, loc);
 
     public static Infix Plus(this string name, int v) => Value(name).Plus(v);
 
-    public static Assignment Assign(this Identifier identifier, int value) => identifier.Assign(value, out _);
+    public static Infix Plus(this Expression e1, int v2) => e1.Plus(Literal(v2));
 
-    public static Assignment Assign(this Identifier identifier, int value, out Assignment result) =>
-        result = new(identifier, Literal(value), loc);
+    private static Infix Plus(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.Plus, loc);
 
-    public static Assignment Assign(this string name, int value) =>
-        name.Assign(value, out _);
+    public static Assignment Assign(this string name, int value) => name.Assign(value, out _);
 
     public static Assignment Assign(this string name, int value, out Assignment result) =>
-        Ident(name).Assign(value, out result);
+        result = new Assignment(Ident(name), Literal(value), loc);
 
-    public static ExpressionJoin Join(this Expression e1, Expression e2) => new(e1, e2, loc);
+    #endregion
 
-    public static CodeBlock Block(params Expression[] exprs) => new(exprs.Join(), loc);
+    #region Expressions
+
+    public static Expression Program(params Expression[] lines) => lines.Join();
+
+    private static ExpressionJoin Join(this Expression e1, Expression e2) => new(e1, e2, loc);
+
+    private static Expression Join(this IEnumerable<Expression> expressions) =>
+        expressions.Aggregate((sequence, expr) => sequence.Join(expr));
+
+    public static CodeBlock Block(params Expression[] expressions) => new(expressions.Join(), loc);
 
     public static ReturnStatement Return(int value) => Return(Literal(value));
 
     public static ReturnStatement Return(Expression e) => new(e, loc);
 
+    public static EmptyExpression Close => new(loc);
+
+    #endregion
+
+    #region Function Declaration
+
     public static FuncDeclarationBuilder Fun<ReturnType>(string name) where ReturnType : Type, new() =>
         new(Ident(name), new ReturnType());
 
-    public sealed class FuncDeclarationBuilder {
+    public sealed class FuncDeclarationBuilder
+    {
         private readonly Identifier _identifier;
         private readonly Type _returnType;
         private readonly List<FunctionParameterDeclaration> _parameters = new();
-        private CodeBlock? _body = null;
+        private CodeBlock? _body;
 
-        internal FuncDeclarationBuilder(Identifier identifier, Type returnType) {
-            _identifier = identifier;
-            _returnType = returnType;
-        }
+        internal FuncDeclarationBuilder(Identifier identifier, Type returnType) =>
+            (_identifier, _returnType) = (identifier, returnType);
 
-        public FuncDeclarationBuilder Parameter<ParamType>(string name)
-            where ParamType : Type, new() => Parameter<ParamType>(name, out _);
+        public FuncDeclarationBuilder Parameter<ParamType>(string name) where ParamType : Type, new() =>
+            Parameter<ParamType>(name, out _);
 
         public FuncDeclarationBuilder Parameter<ParamType>(string name, out FunctionParameterDeclaration result)
             where ParamType : Type, new()
@@ -80,26 +101,21 @@ public static class AstNodesExtensions {
             return this;
         }
 
-        public FuncDeclarationBuilder Body(params Expression[] exprs) {
-            _body = new CodeBlock(exprs.Join(), loc);
+        public FuncDeclarationBuilder Body(params Expression[] expressions)
+        {
+            _body = new CodeBlock(expressions.Join(), loc);
             return this;
         }
 
-        public FunctionDefinition Get(out FunctionDefinition result) => result = Get();
-
-        public FunctionDefinition Get() => new(
-            _identifier,
-            _parameters,
-            _returnType,
-            _body ?? throw new InvalidOperationException(".Body() was not called yet"),
+        public static implicit operator FunctionDefinition(FuncDeclarationBuilder builder) => new(
+            builder._identifier,
+            builder._parameters,
+            builder._returnType,
+            builder._body ?? throw new InvalidOperationException(".Body() was not called yet"),
             loc);
+
+        public FunctionDefinition Get(out FunctionDefinition result) => result = this;
     }
 
-    public static Expression Close => new EmptyExpression(loc);
-
-    private static Expression Join(this IEnumerable<Expression> expressions) {
-        return expressions.Aggregate((seq, expr) => seq.Join(expr));
-    }
-
-    public static Expression Program(params Expression[] lines) => lines.Join();
+    #endregion
 }
