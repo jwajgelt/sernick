@@ -49,7 +49,7 @@ public class SernickGrammarTest
                 PT.ExpressionSeq(
                     PT.CodeBlock(
                         PT.BracesAndParentheses("{"),
-                        PT.ExpressionSeq(),
+                        PT.ExpressionSeq,
                         PT.BracesAndParentheses("}")),
                     PT.OpenExpression(
                         PT.LogicalOperand(
