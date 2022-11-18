@@ -79,24 +79,26 @@ public static class AstNodesExtensions
 
     #region Function Call
 
-    public static FunctionCall Call(this string name) => name.Call(out _);
+    public static FunctionCall Call(this string name) => name.Call(Array.Empty<Expression>(), out _);
 
-    public static FunctionCall Call(this string name, out FunctionCall result) =>
-        result = new FunctionCall(Ident(name), Array.Empty<Expression>(), loc);
+    public static FunctionCall Call(this string name, out FunctionCall result) => name.Call(Array.Empty<Expression>(), out result);
+
+    public static FunctionCall Call(this string name, IEnumerable<Expression> arguments, out FunctionCall result) =>
+        result = new FunctionCall(Ident(name), arguments, loc);
 
     #endregion
 
     #region Operators
 
-    private static IntLiteralValue Literal(int value) => new(value, loc);
+    public static IntLiteralValue Literal(int value) => new(value, loc);
 
-    private static BoolLiteralValue Literal(bool value) => new(value, loc);
+    public static BoolLiteralValue Literal(bool value) => new(value, loc);
 
     public static Infix Plus(this string name, int v) => Value(name).Plus(v);
 
     public static Infix Plus(this Expression e1, int v2) => e1.Plus(Literal(v2));
 
-    private static Infix Plus(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.Plus, loc);
+    public static Infix Plus(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.Plus, loc);
 
     public static Assignment Assign(this string name, int value) => name.Assign(value, out _);
 
@@ -168,6 +170,42 @@ public static class AstNodesExtensions
             loc);
 
         public FunctionDefinition Get(out FunctionDefinition result) => result = this;
+    }
+
+    #endregion
+
+    #region Control Flow
+
+    public static IfStatementBuilder If(Expression condition) => new(condition);
+
+    public sealed class IfStatementBuilder
+    {
+        private readonly Expression _condition;
+        private CodeBlock? _ifBlock;
+        private CodeBlock? _elseBlock;
+
+        internal IfStatementBuilder(Expression condition) => _condition = condition;
+
+        public IfStatementBuilder Then(params Expression[] expressions)
+        {
+            _ifBlock = new CodeBlock(expressions.Join(), loc);
+            return this;
+        }
+
+        public IfStatementBuilder Else(params Expression[] expressions)
+        {
+            _elseBlock = new CodeBlock(expressions.Join(), loc);
+            return this;
+        }
+
+        public static implicit operator IfStatement(IfStatementBuilder builder) => new(
+            builder._condition,
+            builder._ifBlock ?? throw new InvalidOperationException(".Then() was not called yet"),
+            builder._elseBlock,
+            loc
+        );
+
+        public IfStatement Get(out IfStatement result) => result = this;
     }
 
     #endregion
