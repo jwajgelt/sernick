@@ -45,6 +45,30 @@ public sealed class TypeChecking
             this._diagnostics = diagnostics;
         }
 
+        public override TypeInformation VisitAstNode(AstNode node, TypeInformation param)
+        {
+            // just visit recursively, bottom-up
+            // for simple things, just visit them without recursion
+            if(node.Children.Count() == 0)
+            {
+                var emptyTypeInformation = new TypeInformation();
+                return node.Accept(this, emptyTypeInformation);
+            }
+
+            return node.Children.Aggregate(new TypeInformation(),
+                (partialTypeInformation, currentNode) =>
+                {
+                    var typeInformationForCurrentNodeSubtree = currentNode.Accept(this, );
+                }
+
+            foreach(var childNode in node.Children)
+            {
+                var emptyTypeIformation = new TypeInformation();
+                var partialResult = this.VisitAstNode(childNode, emptyTypeIformation);
+
+            }
+        }
+
         public override TypeInformation VisitVariableDeclaration(VariableDeclaration node, TypeInformation param)
         {
             // all necessary checking should be performed in "Visit assignment", so just return Unit here
@@ -222,6 +246,26 @@ public sealed class TypeChecking
             var result = new TypeInformation(partialExpressiontypes);
             result.Add(node, new IntType());
             return result;
+        }
+
+        /// <summary>
+        /// Since we want to do a bottom-up recursion, but we're calling our node.Accept functions
+        /// in a top-down order, before actually processing a node we have to make sure we've visited all of its
+        /// children. This helper method should be thus called at the beginning of almost each "Visit" function,
+        /// except simple AST nodes (e.g. int literal), where we know there would be no recursion
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        private TypeInformation visitNodeChildren(AstNode node)
+        {
+            return node.Children.Aggregate(new TypeInformation(),
+                (partialTypeInformation, childNode) =>
+                {
+                    var resultForChildNode = childNode.Accept(this, new TypeInformation());
+                    return (new List<TypeInformation> { partialTypeInformation, resultForChildNode}).SelectMany(dict => dict)
+                         .ToDictionary(pair => pair.Key, pair => pair.Value);
+                }
+           );
         }
 
     }
