@@ -79,16 +79,36 @@ public static class AstNodesExtensions
 
     #region Function Call
 
-    public static FunctionCall Call(this string name) => name.Call(out _);
+    public static FuncCallBuilder Call(this string name) => new(Ident(name));
 
-    public static FunctionCall Call(this string name, out FunctionCall result) =>
-        result = new FunctionCall(Ident(name), Array.Empty<Expression>(), loc);
+    public static FunctionCall Call(this string name, out FunctionCall result) => result = name.Call();
+
+    public sealed class FuncCallBuilder
+    {
+        private readonly Identifier _identifier;
+        private readonly List<Expression> _arguments = new();
+
+        internal FuncCallBuilder(Identifier identifier) => _identifier = identifier;
+
+        public FuncCallBuilder Argument(Expression arg)
+        {
+            _arguments.Add(arg);
+            return this;
+        }
+
+        public static implicit operator FunctionCall(FuncCallBuilder builder) => new(
+            builder._identifier,
+            builder._arguments,
+            loc);
+
+        public FunctionCall Get(out FunctionCall result) => result = this;
+    }
 
     #endregion
 
     #region Operators
 
-    private static IntLiteralValue Literal(int value) => new(value, loc);
+    public static IntLiteralValue Literal(int value) => new(value, loc);
 
     private static BoolLiteralValue Literal(bool value) => new(value, loc);
 
