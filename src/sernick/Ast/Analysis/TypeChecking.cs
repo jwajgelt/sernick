@@ -34,18 +34,18 @@ public sealed class TypeChecking
         /// Invariant: when visiting AstNode X, types for all children of X are known
         /// and stored in partialExpressionTypes dictionary
         /// </summary>
-        private IReadOnlyDictionary<AstNode, Type> partialExpressionTypes;
+        private IReadOnlyDictionary<AstNode, Type> partialExpressionsTypess;
         private readonly NameResolutionResult nameResolution;
         private Diagnostics _diagnostics;
 
         public TypeCheckingAstVisitor(NameResolutionResult nameResolution, Diagnostics diagnostics)
         {
             this.nameResolution = nameResolution;
-            this.partialExpressionTypes = new TypeInformation();
+            this.childrenTypes = new TypeInformation();
             this._diagnostics = diagnostics;
         }
 
-        public override TypeInformation VisitAstNode(AstNode node, TypeInformation param)
+        public override TypeInformation VisitAstNode(AstNode node, TypeInformation _)
         {
             // just visit recursively, bottom-up
             // for simple things, just visit them without recursion
@@ -55,96 +55,109 @@ public sealed class TypeChecking
                 return node.Accept(this, emptyTypeInformation);
             }
 
-            return node.Children.Aggregate(new TypeInformation(),
-                (partialTypeInformation, currentNode) =>
-                {
-                    var typeInformationForCurrentNodeSubtree = currentNode.Accept(this, );
-                }
+            var childrenTypes = this.visitNodeChildren(node);
 
-            foreach(var childNode in node.Children)
-            {
-                var emptyTypeIformation = new TypeInformation();
-                var partialResult = this.VisitAstNode(childNode, emptyTypeIformation);
+            // TODO what to do after we've visited node children
 
-            }
+
+            return childrenTypes;
         }
 
-        public override TypeInformation VisitVariableDeclaration(VariableDeclaration node, TypeInformation param)
+        public override TypeInformation VisitVariableDeclaration(VariableDeclaration node, TypeInformation _)
         {
             // all necessary checking should be performed in "Visit assignment", so just return Unit here
-            var result = new TypeInformation(param);
+            var childrenTypes = this.visitNodeChildren(node);
+            var result = new TypeInformation(childrenTypes);
             result.Add(node, new UnitType());
             return result;
 
         }
 
-        public override TypeInformation VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, TypeInformation param)
+        public override TypeInformation VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, TypeInformation _)
         {
-            var result = new TypeInformation(param);
+            var childrenTypes = this.visitNodeChildren(node);
+
+            var result = new TypeInformation(childrenTypes);
             result.Add(node, new UnitType());
             return result;
         }
 
-        public override TypeInformation VisitFunctionDefinition(FunctionDefinition node, TypeInformation param)
+        public override TypeInformation VisitFunctionDefinition(FunctionDefinition node, TypeInformation _)
         {
-            var result = new TypeInformation(param);
+            var childrenTypes = this.visitNodeChildren(node);
+
+            var result = new TypeInformation(childrenTypes);
             result.Add(node, new UnitType());
             return result;
         }
 
-        public override TypeInformation VisitCodeBlock(CodeBlock node, TypeInformation param)
+        public override TypeInformation VisitCodeBlock(CodeBlock node, TypeInformation _)
         {
+            var childrenTypes = this.visitNodeChildren(node);
+
             // simply return what expression inside returns?
-            var result = new TypeInformation(param);
-            result.Add(node, param[node.Inner]);
+            var result = new TypeInformation(childrenTypes);
+            result.Add(node, childrenTypes[node.Inner]);
             return result;
 
         }
 
-        public override TypeInformation VisitExpressionJoin(ExpressionJoin node, TypeInformation param)
+        public override TypeInformation VisitExpressionJoin(ExpressionJoin node, TypeInformation _)
         {
-            var result = new TypeInformation(param);
-            result.Add(node, param[node.Second]); // just return the last expressions' type
+            var childrenTypes = this.visitNodeChildren(node);
+
+            var result = new TypeInformation(childrenTypes);
+            result.Add(node, childrenTypes[node.Second]); // just return the last expressions' type
             return result;
         }
 
-        public override TypeInformation VisitFunctionCall(FunctionCall functionCallNode, TypeInformation param)
+        public override TypeInformation VisitFunctionCall(FunctionCall functionCallNode, TypeInformation _)
         {
+            var childrenTypes = this.visitNodeChildren(functionCallNode);
+
             var functionDeclarationNode = nameResolution.CalledFunctionDeclarations[functionCallNode];
             var declaredReturnType = functionDeclarationNode.ReturnType;
 
-            var inferredReturnType = new UnitType(); // TODO
+            var inferredReturnType = new UnitType(); // TODO maybe just add return type from function declaration?
 
             if(inferredReturnType.ToString() != declaredReturnType.ToString())
             {
                 this._diagnostics.Report(new TypeCheckingError(declaredReturnType, inferredReturnType, functionCallNode.LocationRange.Start));
-                return param; // not sure here
+                return childrenTypes; // not sure here
             }
 
-            var result = new TypeInformation(param);
+            var result = new TypeInformation(childrenTypes);
             result.Add(functionCallNode, new UnitType()); // function call returns a unit, not a function return type
             return result;
 
         }
 
-        public override TypeInformation VisitContinueStatement(ContinueStatement node, TypeInformation param)
+        public override TypeInformation VisitContinueStatement(ContinueStatement node, TypeInformation _)
         {
-            var result = new TypeInformation(param);
+            // TODO do we need to visit node.children here?
+            var childrenTypes = this.visitNodeChildren(node);
+
+            var result = new TypeInformation(childrenTypes);
             result.Add(node, new UnitType());
             return result;
         }
 
-        public override TypeInformation VisitReturnStatement(ReturnStatement node, TypeInformation param)
+        public override TypeInformation VisitReturnStatement(ReturnStatement node, TypeInformation _)
         {
-            var result = new TypeInformation(param);
+            var childrenTypes = this.visitNodeChildren(node);
+
+            var result = new TypeInformation(childrenTypes);
             // Return Value is in a subtree, so its type should be already calculated by now
-            result.Add(node, param[node.ReturnValue]);
+            result.Add(node, childrenTypes[node.ReturnValue]);
             return result;
         }
 
-        public override TypeInformation VisitBreakStatement(BreakStatement node, TypeInformation partialExpressionTypes)
+        public override TypeInformation VisitBreakStatement(BreakStatement node, TypeInformation _)
         {
-            var result = new TypeInformation(partialExpressionTypes);
+            // TODO do we need to visit node.children here?
+            var childrenTypes = this.visitNodeChildren(node);
+
+            var result = new TypeInformation(childrenTypes);
             result.Add(node, new UnitType());
             return result;
         }
@@ -152,12 +165,16 @@ public sealed class TypeChecking
 
         public override TypeInformation VisitIfStatement(IfStatement node, TypeInformation param)
         {
+            param = this.visitNodeChildren(node);
+
             // TODO
             return null;
         }
 
         public override TypeInformation VisitLoopStatement(LoopStatement node, TypeInformation partialExpressionTypes)
         {
+            partialExpressionTypes = this.visitNodeChildren(node);
+
             // TODO what if Loop contains a "return 12;"?
             var result = new TypeInformation(partialExpressionTypes);
             result.Add(node, new UnitType());
@@ -165,10 +182,12 @@ public sealed class TypeChecking
         }
 
 
-        public override TypeInformation VisitInfix(Infix node, TypeInformation partialTypeInformation)
+        public override TypeInformation VisitInfix(Infix node, TypeInformation _)
         {
-            var typeOfLeftOperand = partialTypeInformation[node.LeftSide];
-            var typeOfRightOperand = partialTypeInformation[node.RightSide];
+            var childrenTypes = this.visitNodeChildren(node);
+
+            var typeOfLeftOperand = childrenTypes[node.LeftSide];
+            var typeOfRightOperand = childrenTypes[node.RightSide];
 
             if(typeOfLeftOperand.ToString() != typeOfRightOperand.ToString())
             {
@@ -176,37 +195,41 @@ public sealed class TypeChecking
                 this._diagnostics.Report(new TypeCheckingError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
 
                 // TODO does it make sense to return anything here? maybe a Unit type? But it could propagate the error up the tree 
-                var result = new TypeInformation(partialTypeInformation);
+                var result = new TypeInformation(childrenTypes);
                 result.Add(node, new UnitType());
                 return result;
             }
             else
             {
                 var commonType = typeOfLeftOperand;
-                var result = new TypeInformation(partialTypeInformation);
+                var result = new TypeInformation(childrenTypes);
                 result.Add(node, commonType);
                 return result;
             }
         }
 
-        public override TypeInformation VisitAssignment(Assignment node, TypeInformation partialExpressionTypes)
+        public override TypeInformation VisitAssignment(Assignment node, TypeInformation _)
         {
-            var typeOfLeftSide = partialExpressionTypes[node.LeftSide];
-            var typeOfRightSide = partialExpressionTypes[node.RightSide];
+            var childrenTypes = this.visitNodeChildren(node);
+
+            var typeOfLeftSide = childrenTypes[node.LeftSide];
+            var typeOfRightSide = childrenTypes[node.RightSide];
             if (typeOfLeftSide.ToString() != typeOfLeftSide.ToString())
             {
                 this._diagnostics.Report(new TypeCheckingError(typeOfLeftSide, typeOfRightSide, node.LocationRange.Start));
             }
 
             // Regardless of the error, let's return a Unit type for assignment and get more type checking information
-            var result = new TypeInformation(partialExpressionTypes);
+            var result = new TypeInformation(childrenTypes);
             result.Add(node, new UnitType());
             return result;
         }
 
-        public override TypeInformation VisitVariableValue(VariableValue node, TypeInformation partialExpressiontypes)
+        public override TypeInformation VisitVariableValue(VariableValue node, TypeInformation _)
         {
-            var result = new TypeInformation(partialExpressiontypes);
+            var childrenTypes = this.visitNodeChildren(node);
+
+            var result = new TypeInformation(childrenTypes);
 
             var variableDeclarationNode = this.nameResolution.UsedVariableDeclarations[node];
             var variableHasExplicitType = variableDeclarationNode.Type != null;
@@ -222,7 +245,7 @@ public sealed class TypeChecking
             // but we should check it for not being equal null just so C# compiler is satisfied
             if (variableDeclarationNode.InitValue != null)
             {
-                var typeInformation2 = VisitExpression(variableDeclarationNode.InitValue, partialExpressiontypes);
+                var typeInformation2 = VisitExpression(variableDeclarationNode.InitValue, childrenTypes);
                 var typeOfExpression = typeInformation2[variableDeclarationNode.InitValue];
 
                 result.Add(node, typeOfExpression);
@@ -236,15 +259,17 @@ public sealed class TypeChecking
 
         public override TypeInformation VisitBoolLiteralValue(BoolLiteralValue node, TypeInformation partialExpressiontypes)
         {
-            var result = new TypeInformation(partialExpressiontypes);
-            result.Add(node, new BoolType());
+            // No need to visit node children here
+
+            var result = new TypeInformation(){ { node, new BoolType() } };
             return result;
         }
 
         public override TypeInformation VisitIntLiteralValue(IntLiteralValue node, TypeInformation partialExpressiontypes)
         {
-            var result = new TypeInformation(partialExpressiontypes);
-            result.Add(node, new IntType());
+            // No need to visit node children here
+
+            var result = new TypeInformation() { { node, new IntType() } };
             return result;
         }
 
