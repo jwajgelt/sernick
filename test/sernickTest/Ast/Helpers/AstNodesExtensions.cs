@@ -6,6 +6,11 @@ using sernick.Ast.Nodes;
 using sernick.Input;
 using sernick.Utility;
 
+/// <summary>
+/// Import this class statically (<i>using static</i>) to take advantage of a more readable AST construction API.
+/// This class doesn't cover all possible usecases, so if you lack some method, just add it here so that it conforms
+/// to the general style of the API (either static method or extension method; 2 overloads both with <i>out var</i> and without)
+/// </summary>
 public static class AstNodesExtensions
 {
 
@@ -23,6 +28,47 @@ public static class AstNodesExtensions
         InitValue: null,
         IsConst: false,
         loc);
+
+    public static VariableDeclaration Var(string name, int initValue) => Var(name, initValue, out _);
+
+    public static VariableDeclaration Var(string name, int initValue, out VariableDeclaration result) =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: null,
+            InitValue: Literal(initValue),
+            IsConst: false,
+            loc);
+
+    public static VariableDeclaration Var(string name, bool initValue) => Var(name, initValue, out _);
+
+    public static VariableDeclaration Var(string name, bool initValue, out VariableDeclaration result) =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: null,
+            InitValue: Literal(initValue),
+            IsConst: false,
+            loc);
+
+    public static VariableDeclaration Var<T>(string name, Expression initValue) where T : Type, new() => Var<T>(name, initValue, out _);
+
+    public static VariableDeclaration Var<T>(string name, Expression initValue, out VariableDeclaration result)
+        where T : Type, new() =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: new T(),
+            InitValue: initValue,
+            IsConst: false,
+            loc);
+
+    public static VariableDeclaration Var<T>(string name) where T : Type, new() => Var<T>(name, out _);
+
+    public static VariableDeclaration Var<T>(string name, out VariableDeclaration result) where T : Type, new() =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: new T(),
+            InitValue: null,
+            IsConst: false,
+            loc);
 
     public static VariableValue Value(string name) => Value(name, out _);
 
@@ -44,6 +90,8 @@ public static class AstNodesExtensions
 
     private static IntLiteralValue Literal(int value) => new(value, loc);
 
+    private static BoolLiteralValue Literal(bool value) => new(value, loc);
+
     public static Infix Plus(this string name, int v) => Value(name).Plus(v);
 
     public static Infix Plus(this Expression e1, int v2) => e1.Plus(Literal(v2));
@@ -53,7 +101,12 @@ public static class AstNodesExtensions
     public static Assignment Assign(this string name, int value) => name.Assign(value, out _);
 
     public static Assignment Assign(this string name, int value, out Assignment result) =>
-        result = new Assignment(Ident(name), Literal(value), loc);
+        name.Assign(Literal(value), out result);
+
+    public static Assignment Assign(this string name, Expression value) => name.Assign(value, out _);
+
+    public static Assignment Assign(this string name, Expression value, out Assignment result) =>
+        result = new Assignment(Ident(name), value, loc);
 
     #endregion
 
