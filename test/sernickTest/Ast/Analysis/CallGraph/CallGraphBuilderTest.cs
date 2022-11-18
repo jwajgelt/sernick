@@ -21,7 +21,7 @@ public class CallGraphBuilderTest
         );
 
         var functionNameResolution = new Dictionary<FunctionCall, FunctionDefinition> {
-            {fCall, f}
+            { fCall, f }
         };
 
         var expectedCallGraph = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
@@ -49,14 +49,14 @@ public class CallGraphBuilderTest
         );
 
         var functionNameResolution = new Dictionary<FunctionCall, FunctionDefinition> {
-            {fCall, f},
-            {gCall, g}
+            { fCall, f },
+            { gCall, g }
         };
 
         var expectedCallGraph = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
             { f, new FunctionDefinition[]{} },
             { g, new FunctionDefinition[]{} },
-            { h, new FunctionDefinition[]{ f,g } }
+            { h, new FunctionDefinition[]{ f, g } }
         });
 
         Verify(tree, functionNameResolution, expectedCallGraph);
@@ -82,8 +82,8 @@ public class CallGraphBuilderTest
         );
 
         var functionNameResolution = new Dictionary<FunctionCall, FunctionDefinition> {
-            {fCall, f},
-            {gCall, g}
+            { fCall, f },
+            { gCall, g }
         };
 
         var expectedCallGraph = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
@@ -122,9 +122,9 @@ public class CallGraphBuilderTest
         );
 
         var functionNameResolution = new Dictionary<FunctionCall, FunctionDefinition> {
-            {fCallInner, f},
-            {fCallOuter, f},
-            {gCall, g}
+            { fCallInner, f },
+            { fCallOuter, f },
+            { gCall, g }
         };
 
         var expectedCallGraph = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
