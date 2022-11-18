@@ -1,5 +1,7 @@
 namespace sernick.Ast.Nodes;
 
+using Conversion;
+using Grammar.Lexicon;
 using Grammar.Syntax;
 using Input;
 using Parser.ParseTree;
@@ -18,7 +20,12 @@ public abstract record AstNode(Range<ILocation> LocationRange)
     /// </summary>
     public static AstNode From(IParseTree<Symbol> parseTree)
     {
-        throw new NotImplementedException();
+        return parseTree switch
+        {
+            { Symbol: Terminal { Category: LexicalGrammarCategory.TypeIdentifiers } }
+                => parseTree.ToIdentifier(),
+            _ => parseTree.ToExpression()
+        };
     }
 
     public abstract TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param);

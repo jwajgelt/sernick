@@ -50,6 +50,7 @@ public enum NonTerminalSymbol
     FunctionCall,
     FunctionArguments,
     Assignment,
+    IfCondition,
     IfExpression,
     LoopExpression,
     Modifier,

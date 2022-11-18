@@ -2,6 +2,7 @@ namespace sernickTest.Compiler;
 
 using Helpers;
 using sernick.Tokenizer.Lexer;
+using Utility;
 
 public class FrontendTest
 {
@@ -16,7 +17,7 @@ public class FrontendTest
         Assert.False(diagnostics.DidErrorOccur);
     }
 
-    [Theory(Skip = "Too large performance hit on Github Workflow")]
+    [PerformanceHeavyTheory]
     [InlineData("access_outside_parentheses")]
     [InlineData("braces_in_function_call")]
     [InlineData("braces_in_if_condition")]
@@ -32,7 +33,7 @@ public class FrontendTest
         Assert.False(diagnostics.DidErrorOccur);
     }
 
-    [Theory(Skip = "Too large performance hit on Github Workflow")]
+    [PerformanceHeavyTheory]
     [InlineData("many_commands_in_single_line")]
     [InlineData("multiple_lines_separated")]
     [InlineData("separator_far_away")]
@@ -45,7 +46,7 @@ public class FrontendTest
         Assert.False(diagnostics.DidErrorOccur);
     }
 
-    [Theory(Skip = "Too large performance hit on Github Workflow")]
+    [PerformanceHeavyTheory]
     [InlineData("if_else_expression_false")]
     [InlineData("if_else_expression_true")]
     [InlineData("if_else_false")]
@@ -82,7 +83,7 @@ public class FrontendTest
         Assert.False(diagnostics.DidErrorOccur);
     }
 
-    [Theory(Skip = "Too large performance hit on Github Workflow")]
+    [PerformanceHeavyTheory]
     [InlineData("break")]
     [InlineData("continue")]
     [InlineData("nested")]
@@ -96,7 +97,7 @@ public class FrontendTest
         Assert.False(diagnostics.DidErrorOccur);
     }
 
-    [Theory(Skip = "Too large performance hit on Github Workflow")]
+    [PerformanceHeavyTheory]
     [InlineData("bool")]
     [InlineData("function-arguments")]
     [InlineData("functions")]
@@ -109,7 +110,7 @@ public class FrontendTest
         Assert.False(diagnostics.DidErrorOccur);
     }
 
-    [Theory(Skip = "Too large performance hit on Github Workflow")]
+    [PerformanceHeavyTheory]
     [InlineData("const_decl_and_init_no_type")]
     [InlineData("const_decl_and_init_with_type")]
     [InlineData("const_decl_different_scopes")]
@@ -129,7 +130,7 @@ public class FrontendTest
         Assert.False(diagnostics.DidErrorOccur);
     }
 
-    [Theory(Skip = "Too large performance hit on Github Workflow")]
+    [PerformanceHeavyTheory]
     [InlineData("argument-types", "no-types")]
     [InlineData("code-blocks", "mixed_brackets")]
     [InlineData("code-blocks", "unclosed_braces")]
