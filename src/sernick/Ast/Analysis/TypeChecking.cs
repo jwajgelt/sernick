@@ -20,14 +20,13 @@ public sealed class TypeChecking
         init;
     }
 
-    public TypeChecking(AstNode ast, NameResolutionResult nameResolution, Diagnostics diagnostics)
+    public static TypeInformation CheckTypes(AstNode ast, NameResolutionResult nameResolution, Diagnostics diagnostics)
     {
         // TODO: implement a TypeCheckingASTVisitor, walk it over the AST and initialize the property with the result
         var visitor = new TypeCheckingAstVisitor(nameResolution, diagnostics);
-        var newExpressionTypes = new Dictionary<Expression, Type>();
+        return visitor.VisitAstTree(ast, new TypeInformation());
     }
 
-    // TODO: use correct param and result types
     private class TypeCheckingAstVisitor : AstVisitor<TypeInformation, Dictionary<AstNode, Type>>
     {
         /// <summary>
@@ -41,11 +40,10 @@ public sealed class TypeChecking
         public TypeCheckingAstVisitor(NameResolutionResult nameResolution, Diagnostics diagnostics)
         {
             this.nameResolution = nameResolution;
-            this.childrenTypes = new TypeInformation();
             this._diagnostics = diagnostics;
         }
 
-        public override TypeInformation VisitAstNode(AstNode node, TypeInformation _)
+        protected override TypeInformation VisitAstNode(AstNode node, TypeInformation _)
         {
             // just visit recursively, bottom-up
             // for simple things, just visit them without recursion
