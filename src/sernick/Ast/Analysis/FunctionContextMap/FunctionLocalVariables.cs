@@ -37,9 +37,10 @@ public sealed class FunctionLocalVariables
     }
 
     public IEnumerable<Variable> this[FunctionDefinition funcDefinition] =>
-        _locals[funcDefinition]
-            .Select(var => new Variable(var, _functions[var]));
+        _locals[funcDefinition].Select(var => new Variable(var, _functions[var]));
 
     public record struct Variable(VariableDeclaration Declaration,
         IEnumerable<FunctionDefinition> ReferencingFunctions);
+
+    public void DiscardLocal(VariableDeclaration local) => _functions.Remove(local);
 }

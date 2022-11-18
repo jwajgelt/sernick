@@ -67,6 +67,7 @@ public static class FunctionContextMapProcessor
             {
                 var usedElsewhere = referencingFunctions.Count() > 1;
                 functionContext.AddLocal(new FunctionVariableWrapper(localVariable), usedElsewhere);
+                _locals.DiscardLocal(localVariable);
             }
 
             _locals.ExitFunction(node);
