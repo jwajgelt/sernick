@@ -49,6 +49,11 @@ public static class AstNodesExtensions
             IsConst: false,
             loc);
 
+    public static VariableDeclaration Var<T>(string name, bool initValue) where T : Type, new() => Var<T>(name, initValue, out _);
+
+    public static VariableDeclaration Var<T>(string name, bool initValue, out VariableDeclaration result) where T : Type, new() =>
+        Var<T>(name, Literal(initValue), out result);
+
     public static VariableDeclaration Var<T>(string name, Expression initValue) where T : Type, new() => Var<T>(name, initValue, out _);
 
     public static VariableDeclaration Var<T>(string name, Expression initValue, out VariableDeclaration result)
@@ -79,12 +84,30 @@ public static class AstNodesExtensions
 
     #region Function Call
 
-    public static FunctionCall Call(this string name) => name.Call(Array.Empty<Expression>(), out _);
+    public static FuncCallBuilder Call(this string name) => new(Ident(name));
 
-    public static FunctionCall Call(this string name, out FunctionCall result) => name.Call(Array.Empty<Expression>(), out result);
+    public static FunctionCall Call(this string name, out FunctionCall result) => result = name.Call();
 
-    public static FunctionCall Call(this string name, IEnumerable<Expression> arguments, out FunctionCall result) =>
-        result = new FunctionCall(Ident(name), arguments, loc);
+    public sealed class FuncCallBuilder
+    {
+        private readonly Identifier _identifier;
+        private readonly List<Expression> _arguments = new();
+
+        internal FuncCallBuilder(Identifier identifier) => _identifier = identifier;
+
+        public FuncCallBuilder Argument(Expression arg)
+        {
+            _arguments.Add(arg);
+            return this;
+        }
+
+        public static implicit operator FunctionCall(FuncCallBuilder builder) => new(
+            builder._identifier,
+            builder._arguments,
+            loc);
+
+        public FunctionCall Get(out FunctionCall result) => result = this;
+    }
 
     #endregion
 

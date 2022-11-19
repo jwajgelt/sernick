@@ -112,10 +112,10 @@ public class CallGraphBuilderTest
             ).Get(out var g),
 
             Fun<UnitType>("h").Body(
-                Return("f".Call(new[]{
-                    "f".Call(new[]{Literal(0)}, out var fCallInner)
+                Return("f".Call().Argument(
+                    "f".Call().Argument(Literal(0)).Get(out var fCallInner)
                     .Plus("g".Call(out var gCall))
-                }, out var fCallOuter))
+                ).Get(out var fCallOuter))
             ).Get(out var h)
         );
 

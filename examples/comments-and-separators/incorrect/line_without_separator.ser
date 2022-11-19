@@ -1,3 +1,4 @@
 const a = 5
+const b = 2
 
 // There is no line separator at the end of the line
