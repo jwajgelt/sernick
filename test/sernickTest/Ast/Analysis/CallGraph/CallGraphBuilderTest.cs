@@ -25,6 +25,7 @@ public class CallGraphBuilderTest
         };
 
         var expectedCallGraph = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
+            { tree, new FunctionDefinition[]{} },
             { f, new FunctionDefinition[]{} },
             { g, new FunctionDefinition[]{ f } }
         });
@@ -54,6 +55,7 @@ public class CallGraphBuilderTest
         };
 
         var expectedCallGraph = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
+            { tree, new FunctionDefinition[]{} },
             { f, new FunctionDefinition[]{} },
             { g, new FunctionDefinition[]{} },
             { h, new FunctionDefinition[]{ f, g } }
@@ -86,6 +88,7 @@ public class CallGraphBuilderTest
         };
 
         var expectedCallGraph = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
+            { tree, new FunctionDefinition[]{} },
             { f, new FunctionDefinition[]{} },
             { g, new FunctionDefinition[]{ f } },
             { h, new FunctionDefinition[]{ g } }
@@ -126,6 +129,7 @@ public class CallGraphBuilderTest
         };
 
         var expectedCallGraph = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
+            { tree, new FunctionDefinition[]{} },
             { f, new FunctionDefinition[]{} },
             { g, new FunctionDefinition[]{} },
             { h, new FunctionDefinition[]{ f, g } }

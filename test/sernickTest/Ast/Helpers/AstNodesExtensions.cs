@@ -137,7 +137,7 @@ public static class AstNodesExtensions
 
     #region Expressions
 
-    public static Expression Program(params Expression[] lines) => new FunctionDefinition(
+    public static FunctionDefinition Program(params Expression[] lines) => new(
         Name: Ident(""),
         Parameters: Array.Empty<FunctionParameterDeclaration>(),
         ReturnType: new UnitType(),
