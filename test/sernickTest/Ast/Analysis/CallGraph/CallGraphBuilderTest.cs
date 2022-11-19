@@ -11,8 +11,8 @@ public class CallGraphBuilderTest
     [Fact]
     public void TestSimple()
     {
-        // f {}
-        // g { f() }
+        // fun f() {}
+        // fun g() { f() }
         var tree = Program(
             Fun<UnitType>("f").Body(Close).Get(out var f),
             Fun<UnitType>("g").Body(
@@ -36,9 +36,9 @@ public class CallGraphBuilderTest
     [Fact]
     public void TestControlFlow()
     {
-        // f {}
-        // g {}
-        // h { if(true) { f() } else { g() } }
+        // fun f() {}
+        // fun g() {}
+        // fun h() { if(true) { f() } else { g() } }
         var tree = Program(
             Fun<UnitType>("f").Body(Close).Get(out var f),
             Fun<UnitType>("g").Body(Close).Get(out var g),
@@ -67,9 +67,9 @@ public class CallGraphBuilderTest
     [Fact]
     public void TestNestedFunction()
     {
-        // f {}
-        // g {
-        //   h { g() }
+        // fun f() {}
+        // fun g() {
+        //   fun h() { g() }
         //   f()
         // }
         var tree = Program(
@@ -100,9 +100,9 @@ public class CallGraphBuilderTest
     [Fact]
     public void TestCallInParameter()
     {
-        // f(arg : Int) { arg }
-        // g { 1 }
-        // h { f(f(0)+g()) }
+        // fun f(arg : Int) { arg }
+        // fun g() { 1 }
+        // fun h() { f(f(0)+g()) }
         var tree = Program(
             Fun<IntType>("f")
             .Parameter<IntType>("arg")
