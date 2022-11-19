@@ -135,6 +135,41 @@ public class VariableAccessMapBuilderTest
     }
 
     [Fact]
+    public void Builder_handles_complex_Assignments()
+    {
+        // var x;
+        // var y;
+        // fun foo () {
+        //     y = { x = 1; x }
+        // }
+        var ast = Program(
+            Var("x", out var xDeclare),
+            Var("y", out var yDeclare),
+            Fun<UnitType>("foo")
+                .Body(
+                    "y".Assign(
+                        Block(
+                            "x".Assign(1, out var xAssign),
+                            Value("x", out var xVal)),
+                        out var yAssign
+                        )
+                )
+                .Get(out var foo)
+            );
+        var nameResolution = NameResolution()
+            .WithAssigns((xAssign, xDeclare), (yAssign, yDeclare))
+            .WithVars((xVal, xDeclare));
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        
+        Assert.True(variableAccessMap.HasExclusiveWriteAccess(foo, xDeclare));
+        Assert.True(variableAccessMap.HasExclusiveWriteAccess(foo, yDeclare));
+        
+        Assert.Equal(2, variableAccessMap[foo].Count());
+        Assert.Contains((xDeclare, VariableAccessMode.WriteAndRead), variableAccessMap[foo]);
+        Assert.Contains((yDeclare, VariableAccessMode.WriteAndRead), variableAccessMap[foo]);
+    }
+
+    [Fact]
     public void BuiltMap_recognises_ExclusiveWriteAccess_Case1()
     {
         // var x;

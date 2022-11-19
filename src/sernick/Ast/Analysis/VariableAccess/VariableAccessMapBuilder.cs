@@ -118,7 +118,7 @@ public static class VariableAccessMapPreprocess
                 VariableAccess.AddVariableWrite(currentFun, _nameResolution.AssignedVariableDeclarations[assignment]);
             }
 
-            return Unit.I;
+            return assignment.Right.Accept(this, currentFun);
         }
 
         public override Unit VisitVariableDeclaration(VariableDeclaration declaration, FunctionDefinition? currentFun)
@@ -128,7 +128,7 @@ public static class VariableAccessMapPreprocess
                 VariableAccess.AddVariableWrite(currentFun, declaration);
             }
 
-            return VisitAstNode(declaration, currentFun);
+            return declaration.InitValue?.Accept(this, currentFun) ?? Unit.I;
         }
     }
 }
