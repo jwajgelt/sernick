@@ -45,7 +45,7 @@ public static class NameResolutionAlgorithm
         }
 
         public override NameResolutionVisitorResult VisitVariableDeclaration(VariableDeclaration node,
-            IdentifiersNamespace identifiersNamespace) => new(TryAdd(identifiersNamespace, node));
+            IdentifiersNamespace identifiersNamespace) => VisitAstNode(node, TryAdd(identifiersNamespace, node));
 
         public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node,
             IdentifiersNamespace identifiersNamespace)
@@ -69,14 +69,18 @@ public static class NameResolutionAlgorithm
         {
             return VisitIdentifierUse(identifiersNamespace, node.FunctionName, declaration =>
             {
+                var visitorResult = VisitAstNode(node, identifiersNamespace);
                 if (declaration is FunctionDefinition functionDefinition)
                 {
-                    return new NameResolutionVisitorResult(NameResolutionResult.OfFunctionCall(node, functionDefinition),
-                        identifiersNamespace);
+                    return visitorResult with
+                    {
+                        Result = visitorResult.Result.JoinWith(
+                            NameResolutionResult.OfFunctionCall(node, functionDefinition))
+                    };
                 }
 
                 _diagnostics.Report(new NotAFunctionError(node.FunctionName));
-                return new NameResolutionVisitorResult(identifiersNamespace);
+                return visitorResult;
             });
         }
 
@@ -84,14 +88,18 @@ public static class NameResolutionAlgorithm
         {
             return VisitIdentifierUse(identifiersNamespace, node.Left, declaration =>
             {
+                var visitorResult = VisitAstNode(node, identifiersNamespace);
                 if (declaration is VariableDeclaration variableDeclaration)
                 {
-                    return new NameResolutionVisitorResult(NameResolutionResult.OfAssignment(node, variableDeclaration),
-                        identifiersNamespace);
+                    return visitorResult with
+                    {
+                        Result = visitorResult.Result.JoinWith(
+                            NameResolutionResult.OfAssignment(node, variableDeclaration))
+                    };
                 }
 
                 _diagnostics.Report(new NotAVariableError(node.Left));
-                return new NameResolutionVisitorResult(identifiersNamespace);
+                return VisitAstNode(node, identifiersNamespace);
             });
         }
 

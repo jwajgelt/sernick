@@ -9,9 +9,12 @@ public static class DictionaryExtensions
         return dictionary[key];
     }
 
-    public static IReadOnlyDictionary<K, V> JoinWith<K, V>(this IReadOnlyDictionary<K, V> dict, IReadOnlyDictionary<K, V> other) where K : notnull
+    public static IReadOnlyDictionary<K, V> JoinWith<K, V>(
+        this IReadOnlyDictionary<K, V> dict,
+        IReadOnlyDictionary<K, V> other,
+        IEqualityComparer<K> comparer) where K : notnull
     {
         return new[] { dict, other }.SelectMany(d => d)
-            .ToDictionary(pair => pair.Key, pair => pair.Value);
+            .ToDictionary(pair => pair.Key, pair => pair.Value, comparer);
     }
 }

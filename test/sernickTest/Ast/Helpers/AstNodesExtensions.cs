@@ -144,7 +144,7 @@ public static class AstNodesExtensions
         Body: Block(lines),
         LocationRange: loc);
 
-    private static ExpressionJoin Join(this Expression e1, Expression e2) => new(e1, e2, loc);
+    public static ExpressionJoin Join(this Expression e1, Expression e2) => new(e1, e2, loc);
 
     private static Expression Join(this IEnumerable<Expression> expressions) =>
         expressions.Aggregate((sequence, expr) => sequence.Join(expr));
