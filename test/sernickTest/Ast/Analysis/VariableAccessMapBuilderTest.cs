@@ -15,7 +15,7 @@ public class VariableAccessMapBuilderTest
         var ast = Program(
             Var("x", out var xDeclare),
             Fun<UnitType>("foo")
-                .Body("bar".Call(Value("x", out var xVal)))
+                .Body("bar".Call().Argument(Value("x", out var xVal)))
                 .Get(out var foo)
         );
         var nameResolution = NameResolution().WithVars((xVal, xDeclare));
@@ -53,7 +53,7 @@ public class VariableAccessMapBuilderTest
             Var("x", out var xDeclare),
             Fun<UnitType>("foo")
                 .Body(
-                    "bar".Call(Value("x", out var xVal)),
+                    "bar".Call().Argument(Value("x", out var xVal)),
                     "x".Assign(1, out var xAssign)
                     )
                 .Get(out var foo)
@@ -114,18 +114,25 @@ public class VariableAccessMapBuilderTest
     public void BuiltMap_recognises_ExclusiveWriteAccess_Case1()
     {
         // var x;
-        // fun foo() { x = 1 }
+        // fun foo() {
+        //     x = 1;
+        //     x = 2;
+        // }
         // fun bar() { }
         var ast = Program(
             Var("x", out var xDeclare),
             Fun<UnitType>("foo")
-                .Body("x".Assign(1, out var xAssign))
+                .Body(
+                    "x".Assign(1, out var xAssign1),
+                    "x".Assign(1, out var xAssign2))
                 .Get(out var foo),
             Fun<UnitType>("bar")
                 .Body(Close)
                 .Get(out var bar)
         );
-        var nameResolution = NameResolution().WithAssigns((xAssign, xDeclare));
+        var nameResolution = NameResolution().WithAssigns(
+            (xAssign1, xDeclare),
+            (xAssign2, xDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
 
         Assert.True(variableAccessMap.HasExclusiveWriteAccess(foo, xDeclare));

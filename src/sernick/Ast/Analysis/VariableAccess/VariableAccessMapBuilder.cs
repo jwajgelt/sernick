@@ -1,14 +1,8 @@
 namespace sernick.Ast.Analysis.VariableAccess;
 
 using NameResolution;
-using sernick.Ast.Nodes;
+using Nodes;
 using Utility;
-
-public enum VariableAccessMode
-{
-    ReadOnly,
-    WriteAndRead
-}
 
 public sealed class VariableAccessMap
 {
@@ -52,7 +46,17 @@ public sealed class VariableAccessMap
         // Overwrite access mode of variable to WriteAndRead because WriteAndRead is stronger.
         _variableAccessDictionary[fun][variable] = VariableAccessMode.WriteAndRead;
 
-        _exclusiveWriteAccess[variable] = _exclusiveWriteAccess.ContainsKey(variable) ? null : fun;
+        // `fun` has exclusive write access to `variable`
+        // if `variable` hasn't been accessed by a different function
+        // or it was accessed earlier by `fun`.
+        var isNonExclusiveCall = _exclusiveWriteAccess.TryGetValue(variable, out var exclusiveFun) &&
+                                 !ReferenceEquals(exclusiveFun, fun);
+
+        // If it was accessed by a different function set _exclusiveWriteAccess[variable] to null,
+        // because no function will ever have an exclusive write access.
+        // (Note that if we removed `variable` from exclusiveWriteAccess,
+        //  next function accessing `variable` would get exclusive write access, which isn't correct)
+        _exclusiveWriteAccess[variable] = isNonExclusiveCall ? null : fun;
     }
 }
 
