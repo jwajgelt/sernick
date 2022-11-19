@@ -39,7 +39,7 @@ public class CompilerFrontendTest
         CompilerFrontend.Process(input, diagnostics.Object);
     }
 
-    [Theory, MemberData(nameof(CorrectExamplesData))]
+    [PerformanceHeavyTheory, MemberData(nameof(CorrectExamplesData))]
     public void TestCorrectExamples(string group, string fileName)
     {
         var diagnostics = $"examples/{group}/correct/{fileName}.ser".CompileFile();
@@ -47,7 +47,7 @@ public class CompilerFrontendTest
         Assert.False(diagnostics.DidErrorOccur);
     }
 
-    [Theory, MemberData(nameof(IncorrectExamplesData))]
+    [PerformanceHeavyTheory, MemberData(nameof(IncorrectExamplesData))]
     public void TestIncorrectExamples(string group, string fileName, IEnumerable<IDiagnosticItem> expectedErrors)
     {
         var diagnostics = $"examples/{group}/incorrect/{fileName}.ser".CompileFile();
@@ -60,7 +60,6 @@ public class CompilerFrontendTest
         Assert.Equal(expectedErrors, diagnostics.DiagnosticItems);
     }
 
-    // NOTE: DO NOT UNSKIP WHEN PUSHING: it will overload Github Actions
     [PerformanceHeavyTheory]
     [InlineData("a")]
     [InlineData("5")]
@@ -105,17 +104,21 @@ public class CompilerFrontendTest
     [InlineData("var x: Int = 5 + 5")]
     [InlineData("(var x: Int;);")]
     [InlineData("(fun f() {};);")]
-    public void TestCorrectShortPrograms(string program)
+    public void TestCorrectLexerAndParser(string program)
     {
         var diagnostics = program.CompileText();
 
-        Assert.False(diagnostics.DidErrorOccur);
+        Assert.False(diagnostics.DiagnosticItems.Any(item =>
+            item.GetType() == typeof(LexicalError) ||
+            item.GetType() == typeof(SyntaxError<Symbol>)
+        ));
     }
 
     public static IEnumerable<object[]> CorrectExamplesData => Directory
         .GetDirectories("examples", "*", SearchOption.TopDirectoryOnly)
         .Select(dir =>
-            new DirectoryInfo($"{dir}/correct").GetFiles().Select(fileInfo => (Group: dir.Split('/').Last(), fileInfo.Name)))
+            new DirectoryInfo($"{dir}/correct").GetFiles().Select(
+                fileInfo => (Group: dir.Split(Path.DirectorySeparatorChar).Last(), fileInfo.Name)))
         .SelectMany(e => e.Select(fileInfo => new[] { fileInfo.Group, fileInfo.Name.Split('.').First() }))
         .Where(fileInfo => !fileInfo.SequenceEqual(new[] { "comments-and-separators", "multi_line_comment" })
             && !fileInfo.SequenceEqual(new[] { "comments-and-separators", "multi_line_in_command_comment" })
