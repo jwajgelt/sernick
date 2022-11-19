@@ -13,19 +13,22 @@ public class CallGraphBuilderTest
     {
         // fun f() {}
         // fun g() { f() }
+        // g()
         var tree = Program(
             Fun<UnitType>("f").Body(Close).Get(out var f),
             Fun<UnitType>("g").Body(
                 "f".Call(out var fCall)
-            ).Get(out var g)
+            ).Get(out var g),
+            "g".Call(out var gCall)
         );
 
         var functionNameResolution = new Dictionary<FunctionCall, FunctionDefinition> {
-            { fCall, f }
+            { fCall, f },
+            { gCall, g }
         };
 
         var expectedCallGraph = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
-            { tree, new FunctionDefinition[]{} },
+            { tree, new FunctionDefinition[]{ g } },
             { f, new FunctionDefinition[]{} },
             { g, new FunctionDefinition[]{ f } }
         });
@@ -39,23 +42,29 @@ public class CallGraphBuilderTest
         // fun f() {}
         // fun g() {}
         // fun h() { if(true) { f() } else { g() } }
+        // if(false) { g() } else { h() }
         var tree = Program(
             Fun<UnitType>("f").Body(Close).Get(out var f),
             Fun<UnitType>("g").Body(Close).Get(out var g),
             Fun<UnitType>("h").Body(
                 If(true)
                 .Then("f".Call(out var fCall))
-                .Else("g".Call(out var gCall))
-            ).Get(out var h)
+                .Else("g".Call(out var gCall1))
+            ).Get(out var h),
+            If(false)
+                .Then("g".Call(out var gCall2))
+                .Else("h".Call(out var hCall))
         );
 
         var functionNameResolution = new Dictionary<FunctionCall, FunctionDefinition> {
             { fCall, f },
-            { gCall, g }
+            { gCall1, g },
+            { gCall2, g },
+            { hCall, h }
         };
 
         var expectedCallGraph = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
-            { tree, new FunctionDefinition[]{} },
+            { tree, new FunctionDefinition[]{ g, h } },
             { f, new FunctionDefinition[]{} },
             { g, new FunctionDefinition[]{} },
             { h, new FunctionDefinition[]{ f, g } }

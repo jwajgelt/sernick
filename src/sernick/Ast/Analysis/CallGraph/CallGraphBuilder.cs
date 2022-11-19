@@ -33,7 +33,7 @@ public static class CallGraphBuilder
     public static CallGraph Process(AstNode ast, NameResolutionResult nameResolution)
     {
         var visitor = new CallGraphVisitor(nameResolution.CalledFunctionDeclarations);
-        return visitor.VisitAstTree(ast, null);
+        return visitor.VisitAstTree(ast, (FunctionDefinition)ast);
     }
 
     /// <summary>
