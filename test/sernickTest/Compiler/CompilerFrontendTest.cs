@@ -108,10 +108,10 @@ public class CompilerFrontendTest
     {
         var diagnostics = program.CompileText();
 
-        Assert.False(diagnostics.DiagnosticItems.Any(item =>
+        Assert.DoesNotContain(
+            diagnostics.DiagnosticItems, item =>
             item.GetType() == typeof(LexicalError) ||
-            item.GetType() == typeof(SyntaxError<Symbol>)
-        ));
+            item.GetType() == typeof(SyntaxError<Symbol>));
     }
 
     public static IEnumerable<object[]> CorrectExamplesData => Directory
