@@ -1,5 +1,6 @@
 namespace sernick.Ast.Analysis.FunctionContextMap;
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Compiler.Function;
 using NameResolution;
@@ -20,7 +21,7 @@ public static class FunctionContextMapProcessor
     }
 
     /// <summary>
-    /// Only top-level declarations will be visited with <c>EnclosingFunction == null</c>
+    /// Only invisible "main()" declaration will be visited with <c>EnclosingFunction == null</c>
     /// </summary>
     private record struct AstNodeContext(FunctionDefinition? EnclosingFunction = null);
 
@@ -97,46 +98,42 @@ public static class FunctionContextMapProcessor
 
         public override Unit VisitVariableDeclaration(VariableDeclaration node, AstNodeContext astContext)
         {
+            Debug.Assert(astContext.EnclosingFunction is not null);
+
             node.InitValue?.Accept(this, astContext);
 
-            if (astContext.EnclosingFunction is not null)
-            {
-                _locals.DeclareLocal(node, astContext.EnclosingFunction);
-            }
+            _locals.DeclareLocal(node, astContext.EnclosingFunction);
 
             return Unit.I;
         }
 
         public override Unit VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, AstNodeContext astContext)
         {
-            if (astContext.EnclosingFunction is not null)
-            {
-                _locals.DeclareLocal(node, astContext.EnclosingFunction);
-            }
+            Debug.Assert(astContext.EnclosingFunction is not null);
+
+            _locals.DeclareLocal(node, astContext.EnclosingFunction);
 
             return Unit.I;
         }
 
         public override Unit VisitVariableValue(VariableValue node, AstNodeContext astContext)
         {
-            if (astContext.EnclosingFunction is not null)
-            {
-                var declaration = _nameResolution.UsedVariableDeclarations[node];
-                _locals.UseLocal(declaration, astContext.EnclosingFunction);
-            }
+            Debug.Assert(astContext.EnclosingFunction is not null);
+
+            var declaration = _nameResolution.UsedVariableDeclarations[node];
+            _locals.UseLocal(declaration, astContext.EnclosingFunction);
 
             return Unit.I;
         }
 
         public override Unit VisitAssignment(Assignment node, AstNodeContext astContext)
         {
+            Debug.Assert(astContext.EnclosingFunction is not null);
+
             node.Right.Accept(this, astContext);
 
-            if (astContext.EnclosingFunction is not null)
-            {
-                var variableDeclaration = _nameResolution.AssignedVariableDeclarations[node];
-                _locals.UseLocal(variableDeclaration, astContext.EnclosingFunction);
-            }
+            var variableDeclaration = _nameResolution.AssignedVariableDeclarations[node];
+            _locals.UseLocal(variableDeclaration, astContext.EnclosingFunction);
 
             return Unit.I;
         }

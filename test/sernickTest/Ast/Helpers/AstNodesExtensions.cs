@@ -137,7 +137,12 @@ public static class AstNodesExtensions
 
     #region Expressions
 
-    public static Expression Program(params Expression[] lines) => lines.Join();
+    public static Expression Program(params Expression[] lines) => new FunctionDefinition(
+        Name: Ident(""),
+        Parameters: Array.Empty<FunctionParameterDeclaration>(),
+        ReturnType: new UnitType(),
+        Body: Block(lines),
+        LocationRange: loc);
 
     private static ExpressionJoin Join(this Expression e1, Expression e2) => new(e1, e2, loc);
 
