@@ -21,13 +21,20 @@ public enum BinaryOperation
     LessThan, GreaterThan,
     LessThanEqual, GreaterThanEqual,
     Equal, NotEqual,
-    Not, And, Or,
+    And, Or,
 }
 
 public sealed record BinaryOperationNode
     (BinaryOperation Operation, CodeTreeNode Left, CodeTreeNode Right) : CodeTreeNode;
 
-public sealed record Register;
+public enum UnaryOperation
+{
+    Not, Negate
+}
+
+public sealed record UnaryOperationNode(UnaryOperation Operation, CodeTreeNode Operand) : CodeTreeNode;
+
+public record struct Register;
 
 public sealed record RegisterRead(Register Register) : CodeTreeNode;
 

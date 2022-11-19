@@ -4,7 +4,7 @@ public abstract record CodeTreeRoot : CodeTreeNode;
 
 /// <summary>
 /// The root of a code tree for an operation that conditionally jumps to
-/// on of two different code paths, depending on the result of the
+/// one of two different code paths, depending on the result of the
 /// condition evaluation.
 /// </summary>
 /// <param name="TrueCase">The code tree to jump to if the condition is true</param>
