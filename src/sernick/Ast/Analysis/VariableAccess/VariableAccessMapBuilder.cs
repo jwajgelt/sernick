@@ -1,5 +1,6 @@
 namespace sernick.Ast.Analysis.VariableAccess;
 
+using System.Diagnostics;
 using NameResolution;
 using Nodes;
 using Utility;
@@ -61,6 +62,10 @@ public sealed class VariableAccessMap
 
 public static class VariableAccessMapPreprocess
 {
+    /// <summary>
+    ///     Constructs VariableAccessMap from AST and NameResolution.
+    ///     The top node of AST should be a program node (main function declaration)
+    /// </summary>
     public static VariableAccessMap Process(AstNode ast, NameResolutionResult nameResolution)
     {
         var visitor = new VariableAccessVisitor(nameResolution);
@@ -102,27 +107,22 @@ public static class VariableAccessMapPreprocess
 
         public override Unit VisitVariableValue(VariableValue variableValue, FunctionDefinition? currentFun)
         {
-            if (currentFun != null)
-            {
-                VariableAccess.AddVariableRead(currentFun, _nameResolution.UsedVariableDeclarations[variableValue]);
-            }
-
+            Debug.Assert(currentFun != null);
+            VariableAccess.AddVariableRead(currentFun, _nameResolution.UsedVariableDeclarations[variableValue]);
             return Unit.I;
         }
 
         public override Unit VisitAssignment(Assignment assignment, FunctionDefinition? currentFun)
         {
-            if (currentFun != null)
-            {
-                VariableAccess.AddVariableWrite(currentFun, _nameResolution.AssignedVariableDeclarations[assignment]);
-            }
-
+            Debug.Assert(currentFun != null);
+            VariableAccess.AddVariableWrite(currentFun, _nameResolution.AssignedVariableDeclarations[assignment]);
             return assignment.Right.Accept(this, currentFun);
         }
 
         public override Unit VisitVariableDeclaration(VariableDeclaration declaration, FunctionDefinition? currentFun)
         {
-            if (currentFun != null && declaration.InitValue != null)
+            Debug.Assert(currentFun != null);
+            if (declaration.InitValue != null)
             {
                 VariableAccess.AddVariableWrite(currentFun, declaration);
             }
