@@ -7,8 +7,7 @@ using Utility;
 public sealed class VariableAccessMap
 {
     private readonly Dictionary<FunctionDefinition, Dictionary<Declaration, VariableAccessMode>>
-        _variableAccessDictionary = new(
-            ReferenceEqualityComparer.Instance);
+        _variableAccessDictionary = new(ReferenceEqualityComparer.Instance);
 
     private readonly Dictionary<Declaration, FunctionDefinition?> _exclusiveWriteAccess =
         new(ReferenceEqualityComparer.Instance);
@@ -49,14 +48,14 @@ public sealed class VariableAccessMap
         // `fun` has exclusive write access to `variable`
         // if `variable` hasn't been accessed by a different function
         // or it was accessed earlier by `fun`.
-        var isNonExclusiveCall = _exclusiveWriteAccess.TryGetValue(variable, out var exclusiveFun) &&
+        var isNonExclusiveWrite = _exclusiveWriteAccess.TryGetValue(variable, out var exclusiveFun) &&
                                  !ReferenceEquals(exclusiveFun, fun);
 
         // If it was accessed by a different function set _exclusiveWriteAccess[variable] to null,
         // because no function will ever have an exclusive write access.
         // (Note that if we removed `variable` from exclusiveWriteAccess,
         //  next function accessing `variable` would get exclusive write access, which isn't correct)
-        _exclusiveWriteAccess[variable] = isNonExclusiveCall ? null : fun;
+        _exclusiveWriteAccess[variable] = isNonExclusiveWrite ? null : fun;
     }
 }
 
