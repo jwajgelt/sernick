@@ -14,7 +14,13 @@ public static class StatementsConversion
     /// </summary>
     public static Expression ToProgramExpression(this IParseTree<Symbol> node) => node.Children.Count switch
     {
-        1 => node.Children[0].ToExpression(),
+        1 => new FunctionDefinition(
+            Name: new Identifier("main", (node.LocationRange.Start, node.LocationRange.Start)),
+            Parameters: Array.Empty<FunctionParameterDeclaration>(),
+            Body: new CodeBlock(node.Children[0].ToExpression(), node.LocationRange),
+            ReturnType: new UnitType(),
+            LocationRange: node.LocationRange
+            ),
         _ => throw new ArgumentException("Expected single child")
     };
 

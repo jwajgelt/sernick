@@ -16,12 +16,27 @@ public class ConversionTest
         => new(Symbol.Of(category, text));
 
     [Fact]
-    public void EmptyExpression_Conversion()
+    public void Program_is_Converted_to_FunctionDefinition()
     {
         var parseTree = Node(NonTerminalSymbol.Program,
             Node(NonTerminalSymbol.ExpressionSeq, Array.Empty<IFakeParseTree>())
         ).Convert();
 
+        var ast = AstNode.From(parseTree);
+        Assert.True(ast is FunctionDefinition
+        {
+            Name.Name: "main",
+            ReturnType: UnitType,
+            Body.Inner: EmptyExpression
+        });
+        var parameters = ((FunctionDefinition)ast).Parameters;
+        Assert.Empty(parameters);
+    }
+
+    [Fact]
+    public void EmptyExpression_Conversion()
+    {
+        var parseTree = Node(NonTerminalSymbol.ExpressionSeq, Array.Empty<IFakeParseTree>()).Convert();
         Assert.True(AstNode.From(parseTree) is EmptyExpression);
     }
 
