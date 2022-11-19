@@ -53,14 +53,16 @@ public static class FunctionContextMapProcessor
 
             ContextMap[node] = functionContext;
 
-            // foreach (var parameter in node.Parameters)
-            // {
-            //     functionContext.AddLocal(parameter, false);
-            // }
-
             _locals.EnterFunction(node);
 
-            node.Body.Accept(this, new FunctionContextVisitorParam(EnclosingFunction: node));
+            var newVisitorParam = new FunctionContextVisitorParam(EnclosingFunction: node);
+
+            foreach (var parameter in node.Parameters)
+            {
+                parameter.Accept(this, newVisitorParam);
+            }
+
+            node.Body.Accept(this, newVisitorParam);
 
             // At this point, all local variables have been gathered
             foreach (var (localVariable, referencingFunctions) in _locals[node])
@@ -100,15 +102,22 @@ public static class FunctionContextMapProcessor
             return Unit.I;
         }
 
+        public override Unit VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, FunctionContextVisitorParam param)
+        {
+            if (param.EnclosingFunction is not null)
+            {
+                _locals.DeclareLocal(node, param.EnclosingFunction);
+            }
+
+            return Unit.I;
+        }
+
         public override Unit VisitVariableValue(VariableValue node, FunctionContextVisitorParam param)
         {
             if (param.EnclosingFunction is not null)
             {
                 var declaration = _nameResolution.UsedVariableDeclarations[node];
-                if (declaration is VariableDeclaration variableDeclaration)
-                {
-                    _locals.UseLocal(variableDeclaration, param.EnclosingFunction);
-                }
+                _locals.UseLocal(declaration, param.EnclosingFunction);
             }
 
             return Unit.I;
@@ -129,7 +138,7 @@ public static class FunctionContextMapProcessor
     }
 }
 
-internal sealed record FunctionVariableWrapper(VariableDeclaration Variable) : FunctionVariable
+internal sealed record FunctionVariableWrapper(Declaration Variable) : FunctionVariable
 {
     public bool Equals(FunctionVariableWrapper? other) => other is not null && ReferenceEquals(Variable, other.Variable);
 

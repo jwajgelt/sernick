@@ -42,50 +42,53 @@ public class FunctionContextMapProcessorTest
     [Fact]
     public void WhenFunctionDeclared_ThenCorrectLocalsAreAdded()
     {
-        // fun f() { var x: Int; var y = 1; }; var z: Bool = false;
+        // fun f(a: Bool) { var x: Int; var y = 1; }; var z: Bool = false;
         var tree = Program(
-            Fun<UnitType>("f").Body(
-                Var<IntType>("x", out var declX),
-                Var("y", 1, out var declY)
-            ),
+            Fun<UnitType>("f")
+                .Parameter<BoolType>("a", out var paramA)
+                .Body(
+                    Var<IntType>("x", out var declX),
+                    Var("y", 1, out var declY)
+                ),
             Var("z", false)
         );
 
         var contextFactory = new Mock<IFunctionFactory>();
         var functionContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(null, Array.Empty<FunctionParam>(), false))
+            .Setup(f => f.CreateFunction(null, new[] { new FunctionParamWrapper(paramA) }, false))
             .Returns(functionContext);
 
         var nameResolution = NameResolution();
         FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
 
+        Assert.False(functionContext.Locals[new FunctionVariableWrapper(paramA)]);
         Assert.False(functionContext.Locals[new FunctionVariableWrapper(declX)]);
         Assert.False(functionContext.Locals[new FunctionVariableWrapper(declY)]);
-        Assert.True(2 == functionContext.Locals.Count);
+        Assert.True(3 == functionContext.Locals.Count);
     }
 
     [Fact]
-    public void WhenNestedFunctionsDeclared()
+    public void WhenNestedFunctionsDeclared_ThenUsedElsewhereComputedCorrectly()
     {
-        // fun f() {
-        //   var x: Int;
+        // fun f(a: Int) {
         //   var y: Int;
         //   fun g() {
-        //     var z: Int = x;
+        //     var z: Int = a;
         //     var w: Int;
         //     w = y;
         //   }
         // }
         var tree = Program(
-            Fun<UnitType>("f").Body(
-                Var<IntType>("x", out var declX),
-                Var<IntType>("y", out var declY),
-                Fun<UnitType>("g").Body(
-                    Var<IntType>("z", Value("x", out var valueX), out var declZ),
-                    Var<IntType>("w", out var declW),
-                    "w".Assign(Value("y", out var valueY), out var assignment)
-                )
+            Fun<UnitType>("f")
+                .Parameter<IntType>("a", out var paramA)
+                .Body(
+                    Var<IntType>("y", out var declY),
+                    Fun<UnitType>("g").Body(
+                        Var<IntType>("z", Value("a", out var valueA), out var declZ),
+                        Var<IntType>("w", out var declW),
+                        "w".Assign(Value("y", out var valueY), out var assignment)
+                    )
             )
         );
 
@@ -93,7 +96,7 @@ public class FunctionContextMapProcessorTest
         var fContext = new FakeFunctionContext();
         var gContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(null, Array.Empty<FunctionParam>(), false))
+            .Setup(f => f.CreateFunction(null, new[] { new FunctionParamWrapper(paramA) }, false))
             .Returns(fContext);
         contextFactory
             .Setup(f => f.CreateFunction(fContext, Array.Empty<FunctionParam>(), false))
@@ -102,13 +105,13 @@ public class FunctionContextMapProcessorTest
         var nameResolution = NameResolution(
             usedVariables: new[]
             {
-                (valueX, declX as Declaration),
+                (valueA, paramA as Declaration),
                 (valueY, declY as Declaration)
             },
             assignedVariables: new[] { (assignment, declW) });
         FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
 
-        Assert.True(fContext.Locals[new FunctionVariableWrapper(declX)]);
+        Assert.True(fContext.Locals[new FunctionVariableWrapper(paramA)]);
         Assert.True(fContext.Locals[new FunctionVariableWrapper(declY)]);
         Assert.True(2 == fContext.Locals.Count);
 
@@ -121,7 +124,7 @@ public class FunctionContextMapProcessorTest
     public void WhenLocalDeclaredInFunctionCall_ThenAddedToEnclosingFunction()
     {
         // fun f(a: Int) {
-        //   f({var x = 1; x});
+        //   f({var x: Int = a; x});
         // }
         var tree = Program(
             Fun<UnitType>("f")
@@ -130,7 +133,7 @@ public class FunctionContextMapProcessorTest
                     "f".Call()
                         .Argument(
                             Block(
-                                Var("x", 1, out var declX),
+                                Var<IntType>("x", Value("a", out var valueA), out var declX),
                                 Value("x", out var valueX)
                             )
                         )
@@ -146,12 +149,17 @@ public class FunctionContextMapProcessorTest
             .Returns(functionContext);
 
         var nameResolution = NameResolution(
-            usedVariables: new[] { (valueX, declX as Declaration) },
+            usedVariables: new[]
+            {
+                (valueA, paramA as Declaration),
+                (valueX, declX as Declaration)
+            },
             calledFunctions: new[] { (call, funDeclaration) });
         FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
 
+        Assert.False(functionContext.Locals[new FunctionVariableWrapper(paramA)]);
         Assert.False(functionContext.Locals[new FunctionVariableWrapper(declX)]);
-        Assert.Single(functionContext.Locals);
+        Assert.True(2 == functionContext.Locals.Count);
     }
 
     [Fact]
