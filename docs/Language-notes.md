@@ -2,7 +2,7 @@
 
 ### Types:
 
-`Bool, Int`
+`Bool, Int, Unit`
 
 ### Entry point
 
@@ -22,7 +22,9 @@ Line separator is `;`
 
 - Functions are declared using `fun` keyword
 - All arguments are readonly
-- Every function should declare its return type e.g. `fun foo(): ReturnType {...}`
+- Every function declares its return type e.g. `fun foo(): ReturnType {...}`
+  * If the there is no explicitly declared return type, then the function has to return `Unit`, so:\
+    `fun foo() {...}` is equivalent to `fun foo(): Unit {...}`
 - Every argument should declare its type (even if it has a default value)
 - It is possible to have a default value for a function's argument, however:
   - Only const expr are permitted (no referencing other variables!)

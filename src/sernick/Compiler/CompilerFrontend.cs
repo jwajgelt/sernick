@@ -1,10 +1,12 @@
 namespace sernick.Compiler;
 
+using Ast.Analysis.FunctionContextMap;
 using Ast.Analysis.NameResolution;
 using Ast.Nodes;
 using Common.Dfa;
 using Common.Regex;
 using Diagnostics;
+using Function;
 using Grammar.Lexicon;
 using Grammar.Syntax;
 using Input;
@@ -33,6 +35,7 @@ public static class CompilerFrontend
         var parseTree = parser.Process(parseLeaves, diagnostics);
         var ast = AstNode.From(parseTree);
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
+        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
         ThrowIfErrorsOccurred(diagnostics);
     }
 
