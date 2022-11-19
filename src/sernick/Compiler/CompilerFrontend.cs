@@ -2,6 +2,7 @@ namespace sernick.Compiler;
 
 using Ast.Analysis.FunctionContextMap;
 using Ast.Analysis.NameResolution;
+using Ast.Analysis.VariableAccess;
 using Ast.Nodes;
 using Common.Dfa;
 using Common.Regex;
@@ -36,6 +37,7 @@ public static class CompilerFrontend
         var ast = AstNode.From(parseTree);
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
         ThrowIfErrorsOccurred(diagnostics);
     }
 
