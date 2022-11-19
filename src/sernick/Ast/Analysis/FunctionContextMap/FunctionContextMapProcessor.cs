@@ -15,14 +15,19 @@ public static class FunctionContextMapProcessor
     public static FunctionContextMap Process(AstNode ast, NameResolutionResult nameResolution, IFunctionFactory contextFactory)
     {
         var visitor = new FunctionContextProcessVisitor(nameResolution, contextFactory);
-        visitor.VisitAstTree(ast, new FunctionContextVisitorParam());
+        visitor.VisitAstTree(ast, new AstNodeContext());
         return visitor.ContextMap;
     }
 
     /// <summary>
+    /// Only top-level declarations will be visited with <c>EnclosingFunction == null</c>
+    /// </summary>
+    private record struct AstNodeContext(FunctionDefinition? EnclosingFunction = null);
+
+    /// <summary>
     ///     Visitor class used to prepare FunctionContext for each function declaration from the AST.
     /// </summary>
-    private sealed class FunctionContextProcessVisitor : AstVisitor<Unit, FunctionContextVisitorParam>
+    private sealed class FunctionContextProcessVisitor : AstVisitor<Unit, AstNodeContext>
     {
         public readonly FunctionContextMap ContextMap = new();
 
@@ -34,7 +39,7 @@ public static class FunctionContextMapProcessor
         public FunctionContextProcessVisitor(NameResolutionResult nameResolution, IFunctionFactory contextFactory) =>
             (_nameResolution, _contextFactory) = (nameResolution, contextFactory);
 
-        protected override Unit VisitAstNode(AstNode node, FunctionContextVisitorParam param)
+        protected override Unit VisitAstNode(AstNode node, AstNodeContext param)
         {
             foreach (var child in node.Children)
             {
@@ -44,10 +49,10 @@ public static class FunctionContextMapProcessor
             return Unit.I;
         }
 
-        public override Unit VisitFunctionDefinition(FunctionDefinition node, FunctionContextVisitorParam param)
+        public override Unit VisitFunctionDefinition(FunctionDefinition node, AstNodeContext astContext)
         {
             var functionContext = _contextFactory.CreateFunction(
-                parent: param.EnclosingFunction is not null ? ContextMap[param.EnclosingFunction] : null,
+                parent: astContext.EnclosingFunction is not null ? ContextMap[astContext.EnclosingFunction] : null,
                 parameters: node.Parameters.Select(parameter => new FunctionParamWrapper(parameter)).ToList(),
                 returnsValue: !node.ReturnType.Equals(new UnitType()));
 
@@ -55,14 +60,14 @@ public static class FunctionContextMapProcessor
 
             _locals.EnterFunction(node);
 
-            var newVisitorParam = new FunctionContextVisitorParam(EnclosingFunction: node);
+            var newAstContext = new AstNodeContext(EnclosingFunction: node);
 
             foreach (var parameter in node.Parameters)
             {
-                parameter.Accept(this, newVisitorParam);
+                parameter.Accept(this, newAstContext);
             }
 
-            node.Body.Accept(this, newVisitorParam);
+            node.Body.Accept(this, newAstContext);
 
             // At this point, all local variables have been gathered
             foreach (var (localVariable, referencingFunctions) in _locals[node])
@@ -77,11 +82,11 @@ public static class FunctionContextMapProcessor
             return Unit.I;
         }
 
-        public override Unit VisitFunctionCall(FunctionCall node, FunctionContextVisitorParam param)
+        public override Unit VisitFunctionCall(FunctionCall node, AstNodeContext astContext)
         {
             foreach (var argument in node.Arguments)
             {
-                argument.Accept(this, param);
+                argument.Accept(this, astContext);
             }
 
             var functionDeclaration = _nameResolution.CalledFunctionDeclarations[node];
@@ -90,47 +95,47 @@ public static class FunctionContextMapProcessor
             return Unit.I;
         }
 
-        public override Unit VisitVariableDeclaration(VariableDeclaration node, FunctionContextVisitorParam param)
+        public override Unit VisitVariableDeclaration(VariableDeclaration node, AstNodeContext astContext)
         {
-            node.InitValue?.Accept(this, param);
+            node.InitValue?.Accept(this, astContext);
 
-            if (param.EnclosingFunction is not null)
+            if (astContext.EnclosingFunction is not null)
             {
-                _locals.DeclareLocal(node, param.EnclosingFunction);
+                _locals.DeclareLocal(node, astContext.EnclosingFunction);
             }
 
             return Unit.I;
         }
 
-        public override Unit VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, FunctionContextVisitorParam param)
+        public override Unit VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, AstNodeContext astContext)
         {
-            if (param.EnclosingFunction is not null)
+            if (astContext.EnclosingFunction is not null)
             {
-                _locals.DeclareLocal(node, param.EnclosingFunction);
+                _locals.DeclareLocal(node, astContext.EnclosingFunction);
             }
 
             return Unit.I;
         }
 
-        public override Unit VisitVariableValue(VariableValue node, FunctionContextVisitorParam param)
+        public override Unit VisitVariableValue(VariableValue node, AstNodeContext astContext)
         {
-            if (param.EnclosingFunction is not null)
+            if (astContext.EnclosingFunction is not null)
             {
                 var declaration = _nameResolution.UsedVariableDeclarations[node];
-                _locals.UseLocal(declaration, param.EnclosingFunction);
+                _locals.UseLocal(declaration, astContext.EnclosingFunction);
             }
 
             return Unit.I;
         }
 
-        public override Unit VisitAssignment(Assignment node, FunctionContextVisitorParam param)
+        public override Unit VisitAssignment(Assignment node, AstNodeContext astContext)
         {
-            node.Right.Accept(this, param);
+            node.Right.Accept(this, astContext);
 
-            if (param.EnclosingFunction is not null)
+            if (astContext.EnclosingFunction is not null)
             {
                 var variableDeclaration = _nameResolution.AssignedVariableDeclarations[node];
-                _locals.UseLocal(variableDeclaration, param.EnclosingFunction);
+                _locals.UseLocal(variableDeclaration, astContext.EnclosingFunction);
             }
 
             return Unit.I;
