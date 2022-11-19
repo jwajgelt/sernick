@@ -120,5 +120,15 @@ public static class VariableAccessMapPreprocess
 
             return Unit.I;
         }
+
+        public override Unit VisitVariableDeclaration(VariableDeclaration declaration, FunctionDefinition? currentFun)
+        {
+            if (currentFun != null && declaration.InitValue != null)
+            {
+                VariableAccess.AddVariableWrite(currentFun, declaration);
+            }
+
+            return VisitAstNode(declaration, currentFun);
+        }
     }
 }

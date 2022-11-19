@@ -42,6 +42,21 @@ public class VariableAccessMapBuilderTest
     }
 
     [Fact]
+    public void Builder_adds_VariableWrite_When_AssignInDeclaration()
+    {
+        // fun foo() { var x = 1 }
+        var ast = Program(
+            Fun<UnitType>("foo")
+                .Body(Var("x", 1, out var xDeclare))
+                .Get(out var foo)
+        );
+        var nameResolution = NameResolution();
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+
+        Assert.Single(variableAccessMap[foo], item => item.Equals((xDeclare, VariableAccessMode.WriteAndRead)));
+    }
+
+    [Fact]
     public void Builder_overwrites_Read_with_WriteAdnRead()
     {
         // var x;
