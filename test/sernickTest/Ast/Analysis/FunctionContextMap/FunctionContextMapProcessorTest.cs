@@ -16,13 +16,13 @@ public class FunctionContextMapProcessorTest
     [Fact]
     public void WhenFunctionDeclaredAndCalled_ThenCorrectContextIsCreated()
     {
-        // fun f(a: Int) {}; f()
+        // fun f(a: Int) {}; f(0)
         var tree = Program(
             Fun<UnitType>("f")
                 .Parameter<IntType>("a", out var declA)
                 .Body(Close)
                 .Get(out var declaration),
-            "f".Call(out var call)
+            "f".Call().Argument(Literal(0)).Get(out var call)
         );
 
         var contextFactory = new Mock<IFunctionFactory>();
