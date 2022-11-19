@@ -20,7 +20,7 @@ public class VariableAccessMapBuilderTest
         );
         var nameResolution = NameResolution().WithVars((xVal, xDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
-        
+
         Assert.Single(variableAccessMap[foo], item => item.Equals((xDeclare, VariableAccessMode.ReadOnly)));
     }
 
@@ -37,7 +37,7 @@ public class VariableAccessMapBuilderTest
             );
         var nameResolution = NameResolution().WithAssigns((xAssign, xDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
-        
+
         Assert.Single(variableAccessMap[foo], item => item.Equals((xDeclare, VariableAccessMode.WriteAndRead)));
     }
 
@@ -62,7 +62,7 @@ public class VariableAccessMapBuilderTest
             .WithVars((xVal, xDeclare))
             .WithAssigns((xAssign, xDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
-        
+
         Assert.Single(variableAccessMap[foo], item => item.Equals((xDeclare, VariableAccessMode.WriteAndRead)));
     }
 
@@ -101,10 +101,10 @@ public class VariableAccessMapBuilderTest
             );
         var nameResolution = NameResolution().WithAssigns(
             (xAssign, xDeclare),
-            (yAssign, yDeclare), 
+            (yAssign, yDeclare),
             (zAssign, zDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
-        
+
         Assert.Single(variableAccessMap[f1Def], item => item.Equals((xDeclare, VariableAccessMode.WriteAndRead)));
         Assert.Single(variableAccessMap[f2Def], item => item.Equals((yDeclare, VariableAccessMode.WriteAndRead)));
         Assert.Single(variableAccessMap[f3Def], item => item.Equals((zDeclare, VariableAccessMode.WriteAndRead)));
@@ -127,7 +127,7 @@ public class VariableAccessMapBuilderTest
         );
         var nameResolution = NameResolution().WithAssigns((xAssign, xDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
-        
+
         Assert.True(variableAccessMap.HasExclusiveWriteAccess(foo, xDeclare));
         Assert.False(variableAccessMap.HasExclusiveWriteAccess(bar, xDeclare));
     }
@@ -151,7 +151,7 @@ public class VariableAccessMapBuilderTest
             (xAssign1, xDeclare),
             (xAssign2, xDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
-        
+
         Assert.False(variableAccessMap.HasExclusiveWriteAccess(foo, xDeclare));
         Assert.False(variableAccessMap.HasExclusiveWriteAccess(bar, xDeclare));
     }

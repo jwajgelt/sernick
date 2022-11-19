@@ -13,17 +13,17 @@ public static class NameResolutionResultBuilder
         nameResolution with
         {
             UsedVariableDeclarations = vars.ToDictionary(
-                variable => variable.Item1, 
+                variable => variable.Item1,
                 variable => variable.Item2,
                 ReferenceEqualityComparer<VariableValue>.Instance)
         };
-    
+
     public static NameResolutionResult WithAssigns(this NameResolutionResult nameResolution,
         params (Assignment, VariableDeclaration)[] assigns) =>
         nameResolution with
         {
             AssignedVariableDeclarations = assigns.ToDictionary(
-                variable => variable.Item1, 
+                variable => variable.Item1,
                 variable => variable.Item2,
                 ReferenceEqualityComparer<Assignment>.Instance)
         };
