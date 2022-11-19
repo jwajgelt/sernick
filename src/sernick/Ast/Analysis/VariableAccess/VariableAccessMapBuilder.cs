@@ -32,7 +32,6 @@ public sealed class VariableAccessMap
     /// </summary>
     public bool HasExclusiveWriteAccess(FunctionDefinition fun, VariableDeclaration variable) =>
         _exclusiveWriteAccess.TryGetValue(variable, out var exclusiveFun) && ReferenceEquals(exclusiveFun, fun);
-    
 
     internal void AddFun(FunctionDefinition fun)
     {
@@ -80,13 +79,14 @@ public static class VariableAccessMapPreprocess
             _nameResolution = nameResolution;
             VariableAccess = new VariableAccessMap();
         }
-        
+
         protected override Unit VisitAstNode(AstNode node, FunctionDefinition? currentFun)
         {
             foreach (var child in node.Children)
             {
                 child.Accept(this, currentFun);
             }
+
             return Unit.I;
         }
 
@@ -103,6 +103,7 @@ public static class VariableAccessMapPreprocess
             {
                 VariableAccess.AddVariableRead(currentFun, _nameResolution.UsedVariableDeclarations[variableValue]);
             }
+
             return Unit.I;
         }
 
@@ -112,6 +113,7 @@ public static class VariableAccessMapPreprocess
             {
                 VariableAccess.AddVariableWrite(currentFun, _nameResolution.AssignedVariableDeclarations[assignment]);
             }
+
             return Unit.I;
         }
     }
