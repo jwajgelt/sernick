@@ -50,7 +50,7 @@ public class FunctionContextMapProcessorTest
                     Var<IntType>("x", out var declX),
                     Var("y", 1, out var declY)
                 ),
-            Var("z", false)
+            Var<BoolType>("z", false)
         );
 
         var contextFactory = new Mock<IFunctionFactory>();

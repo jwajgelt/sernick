@@ -49,6 +49,11 @@ public static class AstNodesExtensions
             IsConst: false,
             loc);
 
+    public static VariableDeclaration Var<T>(string name, bool initValue) where T : Type, new() => Var<T>(name, initValue, out _);
+
+    public static VariableDeclaration Var<T>(string name, bool initValue, out VariableDeclaration result) where T : Type, new() =>
+        Var<T>(name, Literal(initValue), out result);
+
     public static VariableDeclaration Var<T>(string name, Expression initValue) where T : Type, new() => Var<T>(name, initValue, out _);
 
     public static VariableDeclaration Var<T>(string name, Expression initValue, out VariableDeclaration result)
