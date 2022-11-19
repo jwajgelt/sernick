@@ -160,10 +160,10 @@ public class VariableAccessMapBuilderTest
             .WithAssigns((xAssign, xDeclare), (yAssign, yDeclare))
             .WithVars((xVal, xDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
-        
+
         Assert.True(variableAccessMap.HasExclusiveWriteAccess(foo, xDeclare));
         Assert.True(variableAccessMap.HasExclusiveWriteAccess(foo, yDeclare));
-        
+
         Assert.Equal(2, variableAccessMap[foo].Count());
         Assert.Contains((xDeclare, VariableAccessMode.WriteAndRead), variableAccessMap[foo]);
         Assert.Contains((yDeclare, VariableAccessMode.WriteAndRead), variableAccessMap[foo]);
