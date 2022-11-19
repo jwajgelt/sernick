@@ -6,7 +6,7 @@ using Nodes;
 /// <summary>
 ///     Class used to represent the call graph.
 /// </summary>
-public sealed record CallGraph(
+public record struct CallGraph(
     IReadOnlyDictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> Graph
 )
 {
@@ -15,7 +15,11 @@ public sealed record CallGraph(
         return new CallGraph(
             Graph.Concat(other.Graph)
             .GroupBy(kv => kv.Key, kv => kv.Value)
-            .ToDictionary(g => g.Key, g => g.SelectMany(x => x).Distinct())
+            .ToDictionary(
+                g => g.Key,
+                g => g.SelectMany(x => x).Distinct(),
+                ReferenceEqualityComparer.Instance as IEqualityComparer<FunctionDefinition>
+            )
         );
     }
 };
@@ -60,8 +64,9 @@ public static class CallGraphBuilder
         {
             var graph = VisitAstNode(node, node);
 
-            var newDefDict = new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>>();
-            newDefDict.Add(node, new List<FunctionDefinition> { });
+            var newDefDict = new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
+                { node, new List<FunctionDefinition> { } }
+            };
 
             return graph.JoinWith(new CallGraph(newDefDict));
         }
@@ -71,8 +76,9 @@ public static class CallGraphBuilder
             var graph = VisitAstNode(node, fun);
             if (fun is not null)
             {
-                var newCallDict = new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>>();
-                newCallDict.Add(fun, new List<FunctionDefinition> { _calledFunctionDeclarations[node] });
+                var newCallDict = new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
+                    { fun, new List<FunctionDefinition> { _calledFunctionDeclarations[node] } }
+                };
                 graph = graph.JoinWith(new CallGraph(newCallDict));
             }
 

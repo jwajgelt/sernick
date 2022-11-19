@@ -178,6 +178,8 @@ public static class AstNodesExtensions
 
     public static IfStatementBuilder If(Expression condition) => new(condition);
 
+    public static IfStatementBuilder If(bool value) => new(Literal(value));
+
     public sealed class IfStatementBuilder
     {
         private readonly Expression _condition;

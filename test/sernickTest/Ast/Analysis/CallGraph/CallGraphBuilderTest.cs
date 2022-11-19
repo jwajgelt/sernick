@@ -16,7 +16,7 @@ public class CallGraphBuilderTest
         var tree = Program(
             Fun<UnitType>("f").Body(Close).Get(out var f),
             Fun<UnitType>("g").Body(
-                "f".Call(out var fCall), Close
+                "f".Call(out var fCall)
             ).Get(out var g)
         );
 
@@ -42,9 +42,9 @@ public class CallGraphBuilderTest
             Fun<UnitType>("f").Body(Close).Get(out var f),
             Fun<UnitType>("g").Body(Close).Get(out var g),
             Fun<UnitType>("h").Body(
-                If(Literal(true))
-                .Then("f".Call(out var fCall), Close)
-                .Else("g".Call(out var gCall), Close)
+                If(true)
+                .Then("f".Call(out var fCall))
+                .Else("g".Call(out var gCall))
             ).Get(out var h)
         );
 
@@ -74,10 +74,9 @@ public class CallGraphBuilderTest
             Fun<UnitType>("f").Body(Close).Get(out var f),
             Fun<UnitType>("g").Body(
                 Fun<UnitType>("h").Body(
-                    "g".Call(out var gCall), Close
+                    "g".Call(out var gCall)
                 ).Get(out var h),
-                "f".Call(out var fCall),
-                Close
+                "f".Call(out var fCall)
             ).Get(out var g)
         );
 
@@ -105,19 +104,18 @@ public class CallGraphBuilderTest
             Fun<IntType>("f")
             .Parameter<IntType>("arg")
             .Body(
-                Return(Value("arg")), Close
+                Value("arg")
             ).Get(out var f),
 
             Fun<IntType>("g").Body(
-                Return(1), Close
+                Return(1)
             ).Get(out var g),
 
             Fun<UnitType>("h").Body(
                 Return("f".Call(new[]{
                     "f".Call(new[]{Literal(0)}, out var fCallInner)
                     .Plus("g".Call(out var gCall))
-                }, out var fCallOuter)),
-                Close
+                }, out var fCallOuter))
             ).Get(out var h)
         );
 
