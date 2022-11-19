@@ -15,7 +15,7 @@ public static class StatementsConversion
     public static Expression ToProgramExpression(this IParseTree<Symbol> node) => node.Children.Count switch
     {
         1 => new FunctionDefinition(
-            Name: new Identifier("main", (node.LocationRange.Start, node.LocationRange.Start)),
+            Name: new Identifier("", (node.LocationRange.Start, node.LocationRange.Start)),
             Parameters: Array.Empty<FunctionParameterDeclaration>(),
             Body: new CodeBlock(node.Children[0].ToExpression(), node.LocationRange),
             ReturnType: new UnitType(),

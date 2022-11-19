@@ -25,7 +25,7 @@ public class ConversionTest
         var ast = AstNode.From(parseTree);
         Assert.True(ast is FunctionDefinition
         {
-            Name.Name: "main",
+            Name.Name: "",
             ReturnType: UnitType,
             Body.Inner: EmptyExpression
         });
