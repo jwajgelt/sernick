@@ -2,13 +2,14 @@ namespace sernickTest.Compiler.Helpers;
 
 using Diagnostics;
 using sernick.Compiler;
+using sernick.Input;
+using sernick.Input.String;
 using sernick.Utility;
 
 public static class FrontendHelper
 {
-    public static FakeDiagnostics Compile(this string fileName)
+    public static FakeDiagnostics Compile(this IInput input)
     {
-        var input = fileName.ReadFile();
         var diagnostics = new FakeDiagnostics();
 
         try
@@ -21,5 +22,16 @@ public static class FrontendHelper
         }
 
         return diagnostics;
+    }
+    public static FakeDiagnostics CompileText(this string text)
+    {
+        var input = new StringInput(text);
+        return input.Compile();
+    }
+
+    public static FakeDiagnostics CompileFile(this string fileName)
+    {
+        var input = fileName.ReadFile();
+        return input.Compile();
     }
 }
