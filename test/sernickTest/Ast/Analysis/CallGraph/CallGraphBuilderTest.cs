@@ -33,7 +33,13 @@ public class CallGraphBuilderTest
             { g, new FunctionDefinition[]{ f } }
         });
 
-        Verify(tree, functionNameResolution, expectedCallGraph);
+        var expectedClosure = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
+            { tree, new FunctionDefinition[]{ f, g } },
+            { f, new FunctionDefinition[]{} },
+            { g, new FunctionDefinition[]{ f } }
+        });
+
+        Verify(tree, functionNameResolution, expectedCallGraph, expectedClosure);
     }
 
     [Fact]
@@ -70,7 +76,14 @@ public class CallGraphBuilderTest
             { h, new FunctionDefinition[]{ f, g } }
         });
 
-        Verify(tree, functionNameResolution, expectedCallGraph);
+        var expectedClosure = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
+            { tree, new FunctionDefinition[]{ f, g, h } },
+            { f, new FunctionDefinition[]{} },
+            { g, new FunctionDefinition[]{} },
+            { h, new FunctionDefinition[]{ f, g } }
+        });
+
+        Verify(tree, functionNameResolution, expectedCallGraph, expectedClosure);
     }
 
     [Fact]
@@ -103,7 +116,14 @@ public class CallGraphBuilderTest
             { h, new FunctionDefinition[]{ g } }
         });
 
-        Verify(tree, functionNameResolution, expectedCallGraph);
+        var expectedClosure = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
+            { tree, new FunctionDefinition[]{} },
+            { f, new FunctionDefinition[]{} },
+            { g, new FunctionDefinition[]{ f } },
+            { h, new FunctionDefinition[]{ f, g } }
+        });
+
+        Verify(tree, functionNameResolution, expectedCallGraph, expectedClosure);
     }
 
     [Fact]
@@ -144,24 +164,39 @@ public class CallGraphBuilderTest
             { h, new FunctionDefinition[]{ f, g } }
         });
 
-        Verify(tree, functionNameResolution, expectedCallGraph);
+        var expectedClosure = new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
+            { tree, new FunctionDefinition[]{} },
+            { f, new FunctionDefinition[]{} },
+            { g, new FunctionDefinition[]{} },
+            { h, new FunctionDefinition[]{ f, g } }
+        });
+
+        Verify(tree, functionNameResolution, expectedCallGraph, expectedClosure);
     }
 
     private static void Verify(
         Expression tree,
         Dictionary<FunctionCall, FunctionDefinition> functionNameResolution,
-        CallGraph expectedCallGraph)
+        CallGraph expectedCallGraph,
+        CallGraph expectedClosure)
     {
         var nameResolution = new NameResolutionResult(
             new Dictionary<VariableValue, Declaration> { },
             new Dictionary<Assignment, VariableDeclaration> { },
             functionNameResolution);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
+        var callGraphClosure = callGraph.Closure();
 
         Assert.Equal(expectedCallGraph.Graph.Keys.OrderBy(a => a.Name.Name), callGraph.Graph.Keys.OrderBy(a => a.Name.Name));
         foreach (var (fun, called) in expectedCallGraph.Graph)
         {
             Assert.Equal(called.OrderBy(a => a.Name.Name), callGraph.Graph[fun].OrderBy(a => a.Name.Name));
+        }
+
+        Assert.Equal(expectedClosure.Graph.Keys.OrderBy(a => a.Name.Name), callGraphClosure.Graph.Keys.OrderBy(a => a.Name.Name));
+        foreach (var (fun, called) in expectedClosure.Graph)
+        {
+            Assert.Equal(called.OrderBy(a => a.Name.Name), callGraphClosure.Graph[fun].OrderBy(a => a.Name.Name));
         }
     }
 }

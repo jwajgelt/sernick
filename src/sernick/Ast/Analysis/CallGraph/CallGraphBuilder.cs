@@ -22,6 +22,31 @@ public record struct CallGraph(
             )
         );
     }
+
+    public CallGraph Closure()
+    {
+        var graph = Graph.ToDictionary(
+            kv => kv.Key,
+            kv => kv.Value.ToList() as IEnumerable<FunctionDefinition>,
+            ReferenceEqualityComparer.Instance as IEqualityComparer<FunctionDefinition>);
+
+        var functions = Graph.Keys;
+        foreach (var f in functions)
+        {
+            foreach (var g in functions)
+            {
+                foreach (var h in functions)
+                {
+                    if (!graph[g].Contains(h) && graph[g].Contains(f) && graph[f].Contains(h))
+                    {
+                        graph[g] = graph[g].Append(h);
+                    }
+                }
+            }
+        }
+
+        return new CallGraph(graph);
+    }
 };
 
 /// <summary>
