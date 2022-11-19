@@ -15,7 +15,10 @@ public class VariableAccessMapBuilderTest
         var ast = Program(
             Var("x", out var xDeclare),
             Fun<UnitType>("foo")
-                .Body("bar".Call().Argument(Value("x", out var xVal)))
+                .Body(
+                    "bar".Call().Argument(Value("x", out var xVal)),
+                    Close
+                    )
                 .Get(out var foo)
         );
         var nameResolution = NameResolution().WithVars((xVal, xDeclare));
@@ -32,7 +35,9 @@ public class VariableAccessMapBuilderTest
         var ast = Program(
             Var("x", out var xDeclare),
             Fun<UnitType>("foo")
-                .Body("x".Assign(1, out var xAssign))
+                .Body(
+                    "x".Assign(1, out var xAssign),
+                    Close)
                 .Get(out var foo)
             );
         var nameResolution = NameResolution().WithAssigns((xAssign, xDeclare));
@@ -69,7 +74,8 @@ public class VariableAccessMapBuilderTest
             Fun<UnitType>("foo")
                 .Body(
                     "bar".Call().Argument(Value("x", out var xVal)),
-                    "x".Assign(1, out var xAssign)
+                    "x".Assign(1, out var xAssign),
+                    Close
                     )
                 .Get(out var foo)
         );
@@ -107,7 +113,10 @@ public class VariableAccessMapBuilderTest
                             "y".Assign(2, out var yAssign),
                             Var("z", out var zDeclare),
                             Fun<UnitType>("f3")
-                                .Body("z".Assign(1, out var zAssign))
+                                .Body(
+                                    "z".Assign(1, out var zAssign),
+                                    Close
+                                    )
                                 .Get(out var f3Def)
                             )
                         .Get(out var f2Def)
@@ -139,7 +148,8 @@ public class VariableAccessMapBuilderTest
             Fun<UnitType>("foo")
                 .Body(
                     "x".Assign(1, out var xAssign1),
-                    "x".Assign(1, out var xAssign2))
+                    "x".Assign(1, out var xAssign2),
+                    Close)
                 .Get(out var foo),
             Fun<UnitType>("bar")
                 .Body(Close)
