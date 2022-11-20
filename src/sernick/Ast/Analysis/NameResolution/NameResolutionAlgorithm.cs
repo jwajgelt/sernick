@@ -57,7 +57,6 @@ public static class NameResolutionAlgorithm
                 _diagnostics.Report(new MultipleDeclarationsError(identifiersNamespace.GetDeclaredInThisScope(node.Name), node));
                 return VisitAstNode(node, identifiersNamespace);
             }
-            
         }
         public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node,
             IdentifiersNamespace identifiersNamespace)

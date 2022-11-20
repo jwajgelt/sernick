@@ -38,7 +38,7 @@ public sealed class IdentifiersNamespace
     }
 
     /// <summary>
-    /// Register declaration so that no other declaration with the same identifier cannot appear in this scope.
+    /// Register declaration so that no other declaration with the same identifier can appear in this scope.
     /// Does not make the variable visible immediately, because it would allow for "var x = x",
     /// but is needed to make "var x = (var x = 1; x)" invalid.
     /// </summary>
@@ -49,11 +49,13 @@ public sealed class IdentifiersNamespace
         {
             throw new IdentifierCollisionException();
         }
+
         return new IdentifiersNamespace(_resolutions, _declaredInCurrentScope.Add(name, declaration));
     }
 
     /// <summary>
-    /// Make a registered identifier resolve to the declaration.
+    /// Make an identifier resolve to a previously registered declaration.
+    /// Throws if declaration was not registered.
     /// </summary>
     public IdentifiersNamespace MakeVisible(Declaration declaration)
     {
@@ -62,6 +64,7 @@ public sealed class IdentifiersNamespace
         {
             return new IdentifiersNamespace(_resolutions.SetItem(name, declaration), _declaredInCurrentScope);
         }
+
         throw new ArgumentException("Declaration should have been previously registered.");
     }
 
@@ -81,7 +84,7 @@ public sealed class IdentifiersNamespace
 
     /// <summary>
     /// Returns declaration from the current scope.
-    /// This is different from GetResolution(identifier), because some declarations might not have been yet made visible.
+    /// This is different from GetResolution(identifier), because some declarations might have not yet been made visible.
     /// </summary>
     public Declaration GetDeclaredInThisScope(Identifier identifier)
     {

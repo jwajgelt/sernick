@@ -510,7 +510,10 @@ public class NameResolutionTest
     {
         // var y : Int = (var y: Int = 1; y);
         var tree = Program(
-            Var<IntType>("y", Var("y", 1).Join(Value("y")))
+            Var<IntType>("y", Group(
+                Var("y", 1),
+                Value("y"))
+            )
         );
         var diagnostics = new Mock<IDiagnostics>();
 
@@ -527,7 +530,10 @@ public class NameResolutionTest
         var tree = Program(
             Fun<IntType>("f").Parameter<IntType>("f").Body(Return(0)),
             "f".Call().Argument(
-                Var("f", 1).Join(Value("f"))
+                Group(
+                    Var("f", 1),
+                    Value("f")
+                )
             )
         );
         var diagnostics = new Mock<IDiagnostics>();
@@ -543,7 +549,9 @@ public class NameResolutionTest
         // var y : Int = (const x: Int = 1; x);
         // x
         var tree = Program(
-            Var<IntType>("y", Var("x", 1, out var declaration).Join(Value("x"))),
+            Var<IntType>("y", Group(
+                    Var("x", 1, out var declaration),
+                    Value("x"))),
             Value("x", out var value)
         );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
@@ -563,7 +571,10 @@ public class NameResolutionTest
         var tree = Program(
             Fun<IntType>("f").Parameter<IntType>("a").Body(Return(0)),
             "f".Call().Argument(
-                Var("x", 1, out var declaration).Join(Value("x"))
+                Group(
+                    Var("x", 1, out var declaration),
+                    Value("x")
+                )
             ),
             Value("x", out var value)
         );
@@ -583,8 +594,11 @@ public class NameResolutionTest
         var tree = Program(
             Fun<IntType>("f").Parameter<IntType>("a").Parameter<IntType>("b").Body(Return(0)),
             "f".Call().Argument(
-                Var("x", 1, out var declaration).Join(Value("x", out var value1))
-                ).Argument(Value("x", out var value2))
+                Group(
+                    Var("x", 1, out var declaration),
+                    Value("x", out var value1)
+                )
+            ).Argument(Value("x", out var value2))
         );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
@@ -605,7 +619,7 @@ public class NameResolutionTest
 
         diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()));
     }
-    
+
     [Fact]
     public void ShadowedVariableStillUsableInDeclaration()
     {

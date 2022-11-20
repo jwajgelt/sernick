@@ -3,7 +3,6 @@ namespace sernickTest.Ast.Analysis;
 using sernick.Ast.Analysis.NameResolution;
 using static Helpers.AstNodesExtensions;
 
-
 public class IdentifiersNamespaceTest
 {
     [Fact]
@@ -15,7 +14,9 @@ public class IdentifiersNamespaceTest
         var identifiers = new IdentifiersNamespace().RegisterAndMakeVisible(declaration1).RegisterAndMakeVisible(declaration2);
 
         Assert.Same(declaration1, identifiers.GetResolution(Ident("a")));
+        Assert.Same(declaration1, identifiers.GetDeclaredInThisScope(Ident("a")));
         Assert.Same(declaration2, identifiers.GetResolution(Ident("b")));
+        Assert.Same(declaration2, identifiers.GetDeclaredInThisScope(Ident("b")));
     }
 
     [Fact]
@@ -67,7 +68,7 @@ public class IdentifiersNamespaceTest
 
         Assert.Throws<IdentifiersNamespace.IdentifierCollisionException>(() => identifiers.Register(declaration2));
     }
-    
+
     [Fact]
     public void RegisteredDeclarationIsNotVisible()
     {
@@ -77,7 +78,7 @@ public class IdentifiersNamespaceTest
 
         Assert.Throws<IdentifiersNamespace.NoSuchIdentifierException>(() => identifiers.GetResolution(Ident("a")));
     }
-    
+
     [Fact]
     public void RegisteredDeclarationDoesNotShadow()
     {
@@ -87,6 +88,7 @@ public class IdentifiersNamespaceTest
         var identifiers = new IdentifiersNamespace().RegisterAndMakeVisible(declaration1).NewScope().Register(declaration2);
 
         Assert.Same(declaration1, identifiers.GetResolution(Ident("a")));
+        Assert.Same(declaration2, identifiers.GetDeclaredInThisScope(Ident("a")));
     }
 
     [Fact]

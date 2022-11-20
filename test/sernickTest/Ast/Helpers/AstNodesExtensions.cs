@@ -144,12 +144,14 @@ public static class AstNodesExtensions
         Body: Block(lines),
         LocationRange: loc);
 
-    public static ExpressionJoin Join(this Expression e1, Expression e2) => new(e1, e2, loc);
+    private static ExpressionJoin Join(this Expression e1, Expression e2) => new(e1, e2, loc);
 
     private static Expression Join(this IEnumerable<Expression> expressions) =>
         expressions.Aggregate((sequence, expr) => sequence.Join(expr));
 
     public static CodeBlock Block(params Expression[] expressions) => new(expressions.Join(), loc);
+
+    public static Expression Group(params Expression[] expressions) => expressions.Join();
 
     public static ReturnStatement Return(int value) => Return(Literal(value));
 
