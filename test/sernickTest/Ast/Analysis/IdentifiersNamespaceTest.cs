@@ -1,25 +1,21 @@
 namespace sernickTest.Ast.Analysis;
 
 using sernick.Ast.Analysis.NameResolution;
-using sernick.Ast.Nodes;
-using sernick.Input;
-using sernick.Utility;
-using Tokenizer.Lexer.Helpers;
+using static Helpers.AstNodesExtensions;
+
 
 public class IdentifiersNamespaceTest
 {
-    private static readonly Range<ILocation> loc = new(new FakeInput.Location(0), new FakeInput.Location(0));
-
     [Fact]
     public void IdentifiersAreVisibleAfterAddingThem()
     {
-        var declaration1 = GetSimpleDeclaration("a");
-        var declaration2 = GetSimpleDeclaration("b");
+        var declaration1 = Var("a");
+        var declaration2 = Var("b");
 
-        var identifiers = new IdentifiersNamespace().Add(declaration1).Add(declaration2);
+        var identifiers = new IdentifiersNamespace().RegisterAndMakeVisible(declaration1).RegisterAndMakeVisible(declaration2);
 
-        Assert.Same(declaration1, identifiers.GetDeclaration(GetSimpleIdentifier("a")));
-        Assert.Same(declaration2, identifiers.GetDeclaration(GetSimpleIdentifier("b")));
+        Assert.Same(declaration1, identifiers.GetDeclaration(Ident("a")));
+        Assert.Same(declaration2, identifiers.GetDeclaration(Ident("b")));
     }
 
     [Fact]
@@ -27,47 +23,68 @@ public class IdentifiersNamespaceTest
     {
         var identifiers = new IdentifiersNamespace();
 
-        Assert.Throws<IdentifiersNamespace.NoSuchIdentifierException>(() => identifiers.GetDeclaration(GetSimpleIdentifier("a")));
+        Assert.Throws<IdentifiersNamespace.NoSuchIdentifierException>(() => identifiers.GetDeclaration(Ident("a")));
     }
 
     [Fact]
     public void DuplicateDeclarationThrows()
     {
-        var declaration1 = GetSimpleDeclaration("a");
-        var declaration2 = GetSimpleDeclaration("a");
-        var identifiers = new IdentifiersNamespace().Add(declaration1);
+        var declaration1 = Var("a");
+        var declaration2 = Var("a");
+        var identifiers = new IdentifiersNamespace().RegisterAndMakeVisible(declaration1);
 
-        Assert.Throws<IdentifiersNamespace.IdentifierCollisionException>(() => identifiers.Add(declaration2));
+        Assert.Throws<IdentifiersNamespace.IdentifierCollisionException>(() => identifiers.RegisterAndMakeVisible(declaration2));
     }
 
     [Fact]
     public void NewScopePreservesIdentifiers()
     {
-        var declaration1 = GetSimpleDeclaration("a");
+        var declaration1 = Var("a");
 
-        var identifiers = new IdentifiersNamespace().Add(declaration1).NewScope();
+        var identifiers = new IdentifiersNamespace().RegisterAndMakeVisible(declaration1).NewScope();
 
-        Assert.Same(declaration1, identifiers.GetDeclaration(GetSimpleIdentifier("a")));
+        Assert.Same(declaration1, identifiers.GetDeclaration(Ident("a")));
     }
 
     [Fact]
     public void NewScopeAllowsShadowing()
     {
-        var declaration1 = GetSimpleDeclaration("a");
-        var declaration2 = GetSimpleDeclaration("a");
+        var declaration1 = Var("a");
+        var declaration2 = Var("a");
 
-        var identifiers = new IdentifiersNamespace().Add(declaration1).NewScope().Add(declaration2);
+        var identifiers = new IdentifiersNamespace().RegisterAndMakeVisible(declaration1).NewScope().RegisterAndMakeVisible(declaration2);
 
-        Assert.Same(declaration2, identifiers.GetDeclaration(GetSimpleIdentifier("a")));
+        Assert.Same(declaration2, identifiers.GetDeclaration(Ident("a")));
     }
 
-    private static Identifier GetSimpleIdentifier(string name)
+    [Fact]
+    public void RegisteredDeclarationPreventsAnother()
     {
-        return new Identifier(name, loc);
-    }
+        var declaration1 = Var("a");
+        var declaration2 = Var("a");
 
-    private static Declaration GetSimpleDeclaration(string name)
+        var identifiers = new IdentifiersNamespace().Register(declaration1);
+
+        Assert.Throws<IdentifiersNamespace.IdentifierCollisionException>(() => identifiers.Register(declaration2));
+    }
+    
+    [Fact]
+    public void RegisteredDeclarationDoesNotShadow()
     {
-        return new VariableDeclaration(GetSimpleIdentifier(name), null, null, false, loc);
+        var declaration1 = Var("a");
+        var declaration2 = Var("a");
+
+        var identifiers = new IdentifiersNamespace().RegisterAndMakeVisible(declaration1).NewScope().Register(declaration2);
+
+        Assert.Same(declaration1, identifiers.GetDeclaration(Ident("a")));
+    }
+    
+    [Fact]
+    public void CannotMakeVisibleUnregistered()
+    {
+        var declaration = Var("a");
+        var identifiers = new IdentifiersNamespace();
+
+        Assert.Throws<ArgumentException>(() => identifiers.MakeVisible(declaration));
     }
 }

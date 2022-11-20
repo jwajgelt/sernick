@@ -16,7 +16,7 @@ public static class AstNodesExtensions
 
     private static readonly Range<ILocation> loc = new(new FakeLocation(), new FakeLocation());
 
-    private static Identifier Ident(string name) => new(name, loc);
+    public static Identifier Ident(string name) => new(name, loc);
 
     #region Variable
 

@@ -147,7 +147,7 @@ public static class NameResolutionAlgorithm
         {
             try
             {
-                return identifiers.Add(declaration);
+                return identifiers.RegisterAndMakeVisible(declaration);
             }
             catch (IdentifiersNamespace.IdentifierCollisionException)
             {

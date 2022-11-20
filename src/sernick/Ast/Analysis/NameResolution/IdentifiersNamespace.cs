@@ -16,7 +16,7 @@ public sealed class IdentifiersNamespace
     {
     }
 
-    private readonly ImmutableHashSet<string> _currentScope;
+    private readonly ImmutableHashSet<string> _declaredInCurrentScope;
     private readonly ImmutableDictionary<string, Declaration> _variables;
 
     public IdentifiersNamespace() : this(ImmutableDictionary<string, Declaration>.Empty,
@@ -26,21 +26,43 @@ public sealed class IdentifiersNamespace
 
     private IdentifiersNamespace(
         ImmutableDictionary<string, Declaration> variables,
-        ImmutableHashSet<string> currentScope)
+        ImmutableHashSet<string> declaredInCurrentScope)
     {
         _variables = variables.WithComparers(null, ReferenceEqualityComparer.Instance);
-        _currentScope = currentScope;
+        _declaredInCurrentScope = declaredInCurrentScope;
     }
 
-    public IdentifiersNamespace Add(Declaration declaration)
+    public IdentifiersNamespace RegisterAndMakeVisible(Declaration declaration)
+    {
+        return Register(declaration).MakeVisible(declaration);
+    }
+
+    /// <summary>
+    /// Register declaration so that no other declaration with the same identifier cannot appear in this scope.
+    /// Does not make the variable visible immediately, because it would allow for "var x = x",
+    /// but is needed to make "var x = (var x = 1; x)" invalid.
+    /// </summary>
+    public IdentifiersNamespace Register(Declaration declaration)
     {
         var name = declaration.Name.Name;
-        if (_currentScope.Contains(name))
+        if (_declaredInCurrentScope.Contains(name))
         {
             throw new IdentifierCollisionException();
         }
+        return new IdentifiersNamespace(_variables, _declaredInCurrentScope.Add(name));
+    }
 
-        return new IdentifiersNamespace(_variables.SetItem(name, declaration), _currentScope.Add(name));
+    /// <summary>
+    /// Make a registered identifier actually refer to the declaration.
+    /// </summary>
+    public IdentifiersNamespace MakeVisible(Declaration declaration)
+    {
+        var name = declaration.Name.Name;
+        if (!_declaredInCurrentScope.Contains(name))
+        {
+            throw new ArgumentException("Declaration should have been previously registered.");
+        }
+        return new IdentifiersNamespace(_variables.SetItem(name, declaration), _declaredInCurrentScope);
     }
 
     public Declaration GetDeclaration(Identifier identifier)
