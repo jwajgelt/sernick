@@ -109,13 +109,11 @@ public static class NameResolutionAlgorithm
 
                 _diagnostics.Report(new NotAVariableError(node.Left));
                 return VisitAstNode(node, identifiersNamespace);
-                ;
             }
             catch (IdentifiersNamespace.NoSuchIdentifierException)
             {
                 _diagnostics.Report(new UndeclaredIdentifierError(identifier));
                 return VisitAstNode(node, identifiersNamespace);
-                ;
             }
         }
 

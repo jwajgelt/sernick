@@ -593,4 +593,36 @@ public class NameResolutionTest
         Assert.Same(declaration, result.UsedVariableDeclarations[value1]);
         Assert.Same(declaration, result.UsedVariableDeclarations[value2]);
     }
+
+    [Fact]
+    public void VariableNotUsableInOwnDeclaration()
+    {
+        // var x : Int = x
+        var tree = Program(Var<IntType>("x", Value("x")));
+        var diagnostics = new Mock<IDiagnostics>();
+
+        NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()));
+    }
+    
+    [Fact]
+    public void ShadowedVariableStillUsableInDeclaration()
+    {
+        // var x : Int = 1;
+        // {
+        //   var x = x;
+        // }
+        var tree = Program(
+            Var<IntType>("x", Value("x"), out var declaration),
+            Block(
+                Var<IntType>("x", Value("x", out var value))
+                )
+            );
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.UsedVariableDeclarations[value]);
+    }
 }
