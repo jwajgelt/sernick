@@ -36,4 +36,9 @@ public record FunctionDefinition(Identifier Name,
 
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitFunctionDefinition(this, param);
+
+    public override string ToString()
+    {
+        return Name.Name;
+    }
 }
