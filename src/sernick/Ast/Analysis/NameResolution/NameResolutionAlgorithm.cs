@@ -52,7 +52,7 @@ public static class NameResolutionAlgorithm
         {
             var identifiersWithFunction = TryAdd(identifiersNamespace, node);
             var identifiersWithParameters = node.Parameters.Aggregate(identifiersWithFunction.NewScope(),
-                (identifiers, parameter) => TryAdd(identifiers, parameter));
+                TryAdd);
 
             var visitorResult = node.Body.Inner.Accept(this, identifiersWithParameters);
             return visitorResult with { IdentifiersNamespace = identifiersWithFunction };
@@ -67,11 +67,13 @@ public static class NameResolutionAlgorithm
 
         public override NameResolutionVisitorResult VisitFunctionCall(FunctionCall node, IdentifiersNamespace identifiersNamespace)
         {
-            return VisitIdentifierUse(identifiersNamespace, node.FunctionName, declaration =>
+            var identifier = node.FunctionName;
+            try
             {
-                var visitorResult = VisitAstNode(node, identifiersNamespace);
+                var declaration = identifiersNamespace.GetDeclaration(identifier);
                 if (declaration is FunctionDefinition functionDefinition)
                 {
+                    var visitorResult = VisitAstNode(node, identifiersNamespace);
                     return visitorResult with
                     {
                         Result = visitorResult.Result.JoinWith(
@@ -80,17 +82,24 @@ public static class NameResolutionAlgorithm
                 }
 
                 _diagnostics.Report(new NotAFunctionError(node.FunctionName));
-                return visitorResult;
-            });
+                return VisitAstNode(node, identifiersNamespace);
+            }
+            catch (IdentifiersNamespace.NoSuchIdentifierException)
+            {
+                _diagnostics.Report(new UndeclaredIdentifierError(identifier));
+                return VisitAstNode(node, identifiersNamespace);
+            }
         }
 
         public override NameResolutionVisitorResult VisitAssignment(Assignment node, IdentifiersNamespace identifiersNamespace)
         {
-            return VisitIdentifierUse(identifiersNamespace, node.Left, declaration =>
+            var identifier = node.Left;
+            try
             {
-                var visitorResult = VisitAstNode(node, identifiersNamespace);
+                var declaration = identifiersNamespace.GetDeclaration(identifier);
                 if (declaration is VariableDeclaration variableDeclaration)
                 {
+                    var visitorResult = VisitAstNode(node, identifiersNamespace);
                     return visitorResult with
                     {
                         Result = visitorResult.Result.JoinWith(
@@ -100,13 +109,22 @@ public static class NameResolutionAlgorithm
 
                 _diagnostics.Report(new NotAVariableError(node.Left));
                 return VisitAstNode(node, identifiersNamespace);
-            });
+                ;
+            }
+            catch (IdentifiersNamespace.NoSuchIdentifierException)
+            {
+                _diagnostics.Report(new UndeclaredIdentifierError(identifier));
+                return VisitAstNode(node, identifiersNamespace);
+                ;
+            }
         }
 
         public override NameResolutionVisitorResult VisitVariableValue(VariableValue node, IdentifiersNamespace identifiersNamespace)
         {
-            return VisitIdentifierUse(identifiersNamespace, node.Identifier, declaration =>
+            var identifier = node.Identifier;
+            try
             {
+                var declaration = identifiersNamespace.GetDeclaration(identifier);
                 if (declaration is VariableDeclaration or FunctionParameterDeclaration)
                 {
                     return new NameResolutionVisitorResult(NameResolutionResult.OfVariableUse(node, declaration),
@@ -115,25 +133,11 @@ public static class NameResolutionAlgorithm
 
                 _diagnostics.Report(new NotAVariableError(node.Identifier));
                 return new NameResolutionVisitorResult(identifiersNamespace);
-            });
-        }
-
-        /// <summary>
-        /// A helper method to avoid code repetition.
-        /// Tries to extract definition of a identifier.
-        /// If succeeds, performs provided action, otherwise reports to diagnostics.
-        /// </summary>
-        private NameResolutionVisitorResult VisitIdentifierUse(IdentifiersNamespace identifiers, Identifier identifier, Func<Declaration, NameResolutionVisitorResult> actionIfPresent)
-        {
-            try
-            {
-                var declaration = identifiers.GetDeclaration(identifier);
-                return actionIfPresent.Invoke(declaration);
             }
             catch (IdentifiersNamespace.NoSuchIdentifierException)
             {
                 _diagnostics.Report(new UndeclaredIdentifierError(identifier));
-                return new NameResolutionVisitorResult(identifiers);
+                return new NameResolutionVisitorResult(identifiersNamespace);
             }
         }
 

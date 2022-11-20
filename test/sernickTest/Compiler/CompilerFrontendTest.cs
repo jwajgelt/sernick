@@ -407,7 +407,8 @@ public class CompilerFrontendTest
             //function_naming_readonly_arguments
             new object[] { "function_naming_readonly_arguments", "argument_modified", new IDiagnosticItem[]
             {
-                // modifying const, not detected yet
+                // modifying a parameter, detected by name resolution
+                new NotAVariableError(new Identifier("argument", new Range<ILocation>(FileUtility.LocationAt(3, 2), FileUtility.LocationAt(3, 10))))
             }},
             new object[] { "function_naming_readonly_arguments", "const_argument", new IDiagnosticItem[]
             {

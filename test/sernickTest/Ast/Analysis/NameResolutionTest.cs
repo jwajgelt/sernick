@@ -83,7 +83,7 @@ public class NameResolutionTest
     [Fact]
     public void VariableAssignmentFromTheSameScopeResolved()
     {
-        // var x; x=; x=1
+        // var x; x=1; x=1
         var tree = Program(
             Var("x", out var declaration),
             "x".Assign(1, out var assignment1),
@@ -470,7 +470,7 @@ public class NameResolutionTest
 
         diagnostics.Verify(d => d.Report(It.IsAny<NotAVariableError>()));
     }
-    
+
     [Fact]
     public void ArgumentResolved()
     {
@@ -485,7 +485,7 @@ public class NameResolutionTest
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
-        
+
         Assert.Same(declaration, result.UsedVariableDeclarations[argument]);
     }
 
@@ -501,11 +501,12 @@ public class NameResolutionTest
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
-        
+
         diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
     }
 
-    [Fact] public void DeclarationInAssignmentWithCollision()
+    [Fact]
+    public void DeclarationInAssignmentWithCollision()
     {
         // var y : Int = (var y: Int = 1; y);
         var tree = Program(
@@ -514,11 +515,12 @@ public class NameResolutionTest
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
-        
+
         diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
     }
-    
-    [Fact] public void DeclarationInCallWithCollision()
+
+    [Fact]
+    public void DeclarationInCallWithCollision()
     {
         // fun f(a: Int): Int { return 0; }
         // f((const f: Int = 1; f));
@@ -531,10 +533,10 @@ public class NameResolutionTest
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
-        
+
         diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
     }
-    
+
     [Fact]
     public void DeclarationInAssignmentResolved()
     {
@@ -547,7 +549,7 @@ public class NameResolutionTest
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
-        
+
         Assert.Same(declaration, result.UsedVariableDeclarations[value]);
     }
 
@@ -568,7 +570,7 @@ public class NameResolutionTest
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
-        
+
         Assert.Same(declaration, result.UsedVariableDeclarations[value]);
     }
 
@@ -587,7 +589,7 @@ public class NameResolutionTest
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
-        
+
         Assert.Same(declaration, result.UsedVariableDeclarations[value1]);
         Assert.Same(declaration, result.UsedVariableDeclarations[value2]);
     }
