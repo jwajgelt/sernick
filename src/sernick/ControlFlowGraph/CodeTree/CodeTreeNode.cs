@@ -21,7 +21,7 @@ public enum BinaryOperation
     LessThan, GreaterThan,
     LessThanEqual, GreaterThanEqual,
     Equal, NotEqual,
-    And, Or,
+    BitwiseAnd, BitwiseOr,
 }
 
 public sealed record BinaryOperationNode
