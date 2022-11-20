@@ -327,4 +327,152 @@ public class AstToCfgConversionTest
             "f".Call().Argument(Literal(true)).Get(out _)
         );
     }
+
+    [Fact]
+    public void ShortCircuitOr()
+    {
+        // var x = 1;
+        //
+        // fun f(v : Int) : Bool {
+        //     x = x + 1;
+        //     return v <= 5;
+        // }
+        //
+        // fun g(v: Int): Bool {
+        //     x = x + 1;
+        //     return v <= x;
+        // }
+        //
+        // var y = 0;
+        // loop {
+        //     if(f(y) || g(y)) {
+        //         break;
+        //     }
+        //     y = y + 1;
+        // }
+
+        _ = Program
+        (
+            Var("x", 1),
+            Fun<BoolType>("f").Parameter<BoolType>("v").Body
+            (
+                "v".Assign("x".Plus(1)),
+                Return("v".Leq(5))
+            ).Get(out _),
+            Fun<BoolType>("g").Parameter<BoolType>("v").Body
+            (
+                "v".Assign("x".Plus(1)),
+                Return("v".Leq("x"))
+            ).Get(out _),
+
+            Var("y", 0),
+            Loop
+            (
+                If("f".Call().Argument(Value("y")).Get(out _).ScOr("g".Call().Argument(Value("y")).Get(out _)))
+                    .Then(Break).Get(out _),
+                "y".Assign("y".Plus(1))
+            )
+        );
+    }
+
+    [Fact]
+    public void ShortCircuitAnd()
+    {
+        // var x = 1;
+        //
+        // fun f(v : Int) : Bool {
+        //     x = x + 1;
+        //     return v <= 5;
+        // }
+        //
+        // fun g(v: Int): Bool {
+        //     x = x + 1;
+        //     return v <= x;
+        // }
+        //
+        // var y = 0;
+        // loop {
+        //     if(f(y) && g(y)) {
+        //         break;
+        //     }
+        //     y = y + 1;
+        // }
+
+        _ = Program
+        (
+            Var("x", 1),
+            Fun<BoolType>("f").Parameter<BoolType>("v").Body
+            (
+                "v".Assign("x".Plus(1)),
+                Return("v".Leq(5))
+            ).Get(out _),
+            Fun<BoolType>("g").Parameter<BoolType>("v").Body
+            (
+                "v".Assign("x".Plus(1)),
+                Return("v".Leq("x"))
+            ).Get(out _),
+
+            Var("y", 0),
+            Loop
+            (
+                If("f".Call().Argument(Value("y")).Get(out _).ScAnd("g".Call().Argument(Value("y")).Get(out _)))
+                    .Then(Break).Get(out _),
+                "y".Assign("y".Plus(1))
+            )
+        );
+    }
+
+    [Fact]
+    public void ShortCircuitOperators()
+    {
+        // var x = 10;
+        //
+        // fun f(v : Int) : Bool {
+        //     return v <= 5;
+        // }
+        //
+        // fun g(v: Int): Bool {
+        //     return v <= x;
+        // }
+        //
+        // fun h(v: Int): Bool {
+        //     return x <= v;
+        // }
+        //
+        // var y = 0;
+        // loop {
+        //     if(f(y) && (g(y) || h(y)) {
+        //         break;
+        //     }
+        //     y = y + 1;
+        // }
+
+        _ = Program
+        (
+            Var("x", 10),
+            Fun<BoolType>("f").Parameter<BoolType>("v").Body
+            (
+                Return("v".Leq(5))
+            ).Get(out _),
+            Fun<BoolType>("g").Parameter<BoolType>("v").Body
+            (
+                Return("v".Leq("x"))
+            ).Get(out _),
+            Fun<BoolType>("h").Parameter<BoolType>("v").Body
+            (
+                Return("x".Leq("v"))
+            ).Get(out _),
+
+            Var("y", 0),
+            Loop
+            (
+                If("f".Call().Argument(Value("y")).Get(out _).ScAnd
+                    (
+                        "g".Call().Argument(Value("y")).Get(out _).ScOr("h".Call().Argument(Value("y")).Get(out _))
+                    ))
+                    .Then(Break).Get(out _),
+                "y".Assign("y".Plus(1))
+            )
+        );
+    }
 }

@@ -143,7 +143,13 @@ public static class AstNodesExtensions
 
     public static Infix Leq(this string name, int v) => Value(name).Leq(Literal(v));
 
+    public static Infix Leq(this string name1, string name2) => Value(name1).Leq(Value(name2));
+
     public static Infix Leq(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.LessOrEquals, loc);
+
+    public static Infix ScOr(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.ScOr, loc);
+
+    public static Infix ScAnd(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.ScAnd, loc);
 
     public static Assignment Assign(this string name, int value) => name.Assign(value, out _);
 
