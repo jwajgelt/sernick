@@ -58,7 +58,7 @@ public static class CompilerFrontend
         var grammar = SernickGrammar.Create();
         return Parser<Symbol>.FromGrammar(grammar, new NonTerminal(NonTerminalSymbol.Start));
     });
-    
+
     private static void ThrowIfErrorsOccurred(IDiagnostics diagnostics)
     {
         if (diagnostics.DidErrorOccur)
