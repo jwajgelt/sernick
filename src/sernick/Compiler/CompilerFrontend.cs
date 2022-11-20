@@ -32,7 +32,7 @@ public static class CompilerFrontend
             .Where(token => !token.Category.Equals(LexicalGrammarCategory.Comments)) // ignore comments
             .Select(token =>
                 new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.LocationRange));
-        var parser = Parser<Symbol>.FromGrammar(SernickGrammar.Create(), new NonTerminal(NonTerminalSymbol.Start));
+        var parser = PrepareParser();
         var parseTree = parser.Process(parseLeaves, diagnostics);
         var ast = AstNode.From(parseTree);
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
@@ -41,8 +41,16 @@ public static class CompilerFrontend
         ThrowIfErrorsOccurred(diagnostics);
     }
 
+    private static ILexer<LexicalGrammarCategory>? lexerCache;
+    private static Parser<Symbol>? parserCache;
+
     private static ILexer<LexicalGrammarCategory> PrepareLexer()
     {
+        if (lexerCache != null)
+        {
+            return lexerCache;
+        }
+
         var grammar = new LexicalGrammar();
         var grammarDict = grammar.GenerateGrammar();
         var categoryDfas =
@@ -50,7 +58,19 @@ public static class CompilerFrontend
                 e => e.Key,
                 e => RegexDfa<char>.FromRegex(e.Value.Regex)
             );
-        return new Lexer<LexicalGrammarCategory, Regex<char>>(categoryDfas);
+        lexerCache = new Lexer<LexicalGrammarCategory, Regex<char>>(categoryDfas);
+        return lexerCache;
+    }
+
+    private static Parser<Symbol> PrepareParser()
+    {
+        if (parserCache != null)
+        {
+            return parserCache;
+        }
+
+        parserCache = Parser<Symbol>.FromGrammar(SernickGrammar.Create(), new NonTerminal(NonTerminalSymbol.Start));
+        return parserCache;
     }
 
     private static void ThrowIfErrorsOccurred(IDiagnostics diagnostics)
