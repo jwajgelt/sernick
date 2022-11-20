@@ -16,20 +16,20 @@ public sealed class IdentifiersNamespace
     {
     }
 
-    private readonly ImmutableHashSet<string> _declaredInCurrentScope;
-    private readonly ImmutableDictionary<string, Declaration> _variables;
+    private readonly ImmutableDictionary<string, Declaration> _declaredInCurrentScope;
+    private readonly ImmutableDictionary<string, Declaration> _resolutions;
 
     public IdentifiersNamespace() : this(ImmutableDictionary<string, Declaration>.Empty,
-        ImmutableHashSet<string>.Empty)
+        ImmutableDictionary<string, Declaration>.Empty)
     {
     }
 
     private IdentifiersNamespace(
-        ImmutableDictionary<string, Declaration> variables,
-        ImmutableHashSet<string> declaredInCurrentScope)
+        ImmutableDictionary<string, Declaration> resolutions,
+        ImmutableDictionary<string, Declaration> declaredInCurrentScope)
     {
-        _variables = variables.WithComparers(null, ReferenceEqualityComparer.Instance);
-        _declaredInCurrentScope = declaredInCurrentScope;
+        _resolutions = resolutions.WithComparers(null, ReferenceEqualityComparer.Instance);
+        _declaredInCurrentScope = declaredInCurrentScope.WithComparers(null, ReferenceEqualityComparer.Instance);
     }
 
     public IdentifiersNamespace RegisterAndMakeVisible(Declaration declaration)
@@ -45,30 +45,48 @@ public sealed class IdentifiersNamespace
     public IdentifiersNamespace Register(Declaration declaration)
     {
         var name = declaration.Name.Name;
-        if (_declaredInCurrentScope.Contains(name))
+        if (_declaredInCurrentScope.ContainsKey(name))
         {
             throw new IdentifierCollisionException();
         }
-        return new IdentifiersNamespace(_variables, _declaredInCurrentScope.Add(name));
+        return new IdentifiersNamespace(_resolutions, _declaredInCurrentScope.Add(name, declaration));
     }
 
     /// <summary>
-    /// Make a registered identifier actually refer to the declaration.
+    /// Make a registered identifier resolve to the declaration.
     /// </summary>
     public IdentifiersNamespace MakeVisible(Declaration declaration)
     {
         var name = declaration.Name.Name;
-        if (!_declaredInCurrentScope.Contains(name))
+        if (_declaredInCurrentScope.TryGetValue(name, out var value) && ReferenceEquals(value, declaration))
         {
-            throw new ArgumentException("Declaration should have been previously registered.");
+            return new IdentifiersNamespace(_resolutions.SetItem(name, declaration), _declaredInCurrentScope);
         }
-        return new IdentifiersNamespace(_variables.SetItem(name, declaration), _declaredInCurrentScope);
+        throw new ArgumentException("Declaration should have been previously registered.");
     }
 
-    public Declaration GetDeclaration(Identifier identifier)
+    /// <summary>
+    /// Returns declaration bound to the identifier.
+    /// </summary>
+    public Declaration GetResolution(Identifier identifier)
     {
         var name = identifier.Name;
-        if (_variables.TryGetValue(name, out var declaration))
+        if (_resolutions.TryGetValue(name, out var declaration))
+        {
+            return declaration;
+        }
+
+        throw new NoSuchIdentifierException();
+    }
+
+    /// <summary>
+    /// Returns declaration from the current scope.
+    /// This is different from GetResolution(identifier), because some declarations might not have been yet made visible.
+    /// </summary>
+    public Declaration GetDeclaredInThisScope(Identifier identifier)
+    {
+        var name = identifier.Name;
+        if (_declaredInCurrentScope.TryGetValue(name, out var declaration))
         {
             return declaration;
         }
@@ -78,6 +96,6 @@ public sealed class IdentifiersNamespace
 
     public IdentifiersNamespace NewScope()
     {
-        return new IdentifiersNamespace(_variables, ImmutableHashSet<string>.Empty);
+        return new IdentifiersNamespace(_resolutions, ImmutableDictionary<string, Declaration>.Empty);
     }
 }

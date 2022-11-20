@@ -45,14 +45,26 @@ public static class NameResolutionAlgorithm
         }
 
         public override NameResolutionVisitorResult VisitVariableDeclaration(VariableDeclaration node,
-            IdentifiersNamespace identifiersNamespace) => VisitAstNode(node, TryAdd(identifiersNamespace, node));
-
+            IdentifiersNamespace identifiersNamespace)
+        {
+            try
+            {
+                var visitorResult = VisitAstNode(node, identifiersNamespace.Register(node));
+                return visitorResult with { IdentifiersNamespace = visitorResult.IdentifiersNamespace.MakeVisible(node) };
+            }
+            catch (IdentifiersNamespace.IdentifierCollisionException)
+            {
+                _diagnostics.Report(new MultipleDeclarationsError(identifiersNamespace.GetDeclaredInThisScope(node.Name), node));
+                return VisitAstNode(node, identifiersNamespace);
+            }
+            
+        }
         public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node,
             IdentifiersNamespace identifiersNamespace)
         {
-            var identifiersWithFunction = TryAdd(identifiersNamespace, node);
+            var identifiersWithFunction = TryRegisterAndMakeVisible(identifiersNamespace, node);
             var identifiersWithParameters = node.Parameters.Aggregate(identifiersWithFunction.NewScope(),
-                TryAdd);
+                TryRegisterAndMakeVisible);
 
             var visitorResult = node.Body.Inner.Accept(this, identifiersWithParameters);
             return visitorResult with { IdentifiersNamespace = identifiersWithFunction };
@@ -70,7 +82,7 @@ public static class NameResolutionAlgorithm
             var identifier = node.FunctionName;
             try
             {
-                var declaration = identifiersNamespace.GetDeclaration(identifier);
+                var declaration = identifiersNamespace.GetResolution(identifier);
                 if (declaration is FunctionDefinition functionDefinition)
                 {
                     var visitorResult = VisitAstNode(node, identifiersNamespace);
@@ -96,7 +108,7 @@ public static class NameResolutionAlgorithm
             var identifier = node.Left;
             try
             {
-                var declaration = identifiersNamespace.GetDeclaration(identifier);
+                var declaration = identifiersNamespace.GetResolution(identifier);
                 if (declaration is VariableDeclaration variableDeclaration)
                 {
                     var visitorResult = VisitAstNode(node, identifiersNamespace);
@@ -122,7 +134,7 @@ public static class NameResolutionAlgorithm
             var identifier = node.Identifier;
             try
             {
-                var declaration = identifiersNamespace.GetDeclaration(identifier);
+                var declaration = identifiersNamespace.GetResolution(identifier);
                 if (declaration is VariableDeclaration or FunctionParameterDeclaration)
                 {
                     return new NameResolutionVisitorResult(NameResolutionResult.OfVariableUse(node, declaration),
@@ -143,7 +155,7 @@ public static class NameResolutionAlgorithm
         /// Tries to add a new declaration to identifiers.
         /// If collision occurs, reports it to _diagnostics and returns the previous set of identifiers.
         /// </summary>
-        private IdentifiersNamespace TryAdd(IdentifiersNamespace identifiers, Declaration declaration)
+        private IdentifiersNamespace TryRegisterAndMakeVisible(IdentifiersNamespace identifiers, Declaration declaration)
         {
             try
             {
@@ -151,7 +163,7 @@ public static class NameResolutionAlgorithm
             }
             catch (IdentifiersNamespace.IdentifierCollisionException)
             {
-                _diagnostics.Report(new MultipleDeclarationsError(identifiers.GetDeclaration(declaration.Name), declaration));
+                _diagnostics.Report(new MultipleDeclarationsError(identifiers.GetDeclaredInThisScope(declaration.Name), declaration));
                 return identifiers;
             }
         }

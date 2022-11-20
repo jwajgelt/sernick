@@ -14,8 +14,8 @@ public class IdentifiersNamespaceTest
 
         var identifiers = new IdentifiersNamespace().RegisterAndMakeVisible(declaration1).RegisterAndMakeVisible(declaration2);
 
-        Assert.Same(declaration1, identifiers.GetDeclaration(Ident("a")));
-        Assert.Same(declaration2, identifiers.GetDeclaration(Ident("b")));
+        Assert.Same(declaration1, identifiers.GetResolution(Ident("a")));
+        Assert.Same(declaration2, identifiers.GetResolution(Ident("b")));
     }
 
     [Fact]
@@ -23,7 +23,7 @@ public class IdentifiersNamespaceTest
     {
         var identifiers = new IdentifiersNamespace();
 
-        Assert.Throws<IdentifiersNamespace.NoSuchIdentifierException>(() => identifiers.GetDeclaration(Ident("a")));
+        Assert.Throws<IdentifiersNamespace.NoSuchIdentifierException>(() => identifiers.GetResolution(Ident("a")));
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public class IdentifiersNamespaceTest
 
         var identifiers = new IdentifiersNamespace().RegisterAndMakeVisible(declaration1).NewScope();
 
-        Assert.Same(declaration1, identifiers.GetDeclaration(Ident("a")));
+        Assert.Same(declaration1, identifiers.GetResolution(Ident("a")));
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class IdentifiersNamespaceTest
 
         var identifiers = new IdentifiersNamespace().RegisterAndMakeVisible(declaration1).NewScope().RegisterAndMakeVisible(declaration2);
 
-        Assert.Same(declaration2, identifiers.GetDeclaration(Ident("a")));
+        Assert.Same(declaration2, identifiers.GetResolution(Ident("a")));
     }
 
     [Fact]
@@ -69,6 +69,16 @@ public class IdentifiersNamespaceTest
     }
     
     [Fact]
+    public void RegisteredDeclarationIsNotVisible()
+    {
+        var declaration1 = Var("a");
+
+        var identifiers = new IdentifiersNamespace().Register(declaration1);
+
+        Assert.Throws<IdentifiersNamespace.NoSuchIdentifierException>(() => identifiers.GetResolution(Ident("a")));
+    }
+    
+    [Fact]
     public void RegisteredDeclarationDoesNotShadow()
     {
         var declaration1 = Var("a");
@@ -76,9 +86,9 @@ public class IdentifiersNamespaceTest
 
         var identifiers = new IdentifiersNamespace().RegisterAndMakeVisible(declaration1).NewScope().Register(declaration2);
 
-        Assert.Same(declaration1, identifiers.GetDeclaration(Ident("a")));
+        Assert.Same(declaration1, identifiers.GetResolution(Ident("a")));
     }
-    
+
     [Fact]
     public void CannotMakeVisibleUnregistered()
     {
