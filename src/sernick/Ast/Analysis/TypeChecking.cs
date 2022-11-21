@@ -284,6 +284,15 @@ public sealed class TypeChecking
             var typeOfLeftOperand = childrenTypes[node.LeftSide];
             var typeOfRightOperand = childrenTypes[node.RightSide];
 
+            if(typeOfLeftOperand == new UnitType() || typeOfRightOperand == new UnitType())
+            {
+                this._diagnostics.Report(new UnitTypeInfixOperatorError(node.LocationRange.Start));
+                var result = new TypeInformation(childrenTypes);
+                result.Add(node, new UnitType());
+                pendingNodes.Remove(node);
+                return result;
+            }
+
             if (typeOfLeftOperand.ToString() != typeOfRightOperand.ToString())
             {
                 // TODO we probably should create a separate error class for operator type mismatch
