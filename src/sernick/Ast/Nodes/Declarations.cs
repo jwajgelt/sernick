@@ -10,9 +10,6 @@ public sealed record VariableDeclaration(Identifier Name,
     Range<ILocation> LocationRange) : Declaration(Name, LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode?[] { Name, InitValue }.OfType<AstNode>();
-    public Identifier name = Name;
-    public Type? type = Type;
-    public Expression? initValue = InitValue;
 
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitVariableDeclaration(this, param);

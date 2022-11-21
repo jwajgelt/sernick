@@ -11,16 +11,7 @@ using TypeInformation = Dictionary<Ast.Nodes.AstNode, Type>;
 
 public sealed class TypeChecking
 {
-    /// <summary>
-    /// Maps expressions to their types
-    /// </summary>
-    public IReadOnlyDictionary<Expression, Type> ExpressionTypes
-    {
-        get;
-        init;
-    }
-
-    public static TypeInformation CheckTypes(AstNode ast, NameResolutionResult nameResolution, Diagnostics diagnostics)
+    public static TypeInformation CheckTypes(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
     {
         // TODO: implement a TypeCheckingASTVisitor, walk it over the AST and initialize the property with the result
         var visitor = new TypeCheckingAstVisitor(nameResolution, diagnostics);
@@ -34,9 +25,9 @@ public sealed class TypeChecking
         /// and stored in partialExpressionTypes dictionary
         /// </summary>
         private readonly NameResolutionResult nameResolution;
-        private Diagnostics _diagnostics;
+        private IDiagnostics _diagnostics;
 
-        public TypeCheckingAstVisitor(NameResolutionResult nameResolution, Diagnostics diagnostics)
+        public TypeCheckingAstVisitor(NameResolutionResult nameResolution, IDiagnostics diagnostics)
         {
             this.nameResolution = nameResolution;
             this._diagnostics = diagnostics;
@@ -179,28 +170,66 @@ public sealed class TypeChecking
         }
 
 
-        public override TypeInformation VisitInfix(Infix node, Unit _)
+        public override TypeInformation VisitInfix(Infix infixNode, Unit _)
         {
-            var childrenTypes = this.visitNodeChildren(node);
+            var childrenTypes = this.visitNodeChildren(infixNode);
 
-            var typeOfLeftOperand = childrenTypes[node.LeftSide];
-            var typeOfRightOperand = childrenTypes[node.RightSide];
+            var typeOfLeftOperand = childrenTypes[infixNode.LeftSide];
+            var typeOfRightOperand = childrenTypes[infixNode.RightSide];
 
             if (typeOfLeftOperand.ToString() != typeOfRightOperand.ToString())
             {
                 // TODO we probably should create a separate error class for operator type mismatch
-                this._diagnostics.Report(new TypeCheckingError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+                this._diagnostics.Report(new TypeCheckingError(typeOfLeftOperand, typeOfRightOperand, infixNode.LocationRange.Start));
 
                 // TODO does it make sense to return anything here? maybe a Unit type? But it could propagate the error up the tree 
                 var result = new TypeInformation(childrenTypes);
-                result.Add(node, new UnitType());
+                result.Add(infixNode, new UnitType());
                 return result;
             }
             else
             {
                 var commonType = typeOfLeftOperand;
+
+                // let's cover some special cases e.g. adding two bools or shirt-curcuiting two ints
+                switch (infixNode.Operator)
+                {
+                    case Infix.Op.Plus:
+                    case Infix.Op.Minus:
+                        {
+                        if(commonType.ToString() == new BoolType().ToString())
+                            {
+                                this._diagnostics.Report(new TypeCheckingError(typeOfLeftOperand, typeOfRightOperand, infixNode.LocationRange.Start));
+                            }
+                            break;
+                        }
+                    case Infix.Op.Greater:
+                    case Infix.Op.GreaterOrEquals:
+                    case Infix.Op.Less:
+                    case Infix.Op.LessOrEquals:
+                        {
+                            if(commonType.ToString() != new IntType().ToString())
+                            {
+                                this._diagnostics.Report(new TypeCheckingError(typeOfLeftOperand, typeOfRightOperand, infixNode.LocationRange.Start));
+                            }
+                            break;
+                        }
+                    case Infix.Op.ScAnd:
+                    case Infix.Op.ScOr:
+                        {
+                            if(commonType.ToString() != new BoolType().ToString())
+                            {
+                                this._diagnostics.Report(new TypeCheckingError(typeOfLeftOperand, typeOfRightOperand, infixNode.LocationRange.Start));
+                            }
+                            break;
+                        }
+                    default:
+                        {
+                            break;
+                        }      
+                }
                 var result = new TypeInformation(childrenTypes);
-                result.Add(node, commonType);
+                result.Add(infixNode, commonType);
                 return result;
             }
         }
@@ -209,8 +238,8 @@ public sealed class TypeChecking
         {
             var childrenTypes = this.visitNodeChildren(node);
 
-            var typeOfLeftSide = childrenTypes[node.LeftSide];
-            var typeOfRightSide = childrenTypes[node.RightSide];
+            var typeOfLeftSide = childrenTypes[node.Left];
+            var typeOfRightSide = childrenTypes[node.Right];
             if (typeOfLeftSide.ToString() != typeOfLeftSide.ToString())
             {
                 this._diagnostics.Report(new TypeCheckingError(typeOfLeftSide, typeOfRightSide, node.LocationRange.Start));
@@ -228,29 +257,39 @@ public sealed class TypeChecking
 
             var result = new TypeInformation(childrenTypes);
 
-            var variableDeclarationNode = this.nameResolution.UsedVariableDeclarations[node];
-            var variableHasExplicitType = variableDeclarationNode.Type != null;
+            var variableIdentifier = node.Identifier;
 
-            // explicit type near variable declaration
-            if (variableDeclarationNode.Type != null)
-            {
-                result.Add(node, variableDeclarationNode.Type);
-                return result;
-            }
-
-            // if there is no type, variable must have been immediately initialized (language-wide decision)
-            // but we should check it for not being equal null just so C# compiler is satisfied
-            if (variableDeclarationNode.InitValue != null)
-            {
-                var typeInformation2 = VisitExpression(variableDeclarationNode.InitValue, _);
-                var typeOfExpression = typeInformation2[variableDeclarationNode.InitValue];
-
-                result.Add(node, typeOfExpression);
-                return result;
-            }
-
-            // this "return" should never be reached
+            result.Add(node, result[node.Identifier]);
             return result;
+
+            //var variableDeclarationNode = this.nameResolution.UsedVariableDeclarations[node];
+            //if (result.ContainsKey(variableDeclarationNode))
+            //{
+            //    var declaredVariableType = result[variableDeclarationNode];
+
+            //}
+            //var variableHasExplicitType = variableDeclarationNode != null;
+
+            //// explicit type near variable declaration
+            //if (variableDeclarationNode.Type != null)
+            //{
+            //    result.Add(node, variableDeclarationNode.Type);
+            //    return result;
+            //}
+
+            //// if there is no type, variable must have been immediately initialized (language-wide decision)
+            //// but we should check it for not being equal null just so C# compiler is satisfied
+            //if (variableDeclarationNode.InitValue != null)
+            //{
+            //    var typeInformation2 = VisitExpression(variableDeclarationNode.InitValue, _);
+            //    var typeOfExpression = typeInformation2[variableDeclarationNode.InitValue];
+
+            //    result.Add(node, typeOfExpression);
+            //    return result;
+            //}
+
+            //// this "return" should never be reached
+            //return result;
         }
 
 

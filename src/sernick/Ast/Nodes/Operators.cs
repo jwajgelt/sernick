@@ -30,8 +30,6 @@ public sealed record Infix
 public sealed record Assignment(Identifier Left, Expression Right, Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode[] { Left, Right };
-    public Identifier LeftSide = Left;
-    public Expression RightSide = Right;
 
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitAssignment(this, param);
