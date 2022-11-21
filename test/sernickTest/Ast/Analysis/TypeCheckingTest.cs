@@ -161,6 +161,8 @@ public class TypeCheckingTest
             var tree = Program(plusExpr);
 
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            diagnostics.SetupAllProperties();
+
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
@@ -171,14 +173,15 @@ public class TypeCheckingTest
         [Fact]
         public void AddingTwoBooleans_ERROR()
         {
-            var minusExpr = Helpers.AstNodesExtensions.Plus(Literal(true), Literal(false));
-            var tree = Program(minusExpr);
+            var plusExpr = Helpers.AstNodesExtensions.Plus(Literal(true), Literal(false));
+            var tree = Program(plusExpr);
 
-            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new UnitType(), result[minusExpr]); // default in case of error
             Assert.NotEmpty(diagnostics.Object.DiagnosticItems); // maybe a more specific check here? TODO
         }
 

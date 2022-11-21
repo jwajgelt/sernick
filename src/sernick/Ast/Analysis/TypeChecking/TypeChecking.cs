@@ -281,7 +281,7 @@ public sealed class TypeChecking
 
             if(typeOfLeftOperand == new UnitType() || typeOfRightOperand == new UnitType())
             {
-                this._diagnostics.Report(new UnitTypeInfixOperatorError(node.LocationRange.Start));
+                this._diagnostics.Report(new InfixOperatorTypeError(new UnitType(), new UnitType(), node.LocationRange.Start));
                 var result = new TypeInformation(childrenTypes);
                 result.Add(node, new UnitType());
                 pendingNodes.Remove(node);
@@ -290,8 +290,7 @@ public sealed class TypeChecking
 
             if (typeOfLeftOperand.ToString() != typeOfRightOperand.ToString())
             {
-                // TODO we probably should create a separate error class for operator type mismatch
-                this._diagnostics.Report(new TypeCheckingError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+                this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
 
                 // TODO does it make sense to return anything here? maybe a Unit type? But it could propagate the error up the tree 
                 var result = new TypeInformation(childrenTypes);
@@ -311,7 +310,8 @@ public sealed class TypeChecking
                         {
                         if(commonType.ToString() == new BoolType().ToString())
                             {
-                                this._diagnostics.Report(new TypeCheckingError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+                                this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+                                
                             }
                             break;
                         }
@@ -322,7 +322,7 @@ public sealed class TypeChecking
                         {
                             if(commonType.ToString() != new IntType().ToString())
                             {
-                                this._diagnostics.Report(new TypeCheckingError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+                                this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                             }
                             break;
                         }
@@ -331,7 +331,7 @@ public sealed class TypeChecking
                         {
                             if(commonType.ToString() != new BoolType().ToString())
                             {
-                                this._diagnostics.Report(new TypeCheckingError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+                                this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                             }
                             break;
                         }
