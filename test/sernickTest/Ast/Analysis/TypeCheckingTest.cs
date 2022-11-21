@@ -29,8 +29,8 @@ public class TypeCheckingTest
 
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new IntType().ToString(), result[literal23].ToString());
-            Assert.Equal(new IntType().ToString(), result[tree].ToString());
+            Assert.Equal(new IntType(), result[literal23]);
+            Assert.Equal(new IntType(), result[tree]);
         }
 
         [Fact]
@@ -49,7 +49,7 @@ public class TypeCheckingTest
         }
 
         [Fact]
-        public void ExpressionWithChainedLiterals(){
+        public void ExpressionWithChainedLiterals_1(){
             var literalFalse = Literal(false);
             var literal42 = Literal(42);
             var tree = Block(literalFalse, literal42);
@@ -61,6 +61,22 @@ public class TypeCheckingTest
             Assert.Equal(new BoolType(), result[literalFalse]);
             Assert.Equal(new IntType(), result[literal42]);
             Assert.Equal(new IntType(), result[tree]);
+        }
+
+        [Fact]
+        public void ExpressionWithChainedLiterals_2()
+        {
+            var literal42 = Literal(42);
+            var literalFalse = Literal(false);
+            var tree = Block(literal42, literalFalse);
+            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Equal(new BoolType(), result[literalFalse]);
+            Assert.Equal(new IntType(), result[literal42]);
+            Assert.Equal(new BoolType(), result[tree]);
         }
 
         [Fact]
