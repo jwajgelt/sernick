@@ -367,34 +367,6 @@ public sealed class TypeChecking
             pendingNodes.Remove(node);
             return result;
 
-            //var variableDeclarationNode = this.nameResolution.UsedVariableDeclarations[node];
-            //if (result.ContainsKey(variableDeclarationNode))
-            //{
-            //    var declaredVariableType = result[variableDeclarationNode];
-
-            //}
-            //var variableHasExplicitType = variableDeclarationNode != null;
-
-            //// explicit type near variable declaration
-            //if (variableDeclarationNode.Type != null)
-            //{
-            //    result.Add(node, variableDeclarationNode.Type);
-            //    return result;
-            //}
-
-            //// if there is no type, variable must have been immediately initialized (language-wide decision)
-            //// but we should check it for not being equal null just so C# compiler is satisfied
-            //if (variableDeclarationNode.InitValue != null)
-            //{
-            //    var typeInformation2 = VisitExpression(variableDeclarationNode.InitValue, _);
-            //    var typeOfExpression = typeInformation2[variableDeclarationNode.InitValue];
-
-            //    result.Add(node, typeOfExpression);
-            //    return result;
-            //}
-
-            //// this "return" should never be reached
-            //return result;
         }
 
 
