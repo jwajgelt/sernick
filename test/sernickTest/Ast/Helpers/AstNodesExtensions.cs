@@ -211,10 +211,10 @@ public static class AstNodesExtensions
             _parameters.Add(result = new FunctionParameterDeclaration(Ident(name), new ParamType(), null, loc));
             return this;
         }
-        
+
         public FuncDeclarationBuilder Parameter(string name, bool defaultValue) =>
             Parameter<BoolType>(name, Literal(defaultValue));
-        
+
         public FuncDeclarationBuilder Parameter(string name, int defaultValue) =>
             Parameter<IntType>(name, Literal(defaultValue));
 
