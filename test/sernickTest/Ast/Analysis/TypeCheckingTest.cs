@@ -5,6 +5,7 @@ using Input;
 using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis;
+using sernick.Ast.Analysis.TypeChecking;
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Nodes;
 using sernick.Diagnostics;
@@ -82,14 +83,15 @@ public class TypeCheckingTest
         }
     }
 
-    public class TestAssignments
+    public class TestVariableDeclaration
     {
         [Fact]
-        public void CorrectLiteralAssignment_1()
+        public void Declaration_CorrectAssignment()
         {
             var literal91 = Literal(91);
             var variableXDeclarationWithLiteralAssignment = Var<IntType>("x", literal91);
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            diagnostics.SetupAllProperties();
 
             var tree = Block(variableXDeclarationWithLiteralAssignment);
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -101,11 +103,12 @@ public class TypeCheckingTest
         }
 
         [Fact]
-        public void IncorrectLiteralAssignment_1()
+        public void Declaration_WrongAssignment_1()
         {
             var literal91 = Literal(91);
             var variableXDeclarationWithLiteralAssignment = Var<BoolType>("x", literal91);
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            diagnostics.SetupAllProperties();
 
             var tree = Block(variableXDeclarationWithLiteralAssignment);
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -118,11 +121,13 @@ public class TypeCheckingTest
         }
 
         [Fact]
-        public void IncorrectLiteralAssignment_2()
+        public void Declaration_WrongAssignment_2()
         {
             var literalFalse = Literal(false);
             var variableXDeclarationWithLiteralAssignment = Var<IntType>("x", literalFalse);
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            diagnostics.SetupAllProperties();
+
             var tree = Block(variableXDeclarationWithLiteralAssignment);
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
@@ -152,7 +157,7 @@ public class TypeCheckingTest
         [Fact]
         public void AddingTwoIntegerLiterals_OK()
         {
-            var plusExpr = Plus(Literal(43), Literal(34));
+            var plusExpr = Helpers.AstNodesExtensions.Plus(Literal(43), Literal(34));
             var tree = Program(plusExpr);
 
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
@@ -166,7 +171,7 @@ public class TypeCheckingTest
         [Fact]
         public void AddingTwoBooleans_ERROR()
         {
-            var minusExpr = Plus(Literal(true), Literal(false));
+            var minusExpr = Helpers.AstNodesExtensions.Plus(Literal(true), Literal(false));
             var tree = Program(minusExpr);
 
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);

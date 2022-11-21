@@ -7,4 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Ast\Analysis\TypeChecking\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Ast\Analysis\TypeChecking\" />
+  </ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-namespace sernick.Ast.Analysis;
+namespace sernick.Ast.Analysis.TypeChecking;
 
 using Diagnostics;
 using Input;

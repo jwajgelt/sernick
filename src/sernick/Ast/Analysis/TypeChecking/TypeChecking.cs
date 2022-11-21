@@ -1,4 +1,4 @@
-namespace sernick.Ast.Analysis;
+namespace sernick.Ast.Analysis.TypeChecking;
 
 using System.Data;
 using System.Xml.Linq;
@@ -91,7 +91,19 @@ public sealed class TypeChecking
             // all necessary checking should be performed in "Visit assignment", so just return Unit here
             pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node);
-            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
+            var result = new TypeInformation(childrenTypes);
+
+            var declaredType = node.Type;
+            if(declaredType != null && node.InitValue != null)
+            {
+                var rhsType = childrenTypes[node.InitValue];
+                if(declaredType != rhsType)
+                {
+                    this._diagnostics.Report(new TypeCheckingError(declaredType, rhsType, node.LocationRange.Start));
+                }
+            }
+
+            result.Add(node, new UnitType());
             pendingNodes.Remove(node);
             return result;
 
@@ -366,9 +378,7 @@ public sealed class TypeChecking
             result.Add(node, result[node.Identifier]);
             pendingNodes.Remove(node);
             return result;
-
         }
-
 
         public override TypeInformation VisitBoolLiteralValue(BoolLiteralValue node, Unit _)
         {
