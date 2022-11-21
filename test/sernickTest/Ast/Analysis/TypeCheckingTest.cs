@@ -19,7 +19,7 @@ public class TypeCheckingTest
     public class TestSimpleExpressions
     {
         [Fact]
-        public void ExpressionWithSingleIntLiteral(){
+        public void ExpressionWithSingleIntLiteral() {
             var literal23 = Literal(23);
             var tree = Block(
                 literal23
@@ -49,7 +49,7 @@ public class TypeCheckingTest
         }
 
         [Fact]
-        public void ExpressionWithChainedLiterals_1(){
+        public void ExpressionWithChainedLiterals_1() {
             var literalFalse = Literal(false);
             var literal42 = Literal(42);
             var tree = Block(literalFalse, literal42);
@@ -78,10 +78,23 @@ public class TypeCheckingTest
             Assert.Equal(new IntType(), result[literal42]);
             Assert.Equal(new BoolType(), result[tree]);
         }
+    }
+
+    public class TestAssignments{
 
         [Fact]
-        public void CorrectLiteralAssignment(){
-            
+        public void CorrectLiteralAssignment() {
+            var literal91 = Literal(91);
+            var variableXDeclarationWithLiteralAssignment = Var<IntType>("x", literal91);
+            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+
+            var tree = Block(variableXDeclarationWithLiteralAssignment);
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Equal(new UnitType(), result[tree]);
+            Assert.Equal(new UnitType(), result[variableXDeclarationWithLiteralAssignment]);
+            Assert.Empty(diagnostics.Object.DiagnosticItems);
         }
     }
    
