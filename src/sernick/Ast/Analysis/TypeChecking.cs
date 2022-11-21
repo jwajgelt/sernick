@@ -31,7 +31,7 @@ public sealed class TypeChecking
         /// so to avoid recalculation (visiting the same ancestor from multiple nodes)
         /// we will have this helper object, containing type information for some AST nodes
         /// </summary>
-        private TypeInformation partialResult;
+        private readonly TypeInformation partialResult;
         /// <summary>
         /// Our Type-checking Algorighm is a top-down postorder
         /// But sometimes, nodes need to know information about some other nodes higher up the tree
@@ -203,7 +203,14 @@ public sealed class TypeChecking
 
             var result = new TypeInformation(childrenTypes);
             // Return Value is in a subtree, so its type should be already calculated by now
-            result.Add(node, childrenTypes[node.ReturnValue]);
+            if (node.ReturnValue != null)
+            {
+                result.Add(node, childrenTypes[node.ReturnValue] ?? new UnitType());
+            }
+            else
+            {
+                result.Add(node, new UnitType());
+            }
             pendingNodes.Remove(node);
             return result;
         }
@@ -226,9 +233,21 @@ public sealed class TypeChecking
             pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node);
 
-            // TODO
+            var typeOfTrueBranch = childrenTypes[node.IfBlock];
+            if(node.ElseBlock != null)
+            {
+                var typeOfFalseBranch = childrenTypes[node.ElseBlock];
+                if(typeOfTrueBranch != typeOfFalseBranch)
+                {
+                    this._diagnostics.Report(new TypeCheckingError(typeOfTrueBranch, typeOfFalseBranch, node.LocationRange.Start));
+                }
+            }
+
+            var result = new TypeInformation(childrenTypes);
+            result.Add(node, typeOfTrueBranch);
+            partialResult[node] = typeOfTrueBranch;
             pendingNodes.Remove(node);
-            return null;
+            return result;
         }
 
         public override TypeInformation VisitLoopStatement(LoopStatement node, Unit _)

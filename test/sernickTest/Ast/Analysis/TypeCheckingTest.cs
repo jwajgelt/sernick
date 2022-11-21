@@ -80,10 +80,10 @@ public class TypeCheckingTest
         }
     }
 
-    public class TestAssignments{
+    public class TestAssignments {
 
         [Fact]
-        public void CorrectLiteralAssignment() {
+        public void CorrectLiteralAssignment_1() {
             var literal91 = Literal(91);
             var variableXDeclarationWithLiteralAssignment = Var<IntType>("x", literal91);
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
@@ -96,6 +96,51 @@ public class TypeCheckingTest
             Assert.Equal(new UnitType(), result[variableXDeclarationWithLiteralAssignment]);
             Assert.Empty(diagnostics.Object.DiagnosticItems);
         }
+
+        [Fact]
+        public void IncorrectLiteralAssignment_1()
+        {
+            var literal91 = Literal(91);
+            var variableXDeclarationWithLiteralAssignment = Var<BoolType>("x", literal91);
+            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+
+            var tree = Block(variableXDeclarationWithLiteralAssignment);
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Equal(new UnitType(), result[tree]);
+            Assert.Equal(new UnitType(), result[variableXDeclarationWithLiteralAssignment]);
+            // I'm not sure if the next line is actually checking anything :(
+            diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingError>()));
+        }
+
+        [Fact]
+        public void IncorrectLiteralAssignment_2()
+        {
+            var literalFalse = Literal(false);
+            var variableXDeclarationWithLiteralAssignment = Var<IntType>("x", literalFalse);
+            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict)
+            var tree = Block(variableXDeclarationWithLiteralAssignment);
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Equal(new UnitType(), result[tree]);
+            Assert.Equal(new UnitType(), result[variableXDeclarationWithLiteralAssignment]);
+            // I'm not sure if the next line is actually checking anything :(
+            diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingError>()));
+        }
+    }
+
+    public class TestVariableValue{
+        //[Fact]
+        //public void IntVariableValue_1()
+        //{
+        //    var tree = Program(
+        //        Var<IntType>("intX", Literal(23)),
+        //        Value("intX")
+        //    );
+        //}
+
     }
    
     private static VariableDeclaration GetVariableDeclaration(string name)
