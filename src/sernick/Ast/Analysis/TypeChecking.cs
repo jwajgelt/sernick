@@ -61,7 +61,6 @@ public sealed class TypeChecking
         public override TypeInformation VisitIdentifier(Identifier identifierNode, Unit _)
         {
             // no need to visit children, identifier nodes should have none
-            // var childrenTypes = this.visitNodeChildren(identifierNode);
             try
             {
                 var variableDeclarationNode = this.getIdentifierAsVariableDeclaration(identifierNode);
