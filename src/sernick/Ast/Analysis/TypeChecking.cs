@@ -342,7 +342,7 @@ public sealed class TypeChecking
 
             var typeOfLeftSide = childrenTypes[node.Left];
             var typeOfRightSide = childrenTypes[node.Right];
-            if (typeOfLeftSide.ToString() != typeOfLeftSide.ToString())
+            if (typeOfLeftSide.ToString() != typeOfRightSide.ToString())
             {
                 this._diagnostics.Report(new TypeCheckingError(typeOfLeftSide, typeOfRightSide, node.LocationRange.Start));
             }
