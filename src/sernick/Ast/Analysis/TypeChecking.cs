@@ -53,24 +53,9 @@ public sealed class TypeChecking
         protected override TypeInformation VisitAstNode(AstNode node, Unit _)
         {
             pendingNodes.Add(node);
-
-            // just visit recursively, bottom-up
-            // for simple things, just visit them without recursion
-            if (node.Children.Count() == 0)
-            {
-                var emptyTypeInformation = new TypeInformation();
-                var result = node.Accept(this, Unit.I);
-                pendingNodes.Remove(node);
-                return result;
-            }
-
-            var childrenTypes = this.visitNodeChildren(node);
-
-            // TODO what to do after we've visited node children
+            var result = node.Accept(this, Unit.I);
             pendingNodes.Remove(node);
-
-
-            return childrenTypes;
+            return result;
         }
 
         public override TypeInformation VisitIdentifier(Identifier identifierNode, Unit _)
@@ -177,7 +162,7 @@ public sealed class TypeChecking
                 this._diagnostics.Report(new FunctionArgumentsMismatchError(declaredArguments.Count(), actualArguments.Count(), functionCallNode.LocationRange.Start));
             }
 
-            declaredArguments.Zip(actualArguments, (declaredArgument, actualArgument) =>
+            declaredArguments.Zip<FunctionParameterDeclaration,Expression, Unit>(actualArguments, (declaredArgument, actualArgument) =>
             {
                 // let us do type checking right here
                 var expectedType = declaredArgument.Type;
@@ -186,6 +171,7 @@ public sealed class TypeChecking
                 {
                     this._diagnostics.Report(new WrongFunctionArgumentError(expectedType, actualType, functionCallNode.LocationRange.Start));
                 }
+                return Unit.I;
             });
 
 

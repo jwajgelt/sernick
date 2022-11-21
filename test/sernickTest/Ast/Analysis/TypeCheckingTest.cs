@@ -163,6 +163,7 @@ public class TypeCheckingTest
             Assert.Empty(diagnostics.Object.DiagnosticItems);
         }
 
+        [Fact]
         public void AddingTwoBooleans_ERROR()
         {
             var minusExpr = Plus(Literal(true), Literal(false));
