@@ -354,14 +354,14 @@ public class AstToCfgConversionTest
         _ = Program
         (
             Var("x", 1),
-            Fun<BoolType>("f").Parameter<BoolType>("v").Body
+            Fun<BoolType>("f").Parameter<IntType>("v").Body
             (
-                "v".Assign("x".Plus(1)),
+                "x".Assign("x".Plus(1)),
                 Return("v".Leq(5))
             ),
-            Fun<BoolType>("g").Parameter<BoolType>("v").Body
+            Fun<BoolType>("g").Parameter<IntType>("v").Body
             (
-                "v".Assign("x".Plus(1)),
+                "x".Assign("x".Plus(1)),
                 Return("v".Leq("x"))
             ),
 
@@ -401,14 +401,14 @@ public class AstToCfgConversionTest
         _ = Program
         (
             Var("x", 1),
-            Fun<BoolType>("f").Parameter<BoolType>("v").Body
+            Fun<BoolType>("f").Parameter<IntType>("v").Body
             (
-                "v".Assign("x".Plus(1)),
+                "x".Assign("x".Plus(1)),
                 Return("v".Leq(5))
             ),
-            Fun<BoolType>("g").Parameter<BoolType>("v").Body
+            Fun<BoolType>("g").Parameter<IntType>("v").Body
             (
-                "v".Assign("x".Plus(1)),
+                "x".Assign("x".Plus(1)),
                 Return("v".Leq("x"))
             ),
 
@@ -450,15 +450,15 @@ public class AstToCfgConversionTest
         _ = Program
         (
             Var("x", 10),
-            Fun<BoolType>("f").Parameter<BoolType>("v").Body
+            Fun<BoolType>("f").Parameter<IntType>("v").Body
             (
                 Return("v".Leq(5))
             ),
-            Fun<BoolType>("g").Parameter<BoolType>("v").Body
+            Fun<BoolType>("g").Parameter<IntType>("v").Body
             (
                 Return("v".Leq("x"))
             ),
-            Fun<BoolType>("h").Parameter<BoolType>("v").Body
+            Fun<BoolType>("h").Parameter<IntType>("v").Body
             (
                 Return("x".Leq("v"))
             ),
