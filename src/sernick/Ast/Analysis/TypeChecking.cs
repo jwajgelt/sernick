@@ -168,17 +168,30 @@ public sealed class TypeChecking
             var functionDeclarationNode = nameResolution.CalledFunctionDeclarations[functionCallNode];
             var declaredReturnType = functionDeclarationNode.ReturnType;
 
-            var inferredReturnType = new UnitType(); // TODO maybe just add return type from function declaration?
+            
+            var declaredArguments = functionDeclarationNode.Parameters;
+            var actualArguments = functionCallNode.Arguments;
 
-            if (inferredReturnType.ToString() != declaredReturnType.ToString())
+            if(declaredArguments.Count() != actualArguments.Count())
             {
-                this._diagnostics.Report(new TypeCheckingError(declaredReturnType, inferredReturnType, functionCallNode.LocationRange.Start));
-                pendingNodes.Remove(functionCallNode);
-                return childrenTypes; // not sure here
+                this._diagnostics.Report(new FunctionArgumentsMismatchError(declaredArguments.Count(), actualArguments.Count(), functionCallNode.LocationRange.Start));
             }
 
+            declaredArguments.Zip(actualArguments, (declaredArgument, actualArgument) =>
+            {
+                // let us do type checking right here
+                var expectedType = declaredArgument.Type;
+                var actualType = childrenTypes[actualArgument];
+                if (expectedType != actualType)
+                {
+                    this._diagnostics.Report(new WrongFunctionArgumentError(expectedType, actualType, functionCallNode.LocationRange.Start));
+                }
+            });
+
+
             var result = new TypeInformation(childrenTypes);
-            result.Add(functionCallNode, new UnitType()); // function call returns a unit, not a function return type
+            result.Add(functionCallNode, declaredReturnType);
+            partialResult[functionCallNode] = declaredReturnType;
             pendingNodes.Remove(functionCallNode);
             return result;
 
