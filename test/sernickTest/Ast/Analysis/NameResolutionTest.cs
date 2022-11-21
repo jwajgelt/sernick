@@ -625,7 +625,7 @@ public class NameResolutionTest
     {
         // var x : Int = 1;
         // {
-        //   var x = x;
+        //   var x : Int = x;
         // }
         var tree = Program(
             Var<IntType>("x", Value("x"), out var declaration),

@@ -47,23 +47,21 @@ public static class NameResolutionAlgorithm
         public override NameResolutionVisitorResult VisitVariableDeclaration(VariableDeclaration node,
             IdentifiersNamespace identifiersNamespace)
         {
-            try
+            if (node.InitValue is null)
             {
-                var visitorResult = VisitAstNode(node, identifiersNamespace.Register(node));
-                return visitorResult with { IdentifiersNamespace = visitorResult.IdentifiersNamespace.MakeVisible(node) };
+                return new NameResolutionVisitorResult(TryAdd(identifiersNamespace, node));
             }
-            catch (IdentifiersNamespace.IdentifierCollisionException)
-            {
-                _diagnostics.Report(new MultipleDeclarationsError(identifiersNamespace.GetDeclaredInThisScope(node.Name), node));
-                return VisitAstNode(node, identifiersNamespace);
-            }
+
+            var visitorResult = node.InitValue.Accept(this, identifiersNamespace);
+            var updatedIdentifiers = TryAdd(visitorResult.IdentifiersNamespace, node);
+            return visitorResult with { IdentifiersNamespace = updatedIdentifiers };
         }
         public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node,
             IdentifiersNamespace identifiersNamespace)
         {
-            var identifiersWithFunction = TryRegisterAndMakeVisible(identifiersNamespace, node);
+            var identifiersWithFunction = TryAdd(identifiersNamespace, node);
             var identifiersWithParameters = node.Parameters.Aggregate(identifiersWithFunction.NewScope(),
-                TryRegisterAndMakeVisible);
+                TryAdd);
 
             var visitorResult = node.Body.Inner.Accept(this, identifiersWithParameters);
             return visitorResult with { IdentifiersNamespace = identifiersWithFunction };
@@ -154,15 +152,15 @@ public static class NameResolutionAlgorithm
         /// Tries to add a new declaration to identifiers.
         /// If collision occurs, reports it to _diagnostics and returns the previous set of identifiers.
         /// </summary>
-        private IdentifiersNamespace TryRegisterAndMakeVisible(IdentifiersNamespace identifiers, Declaration declaration)
+        private IdentifiersNamespace TryAdd(IdentifiersNamespace identifiers, Declaration declaration)
         {
             try
             {
-                return identifiers.RegisterAndMakeVisible(declaration);
+                return identifiers.Add(declaration);
             }
             catch (IdentifiersNamespace.IdentifierCollisionException)
             {
-                _diagnostics.Report(new MultipleDeclarationsError(identifiers.GetDeclaredInThisScope(declaration.Name), declaration));
+                _diagnostics.Report(new MultipleDeclarationsError(identifiers.GetResolution(declaration.Name), declaration));
                 return identifiers;
             }
         }
