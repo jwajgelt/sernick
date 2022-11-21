@@ -25,14 +25,14 @@ public static class CompilerFrontend
     /// <param name="diagnostics"></param>
     public static void Process(IInput input, IDiagnostics diagnostics)
     {
-        var lexer = PrepareLexer();
+        var lexer = lazyLexer.Value;
         var tokens = lexer.Process(input, diagnostics);
         var parseLeaves = tokens
             .Where(token => !token.Category.Equals(LexicalGrammarCategory.Whitespaces)) // strip whitespace
             .Where(token => !token.Category.Equals(LexicalGrammarCategory.Comments)) // ignore comments
             .Select(token =>
                 new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.LocationRange));
-        var parser = Parser<Symbol>.FromGrammar(SernickGrammar.Create(), new NonTerminal(NonTerminalSymbol.Start));
+        var parser = lazyParser.Value;
         var parseTree = parser.Process(parseLeaves, diagnostics);
         var ast = AstNode.From(parseTree);
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
@@ -41,7 +41,7 @@ public static class CompilerFrontend
         ThrowIfErrorsOccurred(diagnostics);
     }
 
-    private static ILexer<LexicalGrammarCategory> PrepareLexer()
+    private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
     {
         var grammar = new LexicalGrammar();
         var grammarDict = grammar.GenerateGrammar();
@@ -51,7 +51,13 @@ public static class CompilerFrontend
                 e => RegexDfa<char>.FromRegex(e.Value.Regex)
             );
         return new Lexer<LexicalGrammarCategory, Regex<char>>(categoryDfas);
-    }
+    });
+
+    private static readonly Lazy<Parser<Symbol>> lazyParser = new(() =>
+    {
+        var grammar = SernickGrammar.Create();
+        return Parser<Symbol>.FromGrammar(grammar, new NonTerminal(NonTerminalSymbol.Start));
+    });
 
     private static void ThrowIfErrorsOccurred(IDiagnostics diagnostics)
     {

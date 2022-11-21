@@ -2,9 +2,11 @@ namespace sernick.Common.Regex;
 
 internal sealed class StarRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<TAtom>
 {
+    private readonly int _hash;
     public StarRegex(Regex<TAtom> child)
     {
         Child = child;
+        _hash = $"Star({Child.GetHashCode()})".GetHashCode();
     }
 
     public Regex<TAtom> Child { get; }
@@ -18,14 +20,11 @@ internal sealed class StarRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<T
 
     public override Regex<TAtom> Reverse() => Star(Child.Reverse());
 
-    public override int GetHashCode()
-    {
-        return $"Star({Child.GetHashCode()})".GetHashCode();
-    }
+    public override int GetHashCode() => _hash;
 
     public override bool Equals(Regex<TAtom>? other)
     {
-        return other is StarRegex<TAtom> starRegex && Child.Equals(starRegex.Child);
+        return ReferenceEquals(this, other) || (other is StarRegex<TAtom> starRegex && _hash == starRegex._hash && Child.Equals(starRegex.Child));
     }
 
     public override string ToString() => $"({Child})*";

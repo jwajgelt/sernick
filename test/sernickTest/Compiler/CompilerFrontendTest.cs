@@ -39,7 +39,7 @@ public class CompilerFrontendTest
         CompilerFrontend.Process(input, diagnostics.Object);
     }
 
-    [PerformanceHeavyTheory, MemberData(nameof(CorrectExamplesData))]
+    [Theory, MemberData(nameof(CorrectExamplesData))]
     public void TestCorrectExamples(string group, string fileName)
     {
         var diagnostics = $"examples/{group}/correct/{fileName}.ser".CompileFile();
@@ -60,7 +60,7 @@ public class CompilerFrontendTest
         Assert.Equal(expectedErrors, diagnostics.DiagnosticItems);
     }
 
-    [PerformanceHeavyTheory]
+    [Theory]
     [InlineData("a")]
     [InlineData("5")]
     [InlineData("{x}")]

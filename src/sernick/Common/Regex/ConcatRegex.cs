@@ -4,9 +4,11 @@ using Utility;
 
 internal sealed class ConcatRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<TAtom>
 {
+    private readonly int _hash;
     public ConcatRegex(IEnumerable<Regex<TAtom>> children)
     {
         Children = children.ToList();
+        _hash = Children.GetCombinedHashCode();
     }
 
     public IReadOnlyList<Regex<TAtom>> Children { get; }
@@ -40,11 +42,11 @@ internal sealed class ConcatRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable
         return Concat(Children.Reverse().Select(child => child.Reverse()));
     }
 
-    public override int GetHashCode() => Children.GetCombinedHashCode();
+    public override int GetHashCode() => _hash;
 
     public override bool Equals(Regex<TAtom>? other)
     {
-        return other is ConcatRegex<TAtom> concatRegex && Children.SequenceEqual(concatRegex.Children);
+        return ReferenceEquals(this, other) || (other is ConcatRegex<TAtom> concatRegex && _hash == concatRegex._hash && Children.SequenceEqual(concatRegex.Children));
     }
 
     public override string ToString() => string.Join("*", Children);

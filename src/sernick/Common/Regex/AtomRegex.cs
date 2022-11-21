@@ -19,7 +19,7 @@ internal sealed class AtomRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<T
 
     public override bool Equals(Regex<TAtom>? other)
     {
-        return other is AtomRegex<TAtom> atomRegex && Atom.Equals(atomRegex.Atom);
+        return ReferenceEquals(this, other) || (other is AtomRegex<TAtom> atomRegex && Atom.Equals(atomRegex.Atom));
     }
 
     public override string? ToString() => Atom.ToString();
