@@ -10,7 +10,7 @@ public class AstToCfgConversionTest
     {
         // var a = 1;
         // var b = 2;
-        // var c = a + b;
+        // var c : Int = a + b;
 
         _ = Program
         (
@@ -66,7 +66,7 @@ public class AstToCfgConversionTest
     [Fact]
     public void SimpleLoop()
     {
-        // var x : Int = 0;
+        // var x = 0;
         // loop {
         //     x = x + 1;
         //     if(x == 10) {
@@ -111,18 +111,18 @@ public class AstToCfgConversionTest
     public void DeepFunctionCall()
     {
         // fun f1(p1 : Int) : Int {
-        //     var v1 = p1;
+        //     var v1 : Int = p1;
         //
         //     fun f2(p2 : Int) : Int {
-        //         var v2 = v1 + p2;
+        //         var v2 : Int = v1 + p2;
         //         v1 = v1 + v2;
         //
         //         fun f3(p3 : Int) : Int {
-        //             var v3 = v1 + v2 + p3;
+        //             var v3 : Int = v1 + v2 + p3;
         //             v2 = v2 + v3;
         //  
         //             fun f4(p4 : Int) : Int {
-        //                 var v4 = v1 + v2 + v3 + p4;
+        //                 var v4 : Int = v1 + v2 + v3 + p4;
         //                 v1 = v4;
         //         
         //                 return f2(v3);
