@@ -36,7 +36,7 @@ public class AstToCfgConversionTest
         (
             Var("a", 1),
             Var("b", 2),
-            If("a".Eq("b")).Then("a".Assign(3)).Else("b".Assign(4)).Get(out _)
+            If("a".Eq("b")).Then("a".Assign(3)).Else("b".Assign(4))
         );
     }
 
@@ -57,9 +57,9 @@ public class AstToCfgConversionTest
             (
                 If("n".Leq(1)).Then(Return(1)),
                 Return("f".Call().Argument("n".Minus(1)).Get(out _)
-                    .Plus("f".Call().Argument("n".Minus(2)).Get(out _)))
-            ).Get(out _),
-            "f".Call().Argument(Literal(5)).Get(out _)
+                    .Plus("f".Call().Argument("n".Minus(2))))
+            ),
+            "f".Call().Argument(Literal(5))
         );
     }
 
@@ -79,7 +79,7 @@ public class AstToCfgConversionTest
             Loop
             (
                 "x".Assign("x".Plus(1)),
-                If("x".Eq(10)).Then(Break).Get(out _)
+                If("x".Eq(10)).Then(Break)
             )
         );
     }
@@ -101,9 +101,9 @@ public class AstToCfgConversionTest
                 Fun<IntType>("g").Parameter<IntType>("y").Body
                 (
                     Return("y".Plus("y"))
-                ).Get(out _),
-                Return("g".Call().Argument(Value("x")).Get(out _).Plus("g".Call().Argument("x".Plus(1)).Get(out _)))
-            ).Get(out _)
+                ),
+                Return("g".Call().Argument(Value("x")).Get(out _).Plus("g".Call().Argument("x".Plus(1))))
+            )
         );
     }
 
@@ -160,18 +160,18 @@ public class AstToCfgConversionTest
                             Var<IntType>("v4", "v1".Plus("v2").Plus("v3").Plus("p4")),
                             "v1".Assign(Value("v4")),
 
-                            Return("f2".Call().Argument(Value("v3")).Get(out _))
-                        ).Get(out _),
+                            Return("f2".Call().Argument(Value("v3")))
+                        ),
 
-                        Return("f4".Call().Argument(Value("v3")).Get(out _))
-                    ).Get(out _),
+                        Return("f4".Call().Argument(Value("v3")))
+                    ),
 
-                    Return("f3".Call().Argument(Value("v2")).Get(out _))
-                ).Get(out _),
+                    Return("f3".Call().Argument(Value("v2")))
+                ),
 
-                Return("f2".Call().Argument(Value("v1")).Get(out _))
-            ).Get(out _),
-            "f1".Call().Argument(Literal(1)).Get(out _)
+                Return("f2".Call().Argument(Value("v1")))
+            ),
+            "f1".Call().Argument(Literal(1))
         );
     }
 
@@ -189,15 +189,15 @@ public class AstToCfgConversionTest
 
         _ = Program
         (
-            Fun<IntType>("f").Parameter<IntType>("x", Literal(1)).Parameter<IntType>("y", Literal(2)).Body
+            Fun<IntType>("f").Parameter("x", 1).Parameter("y", 2).Body
             (
-                Fun<IntType>("g").Parameter<IntType>("z", Literal(3)).Body
+                Fun<IntType>("g").Parameter("z", 3).Body
                 (
                     Return(Value("z"))
                 ),
-                Return("x".Plus("y").Plus("g".Call().Get(out _)))
-            ).Get(out _),
-            "f".Call().Argument(Literal(3)).Get(out _)
+                Return("x".Plus("y").Plus("g".Call()))
+            ),
+            "f".Call().Argument(Literal(3))
         );
     }
 
@@ -228,7 +228,7 @@ public class AstToCfgConversionTest
                     Return(Value("x"))
                 ),
                 Return("g".Call().Get(out _).Plus("x"))
-            ).Get(out _)
+            )
         );
     }
 
@@ -260,22 +260,22 @@ public class AstToCfgConversionTest
             (
                 Fun<UnitType>("g").Body
                 (
-                    "f".Call().Get(out _)
-                ).Get(out _),
+                    "f".Call()
+                ),
 
                 Fun<UnitType>("h").Body
                 (
                     Fun<UnitType>("z").Body
                     (
-                        "g".Call().Get(out _)
-                    ).Get(out _),
+                        "g".Call()
+                    ),
 
-                    "z".Call().Get(out _)
-                ).Get(out _),
+                    "z".Call()
+                ),
 
-                "h".Call().Get(out _)
-            ).Get(out _),
-            "f".Call().Get(out _)
+                "h".Call()
+            ),
+            "f".Call()
         );
     }
 
@@ -312,19 +312,19 @@ public class AstToCfgConversionTest
                 Fun<UnitType>("g").Body
                 (
                     "x".Assign("x".Plus(1)),
-                    "f".Call().Argument(Literal(false)).Get(out _)
-                ).Get(out _),
+                    "f".Call().Argument(Literal(false))
+                ),
 
                 Fun<UnitType>("h").Body
                 (
                     "x".Assign("x".Minus(1)),
-                    "f".Call().Argument(Literal(true)).Get(out _)
-                ).Get(out _),
+                    "f".Call().Argument(Literal(true))
+                ),
 
-                If(Value("v")).Then("g".Call().Get(out _)).Else("h".Call().Get(out _)).Get(out _)
+                If(Value("v")).Then("g".Call()).Else("h".Call())
 
-            ).Get(out _),
-            "f".Call().Argument(Literal(true)).Get(out _)
+            ),
+            "f".Call().Argument(Literal(true))
         );
     }
 
@@ -358,18 +358,18 @@ public class AstToCfgConversionTest
             (
                 "v".Assign("x".Plus(1)),
                 Return("v".Leq(5))
-            ).Get(out _),
+            ),
             Fun<BoolType>("g").Parameter<BoolType>("v").Body
             (
                 "v".Assign("x".Plus(1)),
                 Return("v".Leq("x"))
-            ).Get(out _),
+            ),
 
             Var("y", 0),
             Loop
             (
-                If("f".Call().Argument(Value("y")).Get(out _).ScOr("g".Call().Argument(Value("y")).Get(out _)))
-                    .Then(Break).Get(out _),
+                If("f".Call().Argument(Value("y")).Get(out _).ScOr("g".Call().Argument(Value("y"))))
+                    .Then(Break),
                 "y".Assign("y".Plus(1))
             )
         );
@@ -405,18 +405,18 @@ public class AstToCfgConversionTest
             (
                 "v".Assign("x".Plus(1)),
                 Return("v".Leq(5))
-            ).Get(out _),
+            ),
             Fun<BoolType>("g").Parameter<BoolType>("v").Body
             (
                 "v".Assign("x".Plus(1)),
                 Return("v".Leq("x"))
-            ).Get(out _),
+            ),
 
             Var("y", 0),
             Loop
             (
-                If("f".Call().Argument(Value("y")).Get(out _).ScAnd("g".Call().Argument(Value("y")).Get(out _)))
-                    .Then(Break).Get(out _),
+                If("f".Call().Argument(Value("y")).Get(out _).ScAnd("g".Call().Argument(Value("y"))))
+                    .Then(Break),
                 "y".Assign("y".Plus(1))
             )
         );
@@ -453,24 +453,24 @@ public class AstToCfgConversionTest
             Fun<BoolType>("f").Parameter<BoolType>("v").Body
             (
                 Return("v".Leq(5))
-            ).Get(out _),
+            ),
             Fun<BoolType>("g").Parameter<BoolType>("v").Body
             (
                 Return("v".Leq("x"))
-            ).Get(out _),
+            ),
             Fun<BoolType>("h").Parameter<BoolType>("v").Body
             (
                 Return("x".Leq("v"))
-            ).Get(out _),
+            ),
 
             Var("y", 0),
             Loop
             (
                 If("f".Call().Argument(Value("y")).Get(out _).ScAnd
                     (
-                        "g".Call().Argument(Value("y")).Get(out _).ScOr("h".Call().Argument(Value("y")).Get(out _))
+                        "g".Call().Argument(Value("y")).Get(out _).ScOr("h".Call().Argument(Value("y")))
                     ))
-                    .Then(Break).Get(out _),
+                    .Then(Break),
                 "y".Assign("y".Plus(1))
             )
         );
