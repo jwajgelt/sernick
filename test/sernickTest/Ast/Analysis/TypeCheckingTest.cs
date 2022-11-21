@@ -10,6 +10,7 @@ using sernick.Ast.Nodes;
 using sernick.Diagnostics;
 using sernick.Input;
 using sernick.Utility;
+using static Helpers.AstNodesExtensions;
 
 public class TypeCheckingTest
 {
@@ -19,8 +20,10 @@ public class TypeCheckingTest
     {
         [Fact]
         public void ExpressionWithSingleIntLiteral(){
-            var literal23 = GetIntLiteral(23);
-            var tree = GetCodeBlock(literal23);
+            var literal23 = Literal(23);
+            var tree = Program(
+                literal23
+            );
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
@@ -33,8 +36,8 @@ public class TypeCheckingTest
         [Fact]
         public void ExpressionWithSingleBoolLiteral()
         {
-            var literalTrue = GetBoolLiteral(true);
-            var tree = GetCodeBlock(literalTrue);
+            var literalTrue = Literal(true);
+            var tree = Program(literalTrue);
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
@@ -47,9 +50,9 @@ public class TypeCheckingTest
 
         [Fact]
         public void ExpressionWithChainedLiterals(){
-            var literalFalse = GetBoolLiteral(true);
-            var literal42 = GetIntLiteral(42);
-            var tree = GetExpressionJoin(literalFalse, literal42);
+            var literalFalse = Literal(false);
+            var literal42 = Literal(42);
+            var tree = Program(literalFalse, literal42);
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
