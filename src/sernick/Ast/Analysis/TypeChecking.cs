@@ -83,7 +83,7 @@ public sealed class TypeChecking
                 partialResult[identifierNode] = partialResult[variableDeclarationNode];
                 return new TypeInformation() { { identifierNode, partialResult[variableDeclarationNode] } };
             }
-            finally { }
+            catch { }
 
             try
             {
@@ -91,7 +91,7 @@ public sealed class TypeChecking
                 partialResult[identifierNode] = partialResult[functionDefinitionNode];
                 return new TypeInformation() { { identifierNode, partialResult[functionDefinitionNode] } };
             }
-            finally { }
+            catch { }
 
             // An identifier should always point to either function definition or variable definition
             // So the code should never reach this line

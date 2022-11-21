@@ -21,7 +21,7 @@ public class TypeCheckingTest
         [Fact]
         public void ExpressionWithSingleIntLiteral(){
             var literal23 = Literal(23);
-            var tree = Program(
+            var tree = Block(
                 literal23
             );
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
@@ -29,38 +29,38 @@ public class TypeCheckingTest
 
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Same(new IntType(), result[literal23]);
-            Assert.Same(new IntType(), result[tree]);
+            Assert.Equal(new IntType().ToString(), result[literal23].ToString());
+            Assert.Equal(new IntType().ToString(), result[tree].ToString());
         }
 
         [Fact]
         public void ExpressionWithSingleBoolLiteral()
         {
             var literalTrue = Literal(true);
-            var tree = Program(literalTrue);
+            var tree = Block(literalTrue);
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
 
-            Assert.Same(new BoolType(), result[literalTrue]);
-            Assert.Same(new BoolType(), result[tree]);
+            Assert.Equal(new BoolType(), result[literalTrue]);
+            Assert.Equal(new BoolType(), result[tree]);
         }
 
         [Fact]
         public void ExpressionWithChainedLiterals(){
             var literalFalse = Literal(false);
             var literal42 = Literal(42);
-            var tree = Program(literalFalse, literal42);
+            var tree = Block(literalFalse, literal42);
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Same(new BoolType(), result[literalFalse]);
-            Assert.Same(new IntType(), result[literal42]);
-            Assert.Same(new BoolType(), result[tree]);
+            Assert.Equal(new BoolType(), result[literalFalse]);
+            Assert.Equal(new IntType(), result[literal42]);
+            Assert.Equal(new IntType(), result[tree]);
         }
 
         [Fact]
