@@ -19,7 +19,8 @@ public class TypeCheckingTest
     public class TestSimpleExpressions
     {
         [Fact]
-        public void ExpressionWithSingleIntLiteral() {
+        public void ExpressionWithSingleIntLiteral()
+        {
             var literal23 = Literal(23);
             var tree = Block(
                 literal23
@@ -49,7 +50,8 @@ public class TypeCheckingTest
         }
 
         [Fact]
-        public void ExpressionWithChainedLiterals_1() {
+        public void ExpressionWithChainedLiterals_1()
+        {
             var literalFalse = Literal(false);
             var literal42 = Literal(42);
             var tree = Block(literalFalse, literal42);
@@ -80,10 +82,11 @@ public class TypeCheckingTest
         }
     }
 
-    public class TestAssignments {
-
+    public class TestAssignments
+    {
         [Fact]
-        public void CorrectLiteralAssignment_1() {
+        public void CorrectLiteralAssignment_1()
+        {
             var literal91 = Literal(91);
             var variableXDeclarationWithLiteralAssignment = Var<IntType>("x", literal91);
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
@@ -119,7 +122,7 @@ public class TypeCheckingTest
         {
             var literalFalse = Literal(false);
             var variableXDeclarationWithLiteralAssignment = Var<IntType>("x", literalFalse);
-            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict)
+            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
             var tree = Block(variableXDeclarationWithLiteralAssignment);
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
@@ -131,7 +134,8 @@ public class TypeCheckingTest
         }
     }
 
-    public class TestVariableValue{
+    public class TestVariableValue
+    {
         //[Fact]
         //public void IntVariableValue_1()
         //{
@@ -142,81 +146,37 @@ public class TypeCheckingTest
         //}
 
     }
-   
-    private static VariableDeclaration GetVariableDeclaration(string name)
-    {
-        return new VariableDeclaration(GetIdentifier(name), null, null, false, loc);
-    }
 
-    private static FunctionDefinition GetZeroArgumentFunctionDefinition(string name)
+    public class TestInfix
     {
-        return new FunctionDefinition(GetIdentifier(name),
-            ImmutableArray<FunctionParameterDeclaration>.Empty,
-            new IntType(),
-            GetCodeBlock(GetReturnStatement(GetIntLiteral(0))),
-            loc);
-    }
+        [Fact]
+        public void AddingTwoIntegerLiterals_OK()
+        {
+            var plusExpr = Plus(Literal(43), Literal(34));
+            var tree = Program(plusExpr);
 
-    private static FunctionParameterDeclaration GetFunctionParameter(string name)
-    {
-        return new FunctionParameterDeclaration(GetIdentifier(name), new IntType(), null, loc);
-    }
+            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-    private static FunctionDefinition GetOneArgumentFunctionDefinition(string functionName, FunctionParameterDeclaration parameter, CodeBlock block)
-    {
-        return new FunctionDefinition(GetIdentifier(functionName),
-            new[] { parameter },
-            new IntType(),
-            block,
-            loc);
-    }
+            Assert.Equal(new IntType(), result[plusExpr]);
+            Assert.Empty(diagnostics.Object.DiagnosticItems);
+        }
 
-    private static Identifier GetIdentifier(string name)
-    {
-        return new Identifier(name, loc);
-    }
+        public void AddingTwoBooleans_ERROR()
+        {
+            var minusExpr = Plus(Literal(true), Literal(false));
+            var tree = Program(minusExpr);
 
-    private static LiteralValue GetIntLiteral(int n)
-    {
-        return new IntLiteralValue(n, loc);
-    }
+            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-    private static LiteralValue GetBoolLiteral(bool b){
-        return new BoolLiteralValue(b, loc);
-    }
+            Assert.Equal(new UnitType(), result[minusExpr]); // default in case of error
+            Assert.NotEmpty(diagnostics.Object.DiagnosticItems); // maybe a more specific check here? TODO
+        }
 
-    private static VariableValue GetVariableValue(Identifier identifier)
-    {
-        return new VariableValue(identifier, loc);
-    }
-
-    private static Infix GetSimpleInfix(Expression e1, Expression e2, Infix.Op op)
-    {
-        return new Infix(e1, e2, op, loc);
-    }
-
-    private static ExpressionJoin GetExpressionJoin(Expression e1, Expression e2)
-    {
-        return new ExpressionJoin(e1, e2, loc);
-    }
-
-    private static CodeBlock GetCodeBlock(Expression e)
-    {
-        return new CodeBlock(e, loc);
-    }
-
-    private static Assignment GetAssignment(Identifier identifier, Expression e)
-    {
-        return new Assignment(identifier, e, loc);
-    }
-
-    private static FunctionCall GetFunctionCall(Identifier identifier, IEnumerable<Expression> args)
-    {
-        return new FunctionCall(identifier, args, loc);
-    }
-
-    private static ReturnStatement GetReturnStatement(Expression e)
-    {
-        return new ReturnStatement(e, loc);
     }
 }
+
+  
