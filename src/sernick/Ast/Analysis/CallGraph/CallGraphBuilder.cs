@@ -1,13 +1,53 @@
 namespace sernick.Ast.Analysis.CallGraph;
 
-using sernick.Ast.Nodes;
+using NameResolution;
+using Nodes;
 
 /// <summary>
 ///     Class used to represent the call graph.
 /// </summary>
-public sealed record CallGraph(
+public record struct CallGraph(
     IReadOnlyDictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> Graph
-);
+)
+{
+    public CallGraph JoinWith(CallGraph other)
+    {
+        return new CallGraph(
+            Graph.Concat(other.Graph)
+            .GroupBy(kv => kv.Key, kv => kv.Value)
+            .ToDictionary(
+                g => g.Key,
+                g => g.SelectMany(x => x).Distinct(),
+                ReferenceEqualityComparer.Instance as IEqualityComparer<FunctionDefinition>
+            )
+        );
+    }
+
+    public CallGraph Closure()
+    {
+        var graph = Graph.ToDictionary(
+            kv => kv.Key,
+            kv => kv.Value.ToList() as IEnumerable<FunctionDefinition>,
+            ReferenceEqualityComparer.Instance as IEqualityComparer<FunctionDefinition>);
+
+        var functions = Graph.Keys;
+        foreach (var f in functions)
+        {
+            foreach (var g in functions)
+            {
+                foreach (var h in functions)
+                {
+                    if (!graph[g].Contains(h) && graph[g].Contains(f) && graph[f].Contains(h))
+                    {
+                        graph[g] = graph[g].Append(h);
+                    }
+                }
+            }
+        }
+
+        return new CallGraph(graph);
+    }
+};
 
 /// <summary>
 ///     Static class with Process method, which extracts the call graph from a given AST.
@@ -15,22 +55,59 @@ public sealed record CallGraph(
 /// </summary>
 public static class CallGraphBuilder
 {
-    public static CallGraph Process(AstNode ast)
+    public static CallGraph Process(AstNode ast, NameResolutionResult nameResolution)
     {
-        var visitor = new CallGraphVisitor();
-        return visitor.VisitAstTree(ast, new CallGraphVisitorParam());
+        var visitor = new CallGraphVisitor(nameResolution.CalledFunctionDeclarations);
+        return visitor.VisitAstTree(ast, (FunctionDefinition)ast);
     }
-
-    private sealed class CallGraphVisitorParam { }
 
     /// <summary>
     ///     Visitor class used to extract call graph from the AST.
     /// </summary>
-    private sealed class CallGraphVisitor : AstVisitor<CallGraph, CallGraphVisitorParam>
+    private sealed class CallGraphVisitor : AstVisitor<CallGraph, FunctionDefinition?>
     {
-        protected override CallGraph VisitAstNode(AstNode node, CallGraphVisitorParam param)
+        private readonly IReadOnlyDictionary<FunctionCall, FunctionDefinition> _calledFunctionDeclarations;
+
+        public CallGraphVisitor(IReadOnlyDictionary<FunctionCall, FunctionDefinition> calledFunctionDeclarations)
         {
-            throw new NotImplementedException();
+            _calledFunctionDeclarations = calledFunctionDeclarations;
+        }
+
+        protected override CallGraph VisitAstNode(AstNode node, FunctionDefinition? fun)
+        {
+            return node.Children.Aggregate(
+                new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>>()),
+                (result, next) =>
+                {
+                    var childResult = next.Accept(this, fun);
+                    return result.JoinWith(childResult);
+                }
+            );
+        }
+
+        public override CallGraph VisitFunctionDefinition(FunctionDefinition node, FunctionDefinition? fun)
+        {
+            var graph = VisitAstNode(node, node);
+
+            var newDefDict = new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
+                { node, new List<FunctionDefinition> { } }
+            };
+
+            return graph.JoinWith(new CallGraph(newDefDict));
+        }
+
+        public override CallGraph VisitFunctionCall(FunctionCall node, FunctionDefinition? fun)
+        {
+            var graph = VisitAstNode(node, fun);
+            if (fun is not null)
+            {
+                var newCallDict = new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
+                    { fun, new List<FunctionDefinition> { _calledFunctionDeclarations[node] } }
+                };
+                graph = graph.JoinWith(new CallGraph(newCallDict));
+            }
+
+            return graph;
         }
     }
 }

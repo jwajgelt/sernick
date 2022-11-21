@@ -3,5 +3,5 @@ if(var x1: Bool = true; x1) {
     var y: Bool = x1 && x2;
   }
 }
-// Compilation should fail, x2 is nt declared in this scope
+// Compilation should fail, x2 is not declared in this scope
 var z: Bool = x1 && x2;

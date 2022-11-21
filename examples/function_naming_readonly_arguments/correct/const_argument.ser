@@ -1,4 +1,0 @@
-// const does not modify the behaviour, but is still allowed
-fun function(const argument : Int) : Int {
-	return argument + 1;
-}

@@ -136,7 +136,8 @@ public sealed class Parser<TSymbol> : IParser<TSymbol>
         [DoesNotReturn]
         void ReportError(IParseTree<TSymbol>? previous, IParseTree<TSymbol>? next, string message)
         {
-            diagnostics.Report(new SyntaxError<TSymbol>(previous, next));
+            // previous might be used in the future
+            diagnostics.Report(new SyntaxError<TSymbol>(next));
             // consume the `leaves` Enumerable
             // to force Lexer to report any remaining errors
             while (leavesEnumerator.MoveNext())
