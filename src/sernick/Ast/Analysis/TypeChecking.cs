@@ -91,8 +91,7 @@ public sealed class TypeChecking
             // all necessary checking should be performed in "Visit assignment", so just return Unit here
             pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node);
-            var result = new TypeInformation(childrenTypes);
-            result.Add(node, new UnitType());
+            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
             pendingNodes.Remove(node);
             return result;
 
@@ -103,8 +102,7 @@ public sealed class TypeChecking
             pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node);
 
-            var result = new TypeInformation(childrenTypes);
-            result.Add(node, new UnitType());
+            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
             pendingNodes.Remove(node);
             return result;
         }
