@@ -277,6 +277,37 @@ public class TypeCheckingTest
             Assert.Empty(diagnostics.Object.DiagnosticItems);
         }
     }
+
+    public class TestFunctionDeclaration
+    {
+        [Fact]
+        public void FunctionReturnsBool_1()
+        {
+            var funDecl = Fun<BoolType>("returnsBool");
+            funDecl.Body(
+                Loop(
+                    Block(
+                        Literal(23),
+                        Return(true)
+                    )
+                ),
+                Literal(false)
+            );
+
+            var tree = (
+                funDecl
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Equal(new UnitType(), result[tree]);
+            Assert.Empty(diagnostics.Object.DiagnosticItems);
+        }
+    }
 }
 
   
