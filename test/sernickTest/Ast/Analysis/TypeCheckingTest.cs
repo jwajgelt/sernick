@@ -160,7 +160,7 @@ public class TypeCheckingTest
             var plusExpr = Helpers.AstNodesExtensions.Plus(Literal(43), Literal(34));
             var tree = Program(plusExpr);
 
-            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            var diagnostics = new Mock<IDiagnostics>();
             diagnostics.SetupAllProperties();
 
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -182,7 +182,37 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.NotEmpty(diagnostics.Object.DiagnosticItems); // maybe a more specific check here? TODO
+            diagnostics.Verify(d => d.Report(It.IsAny<InfixOperatorTypeError>()), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public void AddingIntAndBoolean_ERROR()
+        {
+            var plusExpr = Helpers.AstNodesExtensions.Plus(Literal(true), Literal(123));
+            var tree = Program(plusExpr);
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<InfixOperatorTypeError>()), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public void AddingTwoUnitExpressions_ERROR()
+        {
+            var plusExpr = Helpers.AstNodesExtensions.Plus(Block(Var("x")), Block(Var("y")));
+            var tree = Program(plusExpr);
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<InfixOperatorTypeError>()), Times.AtLeastOnce);
         }
 
     }
