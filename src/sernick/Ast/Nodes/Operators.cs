@@ -20,8 +20,6 @@ public sealed record Infix
     }
 
     public override IEnumerable<AstNode> Children => new[] { Left, Right };
-    public Expression LeftSide = Left;
-    public Expression RightSide = Right;
 
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitInfix(this, param);

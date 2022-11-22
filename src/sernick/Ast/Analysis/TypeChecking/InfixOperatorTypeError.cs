@@ -8,7 +8,7 @@ public sealed record InfixOperatorTypeError(Type lhsType, Type rhsType, ILocatio
 {
     public override string ToString()
     {
-        return $"Cannot appy an infix operator with types: ${lhsType} and ${rhsType}: at {Location}";
+        return $"Cannot apply an infix operator with types: ${lhsType} and ${rhsType}: at {Location}";
     }
 
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;

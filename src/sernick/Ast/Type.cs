@@ -1,7 +1,5 @@
 namespace sernick.Ast;
 
-using System.Drawing;
-
 /// <summary>
 /// Base class for Sernick types
 /// </summary>

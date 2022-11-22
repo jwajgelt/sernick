@@ -1,7 +1,5 @@
 namespace sernick.Ast.Analysis.TypeChecking;
 
-using System.Data;
-using System.Xml.Linq;
 using Diagnostics;
 using NameResolution;
 using Nodes;
@@ -9,7 +7,7 @@ using Utility;
 
 using TypeInformation = Dictionary<Ast.Nodes.AstNode, Type>;
 
-public sealed class TypeChecking
+public static class TypeChecking
 {
     public static TypeInformation CheckTypes(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
     {
@@ -88,7 +86,6 @@ public sealed class TypeChecking
 
         public override TypeInformation VisitVariableDeclaration(VariableDeclaration node, Unit _)
         {
-            // all necessary checking should be performed in "Visit assignment", so just return Unit here
             pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node);
             var result = new TypeInformation(childrenTypes);
@@ -171,7 +168,7 @@ public sealed class TypeChecking
                 this._diagnostics.Report(new FunctionArgumentsMismatchError(declaredArguments.Count(), actualArguments.Count(), functionCallNode.LocationRange.Start));
             }
 
-            declaredArguments.Zip<FunctionParameterDeclaration,Expression, Unit>(actualArguments, (declaredArgument, actualArgument) =>
+            var _notNeeded = declaredArguments.Zip<FunctionParameterDeclaration,Expression, Unit>(actualArguments, (declaredArgument, actualArgument) =>
             {
                 // let us do type checking right here
                 var expectedType = declaredArgument.Type;
@@ -361,7 +358,7 @@ public sealed class TypeChecking
 
             // Regardless of the error, let's return a Unit type for assignment and get more type checking information
             var result = new TypeInformation(childrenTypes);
-            result.Add(node, new UnitType());
+            result.Add(node, typeOfLeftSide);
             pendingNodes.Remove(node);
             return result;
         }
@@ -406,12 +403,6 @@ public sealed class TypeChecking
         /// <returns></returns>
         private TypeInformation visitNodeChildren(AstNode node)
         {
-            var nodeHasNoChildren = !node.Children.Any();
-            if(nodeHasNoChildren)
-            {
-                return new TypeInformation();
-            }
-
             var avoidRecalculation = partialResult.ContainsKey(node);
             if (avoidRecalculation)
             {

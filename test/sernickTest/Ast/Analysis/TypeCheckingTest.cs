@@ -215,6 +215,20 @@ public class TypeCheckingTest
             diagnostics.Verify(d => d.Report(It.IsAny<InfixOperatorTypeError>()), Times.AtLeastOnce);
         }
 
+        [Fact]
+        public void AddingIntAndUnit_ERROR()
+        {
+            var plusExpr = Helpers.AstNodesExtensions.Plus(Literal(23), Block(Var("y")));
+            var tree = Program(plusExpr);
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<InfixOperatorTypeError>()), Times.AtLeastOnce);
+        }
     }
 }
 
