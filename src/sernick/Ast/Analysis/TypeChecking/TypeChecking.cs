@@ -255,12 +255,19 @@ public static class TypeChecking
             return result;
         }
 
+        /// <summary>
+        /// Loop always returns a `Unit` type
+        /// Break/return inside the loop would exit the entire function
+        /// and have no effect on the loop 
+        /// </summary>
+        /// <param name="node"></param>
+        /// <param name="_"></param>
+        /// <returns></returns>
         public override TypeInformation VisitLoopStatement(LoopStatement node, Unit _)
         {
             pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node);
 
-            // TODO what if Loop contains a "return 12;"?
             var result = new TypeInformation(childrenTypes);
             result.Add(node, new UnitType());
             pendingNodes.Remove(node);
@@ -273,8 +280,8 @@ public static class TypeChecking
             pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node);
 
-            var typeOfLeftOperand = childrenTypes[node.LeftSide];
-            var typeOfRightOperand = childrenTypes[node.RightSide];
+            var typeOfLeftOperand = childrenTypes[node.Left];
+            var typeOfRightOperand = childrenTypes[node.Right];
 
             if(typeOfLeftOperand == new UnitType() || typeOfRightOperand == new UnitType())
             {

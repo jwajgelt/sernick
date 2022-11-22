@@ -153,6 +153,8 @@ public static class AstNodesExtensions
 
     public static ReturnStatement Return(int value) => Return(Literal(value));
 
+    public static ReturnStatement Return(bool value) => Return(Literal(value));
+
     public static ReturnStatement Return(Expression e) => new(e, loc);
 
     public static EmptyExpression Close => new(loc);
@@ -238,5 +240,9 @@ public static class AstNodesExtensions
         public IfStatement Get(out IfStatement result) => result = this;
     }
 
+    #endregion
+
+    #region Loop
+    public static LoopStatement Loop(CodeBlock codeBlock) => new LoopStatement(codeBlock, loc);
     #endregion
 }

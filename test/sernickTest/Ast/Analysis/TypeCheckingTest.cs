@@ -230,6 +230,30 @@ public class TypeCheckingTest
             diagnostics.Verify(d => d.Report(It.IsAny<InfixOperatorTypeError>()), Times.AtLeastOnce);
         }
     }
+
+    public class TestLoop {
+        [Fact]
+        public void TestLoopReturnInt_OK()
+        {
+            var tree = (
+                Loop(
+                    Block(
+                        Literal(23),
+                        Return(true)
+                    )
+                )
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Same(new IntType(), result[tree]);
+            Assert.Empty(diagnostics.Object.DiagnosticItems);
+        }
+    }
 }
 
   
