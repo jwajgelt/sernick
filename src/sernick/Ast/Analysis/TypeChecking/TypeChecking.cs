@@ -61,7 +61,7 @@ public static class TypeChecking
             // no need to visit children, identifier nodes should have none
             try
             {
-                var variableDeclarationNode = this.getIdentifierAsVariableDeclaration(identifierNode);
+                var variableDeclarationNode = this.getIdentifierAsDeclaration(identifierNode);
                 partialResult[identifierNode] = partialResult[variableDeclarationNode];
                 return new TypeInformation() { { identifierNode, partialResult[variableDeclarationNode] } };
             }
@@ -120,8 +120,15 @@ public static class TypeChecking
         {
             pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node);
-
             var result = new TypeInformation(childrenTypes);
+            var declaredReturnType = node.ReturnType;
+            var bodyReturnType = childrenTypes[node.Body];
+            if(declaredReturnType != bodyReturnType)
+            {
+                this._diagnostics.Report(new TypeCheckingError(declaredReturnType, bodyReturnType, node.LocationRange.Start));
+            }
+
+            
             result.Add(node, new UnitType());
             pendingNodes.Remove(node);
             return result;
@@ -426,7 +433,10 @@ public static class TypeChecking
            );
         }
 
-        private VariableDeclaration getIdentifierAsVariableDeclaration(Identifier identifier)
+        /// <param name="identifier"></param>
+        /// <returns> Variable or function parameter declaration</returns>
+        /// <exception cref="Exception"></exception>
+        private Declaration getIdentifierAsDeclaration(Identifier identifier)
         {
             foreach(var declarationPair in nameResolution.AssignedVariableDeclarations)
             {
@@ -434,6 +444,17 @@ public static class TypeChecking
                 var variableDeclaration = declarationPair.Value;
 
                 if(variableDeclaration.Name == identifier)
+                {
+                    return variableDeclaration;
+                }
+            }
+
+            foreach (var declarationPair in nameResolution.UsedVariableDeclarations)
+            {
+                var variableValue = declarationPair.Key;
+                var variableDeclaration = declarationPair.Value;
+
+                if (variableDeclaration.Name == identifier)
                 {
                     return variableDeclaration;
                 }
