@@ -16,7 +16,7 @@ public static class AstNodesExtensions
 
     private static readonly Range<ILocation> loc = new(new FakeLocation(), new FakeLocation());
 
-    private static Identifier Ident(string name) => new(name, loc);
+    public static Identifier Ident(string name) => new(name, loc);
 
     #region Variable
 
@@ -178,6 +178,8 @@ public static class AstNodesExtensions
         expressions.Aggregate((sequence, expr) => sequence.Join(expr));
 
     public static CodeBlock Block(params Expression[] expressions) => new(expressions.Join(), loc);
+
+    public static Expression Group(params Expression[] expressions) => expressions.Join();
 
     public static ReturnStatement Return(int value) => Return(Literal(value));
 

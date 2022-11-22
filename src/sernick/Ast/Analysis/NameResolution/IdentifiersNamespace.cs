@@ -16,8 +16,8 @@ public sealed class IdentifiersNamespace
     {
     }
 
-    private readonly ImmutableHashSet<string> _currentScope;
-    private readonly ImmutableDictionary<string, Declaration> _variables;
+    private readonly ImmutableDictionary<string, Declaration> _resolutions;
+    private readonly ImmutableHashSet<string> _declaredInCurrentScope;
 
     public IdentifiersNamespace() : this(ImmutableDictionary<string, Declaration>.Empty,
         ImmutableHashSet<string>.Empty)
@@ -25,28 +25,31 @@ public sealed class IdentifiersNamespace
     }
 
     private IdentifiersNamespace(
-        ImmutableDictionary<string, Declaration> variables,
-        ImmutableHashSet<string> currentScope)
+        ImmutableDictionary<string, Declaration> resolutions,
+        ImmutableHashSet<string> declaredInCurrentScope)
     {
-        _variables = variables.WithComparers(null, ReferenceEqualityComparer.Instance);
-        _currentScope = currentScope;
+        _resolutions = resolutions.WithComparers(null, ReferenceEqualityComparer.Instance);
+        _declaredInCurrentScope = declaredInCurrentScope;
     }
 
     public IdentifiersNamespace Add(Declaration declaration)
     {
         var name = declaration.Name.Name;
-        if (_currentScope.Contains(name))
+        if (_declaredInCurrentScope.Contains(name))
         {
             throw new IdentifierCollisionException();
         }
 
-        return new IdentifiersNamespace(_variables.SetItem(name, declaration), _currentScope.Add(name));
+        return new IdentifiersNamespace(_resolutions.SetItem(name, declaration), _declaredInCurrentScope.Add(name));
     }
 
-    public Declaration GetDeclaration(Identifier identifier)
+    /// <summary>
+    /// Returns declaration bound to the identifier.
+    /// </summary>
+    public Declaration GetResolution(Identifier identifier)
     {
         var name = identifier.Name;
-        if (_variables.TryGetValue(name, out var declaration))
+        if (_resolutions.TryGetValue(name, out var declaration))
         {
             return declaration;
         }
@@ -56,6 +59,6 @@ public sealed class IdentifiersNamespace
 
     public IdentifiersNamespace NewScope()
     {
-        return new IdentifiersNamespace(_variables, ImmutableHashSet<string>.Empty);
+        return new IdentifiersNamespace(_resolutions, ImmutableHashSet<string>.Empty);
     }
 }

@@ -13,16 +13,18 @@ public class NameResolutionTest
     [Fact]
     public void VariableUseFromTheSameScopeResolved()
     {
-        // var x; x+1
+        // var x; x+1; x+1
         var tree = Program(
             Var("x", out var declaration),
-            Value("x", out var variableValue).Plus(1)
+            Value("x", out var variableValue1).Plus(1),
+            Value("x", out var variableValue2).Plus(1)
         );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
-        Assert.Same(declaration, result.UsedVariableDeclarations[variableValue]);
+        Assert.Same(declaration, result.UsedVariableDeclarations[variableValue1]);
+        Assert.Same(declaration, result.UsedVariableDeclarations[variableValue2]);
     }
 
     [Fact]
@@ -81,16 +83,18 @@ public class NameResolutionTest
     [Fact]
     public void VariableAssignmentFromTheSameScopeResolved()
     {
-        // var x; x=1
+        // var x; x=1; x=1
         var tree = Program(
             Var("x", out var declaration),
-            "x".Assign(1, out var assignment)
+            "x".Assign(1, out var assignment1),
+            "x".Assign(1, out var assignment2)
         );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
-        Assert.Same(declaration, result.AssignedVariableDeclarations[assignment]);
+        Assert.Same(declaration, result.AssignedVariableDeclarations[assignment1]);
+        Assert.Same(declaration, result.AssignedVariableDeclarations[assignment2]);
     }
 
     [Fact]
@@ -150,18 +154,21 @@ public class NameResolutionTest
     public void CalledFunctionFromTheSameScopeResolved()
     {
         // fun f() : Int { return 0; }
+        // f();
         // f()
         var tree = Program(
             Fun<IntType>("f").Body(
                 Return(0), Close
             ).Get(out var declaration),
-            "f".Call(out var call)
+            "f".Call(out var call1),
+            "f".Call(out var call2)
         );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
-        Assert.Same(declaration, result.CalledFunctionDeclarations[call]);
+        Assert.Same(declaration, result.CalledFunctionDeclarations[call1]);
+        Assert.Same(declaration, result.CalledFunctionDeclarations[call2]);
     }
 
     [Fact]
@@ -462,5 +469,174 @@ public class NameResolutionTest
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<NotAVariableError>()));
+    }
+
+    [Fact]
+    public void ArgumentResolved()
+    {
+        // fun f(a: Int): Int { return 0; }
+        // var x = 0;
+        // f(x);
+        var tree = Program(
+            Fun<IntType>("f").Parameter<IntType>("a").Body(Return(0)),
+            Var("x", 1, out var declaration),
+            "f".Call().Argument(Value("x", out var argument))
+        );
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.UsedVariableDeclarations[argument]);
+    }
+
+    [Fact]
+    public void ShadowFunctionWithVariableCollision()
+    {
+        // fun f() : Int { return 0; }
+        // var f;
+        var tree = Program(
+            Fun<IntType>("f").Body(Return(0)),
+            Var("f")
+        );
+        var diagnostics = new Mock<IDiagnostics>();
+
+        NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
+    }
+
+    [Fact]
+    public void DeclarationInAssignmentWithCollision()
+    {
+        // var y : Int = (var y: Int = 1; y);
+        var tree = Program(
+            Var<IntType>("y", Group(
+                Var("y", 1),
+                Value("y"))
+            )
+        );
+        var diagnostics = new Mock<IDiagnostics>();
+
+        NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
+    }
+
+    [Fact]
+    public void DeclarationInCallWithCollision()
+    {
+        // fun f(a: Int): Int { return 0; }
+        // f((const f: Int = 1; f));
+        var tree = Program(
+            Fun<IntType>("f").Parameter<IntType>("f").Body(Return(0)),
+            "f".Call().Argument(
+                Group(
+                    Var("f", 1),
+                    Value("f")
+                )
+            )
+        );
+        var diagnostics = new Mock<IDiagnostics>();
+
+        NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
+    }
+
+    [Fact]
+    public void DeclarationInAssignmentResolved()
+    {
+        // var y : Int = (const x: Int = 1; x);
+        // x
+        var tree = Program(
+            Var<IntType>("y", Group(
+                    Var("x", 1, out var declaration),
+                    Value("x"))),
+            Value("x", out var value)
+        );
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.UsedVariableDeclarations[value]);
+    }
+
+    [Fact]
+    public void DeclarationInArgumentResolved_Case2()
+    {
+        // fun f(a: Int): Int { return 0; }
+        //
+        // f((const x: Int = 1; x));
+        // x;
+        var tree = Program(
+            Fun<IntType>("f").Parameter<IntType>("a").Body(Return(0)),
+            "f".Call().Argument(
+                Group(
+                    Var("x", 1, out var declaration),
+                    Value("x")
+                )
+            ),
+            Value("x", out var value)
+        );
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.UsedVariableDeclarations[value]);
+    }
+
+    [Fact]
+    public void DeclarationInArgumentResolved_Case1()
+    {
+        // fun f(a: Int, b: Int): Int { return 0; }
+        //
+        // f((const x: Int = 1; x), x);
+        var tree = Program(
+            Fun<IntType>("f").Parameter<IntType>("a").Parameter<IntType>("b").Body(Return(0)),
+            "f".Call().Argument(
+                Group(
+                    Var("x", 1, out var declaration),
+                    Value("x", out var value1)
+                )
+            ).Argument(Value("x", out var value2))
+        );
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.UsedVariableDeclarations[value1]);
+        Assert.Same(declaration, result.UsedVariableDeclarations[value2]);
+    }
+
+    [Fact]
+    public void VariableNotUsableInOwnDeclaration()
+    {
+        // var x : Int = x
+        var tree = Program(Var<IntType>("x", Value("x")));
+        var diagnostics = new Mock<IDiagnostics>();
+
+        NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()));
+    }
+
+    [Fact]
+    public void ShadowedVariableStillUsableInDeclaration()
+    {
+        // var x : Int = 1;
+        // {
+        //   var x : Int = x;
+        // }
+        var tree = Program(
+            Var<IntType>("x", Value("x"), out var declaration),
+            Block(
+                Var<IntType>("x", Value("x", out var value))
+                )
+            );
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.UsedVariableDeclarations[value]);
     }
 }
