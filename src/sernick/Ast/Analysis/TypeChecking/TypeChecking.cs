@@ -210,7 +210,7 @@ public static class TypeChecking
             // Return Value is in a subtree, so its type should be already calculated by now
             if (node.ReturnValue != null)
             {
-                result.Add(node, childrenTypes[node.ReturnValue] ?? new UnitType());
+                result.Add(node, childrenTypes[node.ReturnValue]);
             }
             else
             {
