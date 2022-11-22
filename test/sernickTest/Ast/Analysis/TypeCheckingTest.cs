@@ -26,6 +26,7 @@ public class TypeCheckingTest
             var tree = Block(
                 literal23
             );
+
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
@@ -88,53 +89,51 @@ public class TypeCheckingTest
         [Fact]
         public void Declaration_CorrectAssignment()
         {
-            var literal91 = Literal(91);
-            var variableXDeclarationWithLiteralAssignment = Var<IntType>("x", literal91);
             var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
             diagnostics.SetupAllProperties();
 
-            var tree = Block(variableXDeclarationWithLiteralAssignment);
+            var tree = Block(
+              Var<IntType>("x", Literal(91), out var declX)
+            );
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
             Assert.Equal(new UnitType(), result[tree]);
-            Assert.Equal(new UnitType(), result[variableXDeclarationWithLiteralAssignment]);
+            Assert.Equal(new UnitType(), result[declX]);
             Assert.Empty(diagnostics.Object.DiagnosticItems);
         }
 
         [Fact]
         public void Declaration_WrongAssignment_1()
         {
-            var literal91 = Literal(91);
-            var variableXDeclarationWithLiteralAssignment = Var<BoolType>("x", literal91);
-            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            var diagnostics = new Mock<IDiagnostics>();
             diagnostics.SetupAllProperties();
 
-            var tree = Block(variableXDeclarationWithLiteralAssignment);
+            var tree = Block(
+              Var<BoolType>("x", Literal(91), out var declX)
+            );
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
             Assert.Equal(new UnitType(), result[tree]);
-            Assert.Equal(new UnitType(), result[variableXDeclarationWithLiteralAssignment]);
-            // I'm not sure if the next line is actually checking anything :(
+            Assert.Equal(new UnitType(), result[declX]);
             diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingError>()));
         }
 
         [Fact]
         public void Declaration_WrongAssignment_2()
         {
-            var literalFalse = Literal(false);
-            var variableXDeclarationWithLiteralAssignment = Var<IntType>("x", literalFalse);
-            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            var diagnostics = new Mock<IDiagnostics>();
             diagnostics.SetupAllProperties();
 
-            var tree = Block(variableXDeclarationWithLiteralAssignment);
+            var tree = Block(
+              Var<IntType>("x", Literal(false), out var declX)
+            );
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
             Assert.Equal(new UnitType(), result[tree]);
-            Assert.Equal(new UnitType(), result[variableXDeclarationWithLiteralAssignment]);
-            // I'm not sure if the next line is actually checking anything :(
+            Assert.Equal(new UnitType(), result[declX]);
             diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingError>()));
         }
     }
@@ -233,7 +232,7 @@ public class TypeCheckingTest
 
     public class TestLoop {
         [Fact]
-        public void TestLoopReturnInt_OK()
+        public void LoopNodeAlwaysReturnsUnit_1()
         {
             var tree = (
                 Loop(
@@ -250,7 +249,31 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Same(new IntType(), result[tree]);
+            Assert.Equal(new UnitType(), result[tree]);
+            Assert.Empty(diagnostics.Object.DiagnosticItems);
+        }
+
+        [Fact]
+        public void LoopNodeAlwaysReturnsUnit_2()
+        {
+            var tree = (
+                Loop(
+                    Block(
+                        Literal(23),
+                        Return(true),
+                        Return(false),
+                        Literal(91)
+                    )
+                )
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Equal(new UnitType(), result[tree]);
             Assert.Empty(diagnostics.Object.DiagnosticItems);
         }
     }
