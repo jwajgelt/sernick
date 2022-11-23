@@ -4,5 +4,7 @@ using ControlFlowGraph.CodeTree;
 
 public interface IFunctionCaller
 {
-    public (IReadOnlyList<CodeTreeNode> codeGraph, CodeTreeNode? resultLocation) GenerateCall(IReadOnlyList<CodeTreeNode> arguments);
+    public GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeNode> arguments);
+
+    public record GenerateCallResult(IReadOnlyList<CodeTreeNode> CodeGraph, CodeTreeNode? ResultLocation);
 }

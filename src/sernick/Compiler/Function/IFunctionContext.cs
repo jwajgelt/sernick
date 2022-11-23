@@ -8,7 +8,7 @@ public interface IFunctionContext : IFunctionCaller
     // Do we need this?
     public void AddLocal(FunctionVariable variable, bool usedElsewhere);
 
-    public RegisterWrite ResultVariable { get; set; }
+    public RegisterWrite? ResultVariable { get; set; }
 
     public IReadOnlyList<CodeTreeNode> GeneratePrologue();
 

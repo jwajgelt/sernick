@@ -9,7 +9,7 @@ public sealed class FunctionContext : IFunctionContext
         // silently ignore for now
     }
 
-    public (IReadOnlyList<CodeTreeNode> codeGraph, CodeTreeNode? resultLocation) GenerateCall(IReadOnlyList<CodeTreeNode> arguments)
+    public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeNode> arguments)
     {
         throw new NotImplementedException();
     }
