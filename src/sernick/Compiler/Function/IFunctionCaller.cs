@@ -1,3 +1,8 @@
 namespace sernick.Compiler.Function;
 
-public interface IFunctionCaller { }
+using ControlFlowGraph.CodeTree;
+
+public interface IFunctionCaller
+{
+    public (IReadOnlyList<CodeTreeNode> codeGraph, CodeTreeNode? resultLocation) GenerateCall(IReadOnlyList<CodeTreeNode> arguments);
+}
