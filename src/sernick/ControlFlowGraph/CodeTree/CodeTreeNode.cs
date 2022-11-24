@@ -41,6 +41,7 @@ public sealed record UnaryOperationNode(UnaryOperation Operation, CodeTreeNode O
 /// </summary>
 public class Register { }
 
+#pragma warning disable IDE0052
 /// <summary>
 /// Do not use a constructor -- use one of 16 static variables of this class
 /// https://en.wikipedia.org/wiki/X86_calling_conventions#Callee-saved_(non-volatile)_registers
@@ -57,6 +58,7 @@ public class HardwareRegister: Register {
     public static readonly  HardwareRegister R15 = new HardwareRegister();
     // TODO more registers ???
 }
+#pragma warning enable IDE0052
 
 public sealed record RegisterRead(Register Register) : CodeTreeNode;
 
