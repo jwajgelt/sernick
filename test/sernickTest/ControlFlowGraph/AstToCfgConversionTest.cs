@@ -1,10 +1,35 @@
 namespace sernickTest.ControlFlowGraph;
 
 using sernick.Ast;
+using Xunit;
 using static Ast.Helpers.AstNodesExtensions;
+using sernick.ControlFlowGraph.CodeTree;
 
 public class AstToCfgConversionTest
 {
+
+    [Fact]
+    public void SimpleAdditionLiteralsOnly()
+    {
+        _ = Program
+        (
+            Ast.Helpers.AstNodesExtensions.Plus(Literal(1), Literal(2)),
+            Ast.Helpers.AstNodesExtensions.Plus(Literal(3), Literal(4))
+        );       
+
+        var SecondPlus = new SingleExitNode(null, new BinaryOperationNode(
+            BinaryOperation.Add,
+            new Constant(new RegisterValue(3)),
+            new Constant(new RegisterValue(4))
+        ));
+
+        var FirstPlus = new SingleExitNode(SecondPlus, new BinaryOperationNode(
+            BinaryOperation.Add,
+            new Constant(new RegisterValue(1)),
+            new Constant(new RegisterValue(2))
+        ));
+    }
+
     [Fact]
     public void SimpleAddition()
     {
@@ -16,8 +41,38 @@ public class AstToCfgConversionTest
         (
             Var("a", 1),
             Var("b", 2),
-            Var<IntType>("c", "a".Plus("b"))
+            Var<IntType>("c", "a".Plus("b"))     
         );
+
+        var registerA = new Register(); // NOTE: will probably have a different identity in the output
+        var registerB = new Register();
+        var registerC = new Register();
+
+        
+        var WriteC = new SingleExitNode(null,
+            new RegisterWrite(
+                registerC,
+                new BinaryOperationNode(
+                    BinaryOperation.Add,
+                    new RegisterRead(registerA),
+                    new RegisterRead(registerB)
+                )
+            )
+        );
+
+        var ValueOfB = new SingleExitNode(WriteC,
+            new RegisterWrite(
+                registerB,
+                new Constant(new RegisterValue(2))
+            )
+        );
+
+        var ValueOfA = new SingleExitNode(ValueOfB,
+           new RegisterWrite(
+               registerA,
+               new Constant(new RegisterValue(1))
+           )
+       );
     }
 
     [Fact]
@@ -88,8 +143,32 @@ public class AstToCfgConversionTest
     public void SimpleInnerFunctionCall()
     {
         // fun f(x : Int) : Int {
-        //     fun g(y : Int) : Int {
+        //     fun g(y : Int = 5) : Int {
         //         return y + y;
+        //     }
+        //     return g() + g(x + 1);
+        // }
+
+        // TODO fixme
+        //_ = Program
+        //(
+        //    Fun<IntType>("f").Parameter<IntType>("x").Body
+        //    (
+        //        Fun<IntType>("g").Parameter<IntType>("y").Body
+        //        (
+        //            Return("y".Plus("y"))
+        //        ),
+        //        Return("g".Call().Argument(Value("x")).Get(out _).Plus("g".Call(Literal(5)).Argument("x".Plus(1))))
+        //    )
+        //);
+    }
+
+    [Fact]
+    public void SimpleInnerFunctionCall_2()
+    {
+        // fun f(x : Int) : Int {
+        //     fun g(y : Int) : Int {
+        //         return y + x;
         //     }
         //     return g(x) + g(x + 1);
         // }
@@ -100,7 +179,7 @@ public class AstToCfgConversionTest
             (
                 Fun<IntType>("g").Parameter<IntType>("y").Body
                 (
-                    Return("y".Plus("y"))
+                    Return("y".Plus("x"))
                 ),
                 Return("g".Call().Argument(Value("x")).Get(out _).Plus("g".Call().Argument("x".Plus(1))))
             )
