@@ -58,7 +58,6 @@ public class HardwareRegister: Register {
     public static readonly  HardwareRegister R15 = new HardwareRegister();
     // TODO more registers ???
 }
-#pragma warning enable IDE0052
 
 public sealed record RegisterRead(Register Register) : CodeTreeNode;
 
