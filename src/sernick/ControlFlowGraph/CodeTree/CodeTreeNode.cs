@@ -48,13 +48,13 @@ public class Register { }
 /// https://stackoverflow.com/questions/18024672/what-registers-are-preserved-through-a-linux-x86-64-function-call
 /// </summary>
 public class HardwareRegister: Register {
-    static HardwareRegister RBX = new HardwareRegister();
-    static HardwareRegister RSP = new HardwareRegister();
-    static HardwareRegister RBP = new HardwareRegister();
-    static HardwareRegister R12 = new HardwareRegister();
-    static HardwareRegister R13 = new HardwareRegister();
-    static HardwareRegister R14 = new HardwareRegister();
-    static HardwareRegister R15 = new HardwareRegister();
+    static readonly HardwareRegister RBX = new HardwareRegister();
+    static readonly HardwareRegister RSP = new HardwareRegister();
+    static readonly HardwareRegister RBP = new HardwareRegister();
+    static readonly HardwareRegister R12 = new HardwareRegister();
+    static readonly HardwareRegister R13 = new HardwareRegister();
+    static readonly HardwareRegister R14 = new HardwareRegister();
+    static readonly  HardwareRegister R15 = new HardwareRegister();
     // TODO more registers ???
 }
 
