@@ -34,7 +34,29 @@ public enum UnaryOperation
 
 public sealed record UnaryOperationNode(UnaryOperation Operation, CodeTreeNode Operand) : CodeTreeNode;
 
-public record struct Register;
+/// <summary>
+/// Use new Register() if you want to say "I want to save the value, preferably to a register, but
+/// in the worst-case we could save it to memory". Then you'll get *some* register or memory location.
+/// Use static variables of HardwareRegister class if you want to get the exact register (one of callee-saved)
+/// </summary>
+public class Register { }
+
+/// <summary>
+/// Do not use a constructor -- use one of 16 static variables of this class
+/// https://en.wikipedia.org/wiki/X86_calling_conventions#Callee-saved_(non-volatile)_registers
+/// </summary>
+public class HardwareRegister: Register {
+    static HardwareRegister RBP = new HardwareRegister();
+    static HardwareRegister RBX = new HardwareRegister();
+    static HardwareRegister R4 = new HardwareRegister();
+    static HardwareRegister R5 = new HardwareRegister();
+    static HardwareRegister R6 = new HardwareRegister();
+    static HardwareRegister R7 = new HardwareRegister();
+    static HardwareRegister R8 = new HardwareRegister();
+    static HardwareRegister R9 = new HardwareRegister();
+    static HardwareRegister R10 = new HardwareRegister();
+    // TODO more registers
+}
 
 public sealed record RegisterRead(Register Register) : CodeTreeNode;
 
