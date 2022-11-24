@@ -44,18 +44,18 @@ public class Register { }
 /// <summary>
 /// Do not use a constructor -- use one of 16 static variables of this class
 /// https://en.wikipedia.org/wiki/X86_calling_conventions#Callee-saved_(non-volatile)_registers
+/// List of callee-preserved registers is below
+/// https://stackoverflow.com/questions/18024672/what-registers-are-preserved-through-a-linux-x86-64-function-call
 /// </summary>
 public class HardwareRegister: Register {
-    static HardwareRegister RBP = new HardwareRegister();
     static HardwareRegister RBX = new HardwareRegister();
-    static HardwareRegister R4 = new HardwareRegister();
-    static HardwareRegister R5 = new HardwareRegister();
-    static HardwareRegister R6 = new HardwareRegister();
-    static HardwareRegister R7 = new HardwareRegister();
-    static HardwareRegister R8 = new HardwareRegister();
-    static HardwareRegister R9 = new HardwareRegister();
-    static HardwareRegister R10 = new HardwareRegister();
-    // TODO more registers
+    static HardwareRegister RSP = new HardwareRegister();
+    static HardwareRegister RBP = new HardwareRegister();
+    static HardwareRegister R12 = new HardwareRegister();
+    static HardwareRegister R13 = new HardwareRegister();
+    static HardwareRegister R14 = new HardwareRegister();
+    static HardwareRegister R15 = new HardwareRegister();
+    // TODO more registers ???
 }
 
 public sealed record RegisterRead(Register Register) : CodeTreeNode;
