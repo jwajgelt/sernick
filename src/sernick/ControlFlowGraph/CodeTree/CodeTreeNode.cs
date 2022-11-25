@@ -41,21 +41,22 @@ public sealed record UnaryOperationNode(UnaryOperation Operation, CodeTreeNode O
 /// </summary>
 public class Register { }
 
+#pragma warning disable IDE0052
 /// <summary>
-/// Do not use a constructor -- use one of 16 static variables of this class
 /// https://en.wikipedia.org/wiki/X86_calling_conventions#Callee-saved_(non-volatile)_registers
+/// List of callee-preserved registers is below
+/// https://stackoverflow.com/questions/18024672/what-registers-are-preserved-through-a-linux-x86-64-function-call
 /// </summary>
-public class HardwareRegister: Register {
-    static HardwareRegister RBP = new HardwareRegister();
-    static HardwareRegister RBX = new HardwareRegister();
-    static HardwareRegister R4 = new HardwareRegister();
-    static HardwareRegister R5 = new HardwareRegister();
-    static HardwareRegister R6 = new HardwareRegister();
-    static HardwareRegister R7 = new HardwareRegister();
-    static HardwareRegister R8 = new HardwareRegister();
-    static HardwareRegister R9 = new HardwareRegister();
-    static HardwareRegister R10 = new HardwareRegister();
-    // TODO more registers
+public class HardwareRegister : Register
+{
+    private HardwareRegister() { }
+    public static readonly HardwareRegister RBX = new();
+    public static readonly HardwareRegister RSP = new();
+    public static readonly HardwareRegister RBP = new();
+    public static readonly HardwareRegister R12 = new();
+    public static readonly HardwareRegister R13 = new();
+    public static readonly HardwareRegister R14 = new();
+    public static readonly HardwareRegister R15 = new();
 }
 
 public sealed record RegisterRead(Register Register) : CodeTreeNode;
