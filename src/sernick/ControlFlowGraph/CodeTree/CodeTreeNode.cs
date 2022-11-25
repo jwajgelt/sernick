@@ -50,7 +50,7 @@ public class Register { }
 public class HardwareRegister : Register
 {
     private HardwareRegister() { }
-    public static readonly HardwareRegister RBX = new HardwareRegister();
+    public static readonly HardwareRegister RBX = new();
     public static readonly HardwareRegister RSP = new HardwareRegister();
     public static readonly HardwareRegister RBP = new HardwareRegister();
     public static readonly HardwareRegister R12 = new HardwareRegister();
