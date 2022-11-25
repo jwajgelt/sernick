@@ -51,12 +51,12 @@ public class HardwareRegister : Register
 {
     private HardwareRegister() { }
     public static readonly HardwareRegister RBX = new();
-    public static readonly HardwareRegister RSP = new HardwareRegister();
-    public static readonly HardwareRegister RBP = new HardwareRegister();
-    public static readonly HardwareRegister R12 = new HardwareRegister();
-    public static readonly HardwareRegister R13 = new HardwareRegister();
-    public static readonly HardwareRegister R14 = new HardwareRegister();
-    public static readonly HardwareRegister R15 = new HardwareRegister();
+    public static readonly HardwareRegister RSP = new();
+    public static readonly HardwareRegister RBP = new();
+    public static readonly HardwareRegister R12 = new();
+    public static readonly HardwareRegister R13 = new();
+    public static readonly HardwareRegister R14 = new();
+    public static readonly HardwareRegister R15 = new();
     // TODO more registers ???
 }
 
