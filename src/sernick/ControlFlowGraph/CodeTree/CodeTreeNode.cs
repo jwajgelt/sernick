@@ -57,7 +57,6 @@ public class HardwareRegister : Register
     public static readonly HardwareRegister R13 = new();
     public static readonly HardwareRegister R14 = new();
     public static readonly HardwareRegister R15 = new();
-    // TODO more registers ???
 }
 
 public sealed record RegisterRead(Register Register) : CodeTreeNode;
