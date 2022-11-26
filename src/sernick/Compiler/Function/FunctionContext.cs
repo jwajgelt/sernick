@@ -4,7 +4,7 @@ using ControlFlowGraph.CodeTree;
 
 public sealed class FunctionContext : IFunctionContext
 {
-    public void AddLocal(FunctionVariable variable, bool usedElsewhere)
+    public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
     {
         // silently ignore for now
     }
@@ -26,22 +26,12 @@ public sealed class FunctionContext : IFunctionContext
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateRegisterRead(CodeTreeNode variable, bool direct)
+    public CodeTreeNode GenerateVariableRead(IFunctionVariable variable)
     {
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateRegisterWrite(CodeTreeNode variable, CodeTreeNode value, bool direct)
-    {
-        throw new NotImplementedException();
-    }
-
-    public CodeTreeNode GenerateMemoryRead(CodeTreeNode variable, bool direct)
-    {
-        throw new NotImplementedException();
-    }
-
-    public CodeTreeNode GenerateMemoryWrite(CodeTreeNode variable, CodeTreeNode value, bool direct)
+    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeNode value)
     {
         throw new NotImplementedException();
     }

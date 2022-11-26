@@ -1,5 +1,6 @@
 namespace sernick.Ast.Nodes;
 
+using Compiler.Function;
 using Input;
 using Utility;
 
@@ -18,7 +19,7 @@ public sealed record VariableDeclaration(Identifier Name,
 public sealed record FunctionParameterDeclaration(Identifier Name,
     Type Type,
     LiteralValue? DefaultValue,
-    Range<ILocation> LocationRange) : Declaration(Name, LocationRange)
+    Range<ILocation> LocationRange) : Declaration(Name, LocationRange), IFunctionParam
 {
     public override IEnumerable<AstNode> Children => new AstNode?[] { Name, DefaultValue }.OfType<AstNode>();
 
