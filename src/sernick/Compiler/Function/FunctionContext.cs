@@ -30,7 +30,7 @@ public sealed class FunctionContext : IFunctionContext
         _localsCount = 0;
         _contextId = contextId;
 
-        var fistArgOffset = 4 + 4 * _functionParameters.Count();
+        var fistArgOffset = 4 + 4 * _functionParameters.Count;
         var argNum = 0;
         foreach (var param in _functionParameters)
         {
