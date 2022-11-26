@@ -5,7 +5,6 @@ public abstract record FunctionVariable;
 
 public interface IFunctionContext : IFunctionCaller
 {
-    // Do we need this?
     public void AddLocal(FunctionVariable variable, bool usedElsewhere);
 
     public RegisterWrite? ResultVariable { get; set; }
@@ -14,11 +13,33 @@ public interface IFunctionContext : IFunctionCaller
 
     public IReadOnlyList<CodeTreeNode> GenerateEpilogue();
 
-    public CodeTreeNode GenerateRegisterRead(CodeTreeNode variable, bool direct);
+    /// <summary>
+    ///     Generates either memory read or register read
+    ///     depending on whether the variable is stored on the stack or in registers.
+    ///     This should only be used with local variables in the owner function's scope.
+    /// </summary>
+    /// <param name="variable">a variable declared earlier as local</param>
+    public CodeTreeNode GenerateVariableRead(FunctionVariable variable);
 
-    public CodeTreeNode GenerateRegisterWrite(CodeTreeNode variable, CodeTreeNode value, bool direct);
+    /// <summary>
+    ///     Generates either memory write or register write
+    ///     depending on whether the variable is stored on the stack or in registers.
+    ///     This should only be used in the owner function's scope.
+    /// </summary>
+    /// <param name="variable">a variable declared earlier as local</param>
+    public CodeTreeNode GenerateVariableWrite(FunctionVariable variable, CodeTreeNode value);
 
-    public CodeTreeNode GenerateMemoryRead(CodeTreeNode variable, bool direct);
+    /// <summary>
+    ///     Generates memory read using the Display Table.
+    ///     This can be used outside of the owner function's scope.
+    /// </summary>
+    /// <param name="variable">a variable declared earlier as local</param>
+    public CodeTreeNode GenerateIndirectVariableRead(FunctionVariable variable);
 
-    public CodeTreeNode GenerateMemoryWrite(CodeTreeNode variable, CodeTreeNode value, bool direct);
+    /// <summary>
+    ///     Generates memory write using the Display Table.
+    ///     This can be used outside of the owner function's scope.
+    /// </summary>
+    /// <param name="variable">a variable declared earlier as local</param>
+    public CodeTreeNode GenerateIndirectVariableWrite(FunctionVariable variable, CodeTreeNode value);
 }

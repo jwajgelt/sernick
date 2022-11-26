@@ -26,22 +26,22 @@ public sealed class FunctionContext : IFunctionContext
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateRegisterRead(CodeTreeNode variable, bool direct)
+    public CodeTreeNode GenerateVariableRead(FunctionVariable variable)
     {
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateRegisterWrite(CodeTreeNode variable, CodeTreeNode value, bool direct)
+    public CodeTreeNode GenerateVariableWrite(FunctionVariable variable, CodeTreeNode value)
     {
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateMemoryRead(CodeTreeNode variable, bool direct)
+    public CodeTreeNode GenerateIndirectVariableRead(FunctionVariable variable)
     {
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateMemoryWrite(CodeTreeNode variable, CodeTreeNode value, bool direct)
+    public CodeTreeNode GenerateIndirectVariableWrite(FunctionVariable variable, CodeTreeNode value)
     {
         throw new NotImplementedException();
     }
