@@ -68,4 +68,4 @@ public sealed record MemoryWrite(CodeTreeNode MemoryLocation, CodeTreeNode Value
 
 public sealed record Constant(RegisterValue Value) : CodeTreeNode;
 
-public sealed record FunctionCall(IFunctionCaller FunctionCaller, IEnumerable<CodeTreeNode> Arguments) : CodeTreeNode;
+public sealed record FunctionCall(IFunctionCaller FunctionCaller) : CodeTreeNode;
