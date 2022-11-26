@@ -35,14 +35,4 @@ public sealed class FunctionContext : IFunctionContext
     {
         throw new NotImplementedException();
     }
-
-    public CodeTreeNode GenerateIndirectVariableRead(IFunctionVariable variable)
-    {
-        throw new NotImplementedException();
-    }
-
-    public CodeTreeNode GenerateIndirectVariableWrite(IFunctionVariable variable, CodeTreeNode value)
-    {
-        throw new NotImplementedException();
-    }
 }
