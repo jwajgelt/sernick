@@ -12,7 +12,7 @@ public sealed class FunctionContext : IFunctionContext
 
     // Maps accesses to registers/memory
     private readonly Dictionary<IFunctionVariable, CodeTreeNode> _localVariableLocation;
-    private int _localsCount;
+    private int _localsOffset;
     private CodeTreeNode? _displayEntry;
     private readonly int _contextId;
 
@@ -23,11 +23,11 @@ public sealed class FunctionContext : IFunctionContext
         int contextId
         )
     {
-        _localVariableLocation = new Dictionary<IFunctionVariable, CodeTreeNode>();
+        _localVariableLocation = new Dictionary<IFunctionVariable, CodeTreeNode>(ReferenceEqualityComparer.Instance);
         _parentContext = parent;
         _functionParameters = parameters;
         _valueIsReturned = returnsValue;
-        _localsCount = 0;
+        _localsOffset = 0;
         _contextId = contextId;
 
         var fistArgOffset = 4 + 4 * _functionParameters.Count;
@@ -44,9 +44,9 @@ public sealed class FunctionContext : IFunctionContext
     {
         if (usedElsewhere)
         {
-            _localsCount += 4;
+            _localsOffset += 4;
             var rbpRead = new RegisterRead(HardwareRegister.RBP);
-            var offset = new Constant(new RegisterValue(_localsCount));
+            var offset = new Constant(new RegisterValue(_localsOffset));
             _localVariableLocation.Add(variable, new BinaryOperationNode(BinaryOperation.Sub, rbpRead, offset));
         }
         else
