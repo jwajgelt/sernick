@@ -34,10 +34,10 @@ public sealed class FunctionContext : IFunctionContext
         var argNum = 0;
         foreach (var param in _functionParameters)
         {
-            argNum += 1;
             var rbpRead = new RegisterRead(HardwareRegister.RBP);
-            var offset = new Constant(new RegisterValue(fistArgOffset - 4 * (argNum - 1)));
+            var offset = new Constant(new RegisterValue(fistArgOffset - 4 * argNum));
             _localVariableLocation.Add(param, new BinaryOperationNode(BinaryOperation.Add, rbpRead, offset));
+            argNum += 1;
         }
     }
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
