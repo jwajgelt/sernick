@@ -30,13 +30,13 @@ public sealed class FunctionContext : IFunctionContext
         _localsCount = 0;
         _contextId = contextId;
 
-        int fistArgOffset = 4 + 4 * _functionParameters.Count();
-        int argNum = 0;
-        foreach(IFunctionParam param in _functionParameters)
+        var fistArgOffset = 4 + 4 * _functionParameters.Count();
+        var argNum = 0;
+        foreach (var param in _functionParameters)
         {
             argNum += 1;
             var rbpRead = new RegisterRead(HardwareRegister.RBP);
-            var offset = new Constant(new RegisterValue(fistArgOffset - 4*(argNum-1)));
+            var offset = new Constant(new RegisterValue(fistArgOffset - 4 * (argNum - 1)));
             _localVariableLocation.Add(param, new BinaryOperationNode(BinaryOperation.Add, rbpRead, offset));
         }
     }
