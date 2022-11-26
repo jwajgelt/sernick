@@ -1,3 +1,5 @@
+#pragma warning disable IDE0052
+
 namespace sernick.Compiler.Function;
 
 using ControlFlowGraph.CodeTree;
