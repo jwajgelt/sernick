@@ -4,7 +4,6 @@ using ControlFlowGraph.CodeTree;
 
 public sealed class FunctionContext : IFunctionContext
 {
-    List<(IFunctionVariable, bool)> _localVariables;
     IFunctionContext? _parentContext;
     IReadOnlyCollection<IFunctionParam> _functionParameters;
     bool _valueIsReturned;
@@ -12,20 +11,25 @@ public sealed class FunctionContext : IFunctionContext
     // Maps accesses to registers/memory
     Dictionary<IFunctionVariable, CodeTreeNode> _localVariableLocation;
     int _localsCount;
-    CodeTreeNode displayEntry;
+    CodeTreeNode _displayEntry;
 
     public FunctionContext(
         IFunctionContext? parent, 
         IReadOnlyCollection<IFunctionParam> parameters, 
-        bool returnsValue 
+        bool returnsValue,
+        int contextId
         )
     {
-        _localVariables = new List<(IFunctionVariable, bool)>();
         _localVariableLocation = new Dictionary<IFunctionVariable, CodeTreeNode>();
         _parentContext = parent;
         _functionParameters = parameters;
         _valueIsReturned = returnsValue;
         _localsCount = 0;
+        var offsetInDisplay = new Constant(new RegisterValue(contextId));
+        // This is of course wrong - we do not know display address right now
+        // placeholder
+        var displayAddress = new Constant(new RegisterValue(0));
+        _displayEntry = new BinaryOperationNode(BinaryOperation.Add, displayAddress, offsetInDisplay);
     }
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
     {
@@ -33,7 +37,7 @@ public sealed class FunctionContext : IFunctionContext
             _localsCount += 1;
             var rbpRead = new RegisterRead(HardwareRegister.RBP);
             var offset = new Constant(new RegisterValue(_localsCount));
-            _localVariableLocation.Add(variable, new BinaryOperation());
+            _localVariableLocation.Add(variable, new BinaryOperationNode(BinaryOperation.Add, rbpRead, offset));
         } else {
             _localVariableLocation.Add(variable, new RegisterRead(new Register()));
         }
