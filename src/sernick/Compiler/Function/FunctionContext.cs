@@ -11,7 +11,8 @@ public sealed class FunctionContext : IFunctionContext
     // Maps accesses to registers/memory
     private readonly Dictionary<IFunctionVariable, CodeTreeNode> _localVariableLocation;
     private int _localsCount;
-    private readonly CodeTreeNode _displayEntry;
+    private CodeTreeNode? _displayEntry;
+    private readonly int _contextId;
 
     public FunctionContext(
         IFunctionContext? parent,
@@ -25,11 +26,7 @@ public sealed class FunctionContext : IFunctionContext
         _functionParameters = parameters;
         _valueIsReturned = returnsValue;
         _localsCount = 0;
-        var offsetInDisplay = new Constant(new RegisterValue(contextId));
-        // This is of course wrong - we do not know display address right now
-        // placeholder
-        var displayAddress = new Constant(new RegisterValue(0));
-        _displayEntry = new BinaryOperationNode(BinaryOperation.Sub, displayAddress, offsetInDisplay);
+        _contextId = contextId;
     }
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
     {
@@ -71,5 +68,11 @@ public sealed class FunctionContext : IFunctionContext
     public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeNode value)
     {
         throw new NotImplementedException();
+    }
+
+    public void SetDisplayAddress(CodeTreeNode displayAddress)
+    {
+        var offsetInDisplay = new Constant(new RegisterValue(_contextId));
+        _displayEntry = new BinaryOperationNode(BinaryOperation.Add, displayAddress, offsetInDisplay);
     }
 }
