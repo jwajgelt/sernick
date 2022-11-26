@@ -1,15 +1,16 @@
 namespace sernickTest.Compiler.Function.Helpers;
 
+using Castle.Core;
 using sernick.Compiler.Function;
 using sernick.ControlFlowGraph.CodeTree;
 
 public sealed class FakeFunctionContext : IFunctionContext
 {
-    private readonly Dictionary<FunctionVariable, bool> _locals = new();
+    private readonly Dictionary<IFunctionVariable, bool> _locals = new(ReferenceEqualityComparer<IFunctionVariable>.Instance);
 
-    public IReadOnlyDictionary<FunctionVariable, bool> Locals => _locals;
+    public IReadOnlyDictionary<IFunctionVariable, bool> Locals => _locals;
 
-    public void AddLocal(FunctionVariable variable, bool usedElsewhere) => _locals[variable] = usedElsewhere;
+    public void AddLocal(IFunctionVariable variable, bool usedElsewhere) => _locals[variable] = usedElsewhere;
     public RegisterWrite? ResultVariable { get; set; }
     public IReadOnlyList<CodeTreeNode> GeneratePrologue()
     {
@@ -21,22 +22,12 @@ public sealed class FakeFunctionContext : IFunctionContext
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateRegisterRead(CodeTreeNode variable, bool direct)
+    public CodeTreeNode GenerateVariableRead(IFunctionVariable variable)
     {
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateRegisterWrite(CodeTreeNode variable, CodeTreeNode value, bool direct)
-    {
-        throw new NotImplementedException();
-    }
-
-    public CodeTreeNode GenerateMemoryRead(CodeTreeNode variable, bool direct)
-    {
-        throw new NotImplementedException();
-    }
-
-    public CodeTreeNode GenerateMemoryWrite(CodeTreeNode variable, CodeTreeNode value, bool direct)
+    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeNode value)
     {
         throw new NotImplementedException();
     }

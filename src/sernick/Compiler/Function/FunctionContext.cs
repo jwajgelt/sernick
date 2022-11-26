@@ -4,33 +4,30 @@ using ControlFlowGraph.CodeTree;
 
 public sealed class FunctionContext : IFunctionContext
 {
-    List<(FunctionVariable, bool)> _localVariables;
+    List<(IFunctionVariable, bool)> _localVariables;
     IFunctionContext? _parentContext;
-    IReadOnlyCollection<FunctionParam> _functionParameters;
+    IReadOnlyCollection<IFunctionParam> _functionParameters;
     bool _valueIsReturned;
 
     // Maps accesses to registers/memory
-    Dictionary<FunctionVariable, CodeTreeNode> _localVariableLocation;
+    Dictionary<IFunctionVariable, CodeTreeNode> _localVariableLocation;
     int _localsCount;
-    // Since display has to be represented by a global array
-    // we will just allocate a virtual register, which will
-    // need to be mapped to the display array later
-    Register displayEntry;
+    CodeTreeNode displayEntry;
 
     public FunctionContext(
         IFunctionContext? parent, 
-        IReadOnlyCollection<FunctionParam> parameters, 
+        IReadOnlyCollection<IFunctionParam> parameters, 
         bool returnsValue 
         )
     {
-        _localVariables = new List<(FunctionVariable, bool)>();
-        _localVariableLocation = new Dictionary<FunctionVariable, CodeTreeNode>();
+        _localVariables = new List<(IFunctionVariable, bool)>();
+        _localVariableLocation = new Dictionary<IFunctionVariable, CodeTreeNode>();
         _parentContext = parent;
         _functionParameters = parameters;
         _valueIsReturned = returnsValue;
         _localsCount = 0;
     }
-    public void AddLocal(FunctionVariable variable, bool usedElsewhere)
+    public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
     {
         if(usedElsewhere) {
             _localsCount += 1;
@@ -59,22 +56,12 @@ public sealed class FunctionContext : IFunctionContext
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateRegisterRead(CodeTreeNode variable, bool direct)
+    public CodeTreeNode GenerateVariableRead(IFunctionVariable variable)
     {
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateRegisterWrite(CodeTreeNode variable, CodeTreeNode value, bool direct)
-    {
-        throw new NotImplementedException();
-    }
-
-    public CodeTreeNode GenerateMemoryRead(CodeTreeNode variable, bool direct)
-    {
-        throw new NotImplementedException();
-    }
-
-    public CodeTreeNode GenerateMemoryWrite(CodeTreeNode variable, CodeTreeNode value, bool direct)
+    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeNode value)
     {
         throw new NotImplementedException();
     }
