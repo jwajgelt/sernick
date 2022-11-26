@@ -6,6 +6,7 @@ using ControlFlowGraph.CodeTree;
 
 public sealed class FunctionContext : IFunctionContext
 {
+    private const int PointerSize = 8;
     private readonly IFunctionContext? _parentContext;
     private readonly IReadOnlyCollection<IFunctionParam> _functionParameters;
     private readonly bool _valueIsReturned;
@@ -30,12 +31,12 @@ public sealed class FunctionContext : IFunctionContext
         _localsOffset = 0;
         _contextId = contextId;
 
-        var fistArgOffset = 4 + 4 * _functionParameters.Count;
+        var fistArgOffset = PointerSize * (1 + _functionParameters.Count);
         var argNum = 0;
         foreach (var param in _functionParameters)
         {
             var rbpRead = new RegisterRead(HardwareRegister.RBP);
-            var offset = new Constant(new RegisterValue(fistArgOffset - 4 * argNum));
+            var offset = new Constant(new RegisterValue(fistArgOffset - PointerSize * argNum));
             _localVariableLocation.Add(param, new BinaryOperationNode(BinaryOperation.Add, rbpRead, offset));
             argNum += 1;
         }
@@ -44,7 +45,7 @@ public sealed class FunctionContext : IFunctionContext
     {
         if (usedElsewhere)
         {
-            _localsOffset += 4;
+            _localsOffset += PointerSize;
             var rbpRead = new RegisterRead(HardwareRegister.RBP);
             var offset = new Constant(new RegisterValue(_localsOffset));
             _localVariableLocation.Add(variable, new BinaryOperationNode(BinaryOperation.Sub, rbpRead, offset));
