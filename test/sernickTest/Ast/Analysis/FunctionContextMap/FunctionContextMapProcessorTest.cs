@@ -145,7 +145,7 @@ public class FunctionContextMapProcessorTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, new[] { paramA}, false))
+            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false))
             .Returns(functionContext);
 
         var nameResolution = NameResolution(
