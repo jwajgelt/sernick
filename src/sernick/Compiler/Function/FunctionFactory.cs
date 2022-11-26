@@ -4,6 +4,6 @@ public sealed class FunctionFactory : IFunctionFactory
 {
     public IFunctionContext CreateFunction(IFunctionContext? parent, IReadOnlyCollection<FunctionParam> parameters, bool returnsValue)
     {
-        return new FunctionContext();
+        return new FunctionContext(parent, parameters, returnsValue);
     }
 }

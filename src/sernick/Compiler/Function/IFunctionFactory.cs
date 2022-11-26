@@ -1,6 +1,6 @@
 namespace sernick.Compiler.Function;
 
-public abstract record FunctionParam;
+public abstract record FunctionParam: FunctionVariable;
 
 public interface IFunctionFactory
 {
