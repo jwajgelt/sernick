@@ -41,7 +41,7 @@ public sealed record UnaryOperationNode(UnaryOperation Operation, CodeTreeNode O
 /// </summary>
 public class Register { }
 
-public class VirtualRegister: Register { }
+public class VirtualRegister : Register { }
 
 #pragma warning disable IDE0052
 /// <summary>
