@@ -115,8 +115,8 @@ public sealed class FunctionContext : IFunctionContext
         // Free arg space
         operations.Add(new RegisterWrite(RSP, rspRead + PointerSize * arguments.Count));
 
+        // If value is returned, then put it from RAX to virtual register
         CodeTreeNode? returnValueLocation = null;
-
         if(_valueIsReturned)
         {
             Register returnValueRegister = new Register();
@@ -157,6 +157,13 @@ public sealed class FunctionContext : IFunctionContext
         // Set new RBP value
         operations.Add(new RegisterWrite(RBP, rspRead));
 
+        // Update display entry
+        if(_displayEntry == null)
+        {
+            throw new Exception("DisplayAddress should be set before generating code");
+        }
+        operations.Add(new MemoryWrite(_displayEntry, rbpRead));
+
         // Allocate memory for variables
         var varOffsetConst = new Constant(new RegisterValue(_localsOffset));
         var newRspVal = new BinaryOperationNode(BinaryOperation.Sub, rspRead, varOffsetConst);
@@ -185,15 +192,19 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(new RegisterWrite(reg, tempVal));
         }
 
-        HardwareRegister RSP = HardwareRegister.RSP;
+        Register RSP = HardwareRegister.RSP;
+        Register RBP = HardwareRegister.RBP;
 
         // Free local variables stack space
-        var varOffsetConst = new Constant(new RegisterValue(_localsOffset));
+        var varOffsetConst = _localsOffset;
         var rspVal = new RegisterRead(RSP);
-        var newRspVal = new BinaryOperationNode(BinaryOperation.Add, rspVal, varOffsetConst);
-        operations.Add(new RegisterWrite(RSP, newRspVal));
+        operations.Add(new RegisterWrite(RSP, rspVal + varOffsetConst));
 
-        // TODO: Restore RBP 
+        // Retrieve old RBP
+        operations.Add(new RegisterWrite(RBP, new MemoryRead(rspVal)));
+
+        // Free RBP slot
+        operations.Add(new RegisterWrite(RSP, rspVal + PointerSize));
 
         return operations;
     }
@@ -210,7 +221,7 @@ public sealed class FunctionContext : IFunctionContext
 
     public void SetDisplayAddress(CodeTreeNode displayAddress)
     {
-        var offsetInDisplay = new Constant(new RegisterValue(_contextId));
-        _displayEntry = new BinaryOperationNode(BinaryOperation.Add, displayAddress, offsetInDisplay);
+        var offsetInDisplay = _contextId;
+        _displayEntry = displayAddress + offsetInDisplay;
     }
 }
