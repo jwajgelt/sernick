@@ -10,12 +10,12 @@ public record struct RegisterValue(long Value);
 /// <summary>
 /// Base class nodes appear in CodeTree, which corresponds to a single node in our control-flow graph
 /// </summary>
-public abstract partial record CodeTreeNode;
+public abstract record CodeTreeNode;
 
 /// <summary>
 /// Class of nodes which calculate a value
 /// </summary>
-public abstract record CodeTreeValueNode : CodeTreeNode;
+public abstract partial record CodeTreeValueNode : CodeTreeNode;
 
 /// <summary>
 /// All binary operations used in the code trees
