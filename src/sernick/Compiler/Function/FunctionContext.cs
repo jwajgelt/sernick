@@ -127,7 +127,6 @@ public sealed class FunctionContext : IFunctionContext
         }
 
         return new BinaryOperationNode(BinaryOperation.Add, new MemoryRead(_displayEntry), localMemory.Offset);
-
     }
 }
 
