@@ -3,6 +3,7 @@ namespace sernickTest.Compiler.Function;
 using sernick.Ast;
 using sernick.Compiler.Function;
 using sernick.ControlFlowGraph.CodeTree;
+using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static sernickTest.Ast.Helpers.AstNodesExtensions;
 
 public class FunctionContextGenerateVariableAccessTest
@@ -42,13 +43,7 @@ public class FunctionContextGenerateVariableAccessTest
 
         var readCodeTree = context.GenerateVariableRead(variable);
 
-        var expectedTree =
-            new MemoryRead(
-                new BinaryOperationNode(
-                    BinaryOperation.Sub,
-                    new RegisterRead(HardwareRegister.RBP),
-                    new Constant(new RegisterValue(8)))
-                );
+        var expectedTree = Mem(Reg(HardwareRegister.RBP).Read() - 8).Read();
         Assert.Equal(expectedTree, readCodeTree);
     }
 
@@ -60,13 +55,7 @@ public class FunctionContextGenerateVariableAccessTest
 
         var readCodeTree = context.GenerateVariableRead(arg);
 
-        var expectedTree =
-            new MemoryRead(
-                new BinaryOperationNode(
-                    BinaryOperation.Sub,
-                    new RegisterRead(HardwareRegister.RBP),
-                    new Constant(new RegisterValue(-16)))
-            );
+        var expectedTree = Mem(Reg(HardwareRegister.RBP).Read() - (-16)).Read();
         Assert.Equal(expectedTree, readCodeTree);
     }
 
@@ -80,14 +69,7 @@ public class FunctionContextGenerateVariableAccessTest
 
         var readCodeTree = context.GenerateVariableWrite(variable, value);
 
-        var expectedTree =
-            new MemoryWrite(
-                new BinaryOperationNode(
-                    BinaryOperation.Sub,
-                    new RegisterRead(HardwareRegister.RBP),
-                    new Constant(new RegisterValue(8))),
-                value
-            );
+        var expectedTree = Mem(Reg(HardwareRegister.RBP).Read() - 8).Write(value);
         Assert.Equal(expectedTree, readCodeTree);
     }
 
@@ -122,18 +104,8 @@ public class FunctionContextGenerateVariableAccessTest
 
         var readCodeTree = context.GenerateVariableRead(variable);
 
-        var expectedTree = new MemoryRead(
-            new BinaryOperationNode(
-                BinaryOperation.Sub,
-                new MemoryRead(
-                    new BinaryOperationNode(
-                        BinaryOperation.Add,
-                        displayAddress,
-                        new Constant(new RegisterValue(0)))
-                    ),
-                new Constant(new RegisterValue(8))
-                )
-            );
+        var readDisplay = Mem(displayAddress + 0).Read();
+        var expectedTree = Mem(readDisplay - 8).Read();
         Assert.Equal(expectedTree, readCodeTree);
     }
 
@@ -151,19 +123,8 @@ public class FunctionContextGenerateVariableAccessTest
 
         var readCodeTree = context.GenerateVariableWrite(variable, value);
 
-        var expectedTree = new MemoryWrite(
-            new BinaryOperationNode(
-                BinaryOperation.Sub,
-                new MemoryRead(
-                    new BinaryOperationNode(
-                        BinaryOperation.Add,
-                        displayAddress,
-                        new Constant(new RegisterValue(0)))
-                ),
-                new Constant(new RegisterValue(8))
-            ),
-            value
-        );
+        var readDisplay = Mem(displayAddress + 0).Read();
+        var expectedTree = Mem(readDisplay - 8).Write(value);
         Assert.Equal(expectedTree, readCodeTree);
     }
 }
