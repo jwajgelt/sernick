@@ -5,8 +5,6 @@ public interface IFunctionContext : IFunctionCaller
 {
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere);
 
-    public RegisterWrite? ResultVariable { get; set; }
-
     public IReadOnlyList<CodeTreeNode> GeneratePrologue();
 
     public IReadOnlyList<CodeTreeNode> GenerateEpilogue();

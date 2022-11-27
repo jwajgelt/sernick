@@ -6,19 +6,26 @@ using ControlFlowGraph.CodeTree;
 
 public sealed class FunctionContext : IFunctionContext
 {
-<<<<<<< HEAD
-    private static readonly HardwareRegister[] registersToSave = {
+    private static readonly HardwareRegister[] calleeToSave = {
         HardwareRegister.R12,
         HardwareRegister.R13,
         HardwareRegister.R14,
         HardwareRegister.R15,
-        HardwareRegister.RBX, 
+        HardwareRegister.RBX,
+        HardwareRegister.RDI,
+        HardwareRegister.RSI, 
     };
 
-    private static readonly CodeTreeNode slotSize = new Constant(new RegisterValue(PointerSize));
+    private static readonly HardwareRegister[] callerToSave = {
+        HardwareRegister.R8,
+        HardwareRegister.R9,
+        HardwareRegister.R10,
+        HardwareRegister.R11,
+        HardwareRegister.RAX,
+        HardwareRegister.RCX,
+        HardwareRegister.RDX,
+    };
 
-=======
->>>>>>> main
     private const int PointerSize = 8;
     private readonly IFunctionContext? _parentContext;
     private readonly IReadOnlyCollection<IFunctionParam> _functionParameters;
@@ -45,7 +52,7 @@ public sealed class FunctionContext : IFunctionContext
         _contextId = contextId;
         _registerToTemporaryMap = new Dictionary<HardwareRegister, Register>(ReferenceEqualityComparer.Instance);
 
-        foreach(HardwareRegister reg in registersToSave) 
+        foreach(HardwareRegister reg in calleeToSave) 
         {
             _registerToTemporaryMap.Add(reg, new Register());
         }
@@ -75,11 +82,22 @@ public sealed class FunctionContext : IFunctionContext
     {
         List<CodeTreeNode> operations = new List<CodeTreeNode>();
 
-        HardwareRegister RSP = HardwareRegister.RSP;
-        HardwareRegister RBP = HardwareRegister.RBP;
+        // Caller-saved registers
+        var callerSavedMap = new Dictionary<HardwareRegister, Register>(ReferenceEqualityComparer.Instance);
+        foreach(HardwareRegister reg in callerToSave)
+        {
+            var tempReg = new Register();
+            callerSavedMap[reg] = tempReg;
+            var regVal = new RegisterRead(reg);
+            operations.Add(new RegisterWrite(tempReg, regVal));
+        }
+
+        Register RSP = HardwareRegister.RSP;
+        Register RBP = HardwareRegister.RBP;
+        Register RAX = HardwareRegister.RAX;
 
         var rspRead = new RegisterRead(RSP);
-        var decrementedRsp = new BinaryOperationNode(BinaryOperation.Sub, rspRead, slotSize);
+        var decrementedRsp = rspRead - PointerSize;
         var pushRsp = new RegisterWrite(RSP, decrementedRsp);
 
         var rbpRead = new RegisterRead(RBP);
@@ -91,30 +109,46 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(new MemoryWrite(rspRead, arg));
         }
 
-        // Generate the call (so )
-        operations.Add(pushRsp);
-    }
+        // Right (this needs to be fixed to mean something)
+        operations.Add(new FunctionCall());
 
-    private CodeTreeRoot? cfgFromList(IReadOnlyList<CodeTreeNode> operations, CodeTreeRoot? nextRoot)
-    {
-        CodeTreeRoot? lastRoot = nextRoot;
-        foreach(CodeTreeNode op in operations)
+        // Free arg space
+        operations.Add(new RegisterWrite(RSP, rspRead + PointerSize * arguments.Count));
+
+        CodeTreeNode? returnValueLocation = null;
+
+        if(_valueIsReturned)
         {
-            lastRoot = new SingleExitNode(lastRoot, op);
+            Register returnValueRegister = new Register();
+            var raxRead = new RegisterRead(RAX);
+            operations.Add(new RegisterWrite(returnValueRegister, raxRead));
         }
 
-        return lastRoot;
-    }
+        // Retrieve values of caller-saved registers
+        foreach(HardwareRegister reg in calleeToSave)
+        {
+            var tempReg = callerSavedMap[reg];
+            var tempVal = new RegisterRead(tempReg);
+            operations.Add(new RegisterWrite(reg, tempVal));
+        }
 
-    public RegisterWrite? ResultVariable { get; set; }
+        return new IFunctionCaller.GenerateCallResult(operations, returnValueLocation);
+    }
 
     public IReadOnlyList<CodeTreeNode> GeneratePrologue()
     {
         List<CodeTreeNode> operations = new List<CodeTreeNode>();
 
-        
+        Register RSP = HardwareRegister.RSP;
+        Register RBP = HardwareRegister.RBP;
 
-        // Allocate slot for old RSP value
+        var rspRead = new RegisterRead(RSP);
+        var decrementedRsp = rspRead - PointerSize;
+        var pushRsp = new RegisterWrite(RSP, decrementedRsp);
+
+        var rbpRead = new RegisterRead(RBP);
+
+        // Allocate slot for old RBP value
         operations.Add(pushRsp);
 
         // Write down old RBP value
@@ -125,11 +159,11 @@ public sealed class FunctionContext : IFunctionContext
 
         // Allocate memory for variables
         var varOffsetConst = new Constant(new RegisterValue(_localsOffset));
-        newRspVal = new BinaryOperationNode(BinaryOperation.Sub, rspRead, varOffsetConst);
+        var newRspVal = new BinaryOperationNode(BinaryOperation.Sub, rspRead, varOffsetConst);
         operations.Add(new RegisterWrite(RSP, newRspVal));
 
-        // Calee-saved registers
-        foreach(HardwareRegister reg in registersToSave)
+        // Callee-saved registers
+        foreach(HardwareRegister reg in calleeToSave)
         {
             var tempReg = _registerToTemporaryMap[reg];
             var regVal = new RegisterRead(reg);
@@ -144,7 +178,7 @@ public sealed class FunctionContext : IFunctionContext
         List<CodeTreeNode> operations = new List<CodeTreeNode>();
         
         // Retrieve values of callee-saved registers
-        foreach(HardwareRegister reg in registersToSave)
+        foreach(HardwareRegister reg in calleeToSave)
         {
             var tempReg = _registerToTemporaryMap[reg];
             var tempVal = new RegisterRead(tempReg);
@@ -158,6 +192,8 @@ public sealed class FunctionContext : IFunctionContext
         var rspVal = new RegisterRead(RSP);
         var newRspVal = new BinaryOperationNode(BinaryOperation.Add, rspVal, varOffsetConst);
         operations.Add(new RegisterWrite(RSP, newRspVal));
+
+        // TODO: Restore RBP 
 
         return operations;
     }
