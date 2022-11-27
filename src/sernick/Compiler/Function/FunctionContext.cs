@@ -61,7 +61,7 @@ public sealed class FunctionContext : IFunctionContext
         var argNum = 0;
         foreach (var param in _functionParameters)
         {
-            _localVariableLocation.Add(param, new Constant(new RegisterValue(fistArgOffset - PointerSize * argNum)));
+            _localVariableLocation.Add(param, fistArgOffset - PointerSize * argNum);
             argNum += 1;
         }
     }
@@ -70,7 +70,7 @@ public sealed class FunctionContext : IFunctionContext
         if (usedElsewhere)
         {
             _localsOffset += PointerSize;
-            _localVariableLocation.Add(variable, new Constant(new RegisterValue(_localsOffset)));
+            _localVariableLocation.Add(variable, _localsOffset);
         }
         else
         {
@@ -93,13 +93,10 @@ public sealed class FunctionContext : IFunctionContext
         }
 
         Register rsp = HardwareRegister.RSP;
-        Register rbp = HardwareRegister.RBP;
         Register rax = HardwareRegister.RAX;
 
         var rspRead = new RegisterRead(rsp);
-        var decrementedRsp = rspRead - PointerSize;
-        var pushRsp = new RegisterWrite(rsp, decrementedRsp);
-        _ = new RegisterRead(rbp);
+        var pushRsp = new RegisterWrite(rsp, rspRead - PointerSize);
 
         // Put args onto stack
         foreach (var arg in arguments)
@@ -108,10 +105,10 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(new MemoryWrite(rspRead, arg));
         }
 
-        // Right (this needs to be fixed to mean something)
+        // Performing actual call (puts return addess on stack and jumps)
         operations.Add(new FunctionCall(this));
 
-        // Free arg space
+        // Remove arguments from stack (we already returned from call)
         operations.Add(new RegisterWrite(rsp, rspRead + PointerSize * arguments.Count));
 
         // If value is returned, then put it from RAX to virtual register
@@ -142,9 +139,7 @@ public sealed class FunctionContext : IFunctionContext
         Register rbp = HardwareRegister.RBP;
 
         var rspRead = new RegisterRead(rsp);
-        var decrementedRsp = rspRead - PointerSize;
-        var pushRsp = new RegisterWrite(rsp, decrementedRsp);
-
+        var pushRsp = new RegisterWrite(rsp, rspRead - PointerSize);
         var rbpRead = new RegisterRead(rbp);
 
         // Allocate slot for old RBP value
@@ -165,9 +160,7 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(new MemoryWrite(_displayEntry, rbpRead));
 
         // Allocate memory for variables
-        var varOffsetConst = new Constant(new RegisterValue(_localsOffset));
-        var newRspVal = new BinaryOperationNode(BinaryOperation.Sub, rspRead, varOffsetConst);
-        operations.Add(new RegisterWrite(rsp, newRspVal));
+        operations.Add(new RegisterWrite(rsp, rspRead - _localsOffset));
 
         // Callee-saved registers
         foreach (var reg in calleeToSave)
@@ -192,19 +185,19 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(new RegisterWrite(reg, tempVal));
         }
 
-        Register rsp = HardwareRegister.RSP;
-        Register rbp = HardwareRegister.RBP;
+        var rsp = HardwareRegister.RSP;
+        var rbp = HardwareRegister.RBP;
+
+        var rspRead = new RegisterRead(rsp);
 
         // Free local variables stack space
-        var varOffsetConst = _localsOffset;
-        var rspVal = new RegisterRead(rsp);
-        operations.Add(new RegisterWrite(rsp, rspVal + varOffsetConst));
+        operations.Add(new RegisterWrite(rsp, rspRead + _localsOffset));
 
         // Retrieve old RBP
-        operations.Add(new RegisterWrite(rbp, new MemoryRead(rspVal)));
+        operations.Add(new RegisterWrite(rbp, new MemoryRead(rspRead)));
 
         // Free RBP slot
-        operations.Add(new RegisterWrite(rsp, rspVal + PointerSize));
+        operations.Add(new RegisterWrite(rsp, rspRead + PointerSize));
 
         return operations;
     }
