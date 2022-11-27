@@ -32,7 +32,7 @@ public sealed class FakeFunctionContext : IFunctionContext
         return new FakeVariableWrite(variable, value);
     }
 
-    CodeTreeNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
+    CodeTreeValueNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
     {
         throw new NotImplementedException();
     }

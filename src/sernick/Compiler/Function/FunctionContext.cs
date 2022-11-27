@@ -103,7 +103,7 @@ public sealed class FunctionContext : IFunctionContext
         _displayEntry = displayAddress + _contextId;
     }
 
-    CodeTreeNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
+    CodeTreeValueNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
     {
         if (!_localVariableLocation.TryGetValue(variable, out var local))
         {
@@ -130,25 +130,24 @@ public sealed class FunctionContext : IFunctionContext
 
 internal abstract record VariableLocation
 {
-    public abstract CodeTreeNode GenerateRead();
-    public abstract CodeTreeNode GenerateWrite(CodeTreeNode value);
+    public abstract CodeTreeValueNode GenerateRead();
+    public abstract CodeTreeNode GenerateWrite(CodeTreeValueNode value);
 }
 
-internal record MemoryLocation(CodeTreeNode Offset) : VariableLocation
+internal record MemoryLocation(CodeTreeValueNode Offset) : VariableLocation
 {
-    public override CodeTreeNode GenerateRead() => new MemoryRead(GetDirectLocation());
+    private readonly CodeTreeValueNode _directLocation = Reg(HardwareRegister.RBP).Read() - Offset;
+    public override CodeTreeValueNode GenerateRead() => new MemoryRead(_directLocation);
 
-    public override CodeTreeNode GenerateWrite(CodeTreeNode value) => new MemoryWrite(GetDirectLocation(), value);
-
-    private CodeTreeNode GetDirectLocation() => Reg(HardwareRegister.RBP).Read() - Offset;
+    public override CodeTreeNode GenerateWrite(CodeTreeValueNode value) => new MemoryWrite(_directLocation, value);
 }
 
 internal record RegisterLocation : VariableLocation
 {
     private readonly Register _register = new();
-    public override CodeTreeNode GenerateRead() =>
+    public override CodeTreeValueNode GenerateRead() =>
         new RegisterRead(_register);
 
-    public override CodeTreeNode GenerateWrite(CodeTreeNode value) =>
+    public override CodeTreeNode GenerateWrite(CodeTreeValueNode value) =>
         new RegisterWrite(_register, value);
 }

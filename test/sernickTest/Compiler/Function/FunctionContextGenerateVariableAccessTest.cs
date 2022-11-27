@@ -13,7 +13,7 @@ public class FunctionContextGenerateVariableAccessTest
     {
         var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, 0);
         var variable = Var("x");
-        context.AddLocal(variable, usedElsewhere: false);
+        context.AddLocal(variable, false);
 
         var readCodeTree = context.GenerateVariableRead(variable);
 
@@ -25,7 +25,7 @@ public class FunctionContextGenerateVariableAccessTest
     {
         var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, 0);
         var variable = Var("x");
-        context.AddLocal(variable, usedElsewhere: false);
+        context.AddLocal(variable, false);
         var value = new Constant(new RegisterValue(1));
 
         var writeCodeTree = context.GenerateVariableWrite(variable, value);
@@ -39,7 +39,7 @@ public class FunctionContextGenerateVariableAccessTest
     {
         var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, 0);
         var variable = Var("x");
-        context.AddLocal(variable, usedElsewhere: true);
+        context.AddLocal(variable, true);
 
         var readCodeTree = context.GenerateVariableRead(variable);
 
@@ -64,7 +64,7 @@ public class FunctionContextGenerateVariableAccessTest
     {
         var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, 0);
         var variable = Var("x");
-        context.AddLocal(variable, usedElsewhere: true);
+        context.AddLocal(variable, true);
         var value = new Constant(new RegisterValue(1));
 
         var readCodeTree = context.GenerateVariableWrite(variable, value);
