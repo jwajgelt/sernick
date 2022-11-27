@@ -1,10 +1,17 @@
 namespace sernickTest.ControlFlowGraph;
 
 using sernick.Ast;
+using sernick.ControlFlowGraph.CodeTree;
+using Compiler.Function.Helpers;
+using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static Ast.Helpers.AstNodesExtensions;
 
 public class AstToCfgConversionTest
 {
+    private const int PointerSize = 8;
+    private CodeTreeNode displayAddress = new Constant(new RegisterValue(0)); // TODO idk where it is
+    // TODO call AST -> CFG conversion and compare result to what's expected
+
     [Fact]
     public void SimpleAddition()
     {
@@ -18,6 +25,16 @@ public class AstToCfgConversionTest
             Var("b", 2),
             Var<IntType>("c", "a".Plus("b"))
         );
+
+        var A = Reg(new Register());
+        var B = Reg(new Register());
+        var C = Reg(new Register());
+
+        var c = new SingleExitNode(null, C.Write(A.Value + B.Value));
+        var b = new SingleExitNode(c, B.Write(2));
+        var a = new SingleExitNode(b, A.Write(1));
+
+        var expected = new List<CodeTreeRoot> {a,b,c};
     }
 
     [Fact]
@@ -38,6 +55,20 @@ public class AstToCfgConversionTest
             Var("b", 2),
             If("a".Eq("b")).Then("a".Assign(3)).Else("b".Assign(4))
         );
+
+        var A = Reg(new Register());
+        var B = Reg(new Register());
+
+        var b4 = new SingleExitNode(null, B.Write(4));
+        var a3 = new SingleExitNode(null, A.Write(3));
+        var cond = new SingleExitNode(null, new BinaryOperationNode(
+            BinaryOperation.Equal, A.Value, B.Value
+        ));
+        var ifBlock = new ConditionalJumpNode(a3, b4, cond);
+        var b2 = new SingleExitNode(ifBlock, B.Write(2));
+        var a1 = new SingleExitNode(b2, A.Write(1));
+
+        var expected = new List<CodeTreeRoot> {a1,b2,ifBlock,cond,a3,b4};
     }
 
     [Fact]
@@ -61,6 +92,25 @@ public class AstToCfgConversionTest
             ),
             "f".Call().Argument(Literal(5))
         );
+
+        var N = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+
+        var fContext = new FakeFunctionContext(); // TODO
+
+        var fCall = new SingleExitNode(null, new FunctionCall(
+            fContext, new[] { new Constant(new RegisterValue(5)) }
+        ));
+        var fCallInner1 = new SingleExitNode(null, new FunctionCall(
+            fContext, new[] { N.Value - 1 }
+        ));
+        var fCallInner2 = new SingleExitNode(null, new FunctionCall(
+            fContext, new[] { N.Value - 2 }
+        ));
+        var retF = new SingleExitNode(null, fCallInner1 + fCallInner2); // TODO fix: call is not a value
+        var ret1 = new SingleExitNode(null, 1);
+        var ifBlock = new ConditionalJumpNode(ret1, retF, N.Value <= 1);
+
+        var expected = new List<CodeTreeRoot> {fCall,ifBlock,ret1,retF,fCallInner1,fCallInner2};
     }
 
     [Fact]
@@ -82,6 +132,16 @@ public class AstToCfgConversionTest
                 If("x".Eq(10)).Then(Break)
             )
         );
+
+        var X = Reg(new Register());
+
+        var cond = new SingleExitNode(null, new BinaryOperationNode(
+            BinaryOperation.Equal, X.Value, 10
+        ));
+
+        // TODO loop
+
+        var expected = new List<CodeTreeRoot> {};
     }
 
     [Fact]
@@ -105,6 +165,23 @@ public class AstToCfgConversionTest
                 Return("g".Call().Argument(Value("x")).Get(out _).Plus("g".Call().Argument("x".Plus(1))))
             )
         );
+
+        var X = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var Y = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize); // TODO ? rbp changes so this should be correct
+
+        var fContext = new FakeFunctionContext(); // TODO
+        var gContext = new FakeFunctionContext(); // TODO
+
+        var gRet = new SingleExitNode(null, Y.Value + Y.Value);
+        var gX = new SingleExitNode(null, new FunctionCall(
+            gContext, new[] { X.Value }
+        ));
+        var gX1 = new SingleExitNode(null, new FunctionCall(
+            gContext, new[] { X.Value + 1 }
+        ));
+        var fRet = new SingleExitNode(null, gX + gX1); // TODO fix: call is not a value
+
+        var expected = new List<CodeTreeRoot> {fRet,gX,gX1,gRet};
     }
 
     [Fact]
@@ -173,6 +250,8 @@ public class AstToCfgConversionTest
             ),
             "f1".Call().Argument(Literal(1))
         );
+
+        // TODO O_O
     }
 
     [Fact]
@@ -199,6 +278,24 @@ public class AstToCfgConversionTest
             ),
             "f".Call().Argument(Literal(3))
         );
+
+        var X = Mem(Reg(HardwareRegister.RBP).Value + 3*PointerSize);
+        var Y = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var Z = Mem(Reg(HardwareRegister.RBP).Value + 3*PointerSize);
+
+        var fContext = new FakeFunctionContext(); // TODO
+        var gContext = new FakeFunctionContext(); // TODO
+
+        var fCall = new SingleExitNode(null, new FunctionCall(
+            fContext, new[] { new Constant(new RegisterValue(3)), new Constant(new RegisterValue(2)) }
+        ));
+        var gCall = new SingleExitNode(null, new FunctionCall(
+            gContext, new[] { new Constant(new RegisterValue(3)) }
+        ));
+        var fRet = new SingleExitNode(null, X.Value + Y.Value + gCall); // TODO fix: call is not a value
+        var gRet = new SingleExitNode(null, Z.Value);
+
+        var expected = new List<CodeTreeRoot> {fRet,gRet,fCall,gCall};
     }
 
     [Fact]
@@ -230,6 +327,23 @@ public class AstToCfgConversionTest
                 Return("g".Call().Get(out _).Plus("x"))
             )
         );
+
+        var Xf = Reg(new Register());
+        var Xg = Reg(new Register());
+
+        var fContext = new FakeFunctionContext(); // TODO
+        var gContext = new FakeFunctionContext(); // TODO
+
+        var gCall = new SingleExitNode(null, new FunctionCall(
+            gContext, new CodeTreeNode[] {}
+        ));
+        var fRet = new SingleExitNode(null, gCall + Xf.Value); // TODO fix: call is not a value
+        var x1 = new SingleExitNode(fRet, Xf.Write(1));
+        var gRet = new SingleExitNode(null, Xg.Value);
+        var xxx = new SingleExitNode(gRet, Xg.Write(Xg.Value + Xg.Value));
+        var x2 = new SingleExitNode(xxx, Xg.Write(2));
+
+        var expected = new List<CodeTreeRoot> {x1,gCall,fRet,x2,xxx,gRet};
     }
 
     [Fact]
@@ -277,6 +391,26 @@ public class AstToCfgConversionTest
             ),
             "f".Call()
         );
+
+        var fContext = new FakeFunctionContext(); // TODO
+        var gContext = new FakeFunctionContext(); // TODO
+        var hContext = new FakeFunctionContext(); // TODO
+        var zContext = new FakeFunctionContext(); // TODO
+
+        var fCall = new SingleExitNode(null, new FunctionCall(
+            fContext, new CodeTreeNode[] {}
+        ));
+        var gCall = new SingleExitNode(null, new FunctionCall(
+            gContext, new CodeTreeNode[] {}
+        ));
+        var hCall = new SingleExitNode(null, new FunctionCall(
+            hContext, new CodeTreeNode[] {}
+        ));
+        var zCall = new SingleExitNode(null, new FunctionCall(
+            zContext, new CodeTreeNode[] {}
+        ));
+
+        var expected = new List<CodeTreeRoot> {fCall,gCall,hCall,zCall};
     }
 
     [Fact]
@@ -326,6 +460,35 @@ public class AstToCfgConversionTest
             ),
             "f".Call().Argument(Literal(true))
         );
+
+        var fContext = new FakeFunctionContext(); // TODO
+        var gContext = new FakeFunctionContext(); // TODO
+        var hContext = new FakeFunctionContext(); // TODO
+
+        var X = Mem(displayAddress);
+        var V = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+
+        var fCallInMain = new SingleExitNode(null, new FunctionCall(
+            fContext, new[] { new Constant(new RegisterValue(1)) }
+        ));
+        var x1 = new SingleExitNode(fCallInMain, X.Write(1));
+        var gCall = new SingleExitNode(null, new FunctionCall(
+            gContext, new CodeTreeNode[] {}
+        ));
+        var hCall = new SingleExitNode(null, new FunctionCall(
+            hContext, new CodeTreeNode[] {}
+        ));
+        var ifBlock = new ConditionalJumpNode(gCall, hCall, V.Value);
+        var fCallInH = new SingleExitNode(null, new FunctionCall(
+            fContext, new[] { new Constant(new RegisterValue(1)) }
+        ));
+        var xMinus1 = new SingleExitNode(fCallInH, X.Write(X.Value - 1));
+        var fCallInG = new SingleExitNode(null, new FunctionCall(
+            fContext, new[] { new Constant(new RegisterValue(0)) }
+        ));
+        var xPlus1 = new SingleExitNode(fCallInG, X.Write(X.Value + 1));
+
+        var expected = new List<CodeTreeRoot> {x1,fCallInMain,ifBlock,gCall,xPlus1,fCallInG,hCall,xMinus1,fCallInH};
     }
 
     [Fact]
@@ -373,6 +536,32 @@ public class AstToCfgConversionTest
                 "y".Assign("y".Plus(1))
             )
         );
+
+        var X = Mem(displayAddress);
+        var Vf = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var Vg = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var Y = Reg(new Register());
+
+        var fContext = new FakeFunctionContext(); // TODO
+        var gContext = new FakeFunctionContext(); // TODO
+
+        var yPlus1 = new SingleExitNode(null, Y.Write(Y.Value + 1)); // TODO not null
+        var cond2 = new ConditionalJumpNode(null, yPlus1, new FunctionCall(
+            gContext, new[] { Y.Value }
+        ));
+        var cond1 = new ConditionalJumpNode(null, cond2, new FunctionCall(
+            fContext, new[] { Y.Value }
+        ));
+        // TODO not sure how loops are supposed to work
+        var y0 = new SingleExitNode(cond1, Y.Write(0));
+        var x1 = new SingleExitNode(y0, X.Write(1));
+        
+        var gRet = new SingleExitNode(null, Vg.Value <= X.Value);
+        var xPlus1InG = new SingleExitNode(gRet, X.Write(X.Value + 1));
+        var fRet = new SingleExitNode(null, Vf.Value <= 5);
+        var xPlus1InF = new SingleExitNode(fRet, X.Write(X.Value + 1));
+
+        var expected = new List<CodeTreeRoot> {x1,y0,cond1,cond2,yPlus1,xPlus1InF,fRet,xPlus1InG,gRet};
     }
 
     [Fact]
@@ -420,6 +609,32 @@ public class AstToCfgConversionTest
                 "y".Assign("y".Plus(1))
             )
         );
+
+        var X = Mem(displayAddress);
+        var Vf = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var Vg = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var Y = Reg(new Register());
+
+        var fContext = new FakeFunctionContext(); // TODO
+        var gContext = new FakeFunctionContext(); // TODO
+
+        var yPlus1 = new SingleExitNode(null, Y.Write(Y.Value + 1)); // TODO not null
+        var cond2 = new ConditionalJumpNode(null, yPlus1, new FunctionCall(
+            gContext, new[] { Y.Value }
+        ));
+        var cond1 = new ConditionalJumpNode(cond2, yPlus1, new FunctionCall(
+            fContext, new[] { Y.Value }
+        ));
+        // TODO not sure how loops are supposed to work
+        var y0 = new SingleExitNode(cond1, Y.Write(0));
+        var x1 = new SingleExitNode(y0, X.Write(1));
+        
+        var gRet = new SingleExitNode(null, Vg.Value <= X.Value);
+        var xPlus1InG = new SingleExitNode(gRet, X.Write(X.Value + 1));
+        var fRet = new SingleExitNode(null, Vf.Value <= 5);
+        var xPlus1InF = new SingleExitNode(fRet, X.Write(X.Value + 1));
+
+        var expected = new List<CodeTreeRoot> {x1,y0,cond1,cond2,yPlus1,xPlus1InF,fRet,xPlus1InG,gRet};
     }
 
     [Fact]
@@ -474,5 +689,35 @@ public class AstToCfgConversionTest
                 "y".Assign("y".Plus(1))
             )
         );
+
+        var X = Mem(displayAddress);
+        var Vf = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var Vg = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var Vh = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var Y = Reg(new Register());
+
+        var fContext = new FakeFunctionContext(); // TODO
+        var gContext = new FakeFunctionContext(); // TODO
+        var hContext = new FakeFunctionContext(); // TODO
+
+        var yPlus1 = new SingleExitNode(null, Y.Write(Y.Value + 1)); // TODO not null
+        var cond3 = new ConditionalJumpNode(null, yPlus1, new FunctionCall(
+            gContext, new[] { Y.Value }
+        ));
+        var cond2 = new ConditionalJumpNode(null, cond3, new FunctionCall(
+            gContext, new[] { Y.Value }
+        ));
+        var cond1 = new ConditionalJumpNode(cond2, yPlus1, new FunctionCall(
+            fContext, new[] { Y.Value }
+        ));
+        // TODO not sure how loops are supposed to work
+        var y0 = new SingleExitNode(cond1, Y.Write(0));
+        var x10 = new SingleExitNode(y0, X.Write(10));
+        
+        var hRet = new SingleExitNode(null, X.Value <= Vh.Value);
+        var gRet = new SingleExitNode(null, Vg.Value <= X.Value);
+        var fRet = new SingleExitNode(null, Vf.Value <= 5);
+
+        var expected = new List<CodeTreeRoot> {x10,y0,cond1,cond2,cond3,yPlus1,fRet,gRet,hRet};
     }
 }
