@@ -27,4 +27,14 @@ public static class NameResolutionResultBuilder
                 variable => variable.Item2,
                 ReferenceEqualityComparer<Assignment>.Instance)
         };
+
+    public static NameResolutionResult WithCalls(this NameResolutionResult nameResolution,
+        params (FunctionCall, FunctionDefinition)[] calls) =>
+        nameResolution with
+        {
+            CalledFunctionDeclarations = calls.ToDictionary(
+                call => call.Item1,
+                call => call.Item2,
+                ReferenceEqualityComparer<FunctionCall>.Instance)
+        };
 }
