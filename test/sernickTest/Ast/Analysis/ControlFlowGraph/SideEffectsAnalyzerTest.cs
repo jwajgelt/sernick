@@ -122,7 +122,7 @@ public class SideEffectsAnalyzerTest
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
-    
+
     [Fact]
     public void ReadsAndAssignmentsToSameVariableAreSeparated()
     {
@@ -187,8 +187,8 @@ public class SideEffectsAnalyzerTest
                 new FakeVariableWrite(
                     declX,
                     new BinaryOperationNode(
-                        BinaryOperation.Add, 
-                        new FakeVariableRead(declX), 
+                        BinaryOperation.Add,
+                        new FakeVariableRead(declX),
                         new Constant(new RegisterValue(1)))
                     )
             })
