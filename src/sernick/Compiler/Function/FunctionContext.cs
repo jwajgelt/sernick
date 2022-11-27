@@ -80,35 +80,22 @@ public sealed class FunctionContext : IFunctionContext
     public IReadOnlyList<CodeTreeNode> GeneratePrologue()
     {
         List<CodeTreeNode> operations = new List<CodeTreeNode>();
+
+        HardwareRegister RSP = HardwareRegister.RSP;
+
+        // Allocate memory for variables
+        var varOffsetConst = new Constant(new RegisterValue(_localsOffset));
+        var rspVal = new RegisterRead(RSP);
+        var newRspVal = new BinaryOperationNode(BinaryOperation.Sub, rspVal, varOffsetConst);
+        operations.Add(new RegisterWrite(RSP, newRspVal));
+
+        // Calee-saved registers
         foreach(HardwareRegister reg in registersToSave)
         {
             var tempReg = _registerToTemporaryMap[reg];
             var regVal = new RegisterRead(reg);
             operations.Add(new RegisterWrite(tempReg, regVal));
         }
-
-        HardwareRegister RSP = HardwareRegister.RSP;
-        HardwareRegister RBP = HardwareRegister.RBP;
-
-        // Allocate memory for arguments
-        var argsOffsetConst = new Constant(new RegisterValue(PointerSize * _functionParameters.Count));
-        var rspVal = new RegisterRead(RSP);
-        var newRsp = new BinaryOperationNode(BinaryOperation.Sub, rspVal, argsOffsetConst);
-        operations.Add(new RegisterWrite(RSP, newRsp));
-
-        // Allocate slot for return address
-        rspVal = new RegisterRead(RSP);
-        newRsp = new BinaryOperationNode(BinaryOperation.Sub, rspVal, slotSize);
-        operations.Add(new RegisterWrite(RSP, newRsp));
-
-        // Set RA
-
-        // Allocate slot for old RSP value
-        rspVal = new RegisterRead(RSP);
-        newRsp = new BinaryOperationNode(BinaryOperation.Sub, rspVal, slotSize);
-        operations.Add(new RegisterWrite(RSP, newRsp));
-
-        // Set old RSP value
 
         return operations;
     }
@@ -117,13 +104,21 @@ public sealed class FunctionContext : IFunctionContext
     {
         List<CodeTreeNode> operations = new List<CodeTreeNode>();
         
-        
+        // Retrieve values of callee-saved registers
         foreach(HardwareRegister reg in registersToSave)
         {
             var tempReg = _registerToTemporaryMap[reg];
             var tempVal = new RegisterRead(tempReg);
             operations.Add(new RegisterWrite(reg, tempVal));
         }
+
+        HardwareRegister RSP = HardwareRegister.RSP;
+
+        // Free local variables stack space
+        var varOffsetConst = new Constant(new RegisterValue(_localsOffset));
+        var rspVal = new RegisterRead(RSP);
+        var newRspVal = new BinaryOperationNode(BinaryOperation.Add, rspVal, varOffsetConst);
+        operations.Add(new RegisterWrite(RSP, newRspVal));
 
         return operations;
     }
