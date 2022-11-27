@@ -22,7 +22,6 @@ public static class SideEffectsAnalyzer
     (
         HashSet<Variable> ReadVariables,
         HashSet<Variable> WrittenVariables,
-        bool CallsFunction,
         List<CodeTreeNode> CodeTreeRootChildren
     )
     {
@@ -30,10 +29,10 @@ public static class SideEffectsAnalyzer
         // 1. neither is a function call, since these can be effectful
         // 2. no variable read in `next` was written in `this`, or vice versa
         // 3. no variable was written in both
-        public bool CanMergeWith(TreeWithEffects next) => !CallsFunction && !next.CallsFunction
-            && !next.ReadVariables.Any(variable => WrittenVariables.Contains(variable))
-            && !ReadVariables.Any(variable => next.WrittenVariables.Contains(variable))
-            && !WrittenVariables.Any(variable => next.WrittenVariables.Contains(variable));
+        public bool CanMergeWith(TreeWithEffects next) =>
+            !next.ReadVariables.Overlaps(WrittenVariables)
+            && !ReadVariables.Overlaps(next.WrittenVariables)
+            && !WrittenVariables.Overlaps(next.WrittenVariables);
 
         public void MergeWith(TreeWithEffects other)
         {
@@ -43,7 +42,7 @@ public static class SideEffectsAnalyzer
         }
     }
 
-    private static void AddTreesMerging(this List<TreeWithEffects> left, ICollection<TreeWithEffects> right)
+    private static void AddTreesMerging(this List<TreeWithEffects> left, IReadOnlyCollection<TreeWithEffects> right)
     {
         if (!right.Any())
         {
@@ -184,7 +183,6 @@ public static class SideEffectsAnalyzer
             (
                 readVariables,
                 writtenVariables,
-                false,
                 new List<CodeTreeNode> { operationResult }
             );
 
@@ -215,7 +213,6 @@ public static class SideEffectsAnalyzer
                 new (
                     readVariables,
                     new HashSet<VariableDeclaration>(),
-                    false,
                     new List<CodeTreeNode> { variableReadTree }
                 )
             };
@@ -228,8 +225,7 @@ public static class SideEffectsAnalyzer
                 new (
                     new HashSet<VariableDeclaration>(),
                     new HashSet<VariableDeclaration>(),
-                    false,
-                    new List<CodeTreeNode> { new Constant(new RegisterValue(node.Value ? 1 : 0)) }
+                    new List<CodeTreeNode> { new Constant(new RegisterValue(Convert.ToInt64(node.Value))) }
                 )
             };
         }
@@ -241,7 +237,6 @@ public static class SideEffectsAnalyzer
                 new (
                     new HashSet<VariableDeclaration>(),
                     new HashSet<VariableDeclaration>(),
-                    false,
                     new List<CodeTreeNode> { new Constant(new RegisterValue(node.Value)) }
                 )
             };

@@ -210,7 +210,7 @@ public class CodeTreeNodeComparer : IEqualityComparer<CodeTreeNode>
     {
         return x switch
         {
-            null => false,
+            null => y is null,
             ConditionalJumpNode => throw new NotImplementedException(),
             SingleExitNode xNode =>
                 y is SingleExitNode yNode
