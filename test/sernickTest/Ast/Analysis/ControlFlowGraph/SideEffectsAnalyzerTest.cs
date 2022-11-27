@@ -8,7 +8,6 @@ using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Nodes;
 using sernick.ControlFlowGraph.CodeTree;
 using static Helpers.AstNodesExtensions;
-using FunctionCall = sernick.ControlFlowGraph.CodeTree.FunctionCall;
 
 public class SideEffectsAnalyzerTest
 {
@@ -201,50 +200,5 @@ public class SideEffectsAnalyzerTest
         var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
-    }
-}
-
-public class CodeTreeNodeComparer : IEqualityComparer<CodeTreeNode>
-{
-    public bool Equals(CodeTreeNode? x, CodeTreeNode? y)
-    {
-        return x switch
-        {
-            null => y is null,
-            ConditionalJumpNode => throw new NotImplementedException(),
-            SingleExitNode xNode =>
-                y is SingleExitNode yNode
-                && xNode.Operations.SequenceEqual(yNode.Operations, this),
-            BinaryOperationNode xNode =>
-                y is BinaryOperationNode yNode
-                && yNode.Operation == xNode.Operation
-                && Equals(xNode.Left, yNode.Left)
-                && Equals(xNode.Right, yNode.Right),
-            Constant xNode =>
-                y is Constant yNode
-                && yNode.Value.Equals(xNode.Value),
-            MemoryRead => throw new NotImplementedException(),
-            RegisterRead => throw new NotImplementedException(),
-            UnaryOperationNode xNode =>
-                y is UnaryOperationNode yNode
-                && yNode.Operation == xNode.Operation
-                && Equals(xNode.Operand, yNode.Operand),
-            FakeVariableRead xNode =>
-                y is FakeVariableRead yNode
-                && xNode.Variable.Equals(yNode.Variable),
-            CodeTreeValueNode => throw new NotImplementedException(),
-            FunctionCall => throw new NotImplementedException(),
-            MemoryWrite => throw new NotImplementedException(),
-            RegisterWrite => throw new NotImplementedException(),
-            FakeVariableWrite xNode =>
-                y is FakeVariableWrite yNode
-                && xNode.Variable.Equals(yNode.Variable),
-            _ => throw new ArgumentOutOfRangeException(nameof(x))
-        };
-    }
-
-    public int GetHashCode(CodeTreeNode obj)
-    {
-        throw new NotImplementedException();
     }
 }
