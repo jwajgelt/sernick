@@ -43,14 +43,44 @@ public abstract partial record CodeTreeNode
 /// <example>
 /// using static CodeTreeExtensions;
 ///
-/// Reg(myRegister, Mem(loc));
+/// Reg(myRegister).Write(Mem(loc).Value);
 /// </example>
 /// </summary>
 public static class CodeTreeExtensions
 {
-    public static MemoryRead Mem(CodeTreeNode location) => new(location);
-    public static MemoryWrite Mem(CodeTreeNode location, CodeTreeNode value) => new(location, value);
+    public static MemoryReference Mem(CodeTreeNode location) => new(location);
 
-    public static RegisterRead Reg(Register register) => new(register);
-    public static RegisterWrite Reg(Register register, CodeTreeNode value) => new(register, value);
+    /// <summary>
+    /// Create using <see cref="CodeTreeExtensions.Mem"/> method.
+    /// Then you can call <see cref="Write"/>, <see cref="Read"/> or <see cref="Value"/>,
+    /// which returns a corresponding <see cref="CodeTreeNode"/>.
+    /// </summary>
+    public sealed class MemoryReference
+    {
+        private readonly CodeTreeNode _location;
+        internal MemoryReference(CodeTreeNode location) => _location = location;
+
+        public MemoryWrite Write(CodeTreeNode value) => new(_location, value);
+
+        public MemoryRead Value => new(_location);
+        public MemoryRead Read() => Value;
+    }
+
+    public static RegisterReference Reg(Register register) => new(register);
+
+    /// <summary>
+    /// Create using <see cref="CodeTreeExtensions.Reg"/> method.
+    /// Then you can call <see cref="Write"/>, <see cref="Read"/> or <see cref="Value"/>,
+    /// which returns a corresponding <see cref="CodeTreeNode"/>.
+    /// </summary>
+    public sealed class RegisterReference
+    {
+        private readonly Register _register;
+        internal RegisterReference(Register register) => _register = register;
+
+        public RegisterWrite Write(CodeTreeNode value) => new(_register, value);
+
+        public RegisterRead Value => new(_register);
+        public RegisterRead Read() => Value;
+    }
 }
