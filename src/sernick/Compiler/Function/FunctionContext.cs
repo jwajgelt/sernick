@@ -35,9 +35,7 @@ public sealed class FunctionContext : IFunctionContext
         var argNum = 0;
         foreach (var param in _functionParameters)
         {
-            var rbpRead = new RegisterRead(HardwareRegister.RBP);
-            var offset = new Constant(new RegisterValue(fistArgOffset - PointerSize * argNum));
-            _localVariableLocation.Add(param, new BinaryOperationNode(BinaryOperation.Add, rbpRead, offset));
+            _localVariableLocation.Add(param, new Constant(new RegisterValue(fistArgOffset - PointerSize * argNum)));
             argNum += 1;
         }
     }
@@ -46,9 +44,7 @@ public sealed class FunctionContext : IFunctionContext
         if (usedElsewhere)
         {
             _localsOffset += PointerSize;
-            var rbpRead = new RegisterRead(HardwareRegister.RBP);
-            var offset = new Constant(new RegisterValue(_localsOffset));
-            _localVariableLocation.Add(variable, new BinaryOperationNode(BinaryOperation.Sub, rbpRead, offset));
+            _localVariableLocation.Add(variable, new Constant(new RegisterValue(_localsOffset)));
         }
         else
         {
