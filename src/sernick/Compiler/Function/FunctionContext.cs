@@ -2,7 +2,6 @@
 
 namespace sernick.Compiler.Function;
 
-using System.Diagnostics.CodeAnalysis;
 using ControlFlowGraph.CodeTree;
 
 public sealed class FunctionContext : IFunctionContext
@@ -79,10 +78,11 @@ public sealed class FunctionContext : IFunctionContext
             return location.GenerateRead();
         }
 
-        // Get indirect read from ancestors' contexts or throw an error if variable wasn't defined in any context.
-        return _parentContext?.GenerateIndirectVariableRead(variable) ??
-               throw new ArgumentException("Variable is undefined");
-        ;
+        // Get indirect location from ancestors' contexts or throw an error if variable wasn't defined in any context.
+        var indirectLocation = _parentContext?.GetIndirectVariableLocation(variable) ??
+                               throw new ArgumentException("Variable is undefined");
+
+        return new MemoryRead(indirectLocation);
     }
 
     public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value)
@@ -92,10 +92,11 @@ public sealed class FunctionContext : IFunctionContext
             return location.GenerateWrite(value);
         }
 
-        // Get indirect write from ancestors' contexts or throw an error if variable wasn't defined in any context.
-        return _parentContext?.GenerateIndirectVariableWrite(variable, value) ??
-               throw new ArgumentException("Variable is undefined");
-        ;
+        // Get indirect location from ancestors' contexts or throw an error if variable wasn't defined in any context.
+        var indirectLocation = _parentContext?.GetIndirectVariableLocation(variable) ??
+                               throw new ArgumentException("Variable is undefined");
+
+        return new MemoryWrite(indirectLocation, value);
     }
 
     public void SetDisplayAddress(CodeTreeValueNode displayAddress)
@@ -104,56 +105,29 @@ public sealed class FunctionContext : IFunctionContext
         _displayEntry = new BinaryOperationNode(BinaryOperation.Add, displayAddress, offsetInDisplay);
     }
 
-    CodeTreeNode IFunctionContext.GenerateIndirectVariableRead(IFunctionVariable variable)
+    CodeTreeNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
     {
-        if (TryGetIndirectLocation(variable, out var memoryLocation))
+        if (!_localVariableLocation.TryGetValue(variable, out var local))
         {
-            return new MemoryRead(memoryLocation);
+            // If variable isn't in this context then it should be is the context of some ancestor.
+            return _parentContext?.GetIndirectVariableLocation(variable) ??
+                   throw new ArgumentException("Variable is undefined");
         }
 
-        return _parentContext?.GenerateIndirectVariableRead(variable) ??
-               throw new ArgumentException("Variable is undefined");
-    }
-
-    CodeTreeNode IFunctionContext.GenerateIndirectVariableWrite(IFunctionVariable variable, CodeTreeNode value)
-    {
-        if (TryGetIndirectLocation(variable, out var memoryLocation))
+        if (_displayEntry == null)
         {
-            return new MemoryWrite(memoryLocation, value);
+            throw new Exception("DisplayAddress should be set before generating code");
         }
 
-        return _parentContext?.GenerateIndirectVariableWrite(variable, value) ??
-               throw new ArgumentException("Variable is undefined");
-    }
-
-    /// <summary>
-    ///     Returns false if variable doesn't belong to this context.
-    ///     Otherwise generates variable location using the display table.
-    ///     If the display address hasn't been specified throws an error.
-    ///     If variable was added with <code>usedElsewhere = false</code> then throws an error.
-    /// </summary>
-    private bool TryGetIndirectLocation(IFunctionVariable variable, [MaybeNullWhen(false)] out CodeTreeNode location)
-    {
-        if (_localVariableLocation.TryGetValue(variable, out var local))
+        if (local is not MemoryLocation localMemory)
         {
-            if (_displayEntry == null)
-            {
-                throw new Exception("DisplayAddress should be set before generating code");
-            }
-
-            if (local is not MemoryLocation localMemory)
-            {
-                throw new ArgumentException(
-                    "Variable wasn't marked with usedElsewhere=true and can't be accessed indirectly",
-                    nameof(variable));
-            }
-
-            location = new BinaryOperationNode(BinaryOperation.Add, new MemoryRead(_displayEntry), localMemory.Offset);
-            return true;
+            throw new ArgumentException(
+                "Variable was added with usedElsewhere=false and can't be accessed indirectly",
+                nameof(variable));
         }
 
-        location = default;
-        return false;
+        return new BinaryOperationNode(BinaryOperation.Add, new MemoryRead(_displayEntry), localMemory.Offset);
+
     }
 }
 

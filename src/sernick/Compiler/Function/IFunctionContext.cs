@@ -29,7 +29,5 @@ public interface IFunctionContext : IFunctionCaller
     /// </summary>
     public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value);
 
-    protected internal CodeTreeNode GenerateIndirectVariableRead(IFunctionVariable variable);
-
-    protected internal CodeTreeNode GenerateIndirectVariableWrite(IFunctionVariable variable, CodeTreeNode value);
+    protected internal CodeTreeNode GetIndirectVariableLocation(IFunctionVariable variable);
 }
