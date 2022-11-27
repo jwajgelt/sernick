@@ -3,6 +3,7 @@
 namespace sernick.Compiler.Function;
 
 using ControlFlowGraph.CodeTree;
+using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 
 public sealed class FunctionContext : IFunctionContext
 {
@@ -35,8 +36,7 @@ public sealed class FunctionContext : IFunctionContext
         var argNum = 0;
         foreach (var param in _functionParameters)
         {
-            var offset = new Constant(new RegisterValue(-(fistArgOffset - PointerSize * argNum)));
-            _localVariableLocation.Add(param, new MemoryLocation(offset));
+            _localVariableLocation.Add(param, new MemoryLocation(-(fistArgOffset - PointerSize * argNum)));
             argNum += 1;
         }
     }
@@ -45,8 +45,7 @@ public sealed class FunctionContext : IFunctionContext
         if (usedElsewhere)
         {
             _localsOffset += PointerSize;
-            var offset = new Constant(new RegisterValue(_localsOffset));
-            _localVariableLocation.Add(variable, new MemoryLocation(offset));
+            _localVariableLocation.Add(variable, new MemoryLocation(_localsOffset));
         }
         else
         {
@@ -101,8 +100,7 @@ public sealed class FunctionContext : IFunctionContext
 
     public void SetDisplayAddress(CodeTreeValueNode displayAddress)
     {
-        var offsetInDisplay = new Constant(new RegisterValue(_contextId));
-        _displayEntry = new BinaryOperationNode(BinaryOperation.Add, displayAddress, offsetInDisplay);
+        _displayEntry = displayAddress + _contextId;
     }
 
     CodeTreeNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
@@ -126,7 +124,7 @@ public sealed class FunctionContext : IFunctionContext
                 nameof(variable));
         }
 
-        return new BinaryOperationNode(BinaryOperation.Sub, new MemoryRead(_displayEntry), localMemory.Offset);
+        return Mem(_displayEntry).Read() - localMemory.Offset;
     }
 }
 
@@ -136,14 +134,13 @@ internal abstract record VariableLocation
     public abstract CodeTreeNode GenerateWrite(CodeTreeNode value);
 }
 
-internal record MemoryLocation(Constant Offset) : VariableLocation
+internal record MemoryLocation(CodeTreeNode Offset) : VariableLocation
 {
     public override CodeTreeNode GenerateRead() => new MemoryRead(GetDirectLocation());
 
     public override CodeTreeNode GenerateWrite(CodeTreeNode value) => new MemoryWrite(GetDirectLocation(), value);
 
-    private CodeTreeNode GetDirectLocation() =>
-        new BinaryOperationNode(BinaryOperation.Sub, new RegisterRead(HardwareRegister.RBP), Offset);
+    private CodeTreeNode GetDirectLocation() => Reg(HardwareRegister.RBP).Read() - Offset;
 }
 
 internal record RegisterLocation : VariableLocation
