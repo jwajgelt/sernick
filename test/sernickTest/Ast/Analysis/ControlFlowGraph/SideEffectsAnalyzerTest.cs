@@ -29,7 +29,7 @@ public class SideEffectsAnalyzerTest
             ).Get(out var tree);
         var expected = new List<SingleExitNode>
         {
-            new SingleExitNode(null, new []
+            new (null, new []
             {
                 new BinaryOperationNode(
                     binOp,
