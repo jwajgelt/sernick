@@ -32,7 +32,7 @@ public abstract partial record CodeTreeNode
     public static UnaryOperationNode operator !(CodeTreeNode operand) =>
         new(UnaryOperation.Not, operand);
 
-    public static UnaryOperationNode operator -(CodeTreeNode operand) =>
+    public static UnaryOperationNode operator ~(CodeTreeNode operand) =>
         new(UnaryOperation.Negate, operand);
 
     public static implicit operator CodeTreeNode(long constant) => new Constant(new RegisterValue(constant));
