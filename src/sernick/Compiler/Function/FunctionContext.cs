@@ -35,7 +35,7 @@ public sealed class FunctionContext : IFunctionContext
         var argNum = 0;
         foreach (var param in _functionParameters)
         {
-            var offset = new Constant(new RegisterValue(fistArgOffset - PointerSize * argNum));
+            var offset = new Constant(new RegisterValue(-(fistArgOffset - PointerSize * argNum)));
             _localVariableLocation.Add(param, new MemoryLocation(offset));
             argNum += 1;
         }
@@ -126,7 +126,7 @@ public sealed class FunctionContext : IFunctionContext
                 nameof(variable));
         }
 
-        return new BinaryOperationNode(BinaryOperation.Add, new MemoryRead(_displayEntry), localMemory.Offset);
+        return new BinaryOperationNode(BinaryOperation.Sub, new MemoryRead(_displayEntry), localMemory.Offset);
     }
 }
 
@@ -143,7 +143,7 @@ internal record MemoryLocation(Constant Offset) : VariableLocation
     public override CodeTreeNode GenerateWrite(CodeTreeNode value) => new MemoryWrite(GetDirectLocation(), value);
 
     private CodeTreeNode GetDirectLocation() =>
-        new BinaryOperationNode(BinaryOperation.Add, new RegisterRead(HardwareRegister.RBP), Offset);
+        new BinaryOperationNode(BinaryOperation.Sub, new RegisterRead(HardwareRegister.RBP), Offset);
 }
 
 internal record RegisterLocation : VariableLocation
