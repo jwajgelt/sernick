@@ -40,4 +40,4 @@ public sealed class FakeFunctionContext : IFunctionContext
 
 public record FakeVariableRead(IFunctionVariable Variable) : CodeTreeValueNode;
 
-public record FakeVariableWrite(IFunctionVariable Variable, CodeTreeValueNode value) : CodeTreeNode;
+public record FakeVariableWrite(IFunctionVariable Variable, CodeTreeValueNode Value) : CodeTreeNode;
