@@ -1,18 +1,21 @@
 namespace sernick.Ast.Analysis.ControlFlowGraph;
 
-using FunctionContextMap;
+using Compiler.Function;
 using NameResolution;
 using Nodes;
 using sernick.ControlFlowGraph.CodeTree;
 using Utility;
 using FunctionCall = Nodes.FunctionCall;
+using SideEffectsVisitorParam = Utility.Unit;
 using Variable = Nodes.VariableDeclaration;
 
 public static class SideEffectsAnalyzer
 {
-    public static IReadOnlyList<CodeTreeRoot> PullOutSideEffects(AstNode root)
+    public static IReadOnlyList<CodeTreeRoot> PullOutSideEffects(AstNode root, NameResolutionResult nameResolution, IFunctionContext currentFunctionContext)
     {
-        throw new NotImplementedException();
+        var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext);
+        var visitorResult = root.Accept(visitor, Unit.I);
+        return visitorResult.Select(tree => new SingleExitNode(null, tree.CodeTreeRootChildren)).ToList();
     }
 
     private record TreeWithEffects
@@ -20,7 +23,7 @@ public static class SideEffectsAnalyzer
         HashSet<Variable> ReadVariables,
         HashSet<Variable> WrittenVariables,
         bool CallsFunction,
-        List<CodeTreeNode> CodeTreeRoot
+        List<CodeTreeNode> CodeTreeRootChildren
     )
     {
         // we can merge two trees if
@@ -36,7 +39,7 @@ public static class SideEffectsAnalyzer
         {
             ReadVariables.UnionWith(other.ReadVariables);
             WrittenVariables.UnionWith(other.WrittenVariables);
-            CodeTreeRoot.AddRange(other.CodeTreeRoot);
+            CodeTreeRootChildren.AddRange(other.CodeTreeRootChildren);
         }
     }
 
@@ -46,27 +49,25 @@ public static class SideEffectsAnalyzer
         {
             return;
         }
-        
+
         if (left.Count == 0 || !left[^1].CanMergeWith(right.First()))
         {
             left.AddRange(right);
             return;
         }
-        
+
         left[^1].MergeWith(right.First());
         left.AddRange(right.Skip(1));
     }
 
-    private record SideEffectsVisitorParam(FunctionDefinition CurrentFunction);
-
     private class SideEffectsVisitor : AstVisitor<List<TreeWithEffects>, SideEffectsVisitorParam>
     {
-        public SideEffectsVisitor(NameResolutionResult nameResolution, FunctionContextMap functionContextMap)
+        public SideEffectsVisitor(NameResolutionResult nameResolution, IFunctionContext currentFunctionContext)
         {
-            this.nameResolution = nameResolution;
-            this.functionContextMap = functionContextMap;
+            _nameResolution = nameResolution;
+            _currentFunctionContext = currentFunctionContext;
         }
-        
+
         protected override List<TreeWithEffects> VisitAstNode(AstNode node, SideEffectsVisitorParam param)
         {
             var results = node.Children.Select(child => child.Accept(this, param));
@@ -101,7 +102,7 @@ public static class SideEffectsAnalyzer
                 {
                     treeList.Add(prev);
                 }
-                
+
                 treeList.AddRange(result.Skip(1));
             }
 
@@ -120,7 +121,7 @@ public static class SideEffectsAnalyzer
 
         public override List<TreeWithEffects> VisitVariableDeclaration(VariableDeclaration node, SideEffectsVisitorParam param)
         {
-            throw new NotImplementedException("TODO: the same thing as assignment");
+            return GenerateVariableAssignmentTree(node, node.InitValue ?? new EmptyExpression(node.LocationRange), param);
         }
 
         public override List<TreeWithEffects> VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, SideEffectsVisitorParam param)
@@ -135,27 +136,17 @@ public static class SideEffectsAnalyzer
             return new List<TreeWithEffects>();
         }
 
-        public override List<TreeWithEffects> VisitCodeBlock(CodeBlock node, SideEffectsVisitorParam param)
-        {
-            return base.VisitCodeBlock(node, param);
-        }
-
-        public override List<TreeWithEffects> VisitExpressionJoin(ExpressionJoin node, SideEffectsVisitorParam param)
-        {
-            return base.VisitExpressionJoin(node, param);
-        }
-
         public override List<TreeWithEffects> VisitFunctionCall(FunctionCall node, SideEffectsVisitorParam param)
         {
-            throw new NotSupportedException("Side effects analysis shouldn't descend into function call");
+            throw new NotSupportedException("Side effects analysis shouldn't descend into function calls");
         }
 
         public override List<TreeWithEffects> VisitInfix(Infix node, SideEffectsVisitorParam param)
         {
             var leftResult = node.Left.Accept(this, param);
             var rightResult = node.Right.Accept(this, param);
-            var leftValue = leftResult[^1].CodeTreeRoot[^1];
-            var rightValue = rightResult[^1].CodeTreeRoot[^1];
+            var leftValue = leftResult[^1].CodeTreeRootChildren[^1];
+            var rightValue = rightResult[^1].CodeTreeRootChildren[^1];
             var operationResult = node.Operator switch
             {
                 Infix.Op.Plus => new BinaryOperationNode(BinaryOperation.Add, leftValue, rightValue),
@@ -187,14 +178,70 @@ public static class SideEffectsAnalyzer
 
             var result = new List<TreeWithEffects>(leftResult.SkipLast(1));
             result.AddTreesMerging(rightResult.SkipLast(1).ToArray());
-            result.AddTreesMerging(new []{operationTree});
+            result.AddTreesMerging(new[] { operationTree });
             return result;
         }
 
         public override List<TreeWithEffects> VisitAssignment(Assignment node, SideEffectsVisitorParam param)
         {
-            var variable = nameResolution.AssignedVariableDeclarations[node];
-            var value = node.Right;
+            var variable = _nameResolution.AssignedVariableDeclarations[node];
+            return GenerateVariableAssignmentTree(variable, node.Right, param);
+        }
+
+        public override List<TreeWithEffects> VisitVariableValue(VariableValue node, SideEffectsVisitorParam param)
+        {
+            var variable = _nameResolution.UsedVariableDeclarations[node];
+            var readVariables = new HashSet<VariableDeclaration>();
+            if (variable is VariableDeclaration declaration)
+            {
+                readVariables.Add(declaration);
+            }
+
+            var variableReadTree = _currentFunctionContext.GenerateVariableRead(variable);
+            return new List<TreeWithEffects>
+            {
+                new (
+                    readVariables,
+                    new HashSet<VariableDeclaration>(),
+                    false,
+                    new List<CodeTreeNode> { variableReadTree }
+                )
+            };
+        }
+
+        public override List<TreeWithEffects> VisitBoolLiteralValue(BoolLiteralValue node, SideEffectsVisitorParam param)
+        {
+            return new List<TreeWithEffects>
+            {
+                new (
+                    new HashSet<VariableDeclaration>(),
+                    new HashSet<VariableDeclaration>(),
+                    false,
+                    new List<CodeTreeNode> { new Constant(new RegisterValue(node.Value ? 1 : 0)) }
+                )
+            };
+        }
+
+        public override List<TreeWithEffects> VisitIntLiteralValue(IntLiteralValue node, SideEffectsVisitorParam param)
+        {
+            return new List<TreeWithEffects>
+            {
+                new (
+                    new HashSet<VariableDeclaration>(),
+                    new HashSet<VariableDeclaration>(),
+                    false,
+                    new List<CodeTreeNode> { new Constant(new RegisterValue(node.Value)) }
+                )
+            };
+        }
+
+        public override List<TreeWithEffects> VisitEmptyExpression(EmptyExpression node, SideEffectsVisitorParam param)
+        {
+            return new List<TreeWithEffects>();
+        }
+
+        private List<TreeWithEffects> GenerateVariableAssignmentTree(VariableDeclaration variable, AstNode value, SideEffectsVisitorParam param)
+        {
             var result = value.Accept(this, param);
             if (result.Count == 0)
             {
@@ -206,45 +253,11 @@ public static class SideEffectsAnalyzer
 
             var last = result[^1];
             last.WrittenVariables.Add(variable);
-            // last.CodeTreeRoot[^1] = functionContextMap.Implementations[param.CurrentFunction]. (last.CodeTreeRoot[^1]);
-            return new List<TreeWithEffects>();
+            last.CodeTreeRootChildren[^1] = _currentFunctionContext.GenerateVariableWrite(variable, last.CodeTreeRootChildren[^1]);
+            return result;
         }
 
-        public override List<TreeWithEffects> VisitVariableValue(VariableValue node, SideEffectsVisitorParam param)
-        {
-            throw new NotImplementedException("TODO: generate variable read via FunctionContext");
-        }
-
-        public override List<TreeWithEffects> VisitBoolLiteralValue(BoolLiteralValue node, SideEffectsVisitorParam param)
-        {
-            return new List<TreeWithEffects>
-            {
-                new TreeWithEffects(
-                    new HashSet<VariableDeclaration>(),
-                    new HashSet<VariableDeclaration>(),
-                    false,
-                    new List<CodeTreeNode> { new Constant(new RegisterValue(node.Value ? 1 : 0)) })
-            };
-        }
-
-        public override List<TreeWithEffects> VisitIntLiteralValue(IntLiteralValue node, SideEffectsVisitorParam param)
-        {
-            return new List<TreeWithEffects>
-            {
-                new TreeWithEffects(
-                    new HashSet<VariableDeclaration>(),
-                    new HashSet<VariableDeclaration>(),
-                    false,
-                    new List<CodeTreeNode> { new Constant(new RegisterValue(node.Value)) })
-            };
-        }
-
-        public override List<TreeWithEffects> VisitEmptyExpression(EmptyExpression node, SideEffectsVisitorParam param)
-        {
-            return new List<TreeWithEffects>();
-        }
-
-        private NameResolutionResult nameResolution;
-        private FunctionContextMap functionContextMap;
+        private readonly NameResolutionResult _nameResolution;
+        private readonly IFunctionContext _currentFunctionContext;
     }
 }
