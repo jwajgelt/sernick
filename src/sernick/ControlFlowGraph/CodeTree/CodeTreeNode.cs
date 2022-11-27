@@ -1,7 +1,4 @@
 namespace sernick.ControlFlowGraph.CodeTree;
-
-using Compiler.Function;
-
 /// <summary>
 /// Struct for values which can fit in a register
 /// </summary>

@@ -13,7 +13,7 @@ public sealed class FunctionContext : IFunctionContext
         HardwareRegister.R15,
         HardwareRegister.RBX,
         HardwareRegister.RDI,
-        HardwareRegister.RSI, 
+        HardwareRegister.RSI,
     };
 
     private static readonly HardwareRegister[] callerToSave = {
@@ -36,7 +36,7 @@ public sealed class FunctionContext : IFunctionContext
     private int _localsOffset;
     private CodeTreeNode? _displayEntry;
     private readonly int _contextId;
-    private Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
+    private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
     public FunctionContext(
         IFunctionContext? parent,
         IReadOnlyCollection<IFunctionParam> parameters,
@@ -52,7 +52,7 @@ public sealed class FunctionContext : IFunctionContext
         _contextId = contextId;
         _registerToTemporaryMap = new Dictionary<HardwareRegister, Register>(ReferenceEqualityComparer.Instance);
 
-        foreach(HardwareRegister reg in calleeToSave) 
+        foreach (var reg in calleeToSave)
         {
             _registerToTemporaryMap.Add(reg, new Register());
         }
@@ -80,11 +80,11 @@ public sealed class FunctionContext : IFunctionContext
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeNode> arguments)
     {
-        List<CodeTreeNode> operations = new List<CodeTreeNode>();
+        var operations = new List<CodeTreeNode>();
 
         // Caller-saved registers
         var callerSavedMap = new Dictionary<HardwareRegister, Register>(ReferenceEqualityComparer.Instance);
-        foreach(HardwareRegister reg in callerToSave)
+        foreach (var reg in callerToSave)
         {
             var tempReg = new Register();
             callerSavedMap[reg] = tempReg;
@@ -92,18 +92,17 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(new RegisterWrite(tempReg, regVal));
         }
 
-        Register RSP = HardwareRegister.RSP;
-        Register RBP = HardwareRegister.RBP;
-        Register RAX = HardwareRegister.RAX;
+        Register rsp = HardwareRegister.RSP;
+        Register rbp = HardwareRegister.RBP;
+        Register rax = HardwareRegister.RAX;
 
-        var rspRead = new RegisterRead(RSP);
+        var rspRead = new RegisterRead(rsp);
         var decrementedRsp = rspRead - PointerSize;
-        var pushRsp = new RegisterWrite(RSP, decrementedRsp);
-
-        var rbpRead = new RegisterRead(RBP);
+        var pushRsp = new RegisterWrite(rsp, decrementedRsp);
+        _ = new RegisterRead(rbp);
 
         // Put args onto stack
-        foreach(CodeTreeNode arg in arguments)
+        foreach (var arg in arguments)
         {
             operations.Add(pushRsp);
             operations.Add(new MemoryWrite(rspRead, arg));
@@ -113,19 +112,19 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(new FunctionCall());
 
         // Free arg space
-        operations.Add(new RegisterWrite(RSP, rspRead + PointerSize * arguments.Count));
+        operations.Add(new RegisterWrite(rsp, rspRead + PointerSize * arguments.Count));
 
         // If value is returned, then put it from RAX to virtual register
         CodeTreeNode? returnValueLocation = null;
-        if(_valueIsReturned)
+        if (_valueIsReturned)
         {
-            Register returnValueRegister = new Register();
-            var raxRead = new RegisterRead(RAX);
+            var returnValueRegister = new Register();
+            var raxRead = new RegisterRead(rax);
             operations.Add(new RegisterWrite(returnValueRegister, raxRead));
         }
 
         // Retrieve values of caller-saved registers
-        foreach(HardwareRegister reg in calleeToSave)
+        foreach (var reg in calleeToSave)
         {
             var tempReg = callerSavedMap[reg];
             var tempVal = new RegisterRead(tempReg);
@@ -137,16 +136,16 @@ public sealed class FunctionContext : IFunctionContext
 
     public IReadOnlyList<CodeTreeNode> GeneratePrologue()
     {
-        List<CodeTreeNode> operations = new List<CodeTreeNode>();
+        var operations = new List<CodeTreeNode>();
 
-        Register RSP = HardwareRegister.RSP;
-        Register RBP = HardwareRegister.RBP;
+        Register rsp = HardwareRegister.RSP;
+        Register rbp = HardwareRegister.RBP;
 
-        var rspRead = new RegisterRead(RSP);
+        var rspRead = new RegisterRead(rsp);
         var decrementedRsp = rspRead - PointerSize;
-        var pushRsp = new RegisterWrite(RSP, decrementedRsp);
+        var pushRsp = new RegisterWrite(rsp, decrementedRsp);
 
-        var rbpRead = new RegisterRead(RBP);
+        var rbpRead = new RegisterRead(rbp);
 
         // Allocate slot for old RBP value
         operations.Add(pushRsp);
@@ -155,22 +154,23 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(new MemoryWrite(rspRead, rbpRead));
 
         // Set new RBP value
-        operations.Add(new RegisterWrite(RBP, rspRead));
+        operations.Add(new RegisterWrite(rbp, rspRead));
 
         // Update display entry
-        if(_displayEntry == null)
+        if (_displayEntry == null)
         {
             throw new Exception("DisplayAddress should be set before generating code");
         }
+
         operations.Add(new MemoryWrite(_displayEntry, rbpRead));
 
         // Allocate memory for variables
         var varOffsetConst = new Constant(new RegisterValue(_localsOffset));
         var newRspVal = new BinaryOperationNode(BinaryOperation.Sub, rspRead, varOffsetConst);
-        operations.Add(new RegisterWrite(RSP, newRspVal));
+        operations.Add(new RegisterWrite(rsp, newRspVal));
 
         // Callee-saved registers
-        foreach(HardwareRegister reg in calleeToSave)
+        foreach (var reg in calleeToSave)
         {
             var tempReg = _registerToTemporaryMap[reg];
             var regVal = new RegisterRead(reg);
@@ -182,29 +182,29 @@ public sealed class FunctionContext : IFunctionContext
 
     public IReadOnlyList<CodeTreeNode> GenerateEpilogue()
     {
-        List<CodeTreeNode> operations = new List<CodeTreeNode>();
-        
+        var operations = new List<CodeTreeNode>();
+
         // Retrieve values of callee-saved registers
-        foreach(HardwareRegister reg in calleeToSave)
+        foreach (var reg in calleeToSave)
         {
             var tempReg = _registerToTemporaryMap[reg];
             var tempVal = new RegisterRead(tempReg);
             operations.Add(new RegisterWrite(reg, tempVal));
         }
 
-        Register RSP = HardwareRegister.RSP;
-        Register RBP = HardwareRegister.RBP;
+        Register rsp = HardwareRegister.RSP;
+        Register rbp = HardwareRegister.RBP;
 
         // Free local variables stack space
         var varOffsetConst = _localsOffset;
-        var rspVal = new RegisterRead(RSP);
-        operations.Add(new RegisterWrite(RSP, rspVal + varOffsetConst));
+        var rspVal = new RegisterRead(rsp);
+        operations.Add(new RegisterWrite(rsp, rspVal + varOffsetConst));
 
         // Retrieve old RBP
-        operations.Add(new RegisterWrite(RBP, new MemoryRead(rspVal)));
+        operations.Add(new RegisterWrite(rbp, new MemoryRead(rspVal)));
 
         // Free RBP slot
-        operations.Add(new RegisterWrite(RSP, rspVal + PointerSize));
+        operations.Add(new RegisterWrite(rsp, rspVal + PointerSize));
 
         return operations;
     }
