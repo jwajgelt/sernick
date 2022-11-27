@@ -72,7 +72,37 @@ public sealed class FunctionContext : IFunctionContext
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeNode> arguments)
     {
-        throw new NotImplementedException();
+        List<CodeTreeNode> operations = new List<CodeTreeNode>();
+
+        HardwareRegister RSP = HardwareRegister.RSP;
+        HardwareRegister RBP = HardwareRegister.RBP;
+
+        var rspRead = new RegisterRead(RSP);
+        var decrementedRsp = new BinaryOperationNode(BinaryOperation.Sub, rspRead, slotSize);
+        var pushRsp = new RegisterWrite(RSP, decrementedRsp);
+
+        var rbpRead = new RegisterRead(RBP);
+
+        // Put args onto stack
+        foreach(CodeTreeNode arg in arguments)
+        {
+            operations.Add(pushRsp);
+            operations.Add(new MemoryWrite(rspRead, arg));
+        }
+
+        // Generate the call (so )
+        operations.Add(pushRsp);
+    }
+
+    private CodeTreeRoot? cfgFromList(IReadOnlyList<CodeTreeNode> operations, CodeTreeRoot? nextRoot)
+    {
+        CodeTreeRoot? lastRoot = nextRoot;
+        foreach(CodeTreeNode op in operations)
+        {
+            lastRoot = new SingleExitNode(lastRoot, op);
+        }
+
+        return lastRoot;
     }
 
     public RegisterWrite? ResultVariable { get; set; }
@@ -81,12 +111,20 @@ public sealed class FunctionContext : IFunctionContext
     {
         List<CodeTreeNode> operations = new List<CodeTreeNode>();
 
-        HardwareRegister RSP = HardwareRegister.RSP;
+        
+
+        // Allocate slot for old RSP value
+        operations.Add(pushRsp);
+
+        // Write down old RBP value
+        operations.Add(new MemoryWrite(rspRead, rbpRead));
+
+        // Set new RBP value
+        operations.Add(new RegisterWrite(RBP, rspRead));
 
         // Allocate memory for variables
         var varOffsetConst = new Constant(new RegisterValue(_localsOffset));
-        var rspVal = new RegisterRead(RSP);
-        var newRspVal = new BinaryOperationNode(BinaryOperation.Sub, rspVal, varOffsetConst);
+        newRspVal = new BinaryOperationNode(BinaryOperation.Sub, rspRead, varOffsetConst);
         operations.Add(new RegisterWrite(RSP, newRspVal));
 
         // Calee-saved registers
