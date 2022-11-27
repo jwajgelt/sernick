@@ -22,14 +22,14 @@ public sealed class FakeFunctionContext : IFunctionContext
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateVariableRead(IFunctionVariable variable)
+    public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable)
     {
-        throw new NotImplementedException();
+        return new FakeVariableRead(variable);
     }
 
-    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeNode value)
+    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value)
     {
-        throw new NotImplementedException();
+        return new FakeVariableWrite(variable, value);
     }
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeNode> arguments)
@@ -37,3 +37,7 @@ public sealed class FakeFunctionContext : IFunctionContext
         throw new NotImplementedException();
     }
 }
+
+public record FakeVariableRead(IFunctionVariable Variable) : CodeTreeValueNode;
+
+public record FakeVariableWrite(IFunctionVariable Variable, CodeTreeValueNode Value) : CodeTreeNode;
