@@ -153,12 +153,12 @@ public static class SideEffectsAnalyzer
                 throw new NotSupportedException("Left- and right-hand sides of a binary operation can't be empty");
             }
 
-            if (leftResult[^1].CodeTreeRootChildren[^1] is not CodeTreeValueNode leftValue 
+            if (leftResult[^1].CodeTreeRootChildren[^1] is not CodeTreeValueNode leftValue
                 || rightResult[^1].CodeTreeRootChildren[^1] is not CodeTreeValueNode rightValue)
             {
                 throw new NotSupportedException("Left- and right-hand sides of a binary operation have to be values");
             }
-            
+
             var operationResult = node.Operator switch
             {
                 Infix.Op.Plus => new BinaryOperationNode(BinaryOperation.Add, leftValue, rightValue),
