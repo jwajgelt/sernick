@@ -11,7 +11,7 @@ using Variable = Nodes.VariableDeclaration;
 
 public static class SideEffectsAnalyzer
 {
-    public static IReadOnlyList<CodeTreeRoot> PullOutSideEffects(AstNode root, NameResolutionResult nameResolution, IFunctionContext currentFunctionContext)
+    public static IReadOnlyList<SingleExitNode> PullOutSideEffects(AstNode root, NameResolutionResult nameResolution, IFunctionContext currentFunctionContext)
     {
         var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext);
         var visitorResult = root.Accept(visitor, Unit.I);
@@ -75,7 +75,7 @@ public static class SideEffectsAnalyzer
 
             foreach (var result in results)
             {
-                if (result.Any())
+                if (!result.Any())
                 {
                     continue;
                 }
@@ -100,7 +100,7 @@ public static class SideEffectsAnalyzer
                 }
                 else
                 {
-                    treeList.Add(prev);
+                    treeList.Add(next);
                 }
 
                 treeList.AddRange(result.Skip(1));
@@ -145,8 +145,20 @@ public static class SideEffectsAnalyzer
         {
             var leftResult = node.Left.Accept(this, param);
             var rightResult = node.Right.Accept(this, param);
-            var leftValue = leftResult[^1].CodeTreeRootChildren[^1];
-            var rightValue = rightResult[^1].CodeTreeRootChildren[^1];
+
+            if (leftResult.Count == 0 || rightResult.Count == 0
+                || leftResult[^1].CodeTreeRootChildren.Count == 0
+                || rightResult[^1].CodeTreeRootChildren.Count == 0)
+            {
+                throw new NotSupportedException("Left- and right-hand sides of a binary operation can't be empty");
+            }
+
+            if (leftResult[^1].CodeTreeRootChildren[^1] is not CodeTreeValueNode leftValue 
+                || rightResult[^1].CodeTreeRootChildren[^1] is not CodeTreeValueNode rightValue)
+            {
+                throw new NotSupportedException("Left- and right-hand sides of a binary operation have to be values");
+            }
+            
             var operationResult = node.Operator switch
             {
                 Infix.Op.Plus => new BinaryOperationNode(BinaryOperation.Add, leftValue, rightValue),
@@ -252,9 +264,17 @@ public static class SideEffectsAnalyzer
             }
 
             var last = result[^1];
+
+            if (last.CodeTreeRootChildren[^1] is not CodeTreeValueNode assignedValue)
+            {
+                throw new NotSupportedException("Right-hand side of assignment should be a value");
+            }
+
             last.WrittenVariables.Add(variable);
-            last.CodeTreeRootChildren[^1] = _currentFunctionContext.GenerateVariableWrite(variable, last.CodeTreeRootChildren[^1]);
+            last.CodeTreeRootChildren[^1] =
+                _currentFunctionContext.GenerateVariableWrite(variable, assignedValue);
             return result;
+
         }
 
         private readonly NameResolutionResult _nameResolution;

@@ -13,6 +13,11 @@ public record struct RegisterValue(long Value);
 public abstract partial record CodeTreeNode;
 
 /// <summary>
+/// Class of nodes which calculate a value
+/// </summary>
+public abstract record CodeTreeValueNode : CodeTreeNode;
+
+/// <summary>
 /// All binary operations used in the code trees
 /// </summary>
 public enum BinaryOperation
@@ -25,14 +30,14 @@ public enum BinaryOperation
 }
 
 public sealed record BinaryOperationNode
-    (BinaryOperation Operation, CodeTreeNode Left, CodeTreeNode Right) : CodeTreeNode;
+    (BinaryOperation Operation, CodeTreeValueNode Left, CodeTreeValueNode Right) : CodeTreeValueNode;
 
 public enum UnaryOperation
 {
     Not, Negate
 }
 
-public sealed record UnaryOperationNode(UnaryOperation Operation, CodeTreeNode Operand) : CodeTreeNode;
+public sealed record UnaryOperationNode(UnaryOperation Operation, CodeTreeValueNode Operand) : CodeTreeValueNode;
 
 /// <summary>
 /// Use new Register() if you want to say "I want to save the value, preferably to a register, but
@@ -59,13 +64,13 @@ public class HardwareRegister : Register
     public static readonly HardwareRegister R15 = new();
 }
 
-public sealed record RegisterRead(Register Register) : CodeTreeNode;
+public sealed record RegisterRead(Register Register) : CodeTreeValueNode;
 
-public sealed record RegisterWrite(Register Register, CodeTreeNode Value) : CodeTreeNode;
+public sealed record RegisterWrite(Register Register, CodeTreeValueNode Value) : CodeTreeNode;
 
-public sealed record MemoryRead(CodeTreeNode MemoryLocation) : CodeTreeNode;
-public sealed record MemoryWrite(CodeTreeNode MemoryLocation, CodeTreeNode Value) : CodeTreeNode;
+public sealed record MemoryRead(CodeTreeValueNode MemoryLocation) : CodeTreeValueNode;
+public sealed record MemoryWrite(CodeTreeValueNode MemoryLocation, CodeTreeValueNode Value) : CodeTreeNode;
 
-public sealed record Constant(RegisterValue Value) : CodeTreeNode;
+public sealed record Constant(RegisterValue Value) : CodeTreeValueNode;
 
 public sealed record FunctionCall(IFunctionCaller FunctionCaller) : CodeTreeNode;

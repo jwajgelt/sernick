@@ -69,12 +69,12 @@ public sealed class FunctionContext : IFunctionContext
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateVariableRead(IFunctionVariable variable)
+    public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable)
     {
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeNode value)
+    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value)
     {
         throw new NotImplementedException();
     }

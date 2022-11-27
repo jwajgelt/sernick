@@ -14,7 +14,7 @@ public sealed record ConditionalJumpNode
 (
     CodeTreeRoot TrueCase,
     CodeTreeRoot FalseCase,
-    CodeTreeNode ConditionEvaluation
+    CodeTreeValueNode ConditionEvaluation
 ) : CodeTreeRoot;
 
 /// <summary>
@@ -25,6 +25,6 @@ public sealed record ConditionalJumpNode
 /// by a code tree using the assigned value.
 /// </summary>
 /// <param name="NextTree"> Tree representing the code to be evaluated after this code tree </param>
-/// <param name="Operation"> The operation to be performed in this code tree </param>
+/// <param name="Operations"> The operation to be performed in this code tree </param>
 public sealed record SingleExitNode
-    (CodeTreeRoot? NextTree, IReadOnlyList<CodeTreeNode> Operation) : CodeTreeRoot;
+    (CodeTreeRoot? NextTree, IReadOnlyList<CodeTreeNode> Operations) : CodeTreeRoot;
