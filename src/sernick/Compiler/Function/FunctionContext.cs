@@ -6,6 +6,16 @@ using ControlFlowGraph.CodeTree;
 
 public sealed class FunctionContext : IFunctionContext
 {
+    private static readonly HardwareRegister[] registersToSave = {
+        HardwareRegister.R12,
+        HardwareRegister.R13,
+        HardwareRegister.R14,
+        HardwareRegister.R15,
+        HardwareRegister.RBX, 
+    };
+
+    private static readonly CodeTreeNode slotSize = new Constant(new RegisterValue(PointerSize));
+
     private const int PointerSize = 8;
     private readonly IFunctionContext? _parentContext;
     private readonly IReadOnlyCollection<IFunctionParam> _functionParameters;
@@ -16,6 +26,8 @@ public sealed class FunctionContext : IFunctionContext
     private int _localsOffset;
     private CodeTreeNode? _displayEntry;
     private readonly int _contextId;
+
+    private Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
 
     public FunctionContext(
         IFunctionContext? parent,
@@ -30,6 +42,12 @@ public sealed class FunctionContext : IFunctionContext
         _valueIsReturned = returnsValue;
         _localsOffset = 0;
         _contextId = contextId;
+        _registerToTemporaryMap = new Dictionary<HardwareRegister, Register>(ReferenceEqualityComparer.Instance);
+
+        foreach(HardwareRegister reg in registersToSave) 
+        {
+            _registerToTemporaryMap.Add(reg, new Register());
+        }
 
         var fistArgOffset = PointerSize * (1 + _functionParameters.Count);
         var argNum = 0;
@@ -61,12 +79,53 @@ public sealed class FunctionContext : IFunctionContext
 
     public IReadOnlyList<CodeTreeNode> GeneratePrologue()
     {
-        throw new NotImplementedException();
+        List<CodeTreeNode> operations = new List<CodeTreeNode>();
+        foreach(HardwareRegister reg in registersToSave)
+        {
+            var tempReg = _registerToTemporaryMap[reg];
+            var regVal = new RegisterRead(reg);
+            operations.Add(new RegisterWrite(tempReg, regVal));
+        }
+
+        HardwareRegister RSP = HardwareRegister.RSP;
+        HardwareRegister RBP = HardwareRegister.RBP;
+
+        // Allocate memory for arguments
+        var argsOffsetConst = new Constant(new RegisterValue(PointerSize * _functionParameters.Count));
+        var rspVal = new RegisterRead(RSP);
+        var newRsp = new BinaryOperationNode(BinaryOperation.Sub, rspVal, argsOffsetConst);
+        operations.Add(new RegisterWrite(RSP, newRsp));
+
+        // Allocate slot for return address
+        rspVal = new RegisterRead(RSP);
+        newRsp = new BinaryOperationNode(BinaryOperation.Sub, rspVal, slotSize);
+        operations.Add(new RegisterWrite(RSP, newRsp));
+
+        // Set RA
+
+        // Allocate slot for old RSP value
+        rspVal = new RegisterRead(RSP);
+        newRsp = new BinaryOperationNode(BinaryOperation.Sub, rspVal, slotSize);
+        operations.Add(new RegisterWrite(RSP, newRsp));
+
+        // Set old RSP value
+
+        return operations;
     }
 
     public IReadOnlyList<CodeTreeNode> GenerateEpilogue()
     {
-        throw new NotImplementedException();
+        List<CodeTreeNode> operations = new List<CodeTreeNode>();
+        
+        
+        foreach(HardwareRegister reg in registersToSave)
+        {
+            var tempReg = _registerToTemporaryMap[reg];
+            var tempVal = new RegisterRead(tempReg);
+            operations.Add(new RegisterWrite(reg, tempVal));
+        }
+
+        return operations;
     }
 
     public CodeTreeNode GenerateVariableRead(IFunctionVariable variable)
