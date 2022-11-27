@@ -167,9 +167,7 @@ public static class SideEffectsAnalyzer
                 Infix.Op.LessOrEquals => new BinaryOperationNode(BinaryOperation.LessThanEqual, leftValue, rightValue),
                 Infix.Op.GreaterOrEquals => new BinaryOperationNode(BinaryOperation.GreaterThanEqual, leftValue, rightValue),
                 Infix.Op.Equals => new BinaryOperationNode(BinaryOperation.Equal, leftValue, rightValue),
-                Infix.Op.ScAnd => throw new NotSupportedException(
-                    "Side effects analysis expects an AST with linear flow"),
-                Infix.Op.ScOr => throw new NotSupportedException(
+                Infix.Op.ScAnd or Infix.Op.ScOr => throw new NotSupportedException(
                     "Side effects analysis expects an AST with linear flow"),
                 _ => throw new ArgumentOutOfRangeException()
             };
