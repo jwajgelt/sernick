@@ -32,6 +32,16 @@ public sealed class FakeFunctionContext : IFunctionContext
         return new FakeVariableWrite(variable, value);
     }
 
+    CodeTreeNode IFunctionContext.GenerateIndirectVariableRead(IFunctionVariable variable)
+    {
+        throw new NotImplementedException();
+    }
+
+    CodeTreeNode IFunctionContext.GenerateIndirectVariableWrite(IFunctionVariable variable, CodeTreeNode value)
+    {
+        throw new NotImplementedException();
+    }
+
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeNode> arguments)
     {
         throw new NotImplementedException();
