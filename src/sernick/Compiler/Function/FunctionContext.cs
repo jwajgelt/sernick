@@ -6,6 +6,7 @@ using ControlFlowGraph.CodeTree;
 
 public sealed class FunctionContext : IFunctionContext
 {
+<<<<<<< HEAD
     private static readonly HardwareRegister[] registersToSave = {
         HardwareRegister.R12,
         HardwareRegister.R13,
@@ -16,6 +17,8 @@ public sealed class FunctionContext : IFunctionContext
 
     private static readonly CodeTreeNode slotSize = new Constant(new RegisterValue(PointerSize));
 
+=======
+>>>>>>> main
     private const int PointerSize = 8;
     private readonly IFunctionContext? _parentContext;
     private readonly IReadOnlyCollection<IFunctionParam> _functionParameters;
@@ -26,9 +29,7 @@ public sealed class FunctionContext : IFunctionContext
     private int _localsOffset;
     private CodeTreeNode? _displayEntry;
     private readonly int _contextId;
-
     private Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
-
     public FunctionContext(
         IFunctionContext? parent,
         IReadOnlyCollection<IFunctionParam> parameters,
