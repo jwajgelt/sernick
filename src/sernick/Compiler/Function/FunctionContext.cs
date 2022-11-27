@@ -109,7 +109,7 @@ public sealed class FunctionContext : IFunctionContext
         }
 
         // Right (this needs to be fixed to mean something)
-        operations.Add(new FunctionCall());
+        operations.Add(new FunctionCall(this));
 
         // Free arg space
         operations.Add(new RegisterWrite(rsp, rspRead + PointerSize * arguments.Count));

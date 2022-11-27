@@ -1,4 +1,7 @@
 namespace sernick.ControlFlowGraph.CodeTree;
+
+using Compiler.Function;
+
 /// <summary>
 /// Struct for values which can fit in a register
 /// </summary>
@@ -77,4 +80,4 @@ public sealed record MemoryWrite(CodeTreeNode MemoryLocation, CodeTreeNode Value
 
 public sealed record Constant(RegisterValue Value) : CodeTreeNode;
 
-public sealed record FunctionCall() : CodeTreeNode;
+public sealed record FunctionCall(IFunctionCaller FunctionCaller) : CodeTreeNode;
