@@ -16,7 +16,7 @@ public interface IFunctionContext : IFunctionCaller
     ///     If variable isn't in the function's scope then generates memory read
     ///     using the Display Table.
     /// </summary>
-    public CodeTreeNode GenerateVariableRead(IFunctionVariable variable);
+    public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable);
 
     /// <summary>
     ///     If variable is local then generates either memory write or register write
@@ -25,5 +25,5 @@ public interface IFunctionContext : IFunctionCaller
     ///     If variable isn't in the function's scope then generates memory write
     ///     using the Display Table.
     /// </summary>
-    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeNode value);
+    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value);
 }

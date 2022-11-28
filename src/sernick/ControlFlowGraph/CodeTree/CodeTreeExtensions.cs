@@ -1,41 +1,41 @@
 namespace sernick.ControlFlowGraph.CodeTree;
 
-public abstract partial record CodeTreeNode
+public abstract partial record CodeTreeValueNode
 {
-    public static BinaryOperationNode operator +(CodeTreeNode left, CodeTreeNode right) =>
+    public static BinaryOperationNode operator +(CodeTreeValueNode left, CodeTreeValueNode right) =>
         new(BinaryOperation.Add, left, right);
 
-    public static BinaryOperationNode operator -(CodeTreeNode left, CodeTreeNode right) =>
+    public static BinaryOperationNode operator -(CodeTreeValueNode left, CodeTreeValueNode right) =>
         new(BinaryOperation.Sub, left, right);
 
-    public static BinaryOperationNode operator *(CodeTreeNode left, CodeTreeNode right) =>
+    public static BinaryOperationNode operator *(CodeTreeValueNode left, CodeTreeValueNode right) =>
         new(BinaryOperation.Mul, left, right);
 
-    public static BinaryOperationNode operator &(CodeTreeNode left, CodeTreeNode right) =>
+    public static BinaryOperationNode operator &(CodeTreeValueNode left, CodeTreeValueNode right) =>
         new(BinaryOperation.BitwiseAnd, left, right);
 
-    public static BinaryOperationNode operator |(CodeTreeNode left, CodeTreeNode right) =>
+    public static BinaryOperationNode operator |(CodeTreeValueNode left, CodeTreeValueNode right) =>
         new(BinaryOperation.BitwiseOr, left, right);
 
-    public static BinaryOperationNode operator <(CodeTreeNode left, CodeTreeNode right) =>
+    public static BinaryOperationNode operator <(CodeTreeValueNode left, CodeTreeValueNode right) =>
         new(BinaryOperation.LessThan, left, right);
 
-    public static BinaryOperationNode operator >(CodeTreeNode left, CodeTreeNode right) =>
+    public static BinaryOperationNode operator >(CodeTreeValueNode left, CodeTreeValueNode right) =>
         new(BinaryOperation.GreaterThan, left, right);
 
-    public static BinaryOperationNode operator <=(CodeTreeNode left, CodeTreeNode right) =>
+    public static BinaryOperationNode operator <=(CodeTreeValueNode left, CodeTreeValueNode right) =>
         new(BinaryOperation.LessThanEqual, left, right);
 
-    public static BinaryOperationNode operator >=(CodeTreeNode left, CodeTreeNode right) =>
+    public static BinaryOperationNode operator >=(CodeTreeValueNode left, CodeTreeValueNode right) =>
         new(BinaryOperation.GreaterThanEqual, left, right);
 
-    public static UnaryOperationNode operator !(CodeTreeNode operand) =>
+    public static UnaryOperationNode operator !(CodeTreeValueNode operand) =>
         new(UnaryOperation.Not, operand);
 
-    public static UnaryOperationNode operator ~(CodeTreeNode operand) =>
+    public static UnaryOperationNode operator ~(CodeTreeValueNode operand) =>
         new(UnaryOperation.Negate, operand);
 
-    public static implicit operator CodeTreeNode(long constant) => new Constant(new RegisterValue(constant));
+    public static implicit operator CodeTreeValueNode(long constant) => new Constant(new RegisterValue(constant));
 }
 
 /// <summary>
@@ -48,7 +48,7 @@ public abstract partial record CodeTreeNode
 /// </summary>
 public static class CodeTreeExtensions
 {
-    public static MemoryReference Mem(CodeTreeNode location) => new(location);
+    public static MemoryReference Mem(CodeTreeValueNode location) => new(location);
 
     /// <summary>
     /// Create using <see cref="CodeTreeExtensions.Mem"/> method.
@@ -57,10 +57,10 @@ public static class CodeTreeExtensions
     /// </summary>
     public sealed class MemoryReference
     {
-        private readonly CodeTreeNode _location;
-        internal MemoryReference(CodeTreeNode location) => _location = location;
+        private readonly CodeTreeValueNode _location;
+        internal MemoryReference(CodeTreeValueNode location) => _location = location;
 
-        public MemoryWrite Write(CodeTreeNode value) => new(_location, value);
+        public MemoryWrite Write(CodeTreeValueNode value) => new(_location, value);
 
         public MemoryRead Value => new(_location);
         public MemoryRead Read() => Value;
@@ -78,7 +78,7 @@ public static class CodeTreeExtensions
         private readonly Register _register;
         internal RegisterReference(Register register) => _register = register;
 
-        public RegisterWrite Write(CodeTreeNode value) => new(_register, value);
+        public RegisterWrite Write(CodeTreeValueNode value) => new(_register, value);
 
         public RegisterRead Value => new(_register);
         public RegisterRead Read() => Value;
