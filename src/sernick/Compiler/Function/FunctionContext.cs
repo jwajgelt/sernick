@@ -112,6 +112,7 @@ public sealed class FunctionContext : IFunctionContext
             var returnValueRegister = new Register();
             var raxRead = new RegisterRead(rax);
             operations.Add(new RegisterWrite(returnValueRegister, raxRead));
+            returnValueLocation = new RegisterRead(returnValueRegister);
         }
 
         // Retrieve values of caller-saved registers
