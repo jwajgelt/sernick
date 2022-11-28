@@ -1,6 +1,8 @@
 namespace sernick.Compiler;
 
+using Ast;
 using Ast.Analysis.ControlFlowGraph;
+using Ast.Analysis.FunctionCodeTreeMap;
 using Ast.Analysis.FunctionContextMap;
 using Ast.Analysis.NameResolution;
 using Ast.Analysis.VariableAccess;
@@ -39,6 +41,7 @@ public static class CompilerFrontend
         ThrowIfErrorsOccurred(diagnostics);
         var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        // var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast, definition => ControlFlowAnalyzer.UnravelControlFlow(definition, SideEffectsAnalyzer.PullOutSideEffects))
     }
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
