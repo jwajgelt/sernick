@@ -99,31 +99,31 @@ public sealed class FunctionContext : IFunctionContext
         foreach (var arg in arguments)
         {
             operations.Add(pushRsp);
-            operations.Add(new MemoryWrite(rspRead, arg));
+            operations.Add(Mem(rspRead).Write(arg));
         }
 
         // Performing actual call (puts return addess on stack and jumps)
         operations.Add(new FunctionCall(this));
 
         // Remove arguments from stack (we already returned from call)
-        operations.Add(new RegisterWrite(rsp, rspRead + PointerSize * arguments.Count));
+        operations.Add(Reg(rsp).Write(rspRead + PointerSize * arguments.Count));
 
         // If value is returned, then put it from RAX to virtual register
         CodeTreeNode? returnValueLocation = null;
         if (_valueIsReturned)
         {
             var returnValueRegister = new Register();
-            var raxRead = new RegisterRead(rax);
-            operations.Add(new RegisterWrite(returnValueRegister, raxRead));
-            returnValueLocation = new RegisterRead(returnValueRegister);
+            var raxRead = Reg(rax).Read();
+            operations.Add(Reg(returnValueRegister).Write(raxRead));
+            returnValueLocation = Reg(returnValueRegister).Read();
         }
 
         // Retrieve values of caller-saved registers
         foreach (var reg in calleeToSave)
         {
             var tempReg = callerSavedMap[reg];
-            var tempVal = new RegisterRead(tempReg);
-            operations.Add(new RegisterWrite(reg, tempVal));
+            var tempVal = Reg(tempReg).Read();
+            operations.Add(Reg(reg).Write(tempVal));
         }
 
         return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations), returnValueLocation);
@@ -136,18 +136,18 @@ public sealed class FunctionContext : IFunctionContext
         Register rsp = HardwareRegister.RSP;
         Register rbp = HardwareRegister.RBP;
 
-        var rspRead = new RegisterRead(rsp);
-        var pushRsp = new RegisterWrite(rsp, rspRead - PointerSize);
-        var rbpRead = new RegisterRead(rbp);
+        var rspRead = Reg(rsp).Read();
+        var pushRsp = Reg(rsp).Write(rspRead - PointerSize);
+        var rbpRead = Reg(rbp).Read();
 
         // Allocate slot for old RBP value
         operations.Add(pushRsp);
 
         // Write down old RBP value
-        operations.Add(new MemoryWrite(rspRead, rbpRead));
+        operations.Add(Mem(rspRead).Write(rbpRead));
 
         // Set new RBP value
-        operations.Add(new RegisterWrite(rbp, rspRead));
+        operations.Add(Reg(rbp).Write(rspRead));
 
         // Save and update display entry
         if (_displayEntry == null)
@@ -155,18 +155,18 @@ public sealed class FunctionContext : IFunctionContext
             throw new Exception("DisplayAddress should be set before generating code");
         }
 
-        operations.Add(new RegisterWrite(_oldDisplayValReg, new MemoryRead(_displayEntry)));
-        operations.Add(new MemoryWrite(_displayEntry, rbpRead));
+        operations.Add(Reg(_oldDisplayValReg).Write(Mem(_displayEntry).Read()));
+        operations.Add(Mem(_displayEntry).Write(rbpRead));
 
         // Allocate memory for variables
-        operations.Add(new RegisterWrite(rsp, rspRead - _localsOffset));
+        operations.Add(Reg(rsp).Write(rspRead - _localsOffset));
 
         // Callee-saved registers
         foreach (var reg in calleeToSave)
         {
             var tempReg = _registerToTemporaryMap[reg];
-            var regVal = new RegisterRead(reg);
-            operations.Add(new RegisterWrite(tempReg, regVal));
+            var regVal = Reg(reg).Read();
+            operations.Add(Reg(tempReg).Write(regVal));
         }
 
         return CodeTreeListToSingleExitList(operations);
@@ -180,16 +180,16 @@ public sealed class FunctionContext : IFunctionContext
         var rsp = HardwareRegister.RSP;
         var rbp = HardwareRegister.RBP;
 
-        var rspRead = new RegisterRead(rsp);
+        var rspRead = Reg(rsp).Read();
 
         // Free local variables stack space
-        operations.Add(new RegisterWrite(rsp, rspRead + _localsOffset));
+        operations.Add(Reg(rsp).Write(rspRead + _localsOffset));
 
         // Retrieve old RBP
-        operations.Add(new RegisterWrite(rbp, new MemoryRead(rspRead)));
+        operations.Add(Reg(rbp).Write(Mem(rspRead).Read()));
 
         // Free RBP slot
-        operations.Add(new RegisterWrite(rsp, rspRead + PointerSize));
+        operations.Add(Reg(rsp).Write(rspRead + PointerSize));
 
         // Restore old display value
         if (_displayEntry == null)
@@ -197,7 +197,7 @@ public sealed class FunctionContext : IFunctionContext
             throw new Exception("DisplayAddress should be set before generating code");
         }
 
-        operations.Add(new MemoryWrite(_displayEntry, new RegisterRead(_oldDisplayValReg)));
+        operations.Add(Mem(_displayEntry).Write(Reg(_oldDisplayValReg).Read()));
 
         return CodeTreeListToSingleExitList(operations);
     }
