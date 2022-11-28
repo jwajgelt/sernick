@@ -74,7 +74,7 @@ public sealed class FunctionContext : IFunctionContext
         }
     }
 
-    public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeNode> arguments)
+    public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
     {
         var operations = new List<CodeTreeNode>();
 
