@@ -70,37 +70,19 @@ public sealed class FunctionContext : IFunctionContext
         throw new NotImplementedException();
     }
 
-    public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable)
-    {
-        if (_localVariableLocation.TryGetValue(variable, out var location))
-        {
-            return location.GenerateRead();
-        }
+    public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable) =>
+        _localVariableLocation.TryGetValue(variable, out var location)
+            ? location.GenerateRead()
+            : new MemoryRead(GetParentsIndirectVariableLocation(variable));
 
-        // Get indirect location from ancestors' contexts or throw an error if variable wasn't defined in any context.
-        var indirectLocation = _parentContext?.GetIndirectVariableLocation(variable) ??
-                               throw new ArgumentException("Variable is undefined");
-
-        return new MemoryRead(indirectLocation);
-    }
-
-    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value)
-    {
-        if (_localVariableLocation.TryGetValue(variable, out var location))
-        {
-            return location.GenerateWrite(value);
-        }
-
-        // Get indirect location from ancestors' contexts or throw an error if variable wasn't defined in any context.
-        var indirectLocation = _parentContext?.GetIndirectVariableLocation(variable) ??
-                               throw new ArgumentException("Variable is undefined");
-
-        return new MemoryWrite(indirectLocation, value);
-    }
+    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value) =>
+        _localVariableLocation.TryGetValue(variable, out var location)
+            ? location.GenerateWrite(value)
+            : new MemoryWrite(GetParentsIndirectVariableLocation(variable), value);
 
     public void SetDisplayAddress(CodeTreeValueNode displayAddress)
     {
-        _displayEntry = displayAddress + _contextId;
+        _displayEntry = displayAddress + PointerSize * _contextId;
     }
 
     CodeTreeValueNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
@@ -125,6 +107,17 @@ public sealed class FunctionContext : IFunctionContext
         }
 
         return Mem(_displayEntry).Read() - localMemory.Offset;
+    }
+
+    private CodeTreeValueNode GetParentsIndirectVariableLocation(IFunctionVariable variable)
+    {
+        if (_parentContext == null)
+        {
+            // Get indirect location from ancestors' contexts or throw an error if variable wasn't defined in any context.
+            throw new ArgumentException("Variable is undefined");
+        }
+
+        return _parentContext.GetIndirectVariableLocation(variable);
     }
 }
 
