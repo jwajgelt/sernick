@@ -92,8 +92,8 @@ public sealed class FunctionContext : IFunctionContext
         Register rsp = HardwareRegister.RSP;
         Register rax = HardwareRegister.RAX;
 
-        var rspRead = new RegisterRead(rsp);
-        var pushRsp = new RegisterWrite(rsp, rspRead - PointerSize);
+        var rspRead = Reg(rsp).Read();
+        var pushRsp = Reg(rsp).Write(rspRead - PointerSize);
 
         // Put args onto stack
         foreach (var arg in arguments)
