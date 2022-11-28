@@ -28,4 +28,6 @@ public interface IFunctionContext : IFunctionCaller
     ///     using the Display Table.
     /// </summary>
     public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value);
+
+    protected internal CodeTreeValueNode GetIndirectVariableLocation(IFunctionVariable variable);
 }

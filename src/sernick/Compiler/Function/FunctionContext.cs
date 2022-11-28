@@ -1,5 +1,3 @@
-#pragma warning disable IDE0052
-
 namespace sernick.Compiler.Function;
 
 using ControlFlowGraph.CodeTree;
@@ -33,7 +31,7 @@ public sealed class FunctionContext : IFunctionContext
     private readonly bool _valueIsReturned;
 
     // Maps accesses to registers/memory
-    private readonly Dictionary<IFunctionVariable, CodeTreeValueNode> _localVariableLocation;
+    private readonly Dictionary<IFunctionVariable, VariableLocation> _localVariableLocation;
     private int _localsOffset;
     private CodeTreeValueNode? _displayEntry;
     private readonly Register _oldDisplayValReg;
@@ -45,7 +43,7 @@ public sealed class FunctionContext : IFunctionContext
         bool returnsValue
         )
     {
-        _localVariableLocation = new Dictionary<IFunctionVariable, CodeTreeValueNode>(ReferenceEqualityComparer.Instance);
+        _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
         _parentContext = parent;
         _functionParameters = parameters;
         _valueIsReturned = returnsValue;
@@ -59,7 +57,7 @@ public sealed class FunctionContext : IFunctionContext
         var argNum = 0;
         foreach (var param in _functionParameters)
         {
-            _localVariableLocation.Add(param, fistArgOffset - PointerSize * argNum);
+            _localVariableLocation.Add(param, new MemoryLocation(-(fistArgOffset - PointerSize * argNum)));
             argNum += 1;
         }
     }
@@ -68,11 +66,11 @@ public sealed class FunctionContext : IFunctionContext
         if (usedElsewhere)
         {
             _localsOffset += PointerSize;
-            _localVariableLocation.Add(variable, _localsOffset);
+            _localVariableLocation.Add(variable, new MemoryLocation(_localsOffset));
         }
         else
         {
-            _localVariableLocation.Add(variable, new RegisterRead(new Register()));
+            _localVariableLocation.Add(variable, new RegisterLocation());
         }
     }
 
@@ -218,18 +216,77 @@ public sealed class FunctionContext : IFunctionContext
         return result;
     }
 
-    public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable)
-    {
-        throw new NotImplementedException();
-    }
+    public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable) =>
+        _localVariableLocation.TryGetValue(variable, out var location)
+            ? location.GenerateRead()
+            : new MemoryRead(GetParentsIndirectVariableLocation(variable));
 
-    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value)
-    {
-        throw new NotImplementedException();
-    }
+    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value) =>
+        _localVariableLocation.TryGetValue(variable, out var location)
+            ? location.GenerateWrite(value)
+            : new MemoryWrite(GetParentsIndirectVariableLocation(variable), value);
 
     public void SetDisplayAddress(CodeTreeValueNode displayAddress)
     {
         _displayEntry = displayAddress + PointerSize * Depth;
     }
+
+    CodeTreeValueNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
+    {
+        if (!_localVariableLocation.TryGetValue(variable, out var local))
+        {
+            // If variable isn't in this context then it should be is the context of some ancestor.
+            return _parentContext?.GetIndirectVariableLocation(variable) ??
+                   throw new ArgumentException("Variable is undefined");
+        }
+
+        if (_displayEntry == null)
+        {
+            throw new Exception("DisplayAddress should be set before generating code");
+        }
+
+        if (local is not MemoryLocation localMemory)
+        {
+            throw new ArgumentException(
+                "Variable was added with usedElsewhere=false and can't be accessed indirectly",
+                nameof(variable));
+        }
+
+        return Mem(_displayEntry).Read() - localMemory.Offset;
+    }
+
+    private CodeTreeValueNode GetParentsIndirectVariableLocation(IFunctionVariable variable)
+    {
+        if (_parentContext == null)
+        {
+            // Get indirect location from ancestors' contexts or throw an error if variable wasn't defined in any context.
+            throw new ArgumentException("Variable is undefined");
+        }
+
+        return _parentContext.GetIndirectVariableLocation(variable);
+    }
+}
+
+internal abstract record VariableLocation
+{
+    public abstract CodeTreeValueNode GenerateRead();
+    public abstract CodeTreeNode GenerateWrite(CodeTreeValueNode value);
+}
+
+internal record MemoryLocation(CodeTreeValueNode Offset) : VariableLocation
+{
+    private readonly CodeTreeValueNode _directLocation = Reg(HardwareRegister.RBP).Read() - Offset;
+    public override CodeTreeValueNode GenerateRead() => new MemoryRead(_directLocation);
+
+    public override CodeTreeNode GenerateWrite(CodeTreeValueNode value) => new MemoryWrite(_directLocation, value);
+}
+
+internal record RegisterLocation : VariableLocation
+{
+    private readonly Register _register = new();
+    public override CodeTreeValueNode GenerateRead() =>
+        new RegisterRead(_register);
+
+    public override CodeTreeNode GenerateWrite(CodeTreeValueNode value) =>
+        new RegisterWrite(_register, value);
 }
