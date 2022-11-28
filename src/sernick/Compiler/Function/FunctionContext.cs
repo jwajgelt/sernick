@@ -53,11 +53,7 @@ public sealed class FunctionContext : IFunctionContext
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _oldDisplayValReg = new Register();
 
-        Depth = 0;
-        if (parent != null)
-        {
-            Depth = parent.Depth + 1;
-        }
+        Depth = (parent?.Depth ?? -1) + 1;
 
         var fistArgOffset = PointerSize * (1 + _functionParameters.Count);
         var argNum = 0;
