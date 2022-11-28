@@ -211,21 +211,21 @@ public class AstToCfgConversionTest
 
         _ = Program
         (
-            Fun<IntType>("f1").Parameter<IntType>("p1").Body
+            Fun<IntType>("f1").Parameter<IntType>("p1", out var paramP1).Body
             (
                 Var<IntType>("v1", Value("p1")),
 
-                Fun<IntType>("f2").Parameter<IntType>("p2").Body
+                Fun<IntType>("f2").Parameter<IntType>("p2", out var paramP2).Body
                 (
                     Var<IntType>("v2", "v1".Plus("p2")),
                     "v1".Assign("v1".Plus("v2")),
 
-                    Fun<IntType>("f3").Parameter<IntType>("p3").Body
+                    Fun<IntType>("f3").Parameter<IntType>("p3", out var paramP3).Body
                     (
                         Var<IntType>("v3", "v1".Plus("v2").Plus("p3")),
                         "v2".Assign("v2".Plus("v3")),
 
-                        Fun<IntType>("f4").Parameter<IntType>("p4").Body
+                        Fun<IntType>("f4").Parameter<IntType>("p4", out var paramP4).Body
                         (
                             Var<IntType>("v4", "v1".Plus("v2").Plus("v3").Plus("p4")),
                             "v1".Assign(Value("v4")),
@@ -244,7 +244,56 @@ public class AstToCfgConversionTest
             "f1".Call().Argument(Literal(1))
         );
 
-        // TODO O_O
+        var V1 = Mem(displayAddress); // TODO update this
+        var V2 = Mem(displayAddress); // TODO update this
+        var V3 = Mem(displayAddress); // TODO update this
+        var V4 = Mem(displayAddress); // TODO update this
+        var P1 = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var P2 = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var P3 = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var P4 = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var f1Context = funFactory.CreateFunction(null, new IFunctionParam[] { paramP1 }, true);
+        var f2Context = funFactory.CreateFunction(null, new IFunctionParam[] { paramP2 }, true);
+        var f3Context = funFactory.CreateFunction(null, new IFunctionParam[] { paramP3 }, true);
+        var f4Context = funFactory.CreateFunction(null, new IFunctionParam[] { paramP4 }, true);
+
+        var f1Call = f1Context.GenerateCall(new[] { new Constant(new RegisterValue(1)) });
+        var f2Callv1 = f2Context.GenerateCall(new[] { V1.Value });
+        var f3Call = f2Context.GenerateCall(new[] { V2.Value });
+        var f4Call = f2Context.GenerateCall(new[] { V3.Value });
+        var f2Callv3 = f2Context.GenerateCall(new[] { V3.Value });
+        
+        var f4Ret = new SingleExitNode(null, new[] { f2Callv3.ResultLocation! });
+        var f2Callv3Tree = new SingleExitNode(f4Ret, f2Callv3.CodeGraph);
+        var v1v4 = new SingleExitNode(f2Callv3Tree, new[] { V1.Write(V4.Value) });
+        var v4 = new SingleExitNode(v1v4, new[] { V4.Write(V1.Value + V2.Value + V3.Value + P4.Value )});
+        
+        var f3Ret = new SingleExitNode(null, new[] { f4Call.ResultLocation! });
+        var f4CallTree = new SingleExitNode(f3Ret, f4Call.CodeGraph);
+        var v2Plusv3 = new SingleExitNode(f4CallTree, new[] { V2.Write(V2.Value + V3.Value) });
+        var v3 = new SingleExitNode(v2Plusv3, new[] { V3.Write(V1.Value + V2.Value + P3.Value )});
+        
+        var f2Ret = new SingleExitNode(null, new[] { f3Call.ResultLocation! });
+        var f3CallTree = new SingleExitNode(f2Ret, f3Call.CodeGraph);
+        var v1Plusv2 = new SingleExitNode(f3CallTree, new[] { V1.Write(V1.Value + V2.Value) });
+        var v2 = new SingleExitNode(v1Plusv2, new[] { V2.Write(V1.Value + P2.Value)});
+        
+        var f1Ret = new SingleExitNode(null, new[] { f2Callv1.ResultLocation! });
+        var f2Callv1Tree = new SingleExitNode(f1Ret, f2Callv1.CodeGraph);
+        var v1 = new SingleExitNode(f2Callv1Tree, new[] { V1.Write(P1.Value)});
+
+        var f1CallTree = new SingleExitNode(null, f1Call.CodeGraph);
+
+        var expected = new List<CodeTreeRoot> {
+            f1CallTree,
+            v1,f2Callv1Tree,f1Ret,
+            v2,v1Plusv2,f3CallTree,f2Ret,
+            v3,v2Plusv3,f4CallTree,f3Ret,
+            v4,v1v4,f2Callv3Tree,f4Ret
+        };
     }
 
     [Fact]
