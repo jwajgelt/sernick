@@ -3,6 +3,7 @@
 namespace sernick.Compiler.Function;
 
 using ControlFlowGraph.CodeTree;
+using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 
 public sealed class FunctionContext : IFunctionContext
 {
@@ -50,7 +51,7 @@ public sealed class FunctionContext : IFunctionContext
         _valueIsReturned = returnsValue;
         _localsOffset = 0;
         _contextId = contextId;
-        _registerToTemporaryMap = calleeToSave.ToDictionary(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
+        _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
 
         var fistArgOffset = PointerSize * (1 + _functionParameters.Count);
         var argNum = 0;
