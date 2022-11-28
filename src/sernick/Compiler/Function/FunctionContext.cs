@@ -83,8 +83,7 @@ public sealed class FunctionContext : IFunctionContext
         {
             var tempReg = new Register();
             callerSavedMap[reg] = tempReg;
-            var regVal = new RegisterRead(reg);
-            operations.Add(new RegisterWrite(tempReg, regVal));
+            operations.Add(Reg(tempReg).Write(Reg(reg).Read()));
         }
 
         Register rsp = HardwareRegister.RSP;
