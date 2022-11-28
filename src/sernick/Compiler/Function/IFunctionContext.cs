@@ -9,6 +9,8 @@ public interface IFunctionContext : IFunctionCaller
 
     public IReadOnlyList<SingleExitNode> GenerateEpilogue();
 
+    public int GetDepth();
+
     /// <summary>
     ///     If variable is local then generates either memory read or register read
     ///     depending on whether the variable is stored on the stack or in registers.

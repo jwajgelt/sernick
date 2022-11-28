@@ -36,7 +36,7 @@ public sealed class FunctionContext : IFunctionContext
     private readonly Dictionary<IFunctionVariable, CodeTreeValueNode> _localVariableLocation;
     private int _localsOffset;
     private CodeTreeValueNode? _displayEntry;
-    private readonly int _contextId;
+    private readonly int _lexicalDepth;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
     public FunctionContext(
         IFunctionContext? parent,
@@ -50,8 +50,13 @@ public sealed class FunctionContext : IFunctionContext
         _functionParameters = parameters;
         _valueIsReturned = returnsValue;
         _localsOffset = 0;
-        _contextId = contextId;
+        _lexicalDepth = 0;
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
+
+        if (parent != null)
+        {
+            _lexicalDepth = parent.GetDepth() + 1;
+        }
 
         var fistArgOffset = PointerSize * (1 + _functionParameters.Count);
         var argNum = 0;
@@ -73,6 +78,8 @@ public sealed class FunctionContext : IFunctionContext
             _localVariableLocation.Add(variable, new RegisterRead(new Register()));
         }
     }
+
+    public int GetDepth() => _lexicalDepth;
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
     {
@@ -217,6 +224,6 @@ public sealed class FunctionContext : IFunctionContext
 
     public void SetDisplayAddress(CodeTreeValueNode displayAddress)
     {
-        _displayEntry = displayAddress + PointerSize * _contextId;
+        _displayEntry = displayAddress + PointerSize * _lexicalDepth;
     }
 }

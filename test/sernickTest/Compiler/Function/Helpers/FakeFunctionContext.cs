@@ -31,6 +31,11 @@ public sealed class FakeFunctionContext : IFunctionContext
         return new FakeVariableWrite(variable, value);
     }
 
+    public int GetDepth()
+    {
+        throw new NotImplementedException();
+    }
+
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
     {
         throw new NotImplementedException();
