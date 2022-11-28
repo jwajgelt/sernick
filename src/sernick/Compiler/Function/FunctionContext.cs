@@ -214,9 +214,11 @@ public sealed class FunctionContext : IFunctionContext
         foreach (var tree in trees)
         {
             var treeRoot = new SingleExitNode(nextRoot, new List<CodeTreeNode> { tree });
+            result.Add(treeRoot);
             nextRoot = treeRoot;
         }
 
+        result.Reverse();
         return result;
     }
 
