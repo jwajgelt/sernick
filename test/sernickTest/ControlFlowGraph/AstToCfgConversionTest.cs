@@ -30,11 +30,10 @@ public class AstToCfgConversionTest
         var B = Reg(new Register());
         var C = Reg(new Register());
 
-        var c = new SingleExitNode(null, C.Write(A.Value + B.Value));
-        var b = new SingleExitNode(c, B.Write(2));
-        var a = new SingleExitNode(b, A.Write(1));
+        var c = new SingleExitNode(null, new[] { C.Write(A.Value + B.Value) });
+        var ab = new SingleExitNode(c, new[] { A.Write(1), B.Write(2) });
 
-        var expected = new List<CodeTreeRoot> {a,b,c};
+        var expected = new List<CodeTreeRoot> {ab,c};
     }
 
     [Fact]
@@ -59,16 +58,13 @@ public class AstToCfgConversionTest
         var A = Reg(new Register());
         var B = Reg(new Register());
 
-        var b4 = new SingleExitNode(null, B.Write(4));
-        var a3 = new SingleExitNode(null, A.Write(3));
-        var cond = new SingleExitNode(null, new BinaryOperationNode(
-            BinaryOperation.Equal, A.Value, B.Value
-        ));
+        var b4 = new SingleExitNode(null, new[] { B.Write(4) });
+        var a3 = new SingleExitNode(null, new[] { A.Write(3) });
+        var cond = new BinaryOperationNode(BinaryOperation.Equal, A.Value, B.Value);
         var ifBlock = new ConditionalJumpNode(a3, b4, cond);
-        var b2 = new SingleExitNode(ifBlock, B.Write(2));
-        var a1 = new SingleExitNode(b2, A.Write(1));
+        var ab = new SingleExitNode(ifBlock, new[] { A.Write(1), B.Write(2) });
 
-        var expected = new List<CodeTreeRoot> {a1,b2,ifBlock,cond,a3,b4};
+        var expected = new List<CodeTreeRoot> {ab,ifBlock,a3,b4};
     }
 
     [Fact]
@@ -104,13 +100,12 @@ public class AstToCfgConversionTest
         var fCallInner2 = fContext.GenerateCall(new[] { N.Value - 2 });
 
         var fCallTree = new SingleExitNode(null, fCall.CodeGraph);
-        var fCallInner1Tree = new SingleExitNode(null, fCallInner1.CodeGraph);
-        var fCallInner2Tree = new SingleExitNode(null, fCallInner2.CodeGraph);
-        var retF = new SingleExitNode(null, (RegisterRead)fCallInner1.ResultLocation + (RegisterRead)fCallInner2.ResultLocation);
-        var ret1 = new SingleExitNode(null, 1);
-        var ifBlock = new ConditionalJumpNode(ret1, retF, N.Value <= 1);
+        var retF = new SingleExitNode(null, new[] { fCallInner1.ResultLocation + fCallInner2.ResultLocation });
+        var fCallsInner = new SingleExitNode(retF, fCallInner1.CodeGraph.Concat(fCallInner2.CodeGraph).ToList());
+        var ret1 = new SingleExitNode(null, new[] { new Constant(new RegisterValue(1)) });
+        var ifBlock = new ConditionalJumpNode(ret1, fCallsInner, N.Value <= 1);
 
-        var expected = new List<CodeTreeRoot> {fCallTree,ifBlock,ret1,retF,fCallInner1Tree,fCallInner2Tree};
+        var expected = new List<CodeTreeRoot> {fCallTree,ifBlock,ret1,fCallsInner,retF};
     }
 
     [Fact]
@@ -135,9 +130,7 @@ public class AstToCfgConversionTest
 
         var X = Reg(new Register());
 
-        var cond = new SingleExitNode(null, new BinaryOperationNode(
-            BinaryOperation.Equal, X.Value, 10
-        ));
+        var cond = new BinaryOperationNode(BinaryOperation.Equal, X.Value, 10);
 
         // TODO loop
 
@@ -177,12 +170,11 @@ public class AstToCfgConversionTest
         var gCall1 = gContext.GenerateCall(new[] { X.Value - 1 });
         var gCall2 = gContext.GenerateCall(new[] { X.Value - 2 });
 
-        var gRet = new SingleExitNode(null, Y.Value + Y.Value);
-        var gCall1Tree = new SingleExitNode(null, gCall1.CodeGraph);
-        var gCall2Tree = new SingleExitNode(null, gCall2.CodeGraph);
-        var fRet = new SingleExitNode(null, (RegisterRead)gCall1.ResultLocation + (RegisterRead)gCall2.ResultLocation);
+        var gRet = new SingleExitNode(null, new[] { Y.Value + Y.Value });
+        var fRet = new SingleExitNode(null, new[] { gCall1.ResultLocation + gCall2.ResultLocation });
+        var gCalls = new SingleExitNode(fRet, gCall1.CodeGraph.Concat(gCall2.CodeGraph).ToList());
 
-        var expected = new List<CodeTreeRoot> {fRet,gCall1Tree,gCall2Tree,gRet};
+        var expected = new List<CodeTreeRoot> {gCalls,fRet,gRet};
     }
 
     [Fact]
@@ -274,7 +266,7 @@ public class AstToCfgConversionTest
             .Parameter<IntType>("y", Literal(2), out var paramY)
             .Body
             (
-                Fun<IntType>("g").Parameter("z", Literal(3), out var paramZ).Body
+                Fun<IntType>("g").Parameter<IntType>("z", Literal(3), out var paramZ).Body
                 (
                     Return(Value("z"))
                 ),
@@ -296,9 +288,9 @@ public class AstToCfgConversionTest
         var gCall = gContext.GenerateCall(new[] { new Constant(new RegisterValue(3)) });
         
         var fCallTree = new SingleExitNode(null, fCall.CodeGraph);
-        var gCallTree = new SingleExitNode(null, gCall.CodeGraph);
-        var fRet = new SingleExitNode(null, X.Value + Y.Value + (RegisterRead)gCall.ResultLocation); // TODO fix: call is not a value
-        var gRet = new SingleExitNode(null, Z.Value);
+        var fRet = new SingleExitNode(null, new[] { X.Value + Y.Value + gCall.ResultLocation });
+        var gCallTree = new SingleExitNode(fRet, gCall.CodeGraph);
+        var gRet = new SingleExitNode(null, new[] { Z.Value });
 
         var expected = new List<CodeTreeRoot> {fRet,gRet,fCallTree,gCallTree};
     }
@@ -344,12 +336,12 @@ public class AstToCfgConversionTest
         var fCall = fContext.GenerateCall(new CodeTreeNode[] {});
         var gCall = gContext.GenerateCall(new CodeTreeNode[] {});
 
-        var gCallTree = new SingleExitNode(null, gCall.CodeGraph);
-        var fRet = new SingleExitNode(null, (RegisterRead)gCall.ResultLocation + Xf.Value); // TODO fix: call is not a value
-        var x1 = new SingleExitNode(fRet, Xf.Write(1));
-        var gRet = new SingleExitNode(null, Xg.Value);
-        var xxx = new SingleExitNode(gRet, Xg.Write(Xg.Value + Xg.Value));
-        var x2 = new SingleExitNode(xxx, Xg.Write(2));
+        var fRet = new SingleExitNode(null, new[] { gCall.ResultLocation + Xf.Value }); // TODO fix: call is not a value
+        var gCallTree = new SingleExitNode(fRet, gCall.CodeGraph);
+        var x1 = new SingleExitNode(gCallTree, new[] { Xf.Write(1) });
+        var gRet = new SingleExitNode(null, new[] { Xg.Value });
+        var xxx = new SingleExitNode(gRet, new[] { Xg.Write(Xg.Value + Xg.Value) });
+        var x2 = new SingleExitNode(xxx, new[] { Xg.Write(2) });
 
         var expected = new List<CodeTreeRoot> {x1,gCallTree,fRet,x2,xxx,gRet};
     }
@@ -484,14 +476,14 @@ public class AstToCfgConversionTest
         var fCallInH = fContext.GenerateCall(new CodeTreeNode[] { new Constant(new RegisterValue(1)) });
 
         var fCallInMainTree = new SingleExitNode(null, fCallInMain.CodeGraph);
-        var x1 = new SingleExitNode(fCallInMainTree, X.Write(1));
+        var x1 = new SingleExitNode(fCallInMainTree, new[] { X.Write(1) });
         var gCallTree = new SingleExitNode(null, gCall.CodeGraph);
         var hCallTree = new SingleExitNode(null, hCall.CodeGraph);
         var ifBlock = new ConditionalJumpNode(gCallTree, hCallTree, V.Value);
         var fCallInHTree = new SingleExitNode(null, fCallInH.CodeGraph);
-        var xMinus1 = new SingleExitNode(fCallInHTree, X.Write(X.Value - 1));
+        var xMinus1 = new SingleExitNode(fCallInHTree, new[] { X.Write(X.Value - 1) });
         var fCallInGTree = new SingleExitNode(null, fCallInG.CodeGraph);
-        var xPlus1 = new SingleExitNode(fCallInGTree, X.Write(X.Value + 1));
+        var xPlus1 = new SingleExitNode(fCallInGTree, new[] { X.Write(X.Value + 1) });
 
         var expected = new List<CodeTreeRoot> {x1,fCallInMainTree,ifBlock,gCallTree,xPlus1,fCallInGTree,hCallTree,xMinus1,fCallInHTree};
     }
@@ -555,21 +547,19 @@ public class AstToCfgConversionTest
         var fCall = fContext.GenerateCall(new CodeTreeNode[] { Y.Value });
         var gCall = gContext.GenerateCall(new CodeTreeNode[] { Y.Value });
 
-        var yPlus1 = new SingleExitNode(null, Y.Write(Y.Value + 1)); // TODO not null
-        var cond2 = new ConditionalJumpNode(null, yPlus1, (RegisterRead)gCall.ResultLocation);
+        var yPlus1 = new SingleExitNode(null, new[] { Y.Write(Y.Value + 1) }); // TODO not null
+        var cond2 = new ConditionalJumpNode(null, yPlus1, gCall.ResultLocation);
         var gCallTree = new SingleExitNode(cond2, gCall.CodeGraph);
-        var cond1 = new ConditionalJumpNode(null, gCallTree, (RegisterRead)fCall.ResultLocation);
+        var cond1 = new ConditionalJumpNode(null, gCallTree, fCall.ResultLocation);
         var fCallTree = new SingleExitNode(cond1, fCall.CodeGraph);
         // TODO not sure how loops are supposed to work
-        var y0 = new SingleExitNode(cond1, Y.Write(0));
-        var x1 = new SingleExitNode(y0, X.Write(1));
+        var xy = new SingleExitNode(cond1, new CodeTreeNode[] { X.Write(1), Y.Write(0) });
         
-        var gRet = new SingleExitNode(null, Vg.Value <= X.Value);
-        var xPlus1InG = new SingleExitNode(gRet, X.Write(X.Value + 1));
-        var fRet = new SingleExitNode(null, Vf.Value <= 5);
-        var xPlus1InF = new SingleExitNode(fRet, X.Write(X.Value + 1));
+        var gRet = new SingleExitNode(null, new[] { Vg.Value <= X.Value });
+        var xPlus1InG = new SingleExitNode(gRet, new[] { X.Write(X.Value + 1) });
+        var fRet = new SingleExitNode(null, new CodeTreeNode[] { X.Write(X.Value + 1), Vf.Value <= 5 });
 
-        var expected = new List<CodeTreeRoot> {x1,y0,fCallTree,cond1,gCallTree,cond2,yPlus1,xPlus1InF,fRet,xPlus1InG,gRet};
+        var expected = new List<CodeTreeRoot> {xy,fCallTree,cond1,gCallTree,cond2,yPlus1,fRet,xPlus1InG,gRet};
     }
 
     [Fact]
@@ -631,21 +621,19 @@ public class AstToCfgConversionTest
         var fCall = fContext.GenerateCall(new CodeTreeNode[] { Y.Value });
         var gCall = gContext.GenerateCall(new CodeTreeNode[] { Y.Value });
 
-        var yPlus1 = new SingleExitNode(null, Y.Write(Y.Value + 1)); // TODO not null
-        var cond2 = new ConditionalJumpNode(null, yPlus1, (RegisterRead)gCall.ResultLocation);
+        var yPlus1 = new SingleExitNode(null, new[] { Y.Write(Y.Value + 1) }); // TODO not null
+        var cond2 = new ConditionalJumpNode(null, yPlus1, gCall.ResultLocation);
         var gCallTree = new SingleExitNode(cond2, gCall.CodeGraph);
-        var cond1 = new ConditionalJumpNode(gCallTree, yPlus1, (RegisterRead)fCall.ResultLocation);
+        var cond1 = new ConditionalJumpNode(gCallTree, yPlus1, fCall.ResultLocation);
         var fCallTree = new SingleExitNode(cond1, fCall.CodeGraph);
         // TODO not sure how loops are supposed to work
-        var y0 = new SingleExitNode(cond1, Y.Write(0));
-        var x1 = new SingleExitNode(y0, X.Write(1));
+        var xy = new SingleExitNode(cond1, new CodeTreeNode[] { X.Write(1), Y.Write(0) });
         
-        var gRet = new SingleExitNode(null, Vg.Value <= X.Value);
-        var xPlus1InG = new SingleExitNode(gRet, X.Write(X.Value + 1));
-        var fRet = new SingleExitNode(null, Vf.Value <= 5);
-        var xPlus1InF = new SingleExitNode(fRet, X.Write(X.Value + 1));
+        var gRet = new SingleExitNode(null, new[] { Vg.Value <= X.Value });
+        var xPlus1InG = new SingleExitNode(gRet, new[] { X.Write(X.Value + 1) });
+        var fRet = new SingleExitNode(null, new CodeTreeNode[] { X.Write(X.Value + 1), Vf.Value <= 5 });
 
-        var expected = new List<CodeTreeRoot> {x1,y0,fCallTree,cond1,gCallTree,cond2,yPlus1,xPlus1InF,fRet,xPlus1InG,gRet};
+        var expected = new List<CodeTreeRoot> {xy,fCallTree,cond1,gCallTree,cond2,yPlus1,fRet,xPlus1InG,gRet};
     }
 
     [Fact]
@@ -704,6 +692,7 @@ public class AstToCfgConversionTest
         var X = Mem(displayAddress);
         var Vf = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
         var Vg = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var Vh = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
         var Y = Reg(new Register());
 
         var funFactory = new FunctionFactory();
@@ -716,22 +705,20 @@ public class AstToCfgConversionTest
         var gCall = gContext.GenerateCall(new CodeTreeNode[] { Y.Value });
         var hCall = hContext.GenerateCall(new CodeTreeNode[] { Y.Value });
 
-        var yPlus1 = new SingleExitNode(null, Y.Write(Y.Value + 1)); // TODO not null
-        var cond3 = new ConditionalJumpNode(null, yPlus1, (RegisterRead)gCall.ResultLocation);
+        var yPlus1 = new SingleExitNode(null, new[] { Y.Write(Y.Value + 1) }); // TODO not null
+        var cond3 = new ConditionalJumpNode(null, yPlus1, gCall.ResultLocation);
         var hCallTree = new SingleExitNode(cond3, gCall.CodeGraph);
-        var cond2 = new ConditionalJumpNode(null, hCallTree, (RegisterRead)gCall.ResultLocation);
+        var cond2 = new ConditionalJumpNode(null, hCallTree, gCall.ResultLocation);
         var gCallTree = new SingleExitNode(cond2, gCall.CodeGraph);
-        var cond1 = new ConditionalJumpNode(gCallTree, yPlus1, (RegisterRead)fCall.ResultLocation);
+        var cond1 = new ConditionalJumpNode(gCallTree, yPlus1, fCall.ResultLocation);
         var fCallTree = new SingleExitNode(cond1, fCall.CodeGraph);
         // TODO not sure how loops are supposed to work
-        var y0 = new SingleExitNode(cond1, Y.Write(0));
-        var x1 = new SingleExitNode(y0, X.Write(1));
+        var xy = new SingleExitNode(cond1, new CodeTreeNode[] { X.Write(10), Y.Write(0) });
         
-        var gRet = new SingleExitNode(null, Vg.Value <= X.Value);
-        var xPlus1InG = new SingleExitNode(gRet, X.Write(X.Value + 1));
-        var fRet = new SingleExitNode(null, Vf.Value <= 5);
-        var xPlus1InF = new SingleExitNode(fRet, X.Write(X.Value + 1));
+        var hRet = new SingleExitNode(null, new[] { X.Value <= Vh.Value });
+        var gRet = new SingleExitNode(null, new[] { Vg.Value <= X.Value });
+        var fRet = new SingleExitNode(null, new[] { Vf.Value <= 5 });
 
-        var expected = new List<CodeTreeRoot> {x1,y0,fCallTree,cond1,gCallTree,cond2,hCallTree,cond3,yPlus1,xPlus1InF,fRet,xPlus1InG,gRet};
+        var expected = new List<CodeTreeRoot> {xy,fCallTree,cond1,gCallTree,cond2,hCallTree,cond3,yPlus1,fRet,gRet,hRet};
     }
 }
