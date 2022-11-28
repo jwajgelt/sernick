@@ -37,12 +37,12 @@ public sealed class FunctionContext : IFunctionContext
     private int _localsOffset;
     private CodeTreeValueNode? _displayEntry;
     private readonly int _lexicalDepth;
+    private readonly Register _oldDisplayValReg;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
     public FunctionContext(
         IFunctionContext? parent,
         IReadOnlyCollection<IFunctionParam> parameters,
-        bool returnsValue,
-        int contextId
+        bool returnsValue
         )
     {
         _localVariableLocation = new Dictionary<IFunctionVariable, CodeTreeValueNode>(ReferenceEqualityComparer.Instance);
@@ -52,6 +52,7 @@ public sealed class FunctionContext : IFunctionContext
         _localsOffset = 0;
         _lexicalDepth = 0;
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
+        _oldDisplayValReg = new Register();
 
         if (parent != null)
         {
@@ -154,12 +155,13 @@ public sealed class FunctionContext : IFunctionContext
         // Set new RBP value
         operations.Add(new RegisterWrite(rbp, rspRead));
 
-        // Update display entry
+        // Save and update display entry
         if (_displayEntry == null)
         {
             throw new Exception("DisplayAddress should be set before generating code");
         }
 
+        operations.Add(new RegisterWrite(_oldDisplayValReg, new MemoryRead(_displayEntry)));
         operations.Add(new MemoryWrite(_displayEntry, rbpRead));
 
         // Allocate memory for variables
@@ -194,6 +196,14 @@ public sealed class FunctionContext : IFunctionContext
 
         // Free RBP slot
         operations.Add(new RegisterWrite(rsp, rspRead + PointerSize));
+
+        // Restore old display value
+        if (_displayEntry == null)
+        {
+            throw new Exception("DisplayAddress should be set before generating code");
+        }
+
+        operations.Add(new MemoryWrite(_displayEntry, new RegisterRead(_oldDisplayValReg)));
 
         return CodeTreeListToSingleExitList(operations);
     }
