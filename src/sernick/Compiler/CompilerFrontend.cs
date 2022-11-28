@@ -1,8 +1,5 @@
 namespace sernick.Compiler;
 
-using Ast;
-using Ast.Analysis.ControlFlowGraph;
-using Ast.Analysis.FunctionCodeTreeMap;
 using Ast.Analysis.FunctionContextMap;
 using Ast.Analysis.NameResolution;
 using Ast.Analysis.VariableAccess;
@@ -39,11 +36,11 @@ public static class CompilerFrontend
         var ast = AstNode.From(parseTree);
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        _ = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
+        _ = VariableAccessMapPreprocess.Process(ast, nameResolution);
         // commented since it throws NotImplemented, and will need merging anyway
         // var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
-            // root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, SideEffectsAnalyzer.PullOutSideEffects));
+        // root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, SideEffectsAnalyzer.PullOutSideEffects));
     }
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
