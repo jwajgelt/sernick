@@ -2,14 +2,14 @@ namespace sernickTest.ControlFlowGraph;
 
 using sernick.Ast;
 using sernick.ControlFlowGraph.CodeTree;
-using Compiler.Function.Helpers;
 using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static Ast.Helpers.AstNodesExtensions;
+using sernick.Compiler.Function;
 
 public class AstToCfgConversionTest
 {
     private const int PointerSize = 8;
-    private CodeTreeNode displayAddress = new Constant(new RegisterValue(0)); // TODO idk where it is
+    private CodeTreeValueNode displayAddress = new Constant(new RegisterValue(0)); // TODO idk where it is
     // TODO call AST -> CFG conversion and compare result to what's expected
 
     [Fact]
@@ -84,7 +84,7 @@ public class AstToCfgConversionTest
 
         _ = Program
         (
-            Fun<IntType>("f").Parameter<IntType>("n").Body
+            Fun<IntType>("f").Parameter<IntType>("n", out var paramN).Body
             (
                 If("n".Leq(1)).Then(Return(1)),
                 Return("f".Call().Argument("n".Minus(1)).Get(out _)
@@ -95,22 +95,22 @@ public class AstToCfgConversionTest
 
         var N = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
 
-        var fContext = new FakeFunctionContext(); // TODO
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramN }, false);
 
-        var fCall = new SingleExitNode(null, new FunctionCall(
-            fContext, new[] { new Constant(new RegisterValue(5)) }
-        ));
-        var fCallInner1 = new SingleExitNode(null, new FunctionCall(
-            fContext, new[] { N.Value - 1 }
-        ));
-        var fCallInner2 = new SingleExitNode(null, new FunctionCall(
-            fContext, new[] { N.Value - 2 }
-        ));
-        var retF = new SingleExitNode(null, fCallInner1 + fCallInner2); // TODO fix: call is not a value
+        var fCall = fContext.GenerateCall(new[] { new Constant(new RegisterValue(5)) });
+        var fCallInner1 = fContext.GenerateCall(new[] { N.Value - 1 });
+        var fCallInner2 = fContext.GenerateCall(new[] { N.Value - 2 });
+
+        var fCallTree = new SingleExitNode(null, fCall.CodeGraph);
+        var fCallInner1Tree = new SingleExitNode(null, fCallInner1.CodeGraph);
+        var fCallInner2Tree = new SingleExitNode(null, fCallInner2.CodeGraph);
+        var retF = new SingleExitNode(null, (RegisterRead)fCallInner1.ResultLocation + (RegisterRead)fCallInner2.ResultLocation);
         var ret1 = new SingleExitNode(null, 1);
         var ifBlock = new ConditionalJumpNode(ret1, retF, N.Value <= 1);
 
-        var expected = new List<CodeTreeRoot> {fCall,ifBlock,ret1,retF,fCallInner1,fCallInner2};
+        var expected = new List<CodeTreeRoot> {fCallTree,ifBlock,ret1,retF,fCallInner1Tree,fCallInner2Tree};
     }
 
     [Fact]
@@ -156,9 +156,9 @@ public class AstToCfgConversionTest
 
         _ = Program
         (
-            Fun<IntType>("f").Parameter<IntType>("x").Body
+            Fun<IntType>("f").Parameter<IntType>("x", out var paramX).Body
             (
-                Fun<IntType>("g").Parameter<IntType>("y").Body
+                Fun<IntType>("g").Parameter<IntType>("y", out var paramY).Body
                 (
                     Return("y".Plus("y"))
                 ),
@@ -169,19 +169,20 @@ public class AstToCfgConversionTest
         var X = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
         var Y = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize); // TODO ? rbp changes so this should be correct
 
-        var fContext = new FakeFunctionContext(); // TODO
-        var gContext = new FakeFunctionContext(); // TODO
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramX }, false);
+        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramY }, false);
+
+        var gCall1 = gContext.GenerateCall(new[] { X.Value - 1 });
+        var gCall2 = gContext.GenerateCall(new[] { X.Value - 2 });
 
         var gRet = new SingleExitNode(null, Y.Value + Y.Value);
-        var gX = new SingleExitNode(null, new FunctionCall(
-            gContext, new[] { X.Value }
-        ));
-        var gX1 = new SingleExitNode(null, new FunctionCall(
-            gContext, new[] { X.Value + 1 }
-        ));
-        var fRet = new SingleExitNode(null, gX + gX1); // TODO fix: call is not a value
+        var gCall1Tree = new SingleExitNode(null, gCall1.CodeGraph);
+        var gCall2Tree = new SingleExitNode(null, gCall2.CodeGraph);
+        var fRet = new SingleExitNode(null, (RegisterRead)gCall1.ResultLocation + (RegisterRead)gCall2.ResultLocation);
 
-        var expected = new List<CodeTreeRoot> {fRet,gX,gX1,gRet};
+        var expected = new List<CodeTreeRoot> {fRet,gCall1Tree,gCall2Tree,gRet};
     }
 
     [Fact]
@@ -268,9 +269,12 @@ public class AstToCfgConversionTest
 
         _ = Program
         (
-            Fun<IntType>("f").Parameter("x", 1).Parameter("y", 2).Body
+            Fun<IntType>("f")
+            .Parameter<IntType>("x", Literal(1), out var paramX)
+            .Parameter<IntType>("y", Literal(2), out var paramY)
+            .Body
             (
-                Fun<IntType>("g").Parameter("z", 3).Body
+                Fun<IntType>("g").Parameter("z", Literal(3), out var paramZ).Body
                 (
                     Return(Value("z"))
                 ),
@@ -283,19 +287,20 @@ public class AstToCfgConversionTest
         var Y = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
         var Z = Mem(Reg(HardwareRegister.RBP).Value + 3*PointerSize);
 
-        var fContext = new FakeFunctionContext(); // TODO
-        var gContext = new FakeFunctionContext(); // TODO
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramX, paramY }, false);
+        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramZ }, false);
 
-        var fCall = new SingleExitNode(null, new FunctionCall(
-            fContext, new[] { new Constant(new RegisterValue(3)), new Constant(new RegisterValue(2)) }
-        ));
-        var gCall = new SingleExitNode(null, new FunctionCall(
-            gContext, new[] { new Constant(new RegisterValue(3)) }
-        ));
-        var fRet = new SingleExitNode(null, X.Value + Y.Value + gCall); // TODO fix: call is not a value
+        var fCall = fContext.GenerateCall(new[] { new Constant(new RegisterValue(3)), new Constant(new RegisterValue(2)) });
+        var gCall = gContext.GenerateCall(new[] { new Constant(new RegisterValue(3)) });
+        
+        var fCallTree = new SingleExitNode(null, fCall.CodeGraph);
+        var gCallTree = new SingleExitNode(null, gCall.CodeGraph);
+        var fRet = new SingleExitNode(null, X.Value + Y.Value + (RegisterRead)gCall.ResultLocation); // TODO fix: call is not a value
         var gRet = new SingleExitNode(null, Z.Value);
 
-        var expected = new List<CodeTreeRoot> {fRet,gRet,fCall,gCall};
+        var expected = new List<CodeTreeRoot> {fRet,gRet,fCallTree,gCallTree};
     }
 
     [Fact]
@@ -331,19 +336,22 @@ public class AstToCfgConversionTest
         var Xf = Reg(new Register());
         var Xg = Reg(new Register());
 
-        var fContext = new FakeFunctionContext(); // TODO
-        var gContext = new FakeFunctionContext(); // TODO
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
 
-        var gCall = new SingleExitNode(null, new FunctionCall(
-            gContext, new CodeTreeNode[] {}
-        ));
-        var fRet = new SingleExitNode(null, gCall + Xf.Value); // TODO fix: call is not a value
+        var fCall = fContext.GenerateCall(new CodeTreeNode[] {});
+        var gCall = gContext.GenerateCall(new CodeTreeNode[] {});
+
+        var gCallTree = new SingleExitNode(null, gCall.CodeGraph);
+        var fRet = new SingleExitNode(null, (RegisterRead)gCall.ResultLocation + Xf.Value); // TODO fix: call is not a value
         var x1 = new SingleExitNode(fRet, Xf.Write(1));
         var gRet = new SingleExitNode(null, Xg.Value);
         var xxx = new SingleExitNode(gRet, Xg.Write(Xg.Value + Xg.Value));
         var x2 = new SingleExitNode(xxx, Xg.Write(2));
 
-        var expected = new List<CodeTreeRoot> {x1,gCall,fRet,x2,xxx,gRet};
+        var expected = new List<CodeTreeRoot> {x1,gCallTree,fRet,x2,xxx,gRet};
     }
 
     [Fact]
@@ -392,25 +400,24 @@ public class AstToCfgConversionTest
             "f".Call()
         );
 
-        var fContext = new FakeFunctionContext(); // TODO
-        var gContext = new FakeFunctionContext(); // TODO
-        var hContext = new FakeFunctionContext(); // TODO
-        var zContext = new FakeFunctionContext(); // TODO
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var hContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var zContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
 
-        var fCall = new SingleExitNode(null, new FunctionCall(
-            fContext, new CodeTreeNode[] {}
-        ));
-        var gCall = new SingleExitNode(null, new FunctionCall(
-            gContext, new CodeTreeNode[] {}
-        ));
-        var hCall = new SingleExitNode(null, new FunctionCall(
-            hContext, new CodeTreeNode[] {}
-        ));
-        var zCall = new SingleExitNode(null, new FunctionCall(
-            zContext, new CodeTreeNode[] {}
-        ));
+        var fCall = fContext.GenerateCall(new CodeTreeNode[] {});
+        var gCall = gContext.GenerateCall(new CodeTreeNode[] {});
+        var hCall = gContext.GenerateCall(new CodeTreeNode[] {});
+        var zCall = gContext.GenerateCall(new CodeTreeNode[] {});
 
-        var expected = new List<CodeTreeRoot> {fCall,gCall,hCall,zCall};
+        var fCallTree = new SingleExitNode(null, fCall.CodeGraph);
+        var gCallTree = new SingleExitNode(null, gCall.CodeGraph);
+        var hCallTree = new SingleExitNode(null, hCall.CodeGraph);
+        var zCallTree = new SingleExitNode(null, zCall.CodeGraph);
+
+        var expected = new List<CodeTreeRoot> {fCallTree,gCallTree,hCallTree,zCallTree};
     }
 
     [Fact]
@@ -441,7 +448,7 @@ public class AstToCfgConversionTest
         _ = Program
         (
             Var("x", 1),
-            Fun<UnitType>("f").Parameter<BoolType>("v").Body
+            Fun<UnitType>("f").Parameter<BoolType>("v", out var paramV).Body
             (
                 Fun<UnitType>("g").Body
                 (
@@ -461,34 +468,32 @@ public class AstToCfgConversionTest
             "f".Call().Argument(Literal(true))
         );
 
-        var fContext = new FakeFunctionContext(); // TODO
-        var gContext = new FakeFunctionContext(); // TODO
-        var hContext = new FakeFunctionContext(); // TODO
-
         var X = Mem(displayAddress);
         var V = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
 
-        var fCallInMain = new SingleExitNode(null, new FunctionCall(
-            fContext, new[] { new Constant(new RegisterValue(1)) }
-        ));
-        var x1 = new SingleExitNode(fCallInMain, X.Write(1));
-        var gCall = new SingleExitNode(null, new FunctionCall(
-            gContext, new CodeTreeNode[] {}
-        ));
-        var hCall = new SingleExitNode(null, new FunctionCall(
-            hContext, new CodeTreeNode[] {}
-        ));
-        var ifBlock = new ConditionalJumpNode(gCall, hCall, V.Value);
-        var fCallInH = new SingleExitNode(null, new FunctionCall(
-            fContext, new[] { new Constant(new RegisterValue(1)) }
-        ));
-        var xMinus1 = new SingleExitNode(fCallInH, X.Write(X.Value - 1));
-        var fCallInG = new SingleExitNode(null, new FunctionCall(
-            fContext, new[] { new Constant(new RegisterValue(0)) }
-        ));
-        var xPlus1 = new SingleExitNode(fCallInG, X.Write(X.Value + 1));
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramV }, false);
+        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var hContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
 
-        var expected = new List<CodeTreeRoot> {x1,fCallInMain,ifBlock,gCall,xPlus1,fCallInG,hCall,xMinus1,fCallInH};
+        var fCallInMain = fContext.GenerateCall(new CodeTreeNode[] { new Constant(new RegisterValue(1)) });
+        var gCall = gContext.GenerateCall(new CodeTreeNode[] {});
+        var hCall = hContext.GenerateCall(new CodeTreeNode[] {});
+        var fCallInG = fContext.GenerateCall(new CodeTreeNode[] { new Constant(new RegisterValue(0)) });
+        var fCallInH = fContext.GenerateCall(new CodeTreeNode[] { new Constant(new RegisterValue(1)) });
+
+        var fCallInMainTree = new SingleExitNode(null, fCallInMain.CodeGraph);
+        var x1 = new SingleExitNode(fCallInMainTree, X.Write(1));
+        var gCallTree = new SingleExitNode(null, gCall.CodeGraph);
+        var hCallTree = new SingleExitNode(null, hCall.CodeGraph);
+        var ifBlock = new ConditionalJumpNode(gCallTree, hCallTree, V.Value);
+        var fCallInHTree = new SingleExitNode(null, fCallInH.CodeGraph);
+        var xMinus1 = new SingleExitNode(fCallInHTree, X.Write(X.Value - 1));
+        var fCallInGTree = new SingleExitNode(null, fCallInG.CodeGraph);
+        var xPlus1 = new SingleExitNode(fCallInGTree, X.Write(X.Value + 1));
+
+        var expected = new List<CodeTreeRoot> {x1,fCallInMainTree,ifBlock,gCallTree,xPlus1,fCallInGTree,hCallTree,xMinus1,fCallInHTree};
     }
 
     [Fact]
@@ -517,12 +522,12 @@ public class AstToCfgConversionTest
         _ = Program
         (
             Var("x", 1),
-            Fun<BoolType>("f").Parameter<IntType>("v").Body
+            Fun<BoolType>("f").Parameter<IntType>("v", out var paramF).Body
             (
                 "x".Assign("x".Plus(1)),
                 Return("v".Leq(5))
             ),
-            Fun<BoolType>("g").Parameter<IntType>("v").Body
+            Fun<BoolType>("g").Parameter<IntType>("v", out var paramG).Body
             (
                 "x".Assign("x".Plus(1)),
                 Return("v".Leq("x"))
@@ -542,16 +547,19 @@ public class AstToCfgConversionTest
         var Vg = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
         var Y = Reg(new Register());
 
-        var fContext = new FakeFunctionContext(); // TODO
-        var gContext = new FakeFunctionContext(); // TODO
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramF }, false);
+        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramG }, false);
+
+        var fCall = fContext.GenerateCall(new CodeTreeNode[] { Y.Value });
+        var gCall = gContext.GenerateCall(new CodeTreeNode[] { Y.Value });
 
         var yPlus1 = new SingleExitNode(null, Y.Write(Y.Value + 1)); // TODO not null
-        var cond2 = new ConditionalJumpNode(null, yPlus1, new FunctionCall(
-            gContext, new[] { Y.Value }
-        ));
-        var cond1 = new ConditionalJumpNode(null, cond2, new FunctionCall(
-            fContext, new[] { Y.Value }
-        ));
+        var cond2 = new ConditionalJumpNode(null, yPlus1, (RegisterRead)gCall.ResultLocation);
+        var gCallTree = new SingleExitNode(cond2, gCall.CodeGraph);
+        var cond1 = new ConditionalJumpNode(null, gCallTree, (RegisterRead)fCall.ResultLocation);
+        var fCallTree = new SingleExitNode(cond1, fCall.CodeGraph);
         // TODO not sure how loops are supposed to work
         var y0 = new SingleExitNode(cond1, Y.Write(0));
         var x1 = new SingleExitNode(y0, X.Write(1));
@@ -561,7 +569,7 @@ public class AstToCfgConversionTest
         var fRet = new SingleExitNode(null, Vf.Value <= 5);
         var xPlus1InF = new SingleExitNode(fRet, X.Write(X.Value + 1));
 
-        var expected = new List<CodeTreeRoot> {x1,y0,cond1,cond2,yPlus1,xPlus1InF,fRet,xPlus1InG,gRet};
+        var expected = new List<CodeTreeRoot> {x1,y0,fCallTree,cond1,gCallTree,cond2,yPlus1,xPlus1InF,fRet,xPlus1InG,gRet};
     }
 
     [Fact]
@@ -590,12 +598,12 @@ public class AstToCfgConversionTest
         _ = Program
         (
             Var("x", 1),
-            Fun<BoolType>("f").Parameter<IntType>("v").Body
+            Fun<BoolType>("f").Parameter<IntType>("v", out var paramF).Body
             (
                 "x".Assign("x".Plus(1)),
                 Return("v".Leq(5))
             ),
-            Fun<BoolType>("g").Parameter<IntType>("v").Body
+            Fun<BoolType>("g").Parameter<IntType>("v", out var paramG).Body
             (
                 "x".Assign("x".Plus(1)),
                 Return("v".Leq("x"))
@@ -615,16 +623,19 @@ public class AstToCfgConversionTest
         var Vg = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
         var Y = Reg(new Register());
 
-        var fContext = new FakeFunctionContext(); // TODO
-        var gContext = new FakeFunctionContext(); // TODO
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramF }, false);
+        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramG }, false);
+
+        var fCall = fContext.GenerateCall(new CodeTreeNode[] { Y.Value });
+        var gCall = gContext.GenerateCall(new CodeTreeNode[] { Y.Value });
 
         var yPlus1 = new SingleExitNode(null, Y.Write(Y.Value + 1)); // TODO not null
-        var cond2 = new ConditionalJumpNode(null, yPlus1, new FunctionCall(
-            gContext, new[] { Y.Value }
-        ));
-        var cond1 = new ConditionalJumpNode(cond2, yPlus1, new FunctionCall(
-            fContext, new[] { Y.Value }
-        ));
+        var cond2 = new ConditionalJumpNode(null, yPlus1, (RegisterRead)gCall.ResultLocation);
+        var gCallTree = new SingleExitNode(cond2, gCall.CodeGraph);
+        var cond1 = new ConditionalJumpNode(gCallTree, yPlus1, (RegisterRead)fCall.ResultLocation);
+        var fCallTree = new SingleExitNode(cond1, fCall.CodeGraph);
         // TODO not sure how loops are supposed to work
         var y0 = new SingleExitNode(cond1, Y.Write(0));
         var x1 = new SingleExitNode(y0, X.Write(1));
@@ -634,7 +645,7 @@ public class AstToCfgConversionTest
         var fRet = new SingleExitNode(null, Vf.Value <= 5);
         var xPlus1InF = new SingleExitNode(fRet, X.Write(X.Value + 1));
 
-        var expected = new List<CodeTreeRoot> {x1,y0,cond1,cond2,yPlus1,xPlus1InF,fRet,xPlus1InG,gRet};
+        var expected = new List<CodeTreeRoot> {x1,y0,fCallTree,cond1,gCallTree,cond2,yPlus1,xPlus1InF,fRet,xPlus1InG,gRet};
     }
 
     [Fact]
@@ -665,15 +676,15 @@ public class AstToCfgConversionTest
         _ = Program
         (
             Var("x", 10),
-            Fun<BoolType>("f").Parameter<IntType>("v").Body
+            Fun<BoolType>("f").Parameter<IntType>("v", out var paramF).Body
             (
                 Return("v".Leq(5))
             ),
-            Fun<BoolType>("g").Parameter<IntType>("v").Body
+            Fun<BoolType>("g").Parameter<IntType>("v", out var paramG).Body
             (
                 Return("v".Leq("x"))
             ),
-            Fun<BoolType>("h").Parameter<IntType>("v").Body
+            Fun<BoolType>("h").Parameter<IntType>("v", out var paramH).Body
             (
                 Return("x".Leq("v"))
             ),
@@ -693,31 +704,34 @@ public class AstToCfgConversionTest
         var X = Mem(displayAddress);
         var Vf = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
         var Vg = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
-        var Vh = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
         var Y = Reg(new Register());
 
-        var fContext = new FakeFunctionContext(); // TODO
-        var gContext = new FakeFunctionContext(); // TODO
-        var hContext = new FakeFunctionContext(); // TODO
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramF }, false);
+        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramG }, false);
+        var hContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramH }, false);
+
+        var fCall = fContext.GenerateCall(new CodeTreeNode[] { Y.Value });
+        var gCall = gContext.GenerateCall(new CodeTreeNode[] { Y.Value });
+        var hCall = hContext.GenerateCall(new CodeTreeNode[] { Y.Value });
 
         var yPlus1 = new SingleExitNode(null, Y.Write(Y.Value + 1)); // TODO not null
-        var cond3 = new ConditionalJumpNode(null, yPlus1, new FunctionCall(
-            gContext, new[] { Y.Value }
-        ));
-        var cond2 = new ConditionalJumpNode(null, cond3, new FunctionCall(
-            gContext, new[] { Y.Value }
-        ));
-        var cond1 = new ConditionalJumpNode(cond2, yPlus1, new FunctionCall(
-            fContext, new[] { Y.Value }
-        ));
+        var cond3 = new ConditionalJumpNode(null, yPlus1, (RegisterRead)gCall.ResultLocation);
+        var hCallTree = new SingleExitNode(cond3, gCall.CodeGraph);
+        var cond2 = new ConditionalJumpNode(null, hCallTree, (RegisterRead)gCall.ResultLocation);
+        var gCallTree = new SingleExitNode(cond2, gCall.CodeGraph);
+        var cond1 = new ConditionalJumpNode(gCallTree, yPlus1, (RegisterRead)fCall.ResultLocation);
+        var fCallTree = new SingleExitNode(cond1, fCall.CodeGraph);
         // TODO not sure how loops are supposed to work
         var y0 = new SingleExitNode(cond1, Y.Write(0));
-        var x10 = new SingleExitNode(y0, X.Write(10));
+        var x1 = new SingleExitNode(y0, X.Write(1));
         
-        var hRet = new SingleExitNode(null, X.Value <= Vh.Value);
         var gRet = new SingleExitNode(null, Vg.Value <= X.Value);
+        var xPlus1InG = new SingleExitNode(gRet, X.Write(X.Value + 1));
         var fRet = new SingleExitNode(null, Vf.Value <= 5);
+        var xPlus1InF = new SingleExitNode(fRet, X.Write(X.Value + 1));
 
-        var expected = new List<CodeTreeRoot> {x10,y0,cond1,cond2,cond3,yPlus1,fRet,gRet,hRet};
+        var expected = new List<CodeTreeRoot> {x1,y0,fCallTree,cond1,gCallTree,cond2,hCallTree,cond3,yPlus1,xPlus1InF,fRet,xPlus1InG,gRet};
     }
 }
