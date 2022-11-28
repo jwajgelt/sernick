@@ -124,7 +124,7 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(new RegisterWrite(reg, tempVal));
         }
 
-        return new IFunctionCaller.GenerateCallResult(codeTreeListToSingleExitList(operations), returnValueLocation);
+        return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations), returnValueLocation);
     }
 
     public IReadOnlyList<SingleExitNode> GeneratePrologue()
@@ -166,7 +166,7 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(new RegisterWrite(tempReg, regVal));
         }
 
-        return codeTreeListToSingleExitList(operations);
+        return CodeTreeListToSingleExitList(operations);
     }
 
     public IReadOnlyList<SingleExitNode> GenerateEpilogue()
@@ -188,10 +188,10 @@ public sealed class FunctionContext : IFunctionContext
         // Free RBP slot
         operations.Add(new RegisterWrite(rsp, rspRead + PointerSize));
 
-        return codeTreeListToSingleExitList(operations);
+        return CodeTreeListToSingleExitList(operations);
     }
 
-    private static List<SingleExitNode> codeTreeListToSingleExitList(List<CodeTreeNode> trees)
+    private static List<SingleExitNode> CodeTreeListToSingleExitList(List<CodeTreeNode> trees)
     {
         var result = new List<SingleExitNode>();
         trees.Reverse();
