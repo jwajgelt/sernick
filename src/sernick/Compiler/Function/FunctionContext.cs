@@ -171,15 +171,8 @@ public sealed class FunctionContext : IFunctionContext
 
     public IReadOnlyList<CodeTreeNode> GenerateEpilogue()
     {
-        var operations = new List<CodeTreeNode>();
-
-        // Retrieve values of callee-saved registers
-        foreach (var reg in calleeToSave)
-        {
-            var tempReg = _registerToTemporaryMap[reg];
-            var tempVal = new RegisterRead(tempReg);
-            operations.Add(new RegisterWrite(reg, tempVal));
-        }
+        var operations = calleeToSave.Select(reg =>
+            Reg(reg).Write(Reg(_registerToTemporaryMap[reg]).Read())).ToList();
 
         var rsp = HardwareRegister.RSP;
         var rbp = HardwareRegister.RBP;
