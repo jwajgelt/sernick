@@ -1,12 +1,9 @@
 namespace sernick.Compiler.Function;
 using ControlFlowGraph.CodeTree;
 
-public abstract record FunctionVariable;
-
 public interface IFunctionContext : IFunctionCaller
 {
-    // Do we need this?
-    public void AddLocal(FunctionVariable variable, bool usedElsewhere);
+    public void AddLocal(IFunctionVariable variable, bool usedElsewhere);
 
     public RegisterWrite? ResultVariable { get; set; }
 
@@ -14,11 +11,21 @@ public interface IFunctionContext : IFunctionCaller
 
     public IReadOnlyList<CodeTreeNode> GenerateEpilogue();
 
-    public CodeTreeNode GenerateRegisterRead(CodeTreeNode variable, bool direct);
+    /// <summary>
+    ///     If variable is local then generates either memory read or register read
+    ///     depending on whether the variable is stored on the stack or in registers.
+    ///     <br/>
+    ///     If variable isn't in the function's scope then generates memory read
+    ///     using the Display Table.
+    /// </summary>
+    public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable);
 
-    public CodeTreeNode GenerateRegisterWrite(CodeTreeNode variable, CodeTreeNode value, bool direct);
-
-    public CodeTreeNode GenerateMemoryRead(CodeTreeNode variable, bool direct);
-
-    public CodeTreeNode GenerateMemoryWrite(CodeTreeNode variable, CodeTreeNode value, bool direct);
+    /// <summary>
+    ///     If variable is local then generates either memory write or register write
+    ///     depending on whether the variable is stored on the stack or in registers.
+    ///     <br/>
+    ///     If variable isn't in the function's scope then generates memory write
+    ///     using the Display Table.
+    /// </summary>
+    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value);
 }

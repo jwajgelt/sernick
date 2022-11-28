@@ -1,12 +1,55 @@
+#pragma warning disable IDE0052
+
 namespace sernick.Compiler.Function;
 
 using ControlFlowGraph.CodeTree;
 
 public sealed class FunctionContext : IFunctionContext
 {
-    public void AddLocal(FunctionVariable variable, bool usedElsewhere)
+    private const int PointerSize = 8;
+    private readonly IFunctionContext? _parentContext;
+    private readonly IReadOnlyCollection<IFunctionParam> _functionParameters;
+    private readonly bool _valueIsReturned;
+
+    // Maps accesses to registers/memory
+    private readonly Dictionary<IFunctionVariable, CodeTreeValueNode> _localVariableLocation;
+    private int _localsOffset;
+    private CodeTreeValueNode? _displayEntry;
+    private readonly int _contextId;
+
+    public FunctionContext(
+        IFunctionContext? parent,
+        IReadOnlyCollection<IFunctionParam> parameters,
+        bool returnsValue,
+        int contextId
+        )
     {
-        // silently ignore for now
+        _localVariableLocation = new Dictionary<IFunctionVariable, CodeTreeValueNode>(ReferenceEqualityComparer.Instance);
+        _parentContext = parent;
+        _functionParameters = parameters;
+        _valueIsReturned = returnsValue;
+        _localsOffset = 0;
+        _contextId = contextId;
+
+        var fistArgOffset = PointerSize * (1 + _functionParameters.Count);
+        var argNum = 0;
+        foreach (var param in _functionParameters)
+        {
+            _localVariableLocation.Add(param, new Constant(new RegisterValue(fistArgOffset - PointerSize * argNum)));
+            argNum += 1;
+        }
+    }
+    public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
+    {
+        if (usedElsewhere)
+        {
+            _localsOffset += PointerSize;
+            _localVariableLocation.Add(variable, new Constant(new RegisterValue(_localsOffset)));
+        }
+        else
+        {
+            _localVariableLocation.Add(variable, new RegisterRead(new Register()));
+        }
     }
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeNode> arguments)
@@ -26,23 +69,19 @@ public sealed class FunctionContext : IFunctionContext
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateRegisterRead(CodeTreeNode variable, bool direct)
+    public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable)
     {
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateRegisterWrite(CodeTreeNode variable, CodeTreeNode value, bool direct)
+    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value)
     {
         throw new NotImplementedException();
     }
 
-    public CodeTreeNode GenerateMemoryRead(CodeTreeNode variable, bool direct)
+    public void SetDisplayAddress(CodeTreeValueNode displayAddress)
     {
-        throw new NotImplementedException();
-    }
-
-    public CodeTreeNode GenerateMemoryWrite(CodeTreeNode variable, CodeTreeNode value, bool direct)
-    {
-        throw new NotImplementedException();
+        var offsetInDisplay = new Constant(new RegisterValue(_contextId));
+        _displayEntry = new BinaryOperationNode(BinaryOperation.Add, displayAddress, offsetInDisplay);
     }
 }
