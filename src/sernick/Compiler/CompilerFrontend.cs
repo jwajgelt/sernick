@@ -41,7 +41,9 @@ public static class CompilerFrontend
         ThrowIfErrorsOccurred(diagnostics);
         var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
-        // var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast, definition => ControlFlowAnalyzer.UnravelControlFlow(definition, SideEffectsAnalyzer.PullOutSideEffects))
+        // commented since it throws NotImplemented, and will need merging anyway
+        // var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
+            // root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, SideEffectsAnalyzer.PullOutSideEffects));
     }
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
