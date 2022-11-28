@@ -8,18 +8,20 @@ public sealed class InstructionMatcher
 
     public InstructionMatcher(IEnumerable<CodeTreePattern> patterns) => _patterns = patterns.ToList();
 
-    public IEnumerable<CodeTreeNode> MatchCodeTree(CodeTreeNode root)
+    public bool MatchCodeTree(CodeTreeNode root, out IEnumerable<CodeTreeNode> leaves)
     {
         foreach (var pattern in _patterns)
         {
             if (pattern.TryMatch(root, out var matchedLeaves))
             {
-                return matchedLeaves;
+                leaves = matchedLeaves;
+                return true;
             }
         }
 
-        // shouldn't happen
-        return Enumerable.Empty<CodeTreeNode>();
+        // shouldn't happen (perhaps only in tests)
+        leaves = Enumerable.Empty<CodeTreeNode>();
+        return false;
     }
 }
 
