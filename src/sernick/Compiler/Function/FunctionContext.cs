@@ -210,7 +210,6 @@ public sealed class FunctionContext : IFunctionContext
 
     public void SetDisplayAddress(CodeTreeNode displayAddress)
     {
-        var offsetInDisplay = _contextId;
-        _displayEntry = displayAddress + offsetInDisplay;
+        _displayEntry = displayAddress + PointerSize * _contextId;
     }
 }
