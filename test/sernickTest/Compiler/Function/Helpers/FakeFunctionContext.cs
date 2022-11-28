@@ -11,7 +11,6 @@ public sealed class FakeFunctionContext : IFunctionContext
     public IReadOnlyDictionary<IFunctionVariable, bool> Locals => _locals;
 
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere) => _locals[variable] = usedElsewhere;
-    public RegisterWrite? ResultVariable { get; set; }
     public IReadOnlyList<CodeTreeNode> GeneratePrologue()
     {
         throw new NotImplementedException();
