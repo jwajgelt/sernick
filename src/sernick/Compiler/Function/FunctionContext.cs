@@ -124,10 +124,10 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(new RegisterWrite(reg, tempVal));
         }
 
-        return new IFunctionCaller.GenerateCallResult(operations, returnValueLocation);
+        return new IFunctionCaller.GenerateCallResult(codeTreeListToSingleExitList(operations), returnValueLocation);
     }
 
-    public IReadOnlyList<CodeTreeNode> GeneratePrologue()
+    public IReadOnlyList<SingleExitNode> GeneratePrologue()
     {
         var operations = new List<CodeTreeNode>();
 
@@ -166,13 +166,13 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(new RegisterWrite(tempReg, regVal));
         }
 
-        return operations;
+        return codeTreeListToSingleExitList(operations);
     }
 
-    public IReadOnlyList<CodeTreeNode> GenerateEpilogue()
+    public IReadOnlyList<SingleExitNode> GenerateEpilogue()
     {
         var operations = calleeToSave.Select(reg =>
-            Reg(reg).Write(Reg(_registerToTemporaryMap[reg]).Read())).ToList();
+            Reg(reg).Write(Reg(_registerToTemporaryMap[reg]).Read())).ToList<CodeTreeNode>();
 
         var rsp = HardwareRegister.RSP;
         var rbp = HardwareRegister.RBP;
@@ -188,7 +188,21 @@ public sealed class FunctionContext : IFunctionContext
         // Free RBP slot
         operations.Add(new RegisterWrite(rsp, rspRead + PointerSize));
 
-        return operations;
+        return codeTreeListToSingleExitList(operations);
+    }
+
+    private static List<SingleExitNode> codeTreeListToSingleExitList(List<CodeTreeNode> trees)
+    {
+        var result = new List<SingleExitNode>();
+        trees.Reverse();
+        SingleExitNode? nextRoot = null;
+        foreach (var tree in trees)
+        {
+            var treeRoot = new SingleExitNode(nextRoot, new List<CodeTreeNode> { tree });
+            nextRoot = treeRoot;
+        }
+
+        return result;
     }
 
     public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable)

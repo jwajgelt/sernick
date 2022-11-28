@@ -6,5 +6,5 @@ public interface IFunctionCaller
 {
     public GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments);
 
-    public record GenerateCallResult(IReadOnlyList<CodeTreeNode> CodeGraph, CodeTreeNode? ResultLocation);
+    public record GenerateCallResult(IReadOnlyList<SingleExitNode> CodeGraph, CodeTreeNode? ResultLocation);
 }

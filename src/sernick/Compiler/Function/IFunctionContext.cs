@@ -5,9 +5,9 @@ public interface IFunctionContext : IFunctionCaller
 {
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere);
 
-    public IReadOnlyList<CodeTreeNode> GeneratePrologue();
+    public IReadOnlyList<SingleExitNode> GeneratePrologue();
 
-    public IReadOnlyList<CodeTreeNode> GenerateEpilogue();
+    public IReadOnlyList<SingleExitNode> GenerateEpilogue();
 
     /// <summary>
     ///     If variable is local then generates either memory read or register read

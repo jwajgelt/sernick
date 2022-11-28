@@ -11,12 +11,12 @@ public sealed class FakeFunctionContext : IFunctionContext
     public IReadOnlyDictionary<IFunctionVariable, bool> Locals => _locals;
 
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere) => _locals[variable] = usedElsewhere;
-    public IReadOnlyList<CodeTreeNode> GeneratePrologue()
+    public IReadOnlyList<SingleExitNode> GeneratePrologue()
     {
         throw new NotImplementedException();
     }
 
-    public IReadOnlyList<CodeTreeNode> GenerateEpilogue()
+    public IReadOnlyList<SingleExitNode> GenerateEpilogue()
     {
         throw new NotImplementedException();
     }
