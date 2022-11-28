@@ -50,12 +50,7 @@ public sealed class FunctionContext : IFunctionContext
         _valueIsReturned = returnsValue;
         _localsOffset = 0;
         _contextId = contextId;
-        _registerToTemporaryMap = new Dictionary<HardwareRegister, Register>(ReferenceEqualityComparer.Instance);
-
-        foreach (var reg in calleeToSave)
-        {
-            _registerToTemporaryMap.Add(reg, new Register());
-        }
+        _registerToTemporaryMap = calleeToSave.ToDictionary(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
 
         var fistArgOffset = PointerSize * (1 + _functionParameters.Count);
         var argNum = 0;
