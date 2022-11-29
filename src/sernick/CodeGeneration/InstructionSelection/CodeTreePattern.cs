@@ -133,7 +133,7 @@ public abstract record CodeTreePattern
             [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
             IDictionary<CodeTreePattern, object> values)
         {
-            leaves = null;
+            leaves = Enumerable.Empty<CodeTreeValueNode>();
             return root is Constant node &&
                    Value.Invoke(node.Value) &&
                    Run(values[this] = node.Value);
@@ -146,7 +146,7 @@ public abstract record CodeTreePattern
             [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
             IDictionary<CodeTreePattern, object> values)
         {
-            leaves = null;
+            leaves = Enumerable.Empty<CodeTreeValueNode>();
             return root is RegisterRead node &&
                    Register.Invoke(node.Register) &&
                    Run(values[this] = node.Register);
