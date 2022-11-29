@@ -1,19 +1,19 @@
-namespace sernickTest.ControlFlowGraph;
+namespace sernickTest.CodeGeneration.InstructionSelection;
 
-using sernick.ControlFlowGraph;
+using sernick.CodeGeneration.InstructionSelection;
 using sernick.ControlFlowGraph.CodeTree;
 using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
-using static sernick.ControlFlowGraph.CodeTreePatternPredicates;
-using Pat = sernick.ControlFlowGraph.CodeTreePattern;
+using static sernick.CodeGeneration.InstructionSelection.CodeTreePatternPredicates;
+using Pat = sernick.CodeGeneration.InstructionSelection.CodeTreePattern;
 
-public class InstructionMatcherTest
+public class CodeTreePatternMatcherTest
 {
     [Theory]
     [MemberData(nameof(TestData))]
-    public void TestMatchPattern(CodeTreeNode codeTree)
+    public void TestMatchPattern(Pat pattern, CodeTreeNode codeTree)
     {
-        //var instructionMatcher = new InstructionMatcher(new[] { pattern });
-        //Assert.True(instructionMatcher.MatchCodeTree(codeTree, out _));
+        //var codeTreeMatcher = new CodeTreePatternMatcher(new[] { pattern });
+        //Assert.True(codeTreeMatcher.MatchCodeTree(codeTree, out _, out _));
     }
 
     public static readonly IEnumerable<object[]> TestData = new[]
