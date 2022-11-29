@@ -107,7 +107,7 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(Reg(rsp).Write(rspRead + PointerSize * arguments.Count));
 
         // If value is returned, then put it from RAX to virtual register
-        CodeTreeNode? returnValueLocation = null;
+        CodeTreeValueNode? returnValueLocation = null;
         if (_valueIsReturned)
         {
             var returnValueRegister = new Register();
