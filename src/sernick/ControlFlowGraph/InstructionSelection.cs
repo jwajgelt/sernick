@@ -1,28 +1,52 @@
 namespace sernick.ControlFlowGraph;
 
+using System.Diagnostics.CodeAnalysis;
 using CodeTree;
 
 public sealed class InstructionMatcher
 {
-    private readonly IReadOnlyCollection<CodeTreePattern> _patterns;
+    private readonly IReadOnlyCollection<CodeTreePatternRule> _rules;
 
-    public InstructionMatcher(IEnumerable<CodeTreePattern> patterns) => _patterns = patterns.ToList();
+    public InstructionMatcher(IEnumerable<CodeTreePatternRule> rules) => _rules = rules.ToList();
 
-    public bool MatchCodeTree(CodeTreeNode root, out IEnumerable<CodeTreeNode> leaves)
+    /// <summary>
+    /// Tries to match <see cref="root"/> onto each pattern, until succeeds. In that case,
+    /// returns true and
+    /// sets <see cref="leaves"/> to subtrees that were matched onto Wildcard nodes, and
+    /// sets <see cref="GenerateInstructions"/> to a function which, given input and output registers,
+    /// is able to generate a list of assembly instructions.
+    /// </summary>
+    public bool MatchCodeTree(CodeTreeNode root,
+        [NotNullWhen(true)] out IEnumerable<CodeTreeNode>? leaves,
+        [NotNullWhen(true)] out GenerateInstructions? generateInstructions)
     {
-        foreach (var pattern in _patterns)
+        foreach (var rule in _rules)
         {
-            if (pattern.TryMatch(root, out var matchedLeaves))
+            var values = new Dictionary<CodeTreePattern, object>(ReferenceEqualityComparer.Instance);
+            if (rule.Pattern.TryMatch(root, out var matchedLeaves, values))
             {
                 leaves = matchedLeaves;
+                generateInstructions = () => rule.GenerateInstructions(values);
                 return true;
             }
         }
 
         // shouldn't happen (perhaps only in tests)
-        leaves = Enumerable.Empty<CodeTreeNode>();
+        leaves = null;
+        generateInstructions = null;
         return false;
     }
+
+    public delegate IEnumerable<IInstruction> GenerateInstructions();
+}
+
+public interface IInstruction { }
+
+public sealed record CodeTreePatternRule(
+    CodeTreePattern Pattern,
+    CodeTreePatternRule.GenerateInstructionsDelegate GenerateInstructions)
+{
+    public delegate IEnumerable<IInstruction> GenerateInstructionsDelegate(IReadOnlyDictionary<CodeTreePattern, object> values);
 }
 
 public static class CodeTreePatternPredicates
@@ -38,7 +62,17 @@ public abstract record CodeTreePattern
     /// Tries to match itself onto <see cref="root"/>. If successful,
     /// returns subtrees in <see cref="root"/> that were matched onto <see cref="WildcardNode"/>s of this pattern.
     /// </summary>
-    public abstract bool TryMatch(CodeTreeNode root, out IEnumerable<CodeTreeValueNode> leaves);
+    /// <param name="values">Map of values matched in all non-wildcard nodes. Can be one of
+    /// <list type="number">
+    /// <item><see cref="RegisterValue"/></item>
+    /// <item><see cref="Register"/></item>
+    /// <item><see cref="BinaryOperation"/></item>
+    /// <item><see cref="UnaryOperation"/></item>
+    /// </list>
+    /// </param>
+    public abstract bool TryMatch(CodeTreeNode root,
+        [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+        IDictionary<CodeTreePattern, object> values);
 
     /// <summary>
     /// <see cref="BinaryOperationNode"/> pattern,
@@ -97,88 +131,109 @@ public abstract record CodeTreePattern
     private sealed record BinaryOperationNodePattern(Predicate<BinaryOperation> Operation, CodeTreePattern Left,
         CodeTreePattern Right) : CodeTreePattern
     {
-        public override bool TryMatch(CodeTreeNode root, out IEnumerable<CodeTreeValueNode> leaves)
+        public override bool TryMatch(CodeTreeNode root,
+            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            IDictionary<CodeTreePattern, object> values)
         {
-            leaves = Enumerable.Empty<CodeTreeValueNode>();
+            leaves = null;
             return root is BinaryOperationNode node &&
                    Operation.Invoke(node.Operation) &&
-                   Left.TryMatch(node.Left, out var leftLeaves) &&
-                   Right.TryMatch(node.Right, out var rightLeaves) &&
+                   Run(values[this] = node.Operation) &&
+                   Left.TryMatch(node.Left, out var leftLeaves, values) &&
+                   Right.TryMatch(node.Right, out var rightLeaves, values) &&
                    Run(leaves = leftLeaves.Concat(rightLeaves));
         }
     }
 
     private sealed record UnaryOperationNodePattern(Predicate<UnaryOperation> Operation, CodeTreePattern Operand) : CodeTreePattern
     {
-        public override bool TryMatch(CodeTreeNode root, out IEnumerable<CodeTreeValueNode> leaves)
+        public override bool TryMatch(CodeTreeNode root,
+            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            IDictionary<CodeTreePattern, object> values)
         {
-            leaves = Enumerable.Empty<CodeTreeValueNode>();
+            leaves = null;
             return root is UnaryOperationNode node &&
                    Operation.Invoke(node.Operation) &&
-                   Operand.TryMatch(node.Operand, out leaves);
+                   Run(values[this] = node.Operation) &&
+                   Operand.TryMatch(node.Operand, out leaves, values);
         }
     }
 
     private sealed record ConstantPattern(Predicate<RegisterValue> Value) : CodeTreePattern
     {
-        public override bool TryMatch(CodeTreeNode root, out IEnumerable<CodeTreeValueNode> leaves)
+        public override bool TryMatch(CodeTreeNode root,
+            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            IDictionary<CodeTreePattern, object> values)
         {
-            leaves = Enumerable.Empty<CodeTreeValueNode>();
+            leaves = null;
             return root is Constant node &&
-                   Value.Invoke(node.Value);
+                   Value.Invoke(node.Value) &&
+                   Run(values[this] = node.Value);
         }
     }
 
     private sealed record RegisterReadPattern(Predicate<Register> Register) : CodeTreePattern
     {
-        public override bool TryMatch(CodeTreeNode root, out IEnumerable<CodeTreeValueNode> leaves)
+        public override bool TryMatch(CodeTreeNode root,
+            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            IDictionary<CodeTreePattern, object> values)
         {
-            leaves = Enumerable.Empty<CodeTreeValueNode>();
+            leaves = null;
             return root is RegisterRead node &&
-                   Register.Invoke(node.Register);
+                   Register.Invoke(node.Register) &&
+                   Run(values[this] = node.Register);
         }
     }
 
     private sealed record RegisterWritePattern(Predicate<Register> Register, CodeTreePattern Value) : CodeTreePattern
     {
-        public override bool TryMatch(CodeTreeNode root, out IEnumerable<CodeTreeValueNode> leaves)
+        public override bool TryMatch(CodeTreeNode root,
+            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            IDictionary<CodeTreePattern, object> values)
         {
-            leaves = Enumerable.Empty<CodeTreeValueNode>();
+            leaves = null;
             return root is RegisterWrite node &&
                    Register.Invoke(node.Register) &&
-                   Value.TryMatch(node.Value, out leaves);
+                   Run(values[this] = node.Register) &&
+                   Value.TryMatch(node.Value, out leaves, values);
         }
     }
 
     private sealed record MemoryReadPattern(CodeTreePattern MemoryLocation) : CodeTreePattern
     {
-        public override bool TryMatch(CodeTreeNode root, out IEnumerable<CodeTreeValueNode> leaves)
+        public override bool TryMatch(CodeTreeNode root,
+            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            IDictionary<CodeTreePattern, object> values)
         {
-            leaves = Enumerable.Empty<CodeTreeValueNode>();
+            leaves = null;
             return root is MemoryRead node &&
-                   MemoryLocation.TryMatch(node.MemoryLocation, out leaves);
+                   MemoryLocation.TryMatch(node.MemoryLocation, out leaves, values);
         }
     }
 
     private sealed record MemoryWritePattern(CodeTreePattern MemoryLocation, CodeTreePattern Value) : CodeTreePattern
     {
-        public override bool TryMatch(CodeTreeNode root, out IEnumerable<CodeTreeValueNode> leaves)
+        public override bool TryMatch(CodeTreeNode root,
+            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            IDictionary<CodeTreePattern, object> values)
         {
-            leaves = Enumerable.Empty<CodeTreeValueNode>();
+            leaves = null;
             return root is MemoryWrite node &&
-                   MemoryLocation.TryMatch(node.MemoryLocation, out var leavesLocation) &&
-                   Value.TryMatch(node.Value, out var leavesValue) &&
+                   MemoryLocation.TryMatch(node.MemoryLocation, out var leavesLocation, values) &&
+                   Value.TryMatch(node.Value, out var leavesValue, values) &&
                    Run(leaves = leavesLocation.Concat(leavesValue));
         }
     }
 
     private sealed record WildcardNodePattern : CodeTreePattern
     {
-        public override bool TryMatch(CodeTreeNode root, out IEnumerable<CodeTreeValueNode> leaves)
+        public override bool TryMatch(CodeTreeNode root,
+            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            IDictionary<CodeTreePattern, object> _)
         {
             if (root is not CodeTreeValueNode rootValue)
             {
-                leaves = Enumerable.Empty<CodeTreeValueNode>();
+                leaves = null;
                 return false;
             }
 
