@@ -7,7 +7,7 @@ public interface IFunctionContext : IFunctionCaller
 
     public IReadOnlyList<SingleExitNode> GeneratePrologue();
 
-    public IReadOnlyList<SingleExitNode> GenerateEpilogue();
+    public IReadOnlyList<SingleExitNode> GenerateEpilogue(CodeTreeValueNode? valToReturn);
 
     public int Depth { get; }
 

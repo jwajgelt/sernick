@@ -18,7 +18,7 @@ public sealed class FakeFunctionContext : IFunctionContext
         throw new NotImplementedException();
     }
 
-    public IReadOnlyList<SingleExitNode> GenerateEpilogue()
+    public IReadOnlyList<SingleExitNode> GenerateEpilogue(CodeTreeValueNode? valToReturn)
     {
         throw new NotImplementedException();
     }

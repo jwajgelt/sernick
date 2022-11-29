@@ -131,8 +131,8 @@ public sealed class FunctionContext : IFunctionContext
     {
         var operations = new List<CodeTreeNode>();
 
-        Register rsp = HardwareRegister.RSP;
-        Register rbp = HardwareRegister.RBP;
+        var rsp = HardwareRegister.RSP;
+        var rbp = HardwareRegister.RBP;
 
         var rspRead = Reg(rsp).Read();
         var pushRsp = Reg(rsp).Write(rspRead - PointerSize);
@@ -170,13 +170,14 @@ public sealed class FunctionContext : IFunctionContext
         return CodeTreeListToSingleExitList(operations);
     }
 
-    public IReadOnlyList<SingleExitNode> GenerateEpilogue()
+    public IReadOnlyList<SingleExitNode> GenerateEpilogue(CodeTreeValueNode? valToReturn)
     {
         var operations = calleeToSave.Select(reg =>
             Reg(reg).Write(Reg(_registerToTemporaryMap[reg]).Read())).ToList<CodeTreeNode>();
 
         var rsp = HardwareRegister.RSP;
         var rbp = HardwareRegister.RBP;
+        var rax = HardwareRegister.RAX;
 
         var rspRead = Reg(rsp).Read();
 
@@ -196,6 +197,12 @@ public sealed class FunctionContext : IFunctionContext
         }
 
         operations.Add(Mem(_displayEntry).Write(Reg(_oldDisplayValReg).Read()));
+
+        // Save return value to rax
+        if (valToReturn != null)
+        {
+            operations.Add(Reg(rax).Write(valToReturn));
+        }
 
         return CodeTreeListToSingleExitList(operations);
     }
