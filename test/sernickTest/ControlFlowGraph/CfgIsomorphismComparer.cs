@@ -2,7 +2,7 @@ namespace sernickTest.ControlFlowGraph;
 
 using sernick.ControlFlowGraph.CodeTree;
 
-public class CfgIsomorphismComparer : IEqualityComparer<CodeTreeRoot>
+public sealed class CfgIsomorphismComparer : IEqualityComparer<CodeTreeRoot>
 {
     public bool Equals(CodeTreeRoot? x, CodeTreeRoot? y)
     {
