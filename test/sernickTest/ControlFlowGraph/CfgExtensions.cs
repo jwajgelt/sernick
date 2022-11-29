@@ -5,9 +5,9 @@ using sernick.ControlFlowGraph.CodeTree;
 public static class CfgExtensions
 {
     /// <summary>
-    /// Determines whether CSTs starting in given CodeTreeRoots are isomorphic
+    /// Determines whether the CodeTrees starting in given CodeTreeNodes are isomorphic
     /// </summary>
-    public static bool IsIsomorphicWith(this CodeTreeRoot root, CodeTreeRoot other)
+    public static bool IsIsomorphicWith(this CodeTreeNode root, CodeTreeNode other)
     {
         throw new NotImplementedException();
     }
