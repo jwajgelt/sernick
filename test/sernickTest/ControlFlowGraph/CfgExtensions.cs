@@ -1,4 +1,4 @@
-﻿namespace sernickTest.ControlFlowGraph;
+namespace sernickTest.ControlFlowGraph;
 
 using sernick.ControlFlowGraph.CodeTree;
 
