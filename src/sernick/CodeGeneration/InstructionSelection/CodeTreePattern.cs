@@ -1,4 +1,4 @@
-﻿namespace sernick.CodeGeneration.InstructionSelection;
+namespace sernick.CodeGeneration.InstructionSelection;
 
 using System.Diagnostics.CodeAnalysis;
 using ControlFlowGraph.CodeTree;
@@ -32,38 +32,50 @@ public abstract record CodeTreePattern
     /// <see cref="BinaryOperationNode"/> pattern,
     /// allowing to filter binary-operator of the matching node via <see cref="operation"/> predicate.
     /// </summary>
+    /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
     public static CodeTreePattern BinaryOperationNode(
         Predicate<BinaryOperation> operation,
+        out CodeTreePattern id,
         CodeTreePattern left,
-        CodeTreePattern right) => new BinaryOperationNodePattern(operation, left, right);
+        CodeTreePattern right) => id = new BinaryOperationNodePattern(operation, left, right);
 
     /// <summary>
     /// <see cref="UnaryOperationNode"/> pattern,
     /// allowing to filter unary-operator of the matching node via <see cref="operation"/> predicate.
     /// </summary>
+    /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
     public static CodeTreePattern UnaryOperationNode(
         Predicate<UnaryOperation> operation,
-        CodeTreePattern operand) => new UnaryOperationNodePattern(operation, operand);
+        out CodeTreePattern id,
+        CodeTreePattern operand) => id = new UnaryOperationNodePattern(operation, operand);
 
     /// <summary>
     /// <see cref="Constant"/> pattern,
     /// allowing to filter constant value of the matching node via <see cref="value"/> predicate.
     /// </summary>
-    public static CodeTreePattern Constant(Predicate<RegisterValue> value) => new ConstantPattern(value);
+    /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
+    public static CodeTreePattern Constant(
+        Predicate<RegisterValue> value,
+        out CodeTreePattern id) => id = new ConstantPattern(value);
 
     /// <summary>
     /// <see cref="RegisterRead"/> pattern,
     /// allowing to filter register of the matching node via <see cref="Register"/> predicate.
     /// </summary>
-    public static CodeTreePattern RegisterRead(Predicate<Register> register) => new RegisterReadPattern(register);
+    /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
+    public static CodeTreePattern RegisterRead(
+        Predicate<Register> register,
+        out CodeTreePattern id) => id = new RegisterReadPattern(register);
 
     /// <summary>
     /// <see cref="RegisterWrite"/> pattern,
     /// allowing to filter register of the matching node via <see cref="Register"/> predicate.
     /// </summary>
+    /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
     public static CodeTreePattern RegisterWrite(
         Predicate<Register> register,
-        CodeTreePattern value) => new RegisterWritePattern(register, value);
+        out CodeTreePattern id,
+        CodeTreePattern value) => id = new RegisterWritePattern(register, value);
 
     /// <summary>
     /// <see cref="MemoryRead"/> pattern.
@@ -82,7 +94,9 @@ public abstract record CodeTreePattern
     /// </summary>
     public static CodeTreePattern WildcardNode => new WildcardNodePattern();
 
-    private sealed record BinaryOperationNodePattern(Predicate<BinaryOperation> Operation, CodeTreePattern Left,
+    private sealed record BinaryOperationNodePattern(
+        Predicate<BinaryOperation> Operation,
+        CodeTreePattern Left,
         CodeTreePattern Right) : CodeTreePattern
     {
         public override bool TryMatch(CodeTreeNode root,
