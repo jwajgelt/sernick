@@ -5,7 +5,8 @@ using ControlFlowGraph.CodeTree;
 
 public enum BinaryOp
 {
-    Add, Sub, Xor,
+    Add, Sub,
+    And, Or, Xor,
     Cmp
 }
 
@@ -13,6 +14,8 @@ public sealed record BinaryOpInstruction(BinaryOp Op, IInstructionOperand Left, 
 {
     public static BinaryOpInstructionBuilder Add => new(BinaryOp.Add);
     public static BinaryOpInstructionBuilder Sub => new(BinaryOp.Sub);
+    public static BinaryOpInstructionBuilder And => new(BinaryOp.And);
+    public static BinaryOpInstructionBuilder Or => new(BinaryOp.Or);
     public static BinaryOpInstructionBuilder Xor => new(BinaryOp.Xor);
     public static BinaryOpInstructionBuilder Cmp => new(BinaryOp.Cmp);
 

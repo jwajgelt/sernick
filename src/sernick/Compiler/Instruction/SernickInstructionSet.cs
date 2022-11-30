@@ -76,13 +76,24 @@ public static class SernickInstructionSet
                     });
             }
 
-            // add *, *
+            // <op> *, *
             {
                 yield return new CodeTreePatternRule(
-                    Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _, Pat.WildcardNode, Pat.WildcardNode),
-                    (inputs, _) => new List<IInstruction>
+                    Pat.BinaryOperationNode(
+                        IsAnyOf(
+                            BinaryOperation.Add, BinaryOperation.Sub,
+                            BinaryOperation.BitwiseAnd, BinaryOperation.BitwiseOr), out var op,
+                        Pat.WildcardNode, Pat.WildcardNode),
+                    (inputs, values) => new List<IInstruction>
                     {
-                        Bin.Add.ToReg(inputs[0]).FromReg(inputs[1])
+                        values.Get<BinaryOperation>(op) switch
+                        {
+                            BinaryOperation.Add => Bin.Add.ToReg(inputs[0]).FromReg(inputs[1]),
+                            BinaryOperation.Sub => Bin.Sub.ToReg(inputs[0]).FromReg(inputs[1]),
+                            BinaryOperation.BitwiseAnd => Bin.And.ToReg(inputs[0]).FromReg(inputs[1]),
+                            BinaryOperation.BitwiseOr => Bin.Or.ToReg(inputs[0]).FromReg(inputs[1]),
+                            _ => throw new ArgumentOutOfRangeException()
+                        }
                     });
             }
 
