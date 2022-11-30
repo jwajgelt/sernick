@@ -66,6 +66,16 @@ public static class SernickInstructionSet
                     });
             }
 
+            // call $label
+            {
+                yield return new CodeTreePatternRule(
+                    Pat.FunctionCall(out var call),
+                    (_, values) => new List<IInstruction>
+                    {
+                        new CallInstruction(values.Get<IFunctionCaller>(call).Label)
+                    });
+            }
+
             // add *, *
             {
                 yield return new CodeTreePatternRule(
@@ -76,13 +86,31 @@ public static class SernickInstructionSet
                     });
             }
 
-            // call $label
+            /* CONDITIONALS */
+
+            // cmp *, *
+            // set<cc> $out
             {
                 yield return new CodeTreePatternRule(
-                    Pat.FunctionCall(out var call),
-                    (_, values) => new List<IInstruction>
+                    Pat.BinaryOperationNode(
+                        IsAnyOf(
+                            BinaryOperation.Equal, BinaryOperation.NotEqual,
+                            BinaryOperation.LessThan, BinaryOperation.GreaterThan,
+                            BinaryOperation.LessThanEqual, BinaryOperation.GreaterThanEqual), out var op,
+                        Pat.WildcardNode, Pat.WildcardNode),
+                    (inputs, values) => new List<IInstruction>
                     {
-                        new CallInstruction(values.Get<IFunctionCaller>(call).Label)
+                        Bin.Cmp.ToReg(inputs[0]).FromReg(inputs[1]),
+                        values.Get<BinaryOperation>(op) switch
+                        {
+                            BinaryOperation.Equal => new SetCcInstruction(ConditionCode.E, inputs[0]),
+                            BinaryOperation.NotEqual => new SetCcInstruction(ConditionCode.Ne, inputs[0]),
+                            BinaryOperation.LessThan => new SetCcInstruction(ConditionCode.L, inputs[0]),
+                            BinaryOperation.GreaterThan => new SetCcInstruction(ConditionCode.G, inputs[0]),
+                            BinaryOperation.LessThanEqual => new SetCcInstruction(ConditionCode.Ng, inputs[0]),
+                            BinaryOperation.GreaterThanEqual => new SetCcInstruction(ConditionCode.Nl, inputs[0]),
+                            _ => throw new ArgumentOutOfRangeException()
+                        }
                     });
             }
         }

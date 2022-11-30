@@ -9,6 +9,8 @@ public static class CodeTreePatternPredicates
     public static Predicate<T> Any<T>() => _ => true;
     public static Predicate<T> Is<T>(T expected) => given => Equals(given, expected);
     public static Predicate<RegisterValue> IsZero => node => node.Value == 0;
+
+    public static Predicate<T> IsAnyOf<T>(params T[] expected) => expected.Contains;
 }
 
 public abstract record CodeTreePattern
@@ -94,6 +96,7 @@ public abstract record CodeTreePattern
     /// <summary>
     /// <see cref="FunctionCall"/> pattern.
     /// </summary>
+    /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
     public static CodeTreePattern FunctionCall(out CodeTreePattern id) => id = new FunctionCallPattern();
 
     /// <summary>

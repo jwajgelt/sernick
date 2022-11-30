@@ -51,7 +51,7 @@ public class CodeTreePatternMatcherTest
                     Mov.ToReg(values.Get<Register>(reg2)).FromMem(inputs[0])
                 }),
             Reg(register).Write(Mem(5).Value),
-            new[] { (CodeTreeValueNode)5 }
+            new CodeTreeValueNode[] { 5 }
         },
         
         // mov [*], *
@@ -64,7 +64,7 @@ public class CodeTreePatternMatcherTest
                     Mov.ToMem(inputs[0]).FromReg(inputs[1])
                 }),
             Mem(5).Write((CodeTreeValueNode)5 + 5),
-            new[] { (CodeTreeValueNode)5, (CodeTreeValueNode)5 + 5 }
+            new CodeTreeValueNode[] { 5, (CodeTreeValueNode)5 + 5 }
         },
         
         // mov $reg, $const
@@ -88,7 +88,7 @@ public class CodeTreePatternMatcherTest
                     Mov.ToMem(inputs[0]).FromImm(values.Get<RegisterValue>(imm5))
                 }),
             Mem(5).Write(5),
-            new[] { (CodeTreeValueNode)5 }
+            new CodeTreeValueNode[] { 5 }
         },
 
         // mov $reg, 0 === xor $reg, $reg
@@ -113,7 +113,7 @@ public class CodeTreePatternMatcherTest
                     Bin.Add.ToReg(inputs[0]).FromReg(inputs[1])
                 }),
             Reg(register).Read() + 5,
-            new[] { Reg(register).Read(), (CodeTreeValueNode)5 }
+            new CodeTreeValueNode[] { Reg(register).Read(), 5 }
         },
         
         // call $label
@@ -127,6 +127,35 @@ public class CodeTreePatternMatcherTest
                 }),
             new FunctionCall(new FakeFunctionContext()),
             Enumerable.Empty<CodeTreeValueNode>()
+        },
+        
+        // cmp *, *
+        // set<cc> *
+        new object[]
+        {
+            new CodeTreePatternRule(
+                Pat.BinaryOperationNode(
+                    IsAnyOf(
+                        BinaryOperation.Equal, BinaryOperation.NotEqual,
+                        BinaryOperation.LessThan, BinaryOperation.GreaterThan,
+                        BinaryOperation.LessThanEqual, BinaryOperation.GreaterThanEqual), out var op9,
+                    Pat.WildcardNode, Pat.WildcardNode),
+                (inputs, values) => new List<IInstruction>
+                {
+                    Bin.Cmp.ToReg(inputs[0]).FromReg(inputs[1]),
+                    values.Get<BinaryOperation>(op9) switch
+                    {
+                        BinaryOperation.Equal => new SetCcInstruction(ConditionCode.E, register),
+                        BinaryOperation.NotEqual => new SetCcInstruction(ConditionCode.Ne, register),
+                        BinaryOperation.LessThan => new SetCcInstruction(ConditionCode.L, register),
+                        BinaryOperation.GreaterThan => new SetCcInstruction(ConditionCode.G, register),
+                        BinaryOperation.LessThanEqual => new SetCcInstruction(ConditionCode.Ng, register),
+                        BinaryOperation.GreaterThanEqual => new SetCcInstruction(ConditionCode.Nl, register),
+                        _ => throw new ArgumentOutOfRangeException()
+                    }
+                }),
+            Reg(register).Read() < 5,
+            new CodeTreeValueNode[] { Reg(register).Read(), 5 }
         }
     };
 }
