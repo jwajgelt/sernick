@@ -1,7 +1,10 @@
 namespace sernickTest.CodeGeneration.InstructionSelection;
 
+using Compiler.Function.Helpers;
 using sernick.CodeGeneration;
 using sernick.CodeGeneration.InstructionSelection;
+using sernick.Compiler.Function;
+using sernick.Compiler.Instruction;
 using sernick.ControlFlowGraph.CodeTree;
 using static sernick.CodeGeneration.InstructionSelection.CodeTreePatternPredicates;
 using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
@@ -111,6 +114,19 @@ public class CodeTreePatternMatcherTest
                 }),
             Reg(register).Read() + 5,
             new[] { Reg(register).Read(), (CodeTreeValueNode)5 }
+        },
+        
+        // call *
+        new object[]
+        {
+            new CodeTreePatternRule(
+                Pat.FunctionCall(out var call8),
+                (_, values) => new List<IInstruction>
+                {
+                    new CallInstruction(values.Get<IFunctionCaller>(call8).Label)
+                }),
+            new FunctionCall(new FakeFunctionContext()),
+            Enumerable.Empty<CodeTreeValueNode>()
         }
     };
 }

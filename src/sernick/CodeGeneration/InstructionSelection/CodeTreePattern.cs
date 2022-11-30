@@ -1,6 +1,7 @@
 namespace sernick.CodeGeneration.InstructionSelection;
 
 using System.Diagnostics.CodeAnalysis;
+using Compiler.Function;
 using ControlFlowGraph.CodeTree;
 
 public static class CodeTreePatternPredicates
@@ -20,6 +21,7 @@ public abstract record CodeTreePattern
     /// <list type="number">
     /// <item><see cref="RegisterValue"/></item>
     /// <item><see cref="Register"/></item>
+    /// <item><see cref="IFunctionCaller"/></item>
     /// <item><see cref="BinaryOperation"/></item>
     /// <item><see cref="UnaryOperation"/></item>
     /// </list>
@@ -88,6 +90,11 @@ public abstract record CodeTreePattern
     public static CodeTreePattern MemoryWrite(
         CodeTreePattern location,
         CodeTreePattern value) => new MemoryWritePattern(location, value);
+
+    /// <summary>
+    /// <see cref="FunctionCall"/> pattern.
+    /// </summary>
+    public static CodeTreePattern FunctionCall(out CodeTreePattern id) => id = new FunctionCallPattern();
 
     /// <summary>
     /// Wildcard pattern, which matches any <see cref="CodeTreeValueNode"/>.
@@ -190,6 +197,18 @@ public abstract record CodeTreePattern
                    MemoryLocation.TryMatch(node.MemoryLocation, out var leavesLocation, values) &&
                    Value.TryMatch(node.Value, out var leavesValue, values) &&
                    Run(leaves = leavesLocation.Concat(leavesValue));
+        }
+    }
+
+    private sealed record FunctionCallPattern : CodeTreePattern
+    {
+        public override bool TryMatch(CodeTreeNode root,
+            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            IDictionary<CodeTreePattern, object> values)
+        {
+            leaves = Enumerable.Empty<CodeTreeValueNode>();
+            return root is FunctionCall node &&
+                   Run(values[this] = node.FunctionCaller);
         }
     }
 
