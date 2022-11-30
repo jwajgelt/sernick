@@ -116,7 +116,7 @@ public class CodeTreePatternMatcherTest
             new[] { Reg(register).Read(), (CodeTreeValueNode)5 }
         },
         
-        // call *
+        // call $label
         new object[]
         {
             new CodeTreePatternRule(
@@ -129,18 +129,4 @@ public class CodeTreePatternMatcherTest
             Enumerable.Empty<CodeTreeValueNode>()
         }
     };
-}
-
-internal static class ValuesHelper
-{
-    public static TValue Get<TValue>(this IReadOnlyDictionary<CodeTreePattern, object> dictionary, CodeTreePattern key)
-    {
-        var value = dictionary[key];
-        if (value is null)
-        {
-            throw new KeyNotFoundException();
-        }
-
-        return (TValue)value;
-    }
 }
