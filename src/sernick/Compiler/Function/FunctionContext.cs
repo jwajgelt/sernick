@@ -25,6 +25,15 @@ public sealed class FunctionContext : IFunctionContext
         HardwareRegister.RDX,
     };
 
+    private static readonly HardwareRegister[] argumentRegisters = {
+        HardwareRegister.RDI,
+        HardwareRegister.RSI,
+        HardwareRegister.RDX,
+        HardwareRegister.RCX,
+        HardwareRegister.R8,
+        HardwareRegister.R9,
+    };
+
     private const int PointerSize = 8;
     private readonly IFunctionContext? _parentContext;
     private readonly IReadOnlyCollection<IFunctionParam> _functionParameters;
@@ -93,6 +102,8 @@ public sealed class FunctionContext : IFunctionContext
 
         var rspRead = Reg(rsp).Read();
         var pushRsp = Reg(rsp).Write(rspRead - PointerSize);
+
+        // Put args into registers
 
         // Put args onto stack
         foreach (var arg in arguments)
