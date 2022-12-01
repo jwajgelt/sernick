@@ -75,8 +75,10 @@ public sealed class FunctionContext : IFunctionContext
     {
         if (usedElsewhere)
         {
-            _localsOffset += PointerSize;
-            _localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset));
+            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset + PointerSize)))
+            {
+                _localsOffset += PointerSize;
+            }
         }
         else
         {
