@@ -33,7 +33,7 @@ public sealed class FunctionContext : IFunctionContext
     // Maps accesses to registers/memory
     private readonly Dictionary<IFunctionVariable, VariableLocation> _localVariableLocation;
     private int _localsOffset;
-    private CodeTreeValueNode? _displayEntry;
+    private readonly CodeTreeValueNode _displayEntry;
     private readonly Register _oldDisplayValReg;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
     public int Depth { get; }
@@ -48,6 +48,7 @@ public sealed class FunctionContext : IFunctionContext
         _functionParameters = parameters;
         _valueIsReturned = returnsValue;
         _localsOffset = 0;
+        _displayEntry = new GlobalAddress("display") + PointerSize * Depth;
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _oldDisplayValReg = new Register();
 
@@ -148,11 +149,6 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(Reg(rbp).Write(rspRead));
 
         // Save and update display entry
-        if (_displayEntry == null)
-        {
-            throw new Exception("DisplayAddress should be set before generating code");
-        }
-
         operations.Add(Reg(_oldDisplayValReg).Write(Mem(_displayEntry).Read()));
         operations.Add(Mem(_displayEntry).Write(rbpRead));
 
@@ -191,11 +187,6 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(Reg(rsp).Write(rspRead + PointerSize));
 
         // Restore old display value
-        if (_displayEntry == null)
-        {
-            throw new Exception("DisplayAddress should be set before generating code");
-        }
-
         operations.Add(Mem(_displayEntry).Write(Reg(_oldDisplayValReg).Read()));
 
         // Save return value to rax
@@ -233,11 +224,6 @@ public sealed class FunctionContext : IFunctionContext
             ? location.GenerateWrite(value)
             : new MemoryWrite(GetParentsIndirectVariableLocation(variable), value);
 
-    public void SetDisplayAddress(CodeTreeValueNode displayAddress)
-    {
-        _displayEntry = displayAddress + PointerSize * Depth;
-    }
-
     CodeTreeValueNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
     {
         if (!_localVariableLocation.TryGetValue(variable, out var local))
@@ -245,11 +231,6 @@ public sealed class FunctionContext : IFunctionContext
             // If variable isn't in this context then it should be is the context of some ancestor.
             return _parentContext?.GetIndirectVariableLocation(variable) ??
                    throw new ArgumentException("Variable is undefined");
-        }
-
-        if (_displayEntry == null)
-        {
-            throw new Exception("DisplayAddress should be set before generating code");
         }
 
         if (local is not MemoryLocation localMemory)
