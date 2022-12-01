@@ -36,7 +36,7 @@ public sealed class FunctionContext : IFunctionContext
 
     private const int PointerSize = 8;
     private readonly IFunctionContext? _parentContext;
-    private readonly IReadOnlyCollection<IFunctionParam> _functionParameters;
+    private readonly IReadOnlyList<IFunctionParam> _functionParameters;
     private readonly bool _valueIsReturned;
 
     // Maps accesses to registers/memory
@@ -48,7 +48,7 @@ public sealed class FunctionContext : IFunctionContext
     public int Depth { get; }
     public FunctionContext(
         IFunctionContext? parent,
-        IReadOnlyCollection<IFunctionParam> parameters,
+        IReadOnlyList<IFunctionParam> parameters,
         bool returnsValue
         )
     {
@@ -62,14 +62,6 @@ public sealed class FunctionContext : IFunctionContext
         _oldDisplayValReg = new Register();
 
         Depth = (parent?.Depth + 1) ?? 0;
-
-        var fistArgOffset = PointerSize * (1 + _functionParameters.Count);
-        var argNum = 0;
-        foreach (var param in _functionParameters)
-        {
-            _localVariableLocation.Add(param, new MemoryLocation(-(fistArgOffset - PointerSize * argNum)));
-            argNum += 1;
-        }
     }
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
     {
@@ -103,10 +95,23 @@ public sealed class FunctionContext : IFunctionContext
         var rspRead = Reg(rsp).Read();
         var pushRsp = Reg(rsp).Write(rspRead - PointerSize);
 
+        // Divide args into register and stack
+        var regArgs = new List<CodeTreeValueNode>();
+        var stackArgs = new List<CodeTreeValueNode>();
+
+        for (var i = 0; i < arguments.Count; i++)
+        {
+            (i < 6 ? regArgs : stackArgs).Add(arguments[i]);
+        }
+
         // Put args into registers
+        for (var i = 0; i < regArgs.Count; i++)
+        {
+            operations.Add(Reg(argumentRegisters[i]).Write(regArgs[i]));
+        }
 
         // Put args onto stack
-        foreach (var arg in arguments)
+        foreach (var arg in stackArgs)
         {
             operations.Add(pushRsp);
             operations.Add(Mem(rspRead).Write(arg));
@@ -165,6 +170,22 @@ public sealed class FunctionContext : IFunctionContext
 
         // Allocate memory for variables
         operations.Add(Reg(rsp).Write(rspRead - _localsOffset));
+
+        // Write arguments to known locations
+        var paramNum = _functionParameters.Count;
+        var regParamsNum = (paramNum > 6 ? 6 : paramNum);
+        for (var i = 0; i < regParamsNum; i++)
+        {
+            GenerateVariableWrite(_functionParameters[i], Reg(argumentRegisters[i]).Read());
+        }
+
+        var firstStackArgOffset = PointerSize * (1 + _functionParameters.Count - 6);
+        var argNum = 0;
+        for (var i = 6; i < paramNum; i++)
+        {
+            GenerateVariableWrite(_functionParameters[i], Mem(rbpRead + (firstStackArgOffset - PointerSize * argNum)).Read());
+            argNum += 1;
+        }
 
         // Callee-saved registers
         foreach (var reg in calleeToSave)
