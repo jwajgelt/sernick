@@ -50,8 +50,15 @@ public class FunctionContextGenerateVariableAccessTest
     [Fact]
     public void Generates_MemoryRead_for_FunctionParams()
     {
-        Fun<UnitType>("foo").Parameter<IntType>("arg", out var arg);
-        var context = new FunctionContext(null, new[] { arg }, false);
+        Fun<UnitType>("foo")
+        .Parameter<IntType>("a", out var a)
+        .Parameter<IntType>("b", out var b)
+        .Parameter<IntType>("c", out var c)
+        .Parameter<IntType>("d", out var d)
+        .Parameter<IntType>("e", out var e)
+        .Parameter<IntType>("f", out var f)
+        .Parameter<IntType>("arg", out var arg);
+        var context = new FunctionContext(null, new[] { a, b, c, d, e, f, arg }, false);
 
         var readCodeTree = context.GenerateVariableRead(arg);
 

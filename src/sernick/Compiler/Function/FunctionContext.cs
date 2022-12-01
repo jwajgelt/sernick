@@ -62,17 +62,25 @@ public sealed class FunctionContext : IFunctionContext
         _oldDisplayValReg = new Register();
 
         Depth = (parent?.Depth + 1) ?? 0;
+
+        var fistArgOffset = PointerSize * (1 + _functionParameters.Count - 6);
+        var argNum = 0;
+        for (var i = 6; i < _functionParameters.Count; i++)
+        {
+            _localVariableLocation.Add(_functionParameters[i], new MemoryLocation(-(fistArgOffset - PointerSize * argNum)));
+            argNum += 1;
+        }
     }
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
     {
         if (usedElsewhere)
         {
             _localsOffset += PointerSize;
-            _localVariableLocation.Add(variable, new MemoryLocation(_localsOffset));
+            _localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset));
         }
         else
         {
-            _localVariableLocation.Add(variable, new RegisterLocation());
+            _localVariableLocation.TryAdd(variable, new RegisterLocation());
         }
     }
 
@@ -177,14 +185,6 @@ public sealed class FunctionContext : IFunctionContext
         for (var i = 0; i < regParamsNum; i++)
         {
             GenerateVariableWrite(_functionParameters[i], Reg(argumentRegisters[i]).Read());
-        }
-
-        var firstStackArgOffset = PointerSize * (1 + _functionParameters.Count - 6);
-        var argNum = 0;
-        for (var i = 6; i < paramNum; i++)
-        {
-            GenerateVariableWrite(_functionParameters[i], Mem(rbpRead + (firstStackArgOffset - PointerSize * argNum)).Read());
-            argNum += 1;
         }
 
         // Callee-saved registers
