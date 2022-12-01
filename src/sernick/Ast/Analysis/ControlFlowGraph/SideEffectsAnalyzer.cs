@@ -158,6 +158,31 @@ public static class SideEffectsAnalyzer
                 throw new NotSupportedException("Left- and right-hand sides of a binary operation have to be values");
             }
 
+            // If the evaluation of `rightResult` affects `leftValue`,
+            // we can't reorder `leftValue` after `rightResult`.
+            // Write to a temporary to be read at the end.
+            var rightReads = new HashSet<Variable>();
+            var rightWrites = new HashSet<Variable>();
+            foreach (var tree in rightResult.SkipLast(1))
+            {
+                rightReads.UnionWith(tree.ReadVariables);
+                rightWrites.UnionWith(tree.WrittenVariables);
+            }
+
+            if (leftResult[^1].ReadVariables.Overlaps(rightWrites)
+                || leftResult[^1].WrittenVariables.Overlaps(rightReads)
+                || leftResult[^1].WrittenVariables.Overlaps(rightWrites))
+            {
+                var (tempRead, tempWrite) = GenerateTemporary(leftValue, node);
+                leftResult[^1].CodeTreeRootChildren[^1] = tempWrite;
+                leftResult.Add(new TreeWithEffects(
+                    new HashSet<VariableDeclaration>(),
+                    new HashSet<VariableDeclaration>(),
+                    new List<CodeTreeNode> { tempRead }
+                ));
+                leftValue = tempRead;
+            }
+
             var operationResult = node.Operator switch
             {
                 Infix.Op.Plus => new BinaryOperationNode(BinaryOperation.Add, leftValue, rightValue),
@@ -268,6 +293,20 @@ public static class SideEffectsAnalyzer
                 _currentFunctionContext.GenerateVariableWrite(variable, assignedValue);
             return result;
 
+        }
+
+        private (CodeTreeValueNode, CodeTreeNode) GenerateTemporary(CodeTreeValueNode value, AstNode node)
+        {
+            var tempVariable = new VariableDeclaration(
+                new Identifier("TempVar@" + node.GetHashCode(), node.LocationRange),
+                null,
+                null,
+                false,
+                node.LocationRange);
+            _currentFunctionContext.AddLocal(tempVariable, false);
+            var tempRead = _currentFunctionContext.GenerateVariableRead(tempVariable);
+            var tempWrite = _currentFunctionContext.GenerateVariableWrite(tempVariable, value);
+            return (tempRead, tempWrite);
         }
 
         private readonly NameResolutionResult _nameResolution;
