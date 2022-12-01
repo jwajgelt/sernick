@@ -13,14 +13,15 @@ public sealed class FakeFunctionContext : IFunctionContext
 
     public Label Label => "fake";
 
+    public int Depth => 0;
+
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere) => _locals[variable] = usedElsewhere;
-    public RegisterWrite? ResultVariable { get; set; }
-    public IReadOnlyList<CodeTreeNode> GeneratePrologue()
+    public IReadOnlyList<SingleExitNode> GeneratePrologue()
     {
         throw new NotImplementedException();
     }
 
-    public IReadOnlyList<CodeTreeNode> GenerateEpilogue()
+    public IReadOnlyList<SingleExitNode> GenerateEpilogue(CodeTreeValueNode? valToReturn)
     {
         throw new NotImplementedException();
     }
@@ -40,7 +41,7 @@ public sealed class FakeFunctionContext : IFunctionContext
         throw new NotImplementedException();
     }
 
-    public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeNode> arguments)
+    public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
     {
         throw new NotImplementedException();
     }

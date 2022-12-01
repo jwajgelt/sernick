@@ -7,7 +7,7 @@ public interface IFunctionCaller
 {
     public Label Label { get; }
 
-    public GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeNode> arguments);
+    public GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments);
 
-    public record GenerateCallResult(IReadOnlyList<CodeTreeNode> CodeGraph, CodeTreeNode? ResultLocation);
+    public record GenerateCallResult(IReadOnlyList<SingleExitNode> CodeGraph, CodeTreeValueNode? ResultLocation);
 }
