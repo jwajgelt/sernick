@@ -123,7 +123,8 @@ public class FunctionContextGenerateVariableAccessTest
         var displayAddress = new GlobalAddress("display");
 
         var parentContext = new FunctionContext(null, Array.Empty<IFunctionParam>(), false);
-        parentContext.AddLocal(variable, true);        var context = new FunctionContext(parentContext, Array.Empty<IFunctionParam>(), false);
+        parentContext.AddLocal(variable, true);
+        var context = new FunctionContext(parentContext, Array.Empty<IFunctionParam>(), false);
 
         var readCodeTree = context.GenerateVariableWrite(variable, value);
 
