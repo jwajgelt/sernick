@@ -15,48 +15,54 @@ public static class SideEffectsAnalyzer
     {
         var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext);
         var visitorResult = root.Accept(visitor, Unit.I);
-        return visitorResult.Select(tree => new SingleExitNode(null, tree.CodeTreeRootChildren)).ToList();
+
+        if (!visitorResult.Any())
+        {
+            return new List<SingleExitNode>();
+        }
+
+        var readVariables = new HashSet<Variable>();
+        var writtenVariables = new HashSet<Variable>();
+        var operations = new List<CodeTreeNode>();
+
+        var result = new List<SingleExitNode>();
+
+        foreach (var tree in visitorResult)
+        {
+            if (tree.Affects(readVariables) || tree.AffectedBy(writtenVariables))
+            {
+                result.Add(new SingleExitNode(null, operations));
+                readVariables = new HashSet<Variable>();
+                writtenVariables = new HashSet<Variable>();
+                operations = new List<CodeTreeNode>();
+            }
+
+            operations.Add(tree.CodeTree);
+            readVariables.UnionWith(tree.ReadVariables);
+            writtenVariables.UnionWith(tree.WrittenVariables);
+        }
+
+        result.Add(new SingleExitNode(null, operations));
+
+        return result;
     }
 
     private record TreeWithEffects
     (
         HashSet<Variable> ReadVariables,
         HashSet<Variable> WrittenVariables,
-        List<CodeTreeNode> CodeTreeRootChildren
+        CodeTreeNode CodeTree
     )
     {
-        // we can merge two trees if
-        // 1. neither is a function call, since these can be effectful
-        // 2. no variable read in `next` was written in `this`, or vice versa
-        // 3. no variable was written in both
-        public bool CanMergeWith(TreeWithEffects next) =>
-            !next.ReadVariables.Overlaps(WrittenVariables)
-            && !ReadVariables.Overlaps(next.WrittenVariables)
-            && !WrittenVariables.Overlaps(next.WrittenVariables);
+        public bool AffectedBy(IReadOnlySet<VariableDeclaration> variableWrites) =>
+            ReadVariables.Overlaps(variableWrites)
+            || WrittenVariables.Overlaps(variableWrites)
+            || variableWrites.Overlaps(ReadVariables);
 
-        public void MergeWith(TreeWithEffects other)
+        public bool Affects(IEnumerable<VariableDeclaration> variableReads)
         {
-            ReadVariables.UnionWith(other.ReadVariables);
-            WrittenVariables.UnionWith(other.WrittenVariables);
-            CodeTreeRootChildren.AddRange(other.CodeTreeRootChildren);
+            return WrittenVariables.Overlaps(variableReads);
         }
-    }
-
-    private static void AddTreesMerging(this List<TreeWithEffects> left, IReadOnlyCollection<TreeWithEffects> right)
-    {
-        if (!right.Any())
-        {
-            return;
-        }
-
-        if (left.Count == 0 || !left[^1].CanMergeWith(right.First()))
-        {
-            left.AddRange(right);
-            return;
-        }
-
-        left[^1].MergeWith(right.First());
-        left.AddRange(right.Skip(1));
     }
 
     private class SideEffectsVisitor : AstVisitor<List<TreeWithEffects>, SideEffectsVisitorParam>
@@ -69,43 +75,9 @@ public static class SideEffectsAnalyzer
 
         protected override List<TreeWithEffects> VisitAstNode(AstNode node, SideEffectsVisitorParam param)
         {
-            var results = node.Children.Select(child => child.Accept(this, param));
-            var treeList = new List<TreeWithEffects>();
+            var results = node.Children.SelectMany(child => child.Accept(this, param));
 
-            foreach (var result in results)
-            {
-                if (!result.Any())
-                {
-                    continue;
-                }
-
-                if (treeList.Count == 0)
-                {
-                    treeList.AddRange(result);
-                    continue;
-                }
-
-                var prev = treeList[^1];
-                var next = result.First();
-
-                // If no side effects from the last tree so far
-                // impacts the next tree to be added, merge the two trees.
-                // Since the tree after `next` in result wasn't merged with `next`
-                // before, we don't need to check if we can merge it now, and can just
-                // add the rest of `result` to the tree list
-                if (prev.CanMergeWith(next))
-                {
-                    prev.MergeWith(next);
-                }
-                else
-                {
-                    treeList.Add(next);
-                }
-
-                treeList.AddRange(result.Skip(1));
-            }
-
-            return treeList;
+            return results.ToList();
         }
 
         protected override List<TreeWithEffects> VisitFlowControlStatement(FlowControlStatement node, SideEffectsVisitorParam param)
@@ -137,7 +109,7 @@ public static class SideEffectsAnalyzer
 
         public override List<TreeWithEffects> VisitFunctionCall(FunctionCall node, SideEffectsVisitorParam param)
         {
-            throw new NotSupportedException("Side effects analysis shouldn't descend into function calls");
+            throw new NotImplementedException();
         }
 
         public override List<TreeWithEffects> VisitInfix(Infix node, SideEffectsVisitorParam param)
@@ -145,15 +117,13 @@ public static class SideEffectsAnalyzer
             var leftResult = node.Left.Accept(this, param);
             var rightResult = node.Right.Accept(this, param);
 
-            if (leftResult.Count == 0 || rightResult.Count == 0
-                || leftResult[^1].CodeTreeRootChildren.Count == 0
-                || rightResult[^1].CodeTreeRootChildren.Count == 0)
+            if (leftResult.Count == 0 || rightResult.Count == 0)
             {
                 throw new NotSupportedException("Left- and right-hand sides of a binary operation can't be empty");
             }
 
-            if (leftResult[^1].CodeTreeRootChildren[^1] is not CodeTreeValueNode leftValue
-                || rightResult[^1].CodeTreeRootChildren[^1] is not CodeTreeValueNode rightValue)
+            if (leftResult[^1].CodeTree is not CodeTreeValueNode leftValue
+                || rightResult[^1].CodeTree is not CodeTreeValueNode rightValue)
             {
                 throw new NotSupportedException("Left- and right-hand sides of a binary operation have to be values");
             }
@@ -169,16 +139,15 @@ public static class SideEffectsAnalyzer
                 rightWrites.UnionWith(tree.WrittenVariables);
             }
 
-            if (leftResult[^1].ReadVariables.Overlaps(rightWrites)
-                || leftResult[^1].WrittenVariables.Overlaps(rightReads)
-                || leftResult[^1].WrittenVariables.Overlaps(rightWrites))
+            if (leftResult[^1].AffectedBy(rightWrites)
+                || leftResult[^1].Affects(rightReads))
             {
                 var (tempRead, tempWrite) = GenerateTemporary(leftValue, node);
-                leftResult[^1].CodeTreeRootChildren[^1] = tempWrite;
+                leftResult[^1] = leftResult[^1] with { CodeTree = tempWrite };
                 leftResult.Add(new TreeWithEffects(
                     new HashSet<VariableDeclaration>(),
                     new HashSet<VariableDeclaration>(),
-                    new List<CodeTreeNode> { tempRead }
+                    tempRead
                 ));
                 leftValue = tempRead;
             }
@@ -196,7 +165,7 @@ public static class SideEffectsAnalyzer
                     "Side effects analysis expects an AST with linear flow"),
                 _ => throw new ArgumentOutOfRangeException()
             };
-            // this is overly conservative. Can we track read variables for each code tree root child?
+
             var readVariables = new HashSet<VariableDeclaration>();
             readVariables.UnionWith(leftResult[^1].ReadVariables);
             readVariables.UnionWith(rightResult[^1].ReadVariables);
@@ -206,12 +175,12 @@ public static class SideEffectsAnalyzer
             (
                 readVariables,
                 writtenVariables,
-                new List<CodeTreeNode> { operationResult }
+                operationResult
             );
 
-            var result = new List<TreeWithEffects>(leftResult.SkipLast(1));
-            result.AddTreesMerging(rightResult.SkipLast(1).ToArray());
-            result.AddTreesMerging(new[] { operationTree });
+            var result = leftResult.SkipLast(1).ToList();
+            result.AddRange(rightResult.SkipLast(1));
+            result.Add(operationTree);
             return result;
         }
 
@@ -236,7 +205,7 @@ public static class SideEffectsAnalyzer
                 new (
                     readVariables,
                     new HashSet<VariableDeclaration>(),
-                    new List<CodeTreeNode> { variableReadTree }
+                     variableReadTree
                 )
             };
         }
@@ -248,7 +217,7 @@ public static class SideEffectsAnalyzer
                 new (
                     new HashSet<VariableDeclaration>(),
                     new HashSet<VariableDeclaration>(),
-                    new List<CodeTreeNode> { new Constant(new RegisterValue(Convert.ToInt64(node.Value))) }
+                     new Constant(new RegisterValue(Convert.ToInt64(node.Value)))
                 )
             };
         }
@@ -260,7 +229,7 @@ public static class SideEffectsAnalyzer
                 new (
                     new HashSet<VariableDeclaration>(),
                     new HashSet<VariableDeclaration>(),
-                    new List<CodeTreeNode> { new Constant(new RegisterValue(node.Value)) }
+                     new Constant(new RegisterValue(node.Value))
                 )
             };
         }
@@ -283,14 +252,13 @@ public static class SideEffectsAnalyzer
 
             var last = result[^1];
 
-            if (last.CodeTreeRootChildren[^1] is not CodeTreeValueNode assignedValue)
+            if (last.CodeTree is not CodeTreeValueNode assignedValue)
             {
                 throw new NotSupportedException("Right-hand side of assignment should be a value");
             }
 
             last.WrittenVariables.Add(variable);
-            last.CodeTreeRootChildren[^1] =
-                _currentFunctionContext.GenerateVariableWrite(variable, assignedValue);
+            result[^1] = last with { CodeTree = _currentFunctionContext.GenerateVariableWrite(variable, assignedValue) };
             return result;
 
         }
