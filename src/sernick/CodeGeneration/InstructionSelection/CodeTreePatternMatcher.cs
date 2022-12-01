@@ -13,8 +13,8 @@ public class CodeTreePatternMatcher
     /// Tries to match <see cref="root"/> onto each pattern, until succeeds. In that case,
     /// returns true and
     /// sets <see cref="leaves"/> to subtrees that were matched onto Wildcard nodes, and
-    /// sets <see cref="GenerateInstructions"/> to a function which, given input and output registers,
-    /// is able to generate a list of assembly instructions.
+    /// sets <see cref="GenerateInstructions"/> to a function which, given input registers,
+    /// is able to generate a list of assembly instructions and an output register.
     /// </summary>
     public bool MatchCodeTree(CodeTreeNode root,
         [NotNullWhen(true)] out IEnumerable<CodeTreeNode>? leaves,

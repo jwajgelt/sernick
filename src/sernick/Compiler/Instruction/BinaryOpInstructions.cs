@@ -10,6 +10,15 @@ public enum BinaryOp
     Cmp
 }
 
+/// <summary>
+/// Create binary-op instructions using static factory methods and the builder.
+/// <example>
+/// <code>
+/// using Bin = BinaryOpInstruction;
+/// Bin.Add.ToReg(reg).FromImm(5) // add $reg, 5
+/// </code>
+/// </example>
+/// </summary>
 public sealed record BinaryOpInstruction(BinaryOp Op, IInstructionOperand Left, IInstructionOperand Right) : IInstruction
 {
     public static BinaryOpInstructionBuilder Add => new(BinaryOp.Add);

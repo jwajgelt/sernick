@@ -3,6 +3,15 @@ namespace sernick.Compiler.Instruction;
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 
+/// <summary>
+/// Create mov instructions using the builder.
+/// <example>
+/// <code>
+/// using Mov = MovInstruction;
+/// Mov.ToReg(reg).FromImm(5) // mov $reg, 5
+/// </code>
+/// </example>
+/// </summary>
 public sealed record MovInstruction(IInstructionOperand Target, IInstructionOperand Source) : IInstruction
 {
     public static MovInstructionBuilder ToReg(Register target) => new(target.AsRegOperand());
