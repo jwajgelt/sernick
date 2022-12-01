@@ -26,7 +26,12 @@ public class CodeTreePatternMatcher
             if (rule.Pattern.TryMatch(root, out var matchedLeaves, values))
             {
                 leaves = matchedLeaves;
-                generateInstructions = (output, inputs) => rule.GenerateInstructions(inputs, values);
+                generateInstructions = (IReadOnlyList<Register> inputs, out Register? output) =>
+                {
+                    var (instructions, outputRegister) = rule.GenerateInstructions(inputs, values);
+                    output = outputRegister;
+                    return instructions;
+                };
                 return true;
             }
         }
@@ -37,5 +42,5 @@ public class CodeTreePatternMatcher
         return false;
     }
 
-    public delegate IEnumerable<IInstruction> GenerateInstructions(Register output, IReadOnlyList<Register> inputs);
+    public delegate IEnumerable<IInstruction> GenerateInstructions(IReadOnlyList<Register> inputs, out Register? output);
 }
