@@ -4,6 +4,7 @@ using Compiler.Function.Helpers;
 using Helpers;
 using sernick.Ast;
 using sernick.Ast.Analysis.ControlFlowGraph;
+using sernick.Ast.Analysis.FunctionContextMap;
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Nodes;
 using sernick.ControlFlowGraph.CodeTree;
@@ -23,6 +24,7 @@ public class SideEffectsAnalyzerTest
     {
         // 1 `astOp` 2
         var functionContext = new FakeFunctionContext();
+        var functionContextMap = new FunctionContextMap();
         Fun<UnitType>("f")
             .Body(
                 new Infix(Literal(1), Literal(2), astOp)
@@ -38,7 +40,7 @@ public class SideEffectsAnalyzerTest
             })
         };
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, new NameResolutionResult(), functionContext);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, new NameResolutionResult(), functionContext, functionContextMap);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
@@ -54,6 +56,7 @@ public class SideEffectsAnalyzerTest
     public void BinaryOperationsAreCompiledIntoBinaryOperationNodesWithVariableReads(Infix.Op astOp, BinaryOperation binOp)
     {
         var functionContext = new FakeFunctionContext();
+        var functionContextMap = new FunctionContextMap();
         // var x = 1; var y = 2;
         // x `astOp` y
         // The declarations can happen in the same tree,
@@ -86,7 +89,7 @@ public class SideEffectsAnalyzerTest
             (xUse, declX),
             (yUse, declY));
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
@@ -102,6 +105,7 @@ public class SideEffectsAnalyzerTest
     // public void BinaryOperationsShouldInsertTempVariablesForIntermediateResults(Infix.Op astOp, BinaryOperation binOp)
     // {
     //     var functionContext = new FakeFunctionContext();
+    //     var functionContextMap = new FunctionContextMap();
     //     // var x = 1;
     //     // x `astOp` {x = x+1; x}
     //     // The left-hand-side of operation
@@ -134,6 +138,7 @@ public class SideEffectsAnalyzerTest
     public void AssignmentsAndReadsToSameVariableAreSeparated()
     {
         var functionContext = new FakeFunctionContext();
+        var functionContextMap = new FunctionContextMap();
         // var x = 1;
         // var y = x
         // The `y` declaration cannot happen in the same tree as `x` declaration
@@ -156,7 +161,7 @@ public class SideEffectsAnalyzerTest
 
         var nameResolution = new NameResolutionResult().WithVars((xUse, declX));
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
@@ -165,6 +170,7 @@ public class SideEffectsAnalyzerTest
     public void ReadsAndAssignmentsToSameVariableAreSeparated()
     {
         var functionContext = new FakeFunctionContext();
+        var functionContextMap = new FunctionContextMap();
         // var x = 1;
         // var y = x;
         // x = y
@@ -195,7 +201,7 @@ public class SideEffectsAnalyzerTest
             .WithVars((xUse, declX), (yUse, declY))
             .WithAssigns((xAss, declX));
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
@@ -204,6 +210,7 @@ public class SideEffectsAnalyzerTest
     public void AssignmentsCanUseSameVariableInRightHandSide()
     {
         var functionContext = new FakeFunctionContext();
+        var functionContextMap = new FunctionContextMap();
         // var x = 1;
         // x = x+1
         // The assignment can happen in the same tree
@@ -236,7 +243,7 @@ public class SideEffectsAnalyzerTest
             .WithVars((xUse, declX))
             .WithAssigns((xAss, declX));
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }

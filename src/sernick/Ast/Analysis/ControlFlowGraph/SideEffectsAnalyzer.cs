@@ -1,19 +1,21 @@
 namespace sernick.Ast.Analysis.ControlFlowGraph;
 
 using Compiler.Function;
+using FunctionContextMap;
 using NameResolution;
 using Nodes;
 using sernick.ControlFlowGraph.CodeTree;
 using Utility;
-using FunctionCall = Nodes.FunctionCall;
+using AstFunctionCall = Nodes.FunctionCall;
+using CodeTreeFunctionCall = sernick.ControlFlowGraph.CodeTree.FunctionCall;
 using SideEffectsVisitorParam = Utility.Unit;
 using Variable = Nodes.VariableDeclaration;
 
 public static class SideEffectsAnalyzer
 {
-    public static IReadOnlyList<SingleExitNode> PullOutSideEffects(AstNode root, NameResolutionResult nameResolution, IFunctionContext currentFunctionContext)
+    public static IReadOnlyList<SingleExitNode> PullOutSideEffects(AstNode root, NameResolutionResult nameResolution, IFunctionContext currentFunctionContext, FunctionContextMap functionContextMap)
     {
-        var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext);
+        var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext, functionContextMap);
         var visitorResult = root.Accept(visitor, Unit.I);
 
         if (!visitorResult.Any())
@@ -29,7 +31,10 @@ public static class SideEffectsAnalyzer
 
         foreach (var tree in visitorResult)
         {
-            if (tree.Affects(readVariables) || tree.AffectedBy(writtenVariables))
+            if (operations.Count != 0 && (
+                    !tree.CanMerge 
+                    || tree.Affects(readVariables) 
+                    || tree.AffectedBy(writtenVariables)))
             {
                 result.Add(new SingleExitNode(null, operations));
                 readVariables = new HashSet<Variable>();
@@ -51,7 +56,8 @@ public static class SideEffectsAnalyzer
     (
         HashSet<Variable> ReadVariables,
         HashSet<Variable> WrittenVariables,
-        CodeTreeNode CodeTree
+        CodeTreeNode CodeTree,
+        bool CanMerge = true
     )
     {
         public bool AffectedBy(IReadOnlySet<VariableDeclaration> variableWrites) =>
@@ -59,18 +65,29 @@ public static class SideEffectsAnalyzer
             || WrittenVariables.Overlaps(variableWrites)
             || variableWrites.Overlaps(ReadVariables);
 
+        public bool AffectedBy(IEnumerable<TreeWithEffects> trees) =>
+            trees.Any(tree => AffectedBy(tree.WrittenVariables));
+
         public bool Affects(IEnumerable<VariableDeclaration> variableReads)
         {
             return WrittenVariables.Overlaps(variableReads);
         }
+
+        public bool Affects(IEnumerable<TreeWithEffects> trees) =>
+            trees.Any(tree => Affects(tree.ReadVariables));
     }
 
     private class SideEffectsVisitor : AstVisitor<List<TreeWithEffects>, SideEffectsVisitorParam>
     {
-        public SideEffectsVisitor(NameResolutionResult nameResolution, IFunctionContext currentFunctionContext)
+        public SideEffectsVisitor(
+            NameResolutionResult nameResolution, 
+            IFunctionContext currentFunctionContext, 
+            FunctionContextMap functionContextMap
+        ) 
         {
             _nameResolution = nameResolution;
             _currentFunctionContext = currentFunctionContext;
+            _functionContextMap = functionContextMap;
         }
 
         protected override List<TreeWithEffects> VisitAstNode(AstNode node, SideEffectsVisitorParam param)
@@ -107,9 +124,79 @@ public static class SideEffectsAnalyzer
             return new List<TreeWithEffects>();
         }
 
-        public override List<TreeWithEffects> VisitFunctionCall(FunctionCall node, SideEffectsVisitorParam param)
+        public override List<TreeWithEffects> VisitFunctionCall(AstFunctionCall node, SideEffectsVisitorParam param)
         {
-            throw new NotImplementedException();
+            var args = node.Arguments.ToList();
+            var argsEvals = args.Select(arg => arg.Accept(this, param)).ToList();
+            var argsValues = argsEvals.Select(result =>
+            {
+                if (result.Count == 0)
+                {
+                    throw new NotSupportedException("Arguments must be non-empty expressions");
+                }
+
+                if (result.Last().CodeTree is not CodeTreeValueNode argValue)
+                {
+                    throw new NotSupportedException("Argument expressions must evaluate to values");
+                }
+
+                return argValue;
+            }).ToList();
+
+            for (var i = 0; i < argsEvals.Count - 1; i++)
+            {
+                var currentArgValue = argsEvals[i].Last();
+                for (var j = i + 1; j < argsEvals.Count; j++)
+                {
+                    var followingArgEval = argsEvals[j];
+                    if (!currentArgValue.AffectedBy(followingArgEval) && !currentArgValue.Affects(followingArgEval))
+                    {
+                        continue;
+                    }
+
+                    var (tempRead, tempWrite) = GenerateTemporary(argsValues[i], args[i]);
+                    argsEvals[i][argsEvals[i].Count - 1] = currentArgValue with { CodeTree = tempWrite };
+                    argsValues[i] = tempRead;
+                    break;
+                }
+
+                if (argsEvals[i].Last() == currentArgValue)
+                {
+                    argsEvals[i].RemoveAt(argsEvals[i].Count - 1);
+                }
+            }
+
+            var (functionCall, resultLocation) = _functionContextMap.Callers[node].GenerateCall(argsValues);
+
+            var functionCallTrees = functionCall.SelectMany(
+                callTree => callTree.Operations.Select(
+                    (tree, index) => new TreeWithEffects(
+                        new HashSet<VariableDeclaration>(), 
+                        new HashSet<VariableDeclaration>(),
+                        tree,
+                        index != 0)
+                )).ToList();
+
+            if (functionCallTrees[0].CodeTree is CodeTreeFunctionCall)
+            {
+                // TODO: add read and written variables here
+                functionCallTrees[0] = functionCallTrees[0] with { CanMerge = true };
+            }
+
+            var resultTree = resultLocation != null ? new TreeWithEffects(
+                new HashSet<VariableDeclaration>(),
+                new HashSet<VariableDeclaration>(),
+                resultLocation,
+                false
+            ) : null;
+
+            var operations = argsEvals.SelectMany(trees => trees).Concat(functionCallTrees).ToList();
+            if (resultTree != null)
+            {
+                operations.Add(resultTree);
+            }
+
+            return operations;
         }
 
         public override List<TreeWithEffects> VisitInfix(Infix node, SideEffectsVisitorParam param)
@@ -279,5 +366,6 @@ public static class SideEffectsAnalyzer
 
         private readonly NameResolutionResult _nameResolution;
         private readonly IFunctionContext _currentFunctionContext;
+        private readonly FunctionContextMap _functionContextMap;
     }
 }
