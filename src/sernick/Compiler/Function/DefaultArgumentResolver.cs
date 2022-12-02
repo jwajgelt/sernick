@@ -4,7 +4,7 @@ using ControlFlowGraph.CodeTree;
 
 public static class DefaultArgumentResolver
 {
-    public static CodeTreeValueNode GetDefaultValue(IFunctionParam param)
+    public static CodeTreeValueNode GetDefaultValue(this IFunctionParam param)
     {
         var defaultValue = param.TryGetDefaultValue();
         if (defaultValue == null)

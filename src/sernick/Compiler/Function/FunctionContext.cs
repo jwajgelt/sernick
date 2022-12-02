@@ -107,9 +107,9 @@ public sealed class FunctionContext : IFunctionContext
 
         // Add default arguments if necessary
         var allArgs = new List<CodeTreeValueNode>(arguments);
-        while (arguments.Count < _functionParameters.Count)
+        while (allArgs.Count < _functionParameters.Count)
         {
-            allArgs.Add(DefaultArgumentResolver.GetDefaultValue(_functionParameters[arguments.Count - 1]));
+            allArgs.Add(_functionParameters[allArgs.Count - 1].GetDefaultValue());
         }
 
         // Divide args into register and stack
