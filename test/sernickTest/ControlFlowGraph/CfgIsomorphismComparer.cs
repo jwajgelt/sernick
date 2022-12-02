@@ -15,21 +15,20 @@ static class CfgLabeler
 
         // We want deep copy here
         var labeled = original;
-        processRoot(regToLabel, visitSet, original, labeled);
+        processRoot(regToLabel, visitSet, labeled);
         return labeled;
     }
 
     private static void processRoot(
         Dictionary<Register, int> regToLabel, 
         HashSet<CodeTreeRoot> visitSet,
-        CodeTreeRoot original,
-        CodeTreeRoot labeled
+        CodeTreeRoot graph
         )
     {
 
     }
 
-    private static void processTree()
+    private static void processTree(Dictionary<Register, int> regToLabel, CodeTreeNode original)
     {
 
     }
