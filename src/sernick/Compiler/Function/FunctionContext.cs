@@ -115,10 +115,7 @@ public sealed class FunctionContext : IFunctionContext
         }
 
         // Put args into registers
-        for (var i = 0; i < regArgs.Count; i++)
-        {
-            operations.Add(Reg(argumentRegisters[i]).Write(regArgs[i]));
-        }
+        operations.AddRange(argumentRegisters.Zip(regArgs).Select(p => Reg(p.First).Write(p.Second)));
 
         // Put args onto stack
         foreach (var arg in stackArgs)
