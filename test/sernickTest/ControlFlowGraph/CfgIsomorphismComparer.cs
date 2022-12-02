@@ -2,15 +2,43 @@ namespace sernickTest.ControlFlowGraph;
 
 using sernick.ControlFlowGraph.CodeTree;
 
-public sealed class CfgIsomorphismComparer : IEqualityComparer<CodeTreeRoot>
+sealed record RegisterLabel(int label);
+sealed record LabelRead(RegisterLabel Register) : CodeTreeValueNode;
+sealed record LabelWrite(RegisterLabel Register, CodeTreeValueNode Value) : CodeTreeNode;
+
+static class CfgLabeler
 {
-    private bool areEqual(
-        CodeTreeRoot? x,
-        CodeTreeRoot? y, 
+    public static CodeTreeRoot LabelCfg(CodeTreeRoot original)
+    {
+        var regToLabel = new Dictionary<Register, int>();
+        var visitSet = new HashSet<CodeTreeRoot>();
+
+        // We want deep copy here
+        var labeled = original;
+        processRoot(regToLabel, visitSet, original, labeled);
+        return labeled;
+    }
+
+    private static void processRoot(
         Dictionary<Register, int> regToLabel, 
-        HashSet<CodeTreeRoot> visitSet
+        HashSet<CodeTreeRoot> visitSet,
+        CodeTreeRoot original,
+        CodeTreeRoot labeled
         )
     {
+
+    }
+
+    private static void processTree()
+    {
+
+    }
+}
+
+public sealed class CfgIsomorphismComparer : IEqualityComparer<CodeTreeRoot>
+{
+    public bool Equals(CodeTreeRoot? x, CodeTreeRoot? y)
+    {   
         if(x is null && y is null)
         {
             return true;
@@ -21,30 +49,15 @@ public sealed class CfgIsomorphismComparer : IEqualityComparer<CodeTreeRoot>
             return false;
         }
 
-        if(visitSet.Contains(x) != visitSet.Contains(y))
-        {
-            return false;
-        }
+        var labeledCfgX = CfgLabeler.LabelCfg(x);
+        var labeledCfgY = CfgLabeler.LabelCfg(y);
 
-        if(visitSet.Contains(x))    // ???
-        {
-            return true;
-        }
-
-        visitSet.Add(x);
-        visitSet.Add(y);
-    }
-
-    public bool Equals(CodeTreeRoot? x, CodeTreeRoot? y)
-    {   
-        var regToLabel = new Dictionary<Register, Register>();
-        var visitSet = new HashSet<CodeTreeRoot>();
-
-        return false;
+        return labeledCfgX.Equals(labeledCfgY);
     }
 
     public int GetHashCode(CodeTreeRoot obj)
     {
-        throw new NotImplementedException();
+        var labeledCfg = CfgLabeler.LabelCfg(obj);
+        return labeledCfg.GetHashCode();
     }
 }
