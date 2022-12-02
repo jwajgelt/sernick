@@ -26,9 +26,9 @@ public sealed record FunctionParameterDeclaration(Identifier Name,
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitFunctionParameterDeclaration(this, param);
 
-    public Object? TryGetDefaultValue()
+    public object? TryGetDefaultValue()
     {
-        return this.DefaultValue switch
+        return DefaultValue switch
         {
             null => null,
             IntLiteralValue intValue => intValue.Value,

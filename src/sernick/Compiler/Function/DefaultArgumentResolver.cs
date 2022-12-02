@@ -7,17 +7,17 @@ public static class DefaultArgumentResolver
     public static CodeTreeValueNode GetDefaultValue(IFunctionParam param)
     {
         var defaultValue = param.TryGetDefaultValue();
-        if(defaultValue == null)
+        if (defaultValue == null)
         {
             throw new Exception("Requested a default value, but there is none.");
         }
 
-        if(defaultValue is int intValue)
+        if (defaultValue is int intValue)
         {
             return intValue;
         }
 
-        if(defaultValue is bool boolValue)
+        if (defaultValue is bool boolValue)
         {
             return boolValue ? 1 : 0;
         }

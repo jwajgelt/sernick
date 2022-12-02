@@ -105,13 +105,20 @@ public sealed class FunctionContext : IFunctionContext
         var rspRead = Reg(rsp).Read();
         var pushRsp = Reg(rsp).Write(rspRead - PointerSize);
 
+        // Add default arguments if necessary
+        var allArgs = new List<CodeTreeValueNode>(arguments);
+        while (arguments.Count < _functionParameters.Count)
+        {
+            allArgs.Add(DefaultArgumentResolver.GetDefaultValue(_functionParameters[arguments.Count - 1]));
+        }
+
         // Divide args into register and stack
         var regArgs = new List<CodeTreeValueNode>();
         var stackArgs = new List<CodeTreeValueNode>();
 
-        for (var i = 0; i < arguments.Count; i++)
+        for (var i = 0; i < allArgs.Count; i++)
         {
-            (i < 6 ? regArgs : stackArgs).Add(arguments[i]);
+            (i < 6 ? regArgs : stackArgs).Add(allArgs[i]);
         }
 
         // Put args into registers

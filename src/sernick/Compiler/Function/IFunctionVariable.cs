@@ -8,5 +8,5 @@ public interface IFunctionVariable { }
 
 public interface IFunctionParam : IFunctionVariable
 {
-    Object? TryGetDefaultValue();
+    object? TryGetDefaultValue();
 }
