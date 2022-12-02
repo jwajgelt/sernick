@@ -6,22 +6,12 @@ public static class DefaultArgumentResolver
 {
     public static CodeTreeValueNode GetDefaultValue(this IFunctionParam param)
     {
-        var defaultValue = param.TryGetDefaultValue();
-        if (defaultValue == null)
+        return param.TryGetDefaultValue() switch
         {
-            throw new Exception("Requested a default value, but there is none.");
-        }
-
-        if (defaultValue is int intValue)
-        {
-            return intValue;
-        }
-
-        if (defaultValue is bool boolValue)
-        {
-            return boolValue ? 1 : 0;
-        }
-
-        throw new Exception("Default value of unsupported type.");
+            null => throw new Exception("Requested a default value, but there is none."),
+            int intValue => intValue,
+            bool boolValue => boolValue ? 1 : 0,
+            _ => throw new Exception("Default value of unsupported type."),
+        };
     }
 }
