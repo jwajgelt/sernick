@@ -188,10 +188,8 @@ public sealed class FunctionContext : IFunctionContext
         // Write arguments to known locations
         var paramNum = _functionParameters.Count;
         var regParamsNum = Math.Min(paramNum, 6);
-        for (var i = 0; i < regParamsNum; i++)
-        {
-            operations.Add(GenerateVariableWrite(_functionParameters[i], Reg(argumentRegisters[i]).Read()));
-        }
+        operations.AddRange(_functionParameters.Zip(argumentRegisters).Take(regParamsNum)
+            .Select(p => GenerateVariableWrite(p.First, Reg(p.Second).Read())));
 
         // Callee-saved registers
         foreach (var reg in calleeToSave)
