@@ -180,7 +180,7 @@ public sealed class FunctionContext : IFunctionContext
 
         // Write arguments to known locations
         var paramNum = _functionParameters.Count;
-        var regParamsNum = (paramNum > 6 ? 6 : paramNum);
+        var regParamsNum = Math.Min(paramNum, 6);
         for (var i = 0; i < regParamsNum; i++)
         {
             GenerateVariableWrite(_functionParameters[i], Reg(argumentRegisters[i]).Read());
