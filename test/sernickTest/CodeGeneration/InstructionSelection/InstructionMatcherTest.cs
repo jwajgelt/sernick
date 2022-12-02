@@ -15,8 +15,7 @@ public class CodeTreePatternMatcherTest
     public void TestMatchPattern(CodeTreePatternRule rule, CodeTreeNode codeTree,
         IEnumerable<CodeTreeValueNode> expectedLeaves)
     {
-        var codeTreeMatcher = new CodeTreePatternMatcher(new[] { rule });
-        Assert.True(codeTreeMatcher.MatchCodeTree(codeTree, out var leaves, out _));
+        Assert.True(rule.TryMatchCodeTree(codeTree, out var leaves, out _));
         Assert.Equal(expectedLeaves, leaves);
     }
 
