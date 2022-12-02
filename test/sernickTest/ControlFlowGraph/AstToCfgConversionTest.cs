@@ -475,4 +475,97 @@ public class AstToCfgConversionTest
             )
         );
     }
+
+    [Fact]
+    public void LeftToRightEvaluationSimple()
+    {
+        // var x = 0;
+        //
+        // fun f() : Int {
+        //     x = x + 1;
+        //     return x;
+        // }
+        //
+        // fun g(): Int {
+        //     return x;
+        // }
+        //
+        // var y = f() + g();
+
+        _ = Program
+        (
+            Var("x", 0),
+            Fun<IntType>("f").Body
+            (
+                "x".Assign("x".Plus(1)),
+                Return(Value("x"))
+            ),
+            Fun<IntType>("g").Body
+            (
+                Return(Value("x"))
+            ),
+
+            Var<IntType>("y", "f".Call().Get(out _).Plus("g".Call().Get(out _)))
+        );
+    }
+
+    [Fact]
+    public void LeftToRightEvaluation()
+    {
+        // var x = 0;
+        //
+        // fun f1() : Int {
+        //     x = x + 1;
+        //     return x;
+        // }
+        //
+        // fun f2(): Int {
+        //     x = x + 2;
+        //     return x;
+        // }
+        //
+        // fun f3(): Int {
+        //     x = x + 3;
+        //     return x;
+        // }
+        //
+        // fun f4(): Int {
+        //     x = x + 4;
+        //     return x;
+        // }
+        //
+        // var y = f1() + f2() + f3() + f4();
+
+        _ = Program
+        (
+            Var("x", 0),
+            Fun<IntType>("f1").Body
+            (
+                "x".Assign("x".Plus(1)),
+                Return(Value("x"))
+            ),
+            Fun<IntType>("f2").Body
+            (
+                "x".Assign("x".Plus(2)),
+                Return(Value("x"))
+            ),
+            Fun<IntType>("f3").Body
+            (
+                "x".Assign("x".Plus(3)),
+                Return(Value("x"))
+            ),
+            Fun<IntType>("f4").Body
+            (
+                "x".Assign("x".Plus(4)),
+                Return(Value("x"))
+            ),
+
+            Var<IntType>("y",
+                "f1".Call().Get(out _)
+                    .Plus("f2".Call().Get(out _))
+                    .Plus("f3".Call().Get(out _))
+                    .Plus("f4".Call().Get(out _))
+            )
+        );
+    }
 }
