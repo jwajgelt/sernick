@@ -183,7 +183,7 @@ public sealed class FunctionContext : IFunctionContext
         var regParamsNum = Math.Min(paramNum, 6);
         for (var i = 0; i < regParamsNum; i++)
         {
-            GenerateVariableWrite(_functionParameters[i], Reg(argumentRegisters[i]).Read());
+            operations.Add(GenerateVariableWrite(_functionParameters[i], Reg(argumentRegisters[i]).Read()));
         }
 
         // Callee-saved registers
