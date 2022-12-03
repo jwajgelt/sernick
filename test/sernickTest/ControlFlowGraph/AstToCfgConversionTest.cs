@@ -5,12 +5,21 @@ using sernick.ControlFlowGraph.CodeTree;
 using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static Ast.Helpers.AstNodesExtensions;
 using sernick.Compiler.Function;
+using sernick.Ast.Nodes;
+using Moq;
+using sernick.Ast.Analysis.ControlFlowGraph;
+using sernick.Ast.Analysis.NameResolution;
+using sernickTest.Diagnostics;
+using sernick.Ast.Analysis.FunctionContextMap;
+using sernick.Ast.Analysis.VariableAccess;
 
 public class AstToCfgConversionTest
 {
     private const int PointerSize = 8;
     private CodeTreeValueNode displayAddress = new Constant(new RegisterValue(0)); // TODO use GlobalAddress after it's merged
     // TODO call AST -> CFG conversion and compare result to what's expected
+
+    private CodeTreeRoot empty = new SingleExitNode(null, new CodeTreeNode[] {});
 
     [Fact]
     public void SimpleAddition()
@@ -19,7 +28,7 @@ public class AstToCfgConversionTest
         // var b = 2;
         // var c : Int = a + b;
 
-        _ = Program
+        var main = Program
         (
             Var("a", 1),
             Var("b", 2),
@@ -33,7 +42,9 @@ public class AstToCfgConversionTest
         var c = new SingleExitNode(null, new[] { C.Write(A.Value + B.Value) });
         var ab = new SingleExitNode(c, new[] { A.Write(1), B.Write(2) });
 
-        var expected = new List<CodeTreeRoot> {ab,c};
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, ab}
+        });
     }
 
     [Fact]
@@ -48,7 +59,7 @@ public class AstToCfgConversionTest
         //    b = 4;
         // }
 
-        _ = Program
+        var main = Program
         (
             Var("a", 1),
             Var("b", 2),
@@ -64,7 +75,9 @@ public class AstToCfgConversionTest
         var ifBlock = new ConditionalJumpNode(a3, b4, cond);
         var ab = new SingleExitNode(ifBlock, new[] { A.Write(1), B.Write(2) });
 
-        var expected = new List<CodeTreeRoot> {ab,ifBlock,a3,b4};
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, ab}
+        });
     }
 
     [Fact]
@@ -78,14 +91,14 @@ public class AstToCfgConversionTest
         // }
         // f(5);
 
-        _ = Program
+        var main = Program
         (
             Fun<IntType>("f").Parameter<IntType>("n", out var paramN).Body
             (
                 If("n".Leq(1)).Then(Return(1)),
                 Return("f".Call().Argument("n".Minus(1)).Get(out _)
                     .Plus("f".Call().Argument("n".Minus(2))))
-            ),
+            ).Get(out var f),
             "f".Call().Argument(Literal(5))
         );
 
@@ -105,7 +118,10 @@ public class AstToCfgConversionTest
         var ret1 = new SingleExitNode(null, new[] { new Constant(new RegisterValue(1)) });
         var ifBlock = new ConditionalJumpNode(ret1, fCallsInner, N.Value <= 1);
 
-        var expected = new List<CodeTreeRoot> {fCallTree,ifBlock,ret1,fCallsInner,retF};
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, fCallTree},
+            {f, ifBlock}
+        });
     }
 
     [Fact]
@@ -118,7 +134,7 @@ public class AstToCfgConversionTest
         //         break;
         //     }
         // }
-        _ = Program
+        var main = Program
         (
             Var("x", 0),
             Loop
@@ -130,11 +146,14 @@ public class AstToCfgConversionTest
 
         var X = Reg(new Register());
 
-        var cond = new BinaryOperationNode(BinaryOperation.Equal, X.Value, 10);
-
         // TODO loop
+        // var cond = new BinaryOperationNode(BinaryOperation.Equal, X.Value, 10);
+        var loopBlock = empty;
+        var x = new SingleExitNode(loopBlock, new[] { X.Write(0) });
 
-        var expected = new List<CodeTreeRoot> {};
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, x}
+        });
     }
 
     [Fact]
@@ -147,16 +166,16 @@ public class AstToCfgConversionTest
         //     return g(x) + g(x + 1);
         // }
 
-        _ = Program
+        var main = Program
         (
             Fun<IntType>("f").Parameter<IntType>("x", out var paramX).Body
             (
                 Fun<IntType>("g").Parameter<IntType>("y", out var paramY).Body
                 (
                     Return("y".Plus("y"))
-                ),
+                ).Get(out var g),
                 Return("g".Call().Argument(Value("x")).Get(out _).Plus("g".Call().Argument("x".Plus(1))))
-            )
+            ).Get(out var f)
         );
 
         var X = Reg(HardwareRegister.RDI);
@@ -174,7 +193,11 @@ public class AstToCfgConversionTest
         var fRet = new SingleExitNode(null, new[] { gCall1.ResultLocation! + gCall2.ResultLocation! });
         var gCalls = new SingleExitNode(fRet, gCall1.CodeGraph.Concat(gCall2.CodeGraph).ToList());
 
-        var expected = new List<CodeTreeRoot> {gCalls,fRet,gRet};
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, empty},
+            {f, gCalls},
+            {g, gRet}
+        });
     }
 
     [Fact]
@@ -209,7 +232,7 @@ public class AstToCfgConversionTest
         //
         // f1(1);
 
-        _ = Program
+        var main = Program
         (
             Fun<IntType>("f1").Parameter<IntType>("p1", out var paramP1).Body
             (
@@ -231,24 +254,23 @@ public class AstToCfgConversionTest
                             "v1".Assign(Value("v4")),
 
                             Return("f2".Call().Argument(Value("v3")))
-                        ),
+                        ).Get(out var f4),
 
                         Return("f4".Call().Argument(Value("v3")))
-                    ),
+                    ).Get(out var f3),
 
                     Return("f3".Call().Argument(Value("v2")))
-                ),
+                ).Get(out var f2),
 
                 Return("f2".Call().Argument(Value("v1")))
-            ),
+            ).Get(out var f1),
             "f1".Call().Argument(Literal(1))
         );
 
-        // TODO update display addressing
-        var V1 = Mem(displayAddress);
-        var V2 = Mem(displayAddress);
-        var V3 = Mem(displayAddress);
-        var V4 = Mem(displayAddress);
+        var V1 = Mem(Mem(displayAddress + 1*PointerSize).Value);
+        var V2 = Mem(Mem(displayAddress + 2*PointerSize).Value);
+        var V3 = Mem(Mem(displayAddress + 3*PointerSize).Value);
+        var V4 = Mem(Mem(displayAddress + 4*PointerSize).Value);
         var P = Reg(HardwareRegister.RDI); // P1,P2,P3,P4 are always under RDI 
 
         var funFactory = new FunctionFactory();
@@ -285,13 +307,13 @@ public class AstToCfgConversionTest
 
         var f1CallTree = new SingleExitNode(null, f1Call.CodeGraph);
 
-        var expected = new List<CodeTreeRoot> {
-            f1CallTree,
-            v1,f2Callv1Tree,f1Ret,
-            v2,v1Plusv2,f3CallTree,f2Ret,
-            v3,v2Plusv3,f4CallTree,f3Ret,
-            v4,v1v4,f2Callv3Tree,f4Ret
-        };
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, f1CallTree},
+            {f1, v1},
+            {f2, v2},
+            {f3, v3},
+            {f4, v4}
+        });
     }
 
     [Fact]
@@ -306,7 +328,7 @@ public class AstToCfgConversionTest
         // }
         // f(3);
 
-        _ = Program
+        var main = Program
         (
             Fun<IntType>("f")
             .Parameter<IntType>("x", Literal(1), out var paramX)
@@ -316,9 +338,9 @@ public class AstToCfgConversionTest
                 Fun<IntType>("g").Parameter<IntType>("z", Literal(3), out var paramZ).Body
                 (
                     Return(Value("z"))
-                ),
+                ).Get(out var g),
                 Return("x".Plus("y").Plus("g".Call()))
-            ),
+            ).Get(out var f),
             "f".Call().Argument(Literal(3))
         );
 
@@ -339,7 +361,11 @@ public class AstToCfgConversionTest
         var gCallTree = new SingleExitNode(fRet, gCall.CodeGraph);
         var gRet = new SingleExitNode(null, new[] { Z.Value });
 
-        var expected = new List<CodeTreeRoot> {fRet,gRet,fCallTree,gCallTree};
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, fCallTree},
+            {f, gCallTree},
+            {g, gRet}
+        });
     }
 
     [Fact]
@@ -357,7 +383,7 @@ public class AstToCfgConversionTest
         //     return g() + x;
         // }
 
-        _ = Program
+        var main = Program
         (
             Fun<IntType>("f").Body
             (
@@ -367,9 +393,9 @@ public class AstToCfgConversionTest
                     Var("x", 2),
                     "x".Assign("x".Plus("x")),
                     Return(Value("x"))
-                ),
+                ).Get(out var g),
                 Return("g".Call().Get(out _).Plus("x"))
-            )
+            ).Get(out var f)
         );
 
         var Xf = Reg(new Register());
@@ -383,14 +409,18 @@ public class AstToCfgConversionTest
         var fCall = fContext.GenerateCall(new CodeTreeValueNode[] {});
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] {});
 
-        var fRet = new SingleExitNode(null, new[] { gCall.ResultLocation! + Xf.Value }); // TODO fix: call is not a value
+        var fRet = new SingleExitNode(null, new[] { gCall.ResultLocation! + Xf.Value });
         var gCallTree = new SingleExitNode(fRet, gCall.CodeGraph);
         var x1 = new SingleExitNode(gCallTree, new[] { Xf.Write(1) });
         var gRet = new SingleExitNode(null, new[] { Xg.Value });
         var xxx = new SingleExitNode(gRet, new[] { Xg.Write(Xg.Value + Xg.Value) });
         var x2 = new SingleExitNode(xxx, new[] { Xg.Write(2) });
 
-        var expected = new List<CodeTreeRoot> {x1,gCallTree,fRet,x2,xxx,gRet};
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, empty},
+            {f, x1},
+            {g, x2}
+        });
     }
 
     [Fact]
@@ -415,27 +445,27 @@ public class AstToCfgConversionTest
         // }
         // f();
 
-        _ = Program
+        var main = Program
         (
             Fun<UnitType>("f").Body
             (
                 Fun<UnitType>("g").Body
                 (
                     "f".Call()
-                ),
+                ).Get(out var g),
 
                 Fun<UnitType>("h").Body
                 (
                     Fun<UnitType>("z").Body
                     (
                         "g".Call()
-                    ),
+                    ).Get(out var z),
 
                     "z".Call()
-                ),
+                ).Get(out var h),
 
                 "h".Call()
-            ),
+            ).Get(out var f),
             "f".Call()
         );
 
@@ -456,7 +486,13 @@ public class AstToCfgConversionTest
         var hCallTree = new SingleExitNode(null, hCall.CodeGraph);
         var zCallTree = new SingleExitNode(null, zCall.CodeGraph);
 
-        var expected = new List<CodeTreeRoot> {fCallTree,gCallTree,hCallTree,zCallTree};
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, fCallTree},
+            {f, hCallTree},
+            {g, fCallTree},
+            {h, zCallTree},
+            {z, gCallTree}
+        });
     }
 
     [Fact]
@@ -484,7 +520,7 @@ public class AstToCfgConversionTest
         // }
         // f(true)
 
-        _ = Program
+        var main = Program
         (
             Var("x", 1),
             Fun<UnitType>("f").Parameter<BoolType>("v", out var paramV).Body
@@ -493,21 +529,21 @@ public class AstToCfgConversionTest
                 (
                     "x".Assign("x".Plus(1)),
                     "f".Call().Argument(Literal(false))
-                ),
+                ).Get(out var g),
 
                 Fun<UnitType>("h").Body
                 (
                     "x".Assign("x".Minus(1)),
                     "f".Call().Argument(Literal(true))
-                ),
+                ).Get(out var h),
 
                 If(Value("v")).Then("g".Call()).Else("h".Call())
 
-            ),
+            ).Get(out var f),
             "f".Call().Argument(Literal(true))
         );
 
-        var X = Mem(displayAddress);
+        var X = Mem(Mem(displayAddress).Value);
         var V = Reg(HardwareRegister.RDI);
 
         var funFactory = new FunctionFactory();
@@ -532,7 +568,12 @@ public class AstToCfgConversionTest
         var fCallInGTree = new SingleExitNode(null, fCallInG.CodeGraph);
         var xPlus1 = new SingleExitNode(fCallInGTree, new[] { X.Write(X.Value + 1) });
 
-        var expected = new List<CodeTreeRoot> {x1,fCallInMainTree,ifBlock,gCallTree,xPlus1,fCallInGTree,hCallTree,xMinus1,fCallInHTree};
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, fCallInMainTree},
+            {f, ifBlock},
+            {g, xPlus1},
+            {h, xMinus1}
+        });
     }
 
     [Fact]
@@ -558,19 +599,19 @@ public class AstToCfgConversionTest
         //     y = y + 1;
         // }
 
-        _ = Program
+        var main = Program
         (
             Var("x", 1),
             Fun<BoolType>("f").Parameter<IntType>("v", out var paramF).Body
             (
                 "x".Assign("x".Plus(1)),
                 Return("v".Leq(5))
-            ),
+            ).Get(out var f),
             Fun<BoolType>("g").Parameter<IntType>("v", out var paramG).Body
             (
                 "x".Assign("x".Plus(1)),
                 Return("v".Leq("x"))
-            ),
+            ).Get(out var g),
 
             Var("y", 0),
             Loop
@@ -581,7 +622,7 @@ public class AstToCfgConversionTest
             )
         );
 
-        var X = Mem(displayAddress);
+        var X = Mem(Mem(displayAddress).Value);
         var V = Reg(HardwareRegister.RDI);
         var Y = Reg(new Register());
 
@@ -605,7 +646,11 @@ public class AstToCfgConversionTest
         var xPlus1InG = new SingleExitNode(gRet, new[] { X.Write(X.Value + 1) });
         var fRet = new SingleExitNode(null, new CodeTreeNode[] { X.Write(X.Value + 1), V.Value <= 5 });
 
-        var expected = new List<CodeTreeRoot> {xy,fCallTree,cond1,gCallTree,cond2,yPlus1,fRet,xPlus1InG,gRet};
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, xy},
+            {f, fRet},
+            {g, xPlus1InG}
+        });
     }
 
     [Fact]
@@ -631,19 +676,19 @@ public class AstToCfgConversionTest
         //     y = y + 1;
         // }
 
-        _ = Program
+        var main = Program
         (
             Var("x", 1),
             Fun<BoolType>("f").Parameter<IntType>("v", out var paramF).Body
             (
                 "x".Assign("x".Plus(1)),
                 Return("v".Leq(5))
-            ),
+            ).Get(out var f),
             Fun<BoolType>("g").Parameter<IntType>("v", out var paramG).Body
             (
                 "x".Assign("x".Plus(1)),
                 Return("v".Leq("x"))
-            ),
+            ).Get(out var g),
 
             Var("y", 0),
             Loop
@@ -654,7 +699,7 @@ public class AstToCfgConversionTest
             )
         );
 
-        var X = Mem(displayAddress);
+        var X = Mem(Mem(displayAddress).Value);
         var V = Reg(HardwareRegister.RDI);
         var Y = Reg(new Register());
 
@@ -678,7 +723,11 @@ public class AstToCfgConversionTest
         var xPlus1InG = new SingleExitNode(gRet, new[] { X.Write(X.Value + 1) });
         var fRet = new SingleExitNode(null, new CodeTreeNode[] { X.Write(X.Value + 1), V.Value <= 5 });
 
-        var expected = new List<CodeTreeRoot> {xy,fCallTree,cond1,gCallTree,cond2,yPlus1,fRet,xPlus1InG,gRet};
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, xy},
+            {f, fRet},
+            {g, xPlus1InG}
+        });
     }
 
     [Fact]
@@ -706,21 +755,21 @@ public class AstToCfgConversionTest
         //     y = y + 1;
         // }
 
-        _ = Program
+        var main = Program
         (
             Var("x", 10),
             Fun<BoolType>("f").Parameter<IntType>("v", out var paramF).Body
             (
                 Return("v".Leq(5))
-            ),
+            ).Get(out var f),
             Fun<BoolType>("g").Parameter<IntType>("v", out var paramG).Body
             (
                 Return("v".Leq("x"))
-            ),
+            ).Get(out var g),
             Fun<BoolType>("h").Parameter<IntType>("v", out var paramH).Body
             (
                 Return("x".Leq("v"))
-            ),
+            ).Get(out var h),
 
             Var("y", 0),
             Loop
@@ -734,7 +783,7 @@ public class AstToCfgConversionTest
             )
         );
 
-        var X = Mem(displayAddress);
+        var X = Mem(Mem(displayAddress).Value);
         var V = Reg(HardwareRegister.RDI);
         var Y = Reg(new Register());
 
@@ -762,6 +811,27 @@ public class AstToCfgConversionTest
         var gRet = new SingleExitNode(null, new[] { V.Value <= X.Value });
         var fRet = new SingleExitNode(null, new[] { V.Value <= 5 });
 
-        var expected = new List<CodeTreeRoot> {xy,fCallTree,cond1,gCallTree,cond2,hCallTree,cond3,yPlus1,fRet,gRet,hRet};
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>{
+            {main, xy},
+            {f, fRet},
+            {g, gRet},
+            {h, hRet}
+        });
+    }
+
+    private void Verify(FunctionDefinition ast, IReadOnlyDictionary<FunctionDefinition, CodeTreeRoot> expected)
+    {
+        var diagnostics = new FakeDiagnostics();
+        var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
+        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
+            root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, SideEffectsAnalyzer.PullOutSideEffects));
+        
+        foreach (var (fun, codeTree) in expected)
+        {
+            Assert.True(functionCodeTreeMap.ContainsKey(fun));
+            Assert.Equal(codeTree, functionCodeTreeMap[fun], new CfgIsomorphismComparer());
+        }
     }
 }
