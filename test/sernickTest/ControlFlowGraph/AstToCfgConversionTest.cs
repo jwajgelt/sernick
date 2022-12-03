@@ -382,8 +382,8 @@ public class AstToCfgConversionTest
         var fContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, true);
         var gContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, true);
 
-        var fCall = fContext.GenerateCall(new CodeTreeNode[] {});
-        var gCall = gContext.GenerateCall(new CodeTreeNode[] {});
+        var fCall = fContext.GenerateCall(new CodeTreeValueNode[] {});
+        var gCall = gContext.GenerateCall(new CodeTreeValueNode[] {});
 
         var fRet = new SingleExitNode(null, new[] { gCall.ResultLocation! + Xf.Value }); // TODO fix: call is not a value
         var gCallTree = new SingleExitNode(fRet, gCall.CodeGraph);
@@ -448,10 +448,10 @@ public class AstToCfgConversionTest
         var hContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
         var zContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
 
-        var fCall = fContext.GenerateCall(new CodeTreeNode[] {});
-        var gCall = gContext.GenerateCall(new CodeTreeNode[] {});
-        var hCall = gContext.GenerateCall(new CodeTreeNode[] {});
-        var zCall = gContext.GenerateCall(new CodeTreeNode[] {});
+        var fCall = fContext.GenerateCall(new CodeTreeValueNode[] {});
+        var gCall = gContext.GenerateCall(new CodeTreeValueNode[] {});
+        var hCall = gContext.GenerateCall(new CodeTreeValueNode[] {});
+        var zCall = gContext.GenerateCall(new CodeTreeValueNode[] {});
 
         var fCallTree = new SingleExitNode(null, fCall.CodeGraph);
         var gCallTree = new SingleExitNode(null, gCall.CodeGraph);
@@ -518,11 +518,11 @@ public class AstToCfgConversionTest
         var gContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
         var hContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
 
-        var fCallInMain = fContext.GenerateCall(new CodeTreeNode[] { new Constant(new RegisterValue(1)) });
-        var gCall = gContext.GenerateCall(new CodeTreeNode[] {});
-        var hCall = hContext.GenerateCall(new CodeTreeNode[] {});
-        var fCallInG = fContext.GenerateCall(new CodeTreeNode[] { new Constant(new RegisterValue(0)) });
-        var fCallInH = fContext.GenerateCall(new CodeTreeNode[] { new Constant(new RegisterValue(1)) });
+        var fCallInMain = fContext.GenerateCall(new CodeTreeValueNode[] { new Constant(new RegisterValue(1)) });
+        var gCall = gContext.GenerateCall(new CodeTreeValueNode[] {});
+        var hCall = hContext.GenerateCall(new CodeTreeValueNode[] {});
+        var fCallInG = fContext.GenerateCall(new CodeTreeValueNode[] { new Constant(new RegisterValue(0)) });
+        var fCallInH = fContext.GenerateCall(new CodeTreeValueNode[] { new Constant(new RegisterValue(1)) });
 
         var fCallInMainTree = new SingleExitNode(null, fCallInMain.CodeGraph);
         var x1 = new SingleExitNode(fCallInMainTree, new[] { X.Write(1) });
@@ -593,8 +593,8 @@ public class AstToCfgConversionTest
         var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramF }, true);
         var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramG }, true);
 
-        var fCall = fContext.GenerateCall(new CodeTreeNode[] { Y.Value });
-        var gCall = gContext.GenerateCall(new CodeTreeNode[] { Y.Value });
+        var fCall = fContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
+        var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
 
         var yPlus1 = new SingleExitNode(null, new[] { Y.Write(Y.Value + 1) });
         var cond2 = new ConditionalJumpNode(null, yPlus1, gCall.ResultLocation!);
@@ -667,8 +667,8 @@ public class AstToCfgConversionTest
         var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramF }, true);
         var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramG }, true);
 
-        var fCall = fContext.GenerateCall(new CodeTreeNode[] { Y.Value });
-        var gCall = gContext.GenerateCall(new CodeTreeNode[] { Y.Value });
+        var fCall = fContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
+        var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
 
         var yPlus1 = new SingleExitNode(null, new[] { Y.Write(Y.Value + 1) });
         var cond2 = new ConditionalJumpNode(null, yPlus1, gCall.ResultLocation!);
@@ -750,9 +750,9 @@ public class AstToCfgConversionTest
         var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramG }, true);
         var hContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramH }, true);
 
-        var fCall = fContext.GenerateCall(new CodeTreeNode[] { Y.Value });
-        var gCall = gContext.GenerateCall(new CodeTreeNode[] { Y.Value });
-        var hCall = hContext.GenerateCall(new CodeTreeNode[] { Y.Value });
+        var fCall = fContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
+        var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
+        var hCall = hContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
 
         var yPlus1 = new SingleExitNode(null, new[] { Y.Write(Y.Value + 1) });
         var cond3 = new ConditionalJumpNode(null, yPlus1, hCall.ResultLocation!);
