@@ -132,8 +132,7 @@ public static class TypeChecking
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             // simply return what expression inside returns?
-            var result = new TypeInformation(childrenTypes);
-            result.Add(node, childrenTypes[node.Inner]);
+            var result = new TypeInformation(childrenTypes) { { node, childrenTypes[node.Inner] } };
             _pendingNodes.Remove(node);
             return result;
 
@@ -144,8 +143,8 @@ public static class TypeChecking
             _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
-            var result = new TypeInformation(childrenTypes);
-            result.Add(node, childrenTypes[node.Second]); // just return the last expressions' type
+            // just return the last expressions' type
+            var result = new TypeInformation(childrenTypes) { { node, childrenTypes[node.Second] } };
             _pendingNodes.Remove(node);
             return result;
         }
@@ -180,8 +179,7 @@ public static class TypeChecking
             });
 
 
-            var result = new TypeInformation(childrenTypes);
-            result.Add(functionCallNode, declaredReturnType);
+            var result = new TypeInformation(childrenTypes) { { functionCallNode, declaredReturnType } };
             _partialResult[functionCallNode] = declaredReturnType;
             _pendingNodes.Remove(functionCallNode);
             return result;
@@ -190,7 +188,6 @@ public static class TypeChecking
 
         public override TypeInformation VisitContinueStatement(ContinueStatement node, Type expectedReturnTypeOfReturnExpr)
         {
-            // TODO do we need to visit node.children here?
             _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
