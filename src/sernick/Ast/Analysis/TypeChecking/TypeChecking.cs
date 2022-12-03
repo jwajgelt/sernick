@@ -188,12 +188,8 @@ public static class TypeChecking
 
         public override TypeInformation VisitContinueStatement(ContinueStatement node, Type expectedReturnTypeOfReturnExpr)
         {
-            _pendingNodes.Add(node);
-            var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
-
-            var result = new TypeInformation(childrenTypes);
-            result.Add(node, new UnitType());
-            _pendingNodes.Remove(node);
+            // Continue statement has no children, so we do not visit them
+            var result = new TypeInformation() { { node, new UnitType() } };
             return result;
         }
 
