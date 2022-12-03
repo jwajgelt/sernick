@@ -2,42 +2,22 @@ namespace sernickTest.ControlFlowGraph;
 
 using sernick.ControlFlowGraph.CodeTree;
 
-sealed record RegisterLabel(int label);
-sealed record LabelRead(RegisterLabel Register) : CodeTreeValueNode;
-sealed record LabelWrite(RegisterLabel Register, CodeTreeValueNode Value) : CodeTreeNode;
-
-static class CfgLabeler
+public class CfgComparison
 {
-    public static CodeTreeRoot LabelCfg(CodeTreeRoot original)
+    Dictionary<Register, int> _registerLabels;
+    int _labelsCount;
+    Dictionary<CodeTreeRoot, CodeTreeRoot> _visitMap;
+    public bool AreEqual { get; }
+
+    public CfgComparison(CodeTreeRoot? x, CodeTreeRoot? y)
     {
-        var regToLabel = new Dictionary<Register, int>();
-        var visitSet = new HashSet<CodeTreeRoot>();
-
-        // We want deep copy here
-        var labeled = original;
-        processRoot(regToLabel, visitSet, labeled);
-        return labeled;
+        _registerLabels = new Dictionary<Register, int>();
+        _labelsCount = 0;
+        _visitMap = new Dictionary<CodeTreeRoot, CodeTreeRoot>(ReferenceEqualityComparer.Instance);
+        AreEqual = Same(x, y);
     }
-
-    private static void processRoot(
-        Dictionary<Register, int> regToLabel, 
-        HashSet<CodeTreeRoot> visitSet,
-        CodeTreeRoot graph
-        )
+    bool Same(CodeTreeRoot? x, CodeTreeRoot? y)
     {
-
-    }
-
-    private static void processTree(Dictionary<Register, int> regToLabel, CodeTreeNode original)
-    {
-
-    }
-}
-
-public sealed class CfgIsomorphismComparer : IEqualityComparer<CodeTreeRoot>
-{
-    public bool Equals(CodeTreeRoot? x, CodeTreeRoot? y)
-    {   
         if(x is null && y is null)
         {
             return true;
@@ -48,15 +28,117 @@ public sealed class CfgIsomorphismComparer : IEqualityComparer<CodeTreeRoot>
             return false;
         }
 
-        var labeledCfgX = CfgLabeler.LabelCfg(x);
-        var labeledCfgY = CfgLabeler.LabelCfg(y);
+        if(_visitMap.ContainsKey(x) && _visitMap[x] != y)
+        {
+            return false;
+        }
 
-        return labeledCfgX.Equals(labeledCfgY);
+        if(_visitMap.ContainsKey(y) && _visitMap[y] != x)
+        {
+            return false;
+        }
+
+        if(_visitMap.ContainsKey(x) || _visitMap.ContainsKey(y))
+        {
+            return true;
+        }
+
+        _visitMap[x] = y;
+        _visitMap[y] = x;
+
+        return (x, y) switch
+        {
+            (null, null) => true,
+            (SingleExitNode xSingle, SingleExitNode ySingle) => 
+                Same(xSingle.Operations, ySingle.Operations) &&
+                Same(xSingle.NextTree, ySingle.NextTree),
+            (ConditionalJumpNode xConditional, ConditionalJumpNode yConditional) =>
+                Same(xConditional.ConditionEvaluation, yConditional.ConditionEvaluation) &&
+                Same(xConditional.TrueCase, yConditional.TrueCase) &&
+                Same(xConditional.FalseCase, yConditional.FalseCase),
+            _ => false,
+        };
+    }
+
+    bool Same(IReadOnlyList<CodeTreeNode> x, IReadOnlyList<CodeTreeNode> y)
+    {
+        bool same = true;
+        for(int i=0;i<x.Count;i++)
+        {
+            same = same && Same(x[i], y[i]);
+        }
+        return same;
+    }
+    bool Same(CodeTreeNode x, CodeTreeNode y)
+    {
+        return (x, y) switch
+        {
+            (BinaryOperationNode xBinOp, BinaryOperationNode yBinOp) => 
+                xBinOp.Operation.Equals(yBinOp.Operation) &&
+                Same(xBinOp.Right, yBinOp.Right) &&
+                Same(xBinOp.Left, yBinOp.Left),
+
+            (UnaryOperationNode xUnOp, UnaryOperationNode yUnOp) =>
+                xUnOp.Operation.Equals(yUnOp.Operation) &&
+                Same(xUnOp.Operand, yUnOp.Operand),
+
+            (MemoryRead xMemRd, MemoryRead yMemRd) =>
+                Same(xMemRd.MemoryLocation, yMemRd.MemoryLocation),
+            
+            (MemoryWrite xMemWrt, MemoryWrite yMemWrt) =>
+                Same(xMemWrt.MemoryLocation, yMemWrt.MemoryLocation) &&
+                Same(xMemWrt.Value, yMemWrt.Value),
+
+            (RegisterRead xRegRd, RegisterRead yRegRd) =>
+                Same(xRegRd.Register, yRegRd.Register),
+
+            (RegisterWrite xRegWrt, RegisterWrite yRegWrt) => 
+                Same(xRegWrt.Register, yRegWrt.Register) &&
+                Same(xRegWrt.Value, yRegWrt.Value),
+
+            _ => x.Equals(y),
+        };
+    }
+
+    bool Same(Register x, Register y)
+    {
+        if(x is HardwareRegister && y is HardwareRegister)
+        {
+            return x.Equals(y);
+        }
+
+        if(x is HardwareRegister || y is HardwareRegister)
+        {
+            return false;
+        }
+
+        if(_registerLabels.ContainsKey(x) && _registerLabels.ContainsKey(y))
+        {
+            return _registerLabels[x] == _registerLabels[y];
+        }
+
+        if(_registerLabels.ContainsKey(x) || _registerLabels.ContainsKey(y))
+        {
+            return false;
+        }
+
+        _registerLabels[x] = _labelsCount;
+        _registerLabels[y] = _labelsCount;
+        _labelsCount += 1;
+        return true;
+    }
+}
+
+public sealed class CfgIsomorphismComparer : IEqualityComparer<CodeTreeRoot>
+{
+    public bool Equals(CodeTreeRoot? x, CodeTreeRoot? y)
+    {   
+        var cfgComparison = new CfgComparison(x, y);
+        return cfgComparison.AreEqual;
     }
 
     public int GetHashCode(CodeTreeRoot obj)
     {
-        var labeledCfg = CfgLabeler.LabelCfg(obj);
-        return labeledCfg.GetHashCode();
+        throw new NotImplementedException();
     }
 }
