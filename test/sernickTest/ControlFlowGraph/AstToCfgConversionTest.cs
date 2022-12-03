@@ -331,8 +331,8 @@ public class AstToCfgConversionTest
         var fContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramX, paramY }, true);
         var gContext = funFactory.CreateFunction(fContext, new IFunctionParam[] { paramZ }, true);
 
-        var fCall = fContext.GenerateCall(new[] { new Constant(new RegisterValue(3)), new Constant(new RegisterValue(2)) });
-        var gCall = gContext.GenerateCall(new[] { new Constant(new RegisterValue(3)) });
+        var fCall = fContext.GenerateCall(new CodeTreeValueNode[] { });
+        var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { });
         
         var fCallTree = new SingleExitNode(null, fCall.CodeGraph);
         var fRet = new SingleExitNode(null, new[] { X.Value + Y.Value + gCall.ResultLocation! });
