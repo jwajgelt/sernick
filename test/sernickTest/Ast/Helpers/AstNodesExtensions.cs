@@ -16,7 +16,7 @@ public static class AstNodesExtensions
 
     private static readonly Range<ILocation> loc = new(new FakeLocation(), new FakeLocation());
 
-    private static Identifier Ident(string name) => new(name, loc);
+    public static Identifier Ident(string name) => new(name, loc);
 
     #region Variable
 
@@ -119,9 +119,37 @@ public static class AstNodesExtensions
 
     public static Infix Plus(this string name, int v) => Value(name).Plus(v);
 
+    public static Infix Plus(this string name1, string name2) => Value(name1).Plus(Value(name2));
+
+    public static Infix Plus(this Expression e1, string name2) => e1.Plus(Value(name2));
+
     public static Infix Plus(this Expression e1, int v2) => e1.Plus(Literal(v2));
 
     public static Infix Plus(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.Plus, loc);
+
+    public static Infix Minus(this string name, int v) => Value(name).Minus(v);
+
+    public static Infix Minus(this Expression e1, int v2) => e1.Minus(Literal(v2));
+
+    public static Infix Minus(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.Minus, loc);
+
+    public static Infix Eq(this string name, int v) => name.Eq(Literal(v));
+
+    public static Infix Eq(this string name1, string name2) => Value(name1).Eq(Value(name2));
+
+    public static Infix Eq(this string name, Expression e2) => Value(name).Eq(e2);
+
+    public static Infix Eq(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.Equals, loc);
+
+    public static Infix Leq(this string name, int v) => Value(name).Leq(Literal(v));
+
+    public static Infix Leq(this string name1, string name2) => Value(name1).Leq(Value(name2));
+
+    public static Infix Leq(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.LessOrEquals, loc);
+
+    public static Infix ScOr(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.ScOr, loc);
+
+    public static Infix ScAnd(this Expression e1, Expression e2) => new(e1, e2, Infix.Op.ScAnd, loc);
 
     public static Assignment Assign(this string name, int value) => name.Assign(value, out _);
 
@@ -150,6 +178,8 @@ public static class AstNodesExtensions
         expressions.Aggregate((sequence, expr) => sequence.Join(expr));
 
     public static CodeBlock Block(params Expression[] expressions) => new(expressions.Join(), loc);
+
+    public static Expression Group(params Expression[] expressions) => expressions.Join();
 
     public static ReturnStatement Return(int value) => Return(Literal(value));
 
@@ -183,6 +213,22 @@ public static class AstNodesExtensions
             where ParamType : Type, new()
         {
             _parameters.Add(result = new FunctionParameterDeclaration(Ident(name), new ParamType(), null, loc));
+            return this;
+        }
+
+        public FuncDeclarationBuilder Parameter(string name, bool defaultValue) =>
+            Parameter<BoolType>(name, Literal(defaultValue));
+
+        public FuncDeclarationBuilder Parameter(string name, int defaultValue) =>
+            Parameter<IntType>(name, Literal(defaultValue));
+
+        public FuncDeclarationBuilder Parameter<ParamType>(string name, LiteralValue defaultValue) where ParamType : Type, new() =>
+            Parameter<ParamType>(name, defaultValue, out _);
+
+        public FuncDeclarationBuilder Parameter<ParamType>(string name, LiteralValue defaultValue, out FunctionParameterDeclaration result)
+            where ParamType : Type, new()
+        {
+            _parameters.Add(result = new FunctionParameterDeclaration(Ident(name), new ParamType(), defaultValue, loc));
             return this;
         }
 
@@ -239,6 +285,10 @@ public static class AstNodesExtensions
 
         public IfStatement Get(out IfStatement result) => result = this;
     }
+
+    public static LoopStatement Loop(params Expression[] expressions) => new(Block(expressions), loc);
+
+    public static BreakStatement Break => new(loc);
 
     #endregion
 

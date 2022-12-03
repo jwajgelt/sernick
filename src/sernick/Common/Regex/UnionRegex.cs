@@ -4,9 +4,11 @@ using Utility;
 
 internal sealed class UnionRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<TAtom>
 {
+    private readonly int _hash;
     public UnionRegex(IEnumerable<Regex<TAtom>> children)
     {
         Children = children.ToHashSet();
+        _hash = Children.GetCombinedSetHashCode();
     }
 
     public IReadOnlySet<Regex<TAtom>> Children { get; }
@@ -23,11 +25,11 @@ internal sealed class UnionRegex<TAtom> : Regex<TAtom> where TAtom : IEquatable<
         return Union(Children.Select(child => child.Reverse()));
     }
 
-    public override int GetHashCode() => Children.GetCombinedSetHashCode();
+    public override int GetHashCode() => _hash;
 
     public override bool Equals(Regex<TAtom>? other)
     {
-        return other is UnionRegex<TAtom> unionRegex && Children.SetEquals(unionRegex.Children);
+        return ReferenceEquals(this, other) || (other is UnionRegex<TAtom> unionRegex && _hash == unionRegex._hash && Children.SetEquals(unionRegex.Children));
     }
 
     public override string ToString() => string.Join("+", Children);

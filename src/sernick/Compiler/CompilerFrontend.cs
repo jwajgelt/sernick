@@ -3,7 +3,6 @@ namespace sernick.Compiler;
 using Ast.Analysis.FunctionContextMap;
 using Ast.Analysis.NameResolution;
 using Ast.Analysis.VariableAccess;
-using Ast.Analysis.TypeChecking;
 using Ast.Nodes;
 using Common.Dfa;
 using Common.Regex;
@@ -14,6 +13,8 @@ using Grammar.Syntax;
 using Input;
 using Parser;
 using Parser.ParseTree;
+using sernick.Ast.Analysis.TypeChecking;
+using Tokenizer;
 using Tokenizer.Lexer;
 
 public static class CompilerFrontend
@@ -26,24 +27,25 @@ public static class CompilerFrontend
     /// <param name="diagnostics"></param>
     public static void Process(IInput input, IDiagnostics diagnostics)
     {
-        var lexer = PrepareLexer();
+        var lexer = lazyLexer.Value;
         var tokens = lexer.Process(input, diagnostics);
-        var parseLeaves = tokens
-            .Where(token => !token.Category.Equals(LexicalGrammarCategory.Whitespaces)) // strip whitespace
-            .Where(token => !token.Category.Equals(LexicalGrammarCategory.Comments)) // ignore comments
-            .Select(token =>
-                new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.LocationRange));
-        var parser = Parser<Symbol>.FromGrammar(SernickGrammar.Create(), new NonTerminal(NonTerminalSymbol.Start));
+        ThrowIfErrorsOccurred(diagnostics);
+        var parseLeaves = tokens.ProcessIntoLeaves();
+        var parser = lazyParser.Value;
         var parseTree = parser.Process(parseLeaves, diagnostics);
+        ThrowIfErrorsOccurred(diagnostics);
         var ast = AstNode.From(parseTree);
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
-        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
         var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
+        _ = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
+        _ = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        // commented since it throws NotImplemented, and will need merging anyway
+        // var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
+        // root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, SideEffectsAnalyzer.PullOutSideEffects));
     }
 
-    private static ILexer<LexicalGrammarCategory> PrepareLexer()
+    private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
     {
         var grammar = new LexicalGrammar();
         var grammarDict = grammar.GenerateGrammar();
@@ -53,7 +55,13 @@ public static class CompilerFrontend
                 e => RegexDfa<char>.FromRegex(e.Value.Regex)
             );
         return new Lexer<LexicalGrammarCategory, Regex<char>>(categoryDfas);
-    }
+    });
+
+    private static readonly Lazy<Parser<Symbol>> lazyParser = new(() =>
+    {
+        var grammar = SernickGrammar.Create();
+        return Parser<Symbol>.FromGrammar(grammar, new NonTerminal(NonTerminalSymbol.Start));
+    });
 
     private static void ThrowIfErrorsOccurred(IDiagnostics diagnostics)
     {
@@ -61,5 +69,15 @@ public static class CompilerFrontend
         {
             throw new CompilationException();
         }
+    }
+
+    private static IEnumerable<ParseTreeLeaf<Symbol>> ProcessIntoLeaves(
+        this IEnumerable<Token<LexicalGrammarCategory>> tokens)
+    {
+        return tokens
+            .Where(token => !token.Category.Equals(LexicalGrammarCategory.Whitespaces)) // strip whitespace
+            .Where(token => !token.Category.Equals(LexicalGrammarCategory.Comments)) // ignore comments
+            .Select(token =>
+                new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.LocationRange));
     }
 }

@@ -32,9 +32,9 @@ public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Dec
     public NameResolutionResult JoinWith(NameResolutionResult other)
     {
         return new NameResolutionResult(
-            UsedVariableDeclarations.JoinWith(other.UsedVariableDeclarations),
-            AssignedVariableDeclarations.JoinWith(other.AssignedVariableDeclarations),
-            CalledFunctionDeclarations.JoinWith(other.CalledFunctionDeclarations)
+            UsedVariableDeclarations.JoinWith(other.UsedVariableDeclarations, ReferenceEqualityComparer.Instance),
+            AssignedVariableDeclarations.JoinWith(other.AssignedVariableDeclarations, ReferenceEqualityComparer.Instance),
+            CalledFunctionDeclarations.JoinWith(other.CalledFunctionDeclarations, ReferenceEqualityComparer.Instance)
         );
     }
 

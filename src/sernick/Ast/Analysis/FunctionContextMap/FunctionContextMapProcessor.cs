@@ -1,7 +1,6 @@
 namespace sernick.Ast.Analysis.FunctionContextMap;
 
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using Compiler.Function;
 using NameResolution;
 using Nodes;
@@ -54,7 +53,7 @@ public static class FunctionContextMapProcessor
         {
             var functionContext = _contextFactory.CreateFunction(
                 parent: astContext.EnclosingFunction is not null ? ContextMap[astContext.EnclosingFunction] : null,
-                parameters: node.Parameters.Select(parameter => new FunctionParamWrapper(parameter)).ToList(),
+                parameters: node.Parameters.ToList(),
                 returnsValue: !node.ReturnType.Equals(new UnitType()));
 
             ContextMap[node] = functionContext;
@@ -74,7 +73,7 @@ public static class FunctionContextMapProcessor
             foreach (var (localVariable, referencingFunctions) in _locals[node])
             {
                 var usedElsewhere = referencingFunctions.Count() > 1;
-                functionContext.AddLocal(new FunctionVariableWrapper(localVariable), usedElsewhere);
+                functionContext.AddLocal(localVariable, usedElsewhere);
                 _locals.DiscardLocal(localVariable);
             }
 
@@ -138,19 +137,4 @@ public static class FunctionContextMapProcessor
             return Unit.I;
         }
     }
-}
-
-internal sealed record FunctionVariableWrapper(Declaration Variable) : FunctionVariable
-{
-    public bool Equals(FunctionVariableWrapper? other) => other is not null && ReferenceEquals(Variable, other.Variable);
-
-    public override int GetHashCode() => RuntimeHelpers.GetHashCode(Variable);
-}
-
-internal sealed record FunctionParamWrapper(FunctionParameterDeclaration FunctionParameter) : FunctionParam
-{
-    public bool Equals(FunctionParamWrapper? other) =>
-        other is not null && ReferenceEquals(FunctionParameter, other.FunctionParameter);
-
-    public override int GetHashCode() => RuntimeHelpers.GetHashCode(FunctionParameter);
 }
