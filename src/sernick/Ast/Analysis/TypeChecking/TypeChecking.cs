@@ -258,8 +258,7 @@ public static class TypeChecking
             _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
-            var result = new TypeInformation(childrenTypes);
-            result.Add(node, new UnitType());
+            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
             return result;
         }
@@ -276,8 +275,7 @@ public static class TypeChecking
             if(typeOfLeftOperand == new UnitType() || typeOfRightOperand == new UnitType())
             {
                 this._diagnostics.Report(new InfixOperatorTypeError(new UnitType(), new UnitType(), node.LocationRange.Start));
-                var result = new TypeInformation(childrenTypes);
-                result.Add(node, new UnitType());
+                var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
                 _pendingNodes.Remove(node);
                 return result;
             }
@@ -287,8 +285,7 @@ public static class TypeChecking
                 this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
 
                 // TODO does it make sense to return anything here? maybe a Unit type? But it could propagate the error up the tree 
-                var result = new TypeInformation(childrenTypes);
-                result.Add(node, new UnitType());
+                var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
                 _pendingNodes.Remove(node);
                 return result;
             }
@@ -334,8 +331,7 @@ public static class TypeChecking
                             break;
                         }      
                 }
-                var result = new TypeInformation(childrenTypes);
-                result.Add(node, commonType);
+                var result = new TypeInformation(childrenTypes) { { node, commonType } };
                 _pendingNodes.Remove(node);
                 return result;
             }
@@ -354,8 +350,7 @@ public static class TypeChecking
             }
 
             // Regardless of the error, let's return a Unit type for assignment and get more type checking information
-            var result = new TypeInformation(childrenTypes);
-            result.Add(node, typeOfLeftSide);
+            var result = new TypeInformation(childrenTypes) { { node, typeOfLeftSide } };
             _pendingNodes.Remove(node);
             return result;
         }
