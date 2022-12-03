@@ -27,8 +27,7 @@ public class CfgIsomorphismComparerTest
         var cfgA = new SingleExitNode(null, new List<CodeTreeNode> { aRegRead });
         var cfgB = new SingleExitNode(null, new List<CodeTreeNode> { bRegRead });
 
-        var comparer = new CfgIsomorphismComparer();
-        Assert.True(comparer.Equals(cfgA, cfgB));
+        Assert.Equal(cfgA, cfgB, new CfgIsomorphismComparer());
     }
 
     [Fact]
