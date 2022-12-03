@@ -76,25 +76,25 @@ public static class TypeChecking
         public override TypeInformation VisitIdentifier(Identifier identifierNode, Type expectedReturnTypeOfReturnExpr)
         {
             // no need to visit children, identifier nodes should have none
-            try
-            {
-                var variableDeclarationNode = this.getIdentifierAsDeclaration(identifierNode);
-                partialResult[identifierNode] = partialResult[variableDeclarationNode];
-                return new TypeInformation() { { identifierNode, partialResult[variableDeclarationNode] } };
-            }
-            catch { }
+            // TODO remove all this code? According to Demian's suggestion
 
-            try
-            {
-                var functionDefinitionNode = this.getIdentifierAsFunctionDefinition(identifierNode);
-                partialResult[identifierNode] = partialResult[functionDefinitionNode];
-                return new TypeInformation() { { identifierNode, partialResult[functionDefinitionNode] } };
-            }
-            catch { }
+            //try
+            //{
+            //    var variableDeclarationNode = this.getIdentifierAsDeclaration(identifierNode);
+            //    partialResult[identifierNode] = partialResult[variableDeclarationNode];
+            //    return new TypeInformation() { { identifierNode, partialResult[variableDeclarationNode] } };
+            //}
+            //catch { }
 
-            // An identifier should always point to either function definition or variable definition
-            // So the code should never reach this line
-            // But just in case, let's simply return unit here
+            //try
+            //{
+            //    var functionDefinitionNode = this.getIdentifierAsFunctionDefinition(identifierNode );
+            //    var funDefinitionNode = nameResolution.CalledFunctionDeclarations[identifierNode];
+            //    partialResult[identifierNode] = partialResult[functionDefinitionNode];
+            //    return new TypeInformation() { { identifierNode, partialResult[functionDefinitionNode] } };
+            //}
+            //catch { }
+
             partialResult[identifierNode] = new UnitType();
             return new TypeInformation() { { identifierNode, new UnitType() } };
         }
@@ -397,15 +397,9 @@ public static class TypeChecking
 
         public override TypeInformation VisitVariableValue(VariableValue node, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(node);
-            var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
-
-            var result = new TypeInformation(childrenTypes);
-
-            var variableIdentifier = node.Identifier;
-
-            result.Add(node, result[node.Identifier]);
-            pendingNodes.Remove(node);
+            var variableDeclarationNode = nameResolution.UsedVariableDeclarations[node];
+            var typeOfVariable = partialResult[variableDeclarationNode];
+            var result = new TypeInformation() { { node, typeOfVariable } };
             return result;
         }
 
@@ -449,50 +443,6 @@ public static class TypeChecking
                          .ToDictionary(pair => pair.Key, pair => pair.Value);
                 }
            );
-        }
-
-        /// <param name="identifier"></param>
-        /// <returns> Variable or function parameter declaration</returns>
-        /// <exception cref="Exception"></exception>
-        private Declaration getIdentifierAsDeclaration(Identifier identifier)
-        {
-            foreach(var declarationPair in nameResolution.AssignedVariableDeclarations)
-            {
-                var assignment = declarationPair.Key;
-                var variableDeclaration = declarationPair.Value;
-
-                if(variableDeclaration.Name == identifier)
-                {
-                    return variableDeclaration;
-                }
-            }
-
-            foreach (var declarationPair in nameResolution.UsedVariableDeclarations)
-            {
-                var variableValue = declarationPair.Key;
-                var variableDeclaration = declarationPair.Value;
-
-                if (variableDeclaration.Name == identifier)
-                {
-                    return variableDeclaration;
-                }
-            }
-            throw new Exception();
-        }
-
-        private FunctionDefinition getIdentifierAsFunctionDefinition(Identifier identifier)
-        {
-            foreach (var declarationPair in nameResolution.CalledFunctionDeclarations)
-            {
-                var assignment = declarationPair.Key;
-                var functionDefinition = declarationPair.Value;
-
-                if (functionDefinition.Name == identifier)
-                {
-                    return functionDefinition;
-                }
-            }
-            throw new Exception();
         }
 
     }
