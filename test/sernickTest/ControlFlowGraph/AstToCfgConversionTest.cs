@@ -16,7 +16,6 @@ public class AstToCfgConversionTest
 {
     private const int PointerSize = 8;
     private readonly CodeTreeValueNode displayAddress = new Constant(new RegisterValue(0)); // TODO use GlobalAddress after it's merged
-    // TODO call AST -> CFG conversion and compare result to what's expected
 
     private readonly CodeTreeRoot empty = new SingleExitNode(null, new CodeTreeNode[] { });
 
