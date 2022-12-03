@@ -1,10 +1,14 @@
 namespace sernick.Compiler.Function;
 
 using ControlFlowGraph.CodeTree;
+using Instruction;
 
 public interface IFunctionCaller
 {
-    public GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeNode> arguments);
+    // NOTE: temporary until we decide how we generate function labels
+    public Label Label { get; }
 
-    public record GenerateCallResult(IReadOnlyList<CodeTreeNode> CodeGraph, CodeTreeValueNode? ResultLocation);
+    public GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments);
+
+    public record GenerateCallResult(IReadOnlyList<SingleExitNode> CodeGraph, CodeTreeValueNode? ResultLocation);
 }

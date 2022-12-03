@@ -5,11 +5,11 @@ public interface IFunctionContext : IFunctionCaller
 {
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere);
 
-    public RegisterWrite? ResultVariable { get; set; }
+    public IReadOnlyList<SingleExitNode> GeneratePrologue();
 
-    public IReadOnlyList<CodeTreeNode> GeneratePrologue();
+    public IReadOnlyList<SingleExitNode> GenerateEpilogue(CodeTreeValueNode? valToReturn);
 
-    public IReadOnlyList<CodeTreeNode> GenerateEpilogue();
+    public int Depth { get; }
 
     /// <summary>
     ///     If variable is local then generates either memory read or register read
@@ -28,4 +28,6 @@ public interface IFunctionContext : IFunctionCaller
     ///     using the Display Table.
     /// </summary>
     public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value);
+
+    protected internal CodeTreeValueNode GetIndirectVariableLocation(IFunctionVariable variable);
 }

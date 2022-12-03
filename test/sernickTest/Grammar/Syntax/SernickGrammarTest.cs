@@ -9,6 +9,7 @@ using sernick.Grammar.Syntax;
 using sernick.Input;
 using sernick.Parser.ParseTree;
 using sernick.Utility;
+using Utility;
 using static Parser.Helpers.ParseTreeDsl;
 using Parser = sernick.Parser.Parser<sernick.Grammar.Syntax.Symbol>;
 
@@ -17,7 +18,7 @@ public class SernickGrammarTest
     private static readonly Range<ILocation> locations = new(new FakeLocation(), new FakeLocation());
 
     [Theory]
-    [MemberData(nameof(TestData))]
+    [MemberTupleData(nameof(TestData))]
     public void TestEdgeCases(IEnumerable<Symbol> leaves, IParseTree<Symbol> expectedParseTree)
     {
         var grammar = SernickGrammar.Create();
@@ -29,11 +30,9 @@ public class SernickGrammarTest
         Assert.Equal(expectedParseTree, parseTree, new ParseTreeStructuralComparer());
     }
 
-    public static readonly IEnumerable<object[]> TestData = new[]
-    {
+    public static readonly (IEnumerable<Symbol> leaves, IParseTree<Symbol> expectedParseTree)[] TestData = {
         // {} {} + 2
-        new object[]
-        {
+        (
             // Input
             new[]
             {
@@ -64,10 +63,9 @@ public class SernickGrammarTest
                                     PT.SimpleExpression(
                                         PT.LiteralValue(
                                             PT.Literals("2")))))))))
-        },
+        ),
         // var x = 5 + 5
-        new object[]
-        {
+        (
             // Input
             new[]
             {
@@ -101,6 +99,6 @@ public class SernickGrammarTest
                                                 PT.SimpleExpression(
                                                     PT.LiteralValue(
                                                         PT.Literals("5"))))))))))))
-        }
+        )
     };
 }
