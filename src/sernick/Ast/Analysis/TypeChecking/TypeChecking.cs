@@ -72,26 +72,6 @@ public static class TypeChecking
 
         public override TypeInformation VisitIdentifier(Identifier identifierNode, Type expectedReturnTypeOfReturnExpr)
         {
-            // no need to visit children, identifier nodes should have none
-            // TODO remove all this code? According to Demian's suggestion
-
-            //try
-            //{
-            //    var variableDeclarationNode = this.getIdentifierAsDeclaration(identifierNode);
-            //    partialResult[identifierNode] = partialResult[variableDeclarationNode];
-            //    return new TypeInformation() { { identifierNode, partialResult[variableDeclarationNode] } };
-            //}
-            //catch { }
-
-            //try
-            //{
-            //    var functionDefinitionNode = this.getIdentifierAsFunctionDefinition(identifierNode );
-            //    var funDefinitionNode = nameResolution.CalledFunctionDeclarations[identifierNode];
-            //    partialResult[identifierNode] = partialResult[functionDefinitionNode];
-            //    return new TypeInformation() { { identifierNode, partialResult[functionDefinitionNode] } };
-            //}
-            //catch { }
-
             _partialResult[identifierNode] = new UnitType();
             return new TypeInformation() { { identifierNode, new UnitType() } };
         }
