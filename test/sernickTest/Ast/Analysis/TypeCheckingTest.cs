@@ -281,7 +281,7 @@ public class TypeCheckingTest
     public class TestFunctionDeclaration
     {
         [Fact]
-        public void FunctionReturnsBool_1()
+        public void FunctionReturnsBool_OK()
         {
             var funDecl = Fun<BoolType>("returnsBool");
             funDecl.Body(
@@ -305,7 +305,93 @@ public class TypeCheckingTest
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
             Assert.Equal(new UnitType(), result[tree]);
-            Assert.Empty(diagnostics.Object.DiagnosticItems);
+            Assert.Empty(diagnostics.Invocations);
+        }
+
+        [Fact]
+        public void FunctionReturnsBoolAndInt_BAD()
+        {
+            var funDecl = Fun<BoolType>("returnsBool");
+            funDecl.Body(
+                Loop(
+                    Block(
+                        Literal(23),
+                        Return(91)
+                    )
+                ),
+                Literal(false)
+            );
+
+            var tree = (
+                funDecl
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Equal(new UnitType(), result[tree]);
+            diagnostics.Verify(d => d.Report(It.IsAny<ReturnTypeError>()), Times.AtLeastOnce);
+         
+        }
+
+        [Fact]
+        public void FunctionReturnsInt_OK()
+        {
+            var funDecl = Fun<IntType>("returnsInt");
+            funDecl.Body(
+                Loop(
+                    Block(
+                        Literal(23),
+                        Return(91)
+                    )
+                ),
+                Literal(33)
+            );
+
+            var tree = (
+                funDecl
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Equal(new UnitType(), result[tree]);
+            Assert.Empty(diagnostics.Invocations);
+        }
+
+        [Fact]
+        public void FunctionReturnsIntAndBool_bad()
+        {
+            var funDecl = Fun<IntType>("returnsInt");
+            funDecl.Body(
+                Loop(
+                    Block(
+                        Literal(23),
+                        Return(false)
+                    )
+                ),
+                Return(0),
+                Literal(33)
+            );
+
+            var tree = (
+                funDecl
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Equal(new UnitType(), result[tree]);
+            diagnostics.Verify(d => d.Report(It.IsAny<ReturnTypeError>()), Times.AtLeastOnce);
         }
     }
 }
