@@ -1,6 +1,7 @@
 namespace sernick.Compiler.Function;
 
 using ControlFlowGraph.CodeTree;
+using Instruction;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 
 public sealed class FunctionContext : IFunctionContext
@@ -61,6 +62,9 @@ public sealed class FunctionContext : IFunctionContext
             argNum += 1;
         }
     }
+
+    public Label Label => "TODO";
+
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
     {
         if (usedElsewhere)
