@@ -218,11 +218,8 @@ public static class TypeChecking
 
         public override TypeInformation VisitBreakStatement(BreakStatement node, Type expectedReturnTypeOfReturnExpr)
         {
-            // TODO do we need to visit node.children here?
-            _pendingNodes.Add(node);
-            var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
-            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
-            _pendingNodes.Remove(node);
+            // Break statement should have no children
+            var result = new TypeInformation() { { node, new UnitType() } };
             return result;
         }
 
