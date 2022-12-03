@@ -29,7 +29,7 @@ public static class TypeChecking
     public static TypeInformation CheckTypes(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
     {
         var visitor = new TypeCheckingAstVisitor(nameResolution, diagnostics);
-        return visitor.VisitAstTree(ast, new UnitType());
+        return visitor.VisitAstTree(ast, new AnyType());
     }
 
 
@@ -97,8 +97,6 @@ public static class TypeChecking
             // But just in case, let's simply return unit here
             partialResult[identifierNode] = new UnitType();
             return new TypeInformation() { { identifierNode, new UnitType() } };
-
-
         }
 
         public override TypeInformation VisitVariableDeclaration(VariableDeclaration node, Type expectedReturnTypeOfReturnExpr)
@@ -234,7 +232,7 @@ public static class TypeChecking
             // Return Value is in a subtree, so its type should be already calculated by now
             var returnValueType = (node.ReturnValue != null) ? childrenTypes[node.ReturnValue] : new UnitType();
 
-            if(returnValueType == expectedReturnTypeOfReturnExpr)
+            if(returnValueType == expectedReturnTypeOfReturnExpr || expectedReturnTypeOfReturnExpr == new AnyType())
             {
                 result.Add(node, returnValueType);
             }

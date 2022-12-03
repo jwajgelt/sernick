@@ -32,8 +32,8 @@ public class TypeCheckingTest
 
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new IntType(), result[literal23]);
-            Assert.Equal(new IntType(), result[tree]);
+            Assert.IsType<IntType>(result[literal23]);
+            Assert.IsType<IntType>(result[tree]);
         }
 
         [Fact]
@@ -47,8 +47,8 @@ public class TypeCheckingTest
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
 
-            Assert.Equal(new BoolType(), result[literalTrue]);
-            Assert.Equal(new BoolType(), result[tree]);
+            Assert.IsType<BoolType>(result[literalTrue]);
+            Assert.IsType<BoolType>(result[tree]);
         }
 
         [Fact]
@@ -62,9 +62,9 @@ public class TypeCheckingTest
 
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new BoolType(), result[literalFalse]);
-            Assert.Equal(new IntType(), result[literal42]);
-            Assert.Equal(new IntType(), result[tree]);
+            Assert.IsType<BoolType>(result[literalFalse]);
+            Assert.IsType<IntType>(result[literal42]);
+            Assert.IsType<IntType>(result[tree]);
         }
 
         [Fact]
@@ -78,9 +78,9 @@ public class TypeCheckingTest
 
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new BoolType(), result[literalFalse]);
-            Assert.Equal(new IntType(), result[literal42]);
-            Assert.Equal(new BoolType(), result[tree]);
+            Assert.IsType<BoolType>(result[literalFalse]);
+            Assert.IsType<IntType>(result[literal42]);
+            Assert.IsType<BoolType>(result[tree]);
         }
     }
 
@@ -98,9 +98,9 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new UnitType(), result[tree]);
-            Assert.Equal(new UnitType(), result[declX]);
-            Assert.Empty(diagnostics.Object.DiagnosticItems);
+            Assert.IsType<UnitType>(result[tree]);
+            Assert.IsType<UnitType>(result[declX]);
+            Assert.Empty(diagnostics.Invocations);
         }
 
         [Fact]
@@ -115,9 +115,9 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new UnitType(), result[tree]);
-            Assert.Equal(new UnitType(), result[declX]);
-            diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingError>()));
+            Assert.IsType<UnitType>(result[tree]);
+            Assert.IsType<UnitType>(result[declX]);
+            diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingError>()), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -132,8 +132,8 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new UnitType(), result[tree]);
-            Assert.Equal(new UnitType(), result[declX]);
+            Assert.IsType<UnitType>(result[tree]);
+            Assert.IsType<UnitType>(result[declX]);
             diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingError>()));
         }
     }
@@ -157,7 +157,7 @@ public class TypeCheckingTest
         public void AddingTwoIntegerLiterals_OK()
         {
             var plusExpr = Helpers.AstNodesExtensions.Plus(Literal(43), Literal(34));
-            var tree = Program(plusExpr);
+            var tree = plusExpr;
 
             var diagnostics = new Mock<IDiagnostics>();
             diagnostics.SetupAllProperties();
@@ -165,15 +165,15 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new IntType(), result[plusExpr]);
-            Assert.Empty(diagnostics.Object.DiagnosticItems);
+            Assert.IsType<IntType>(result[plusExpr]);
+            Assert.Empty(diagnostics.Invocations);
         }
 
         [Fact]
         public void AddingTwoBooleans_ERROR()
         {
             var plusExpr = Helpers.AstNodesExtensions.Plus(Literal(true), Literal(false));
-            var tree = Program(plusExpr);
+            var tree = plusExpr;
 
             var diagnostics = new Mock<IDiagnostics>();
             diagnostics.SetupAllProperties();
@@ -188,7 +188,7 @@ public class TypeCheckingTest
         public void AddingIntAndBoolean_ERROR()
         {
             var plusExpr = Helpers.AstNodesExtensions.Plus(Literal(true), Literal(123));
-            var tree = Program(plusExpr);
+            var tree = plusExpr;
 
             var diagnostics = new Mock<IDiagnostics>();
             diagnostics.SetupAllProperties();
@@ -203,7 +203,7 @@ public class TypeCheckingTest
         public void AddingTwoUnitExpressions_ERROR()
         {
             var plusExpr = Helpers.AstNodesExtensions.Plus(Block(Var("x")), Block(Var("y")));
-            var tree = Program(plusExpr);
+            var tree = plusExpr;
 
             var diagnostics = new Mock<IDiagnostics>();
             diagnostics.SetupAllProperties();
@@ -249,7 +249,7 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new UnitType(), result[tree]);
+            Assert.IsType<UnitType>(result[tree]);
             Assert.Empty(diagnostics.Object.DiagnosticItems);
         }
 
@@ -273,8 +273,8 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new UnitType(), result[tree]);
-            Assert.Empty(diagnostics.Object.DiagnosticItems);
+            Assert.IsType<UnitType>(result[tree]);
+            Assert.Empty(diagnostics.Invocations);
         }
     }
 
@@ -304,7 +304,7 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new UnitType(), result[tree]);
+            Assert.IsType<UnitType>(result[tree]);
             Assert.Empty(diagnostics.Invocations);
         }
 
@@ -332,7 +332,7 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new UnitType(), result[tree]);
+            Assert.IsType<UnitType>(result[tree]);
             diagnostics.Verify(d => d.Report(It.IsAny<ReturnTypeError>()), Times.AtLeastOnce);
          
         }
@@ -361,7 +361,7 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new UnitType(), result[tree]);
+            Assert.IsType<UnitType>(result[tree]);
             Assert.Empty(diagnostics.Invocations);
         }
 
@@ -390,7 +390,7 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            Assert.Equal(new UnitType(), result[tree]);
+            Assert.IsType<UnitType>(result[tree]);
             diagnostics.Verify(d => d.Report(It.IsAny<ReturnTypeError>()), Times.AtLeastOnce);
         }
     }
