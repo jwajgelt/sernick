@@ -16,7 +16,9 @@ public static class ControlFlowAnalyzer
         Func<AstNode, NameResolutionResult, IFunctionContext, IReadOnlyList<SingleExitNode>> pullOutSideEffects)
     {
         var visitor = new ControlFlowVisitor(nameResolution, currentFunctionContext, pullOutSideEffects);
-        return visitor.VisitAstTree(root, );
+        IFunctionVariable variable;
+        currentFunctionContext.AddLocal(variable, false);
+        return root.Body.Accept(visitor, new ControlFlowVisitorParam(null, null, null, ))
     }
 
     private sealed record ControlFlowVisitorParam
@@ -113,11 +115,6 @@ public static class ControlFlowAnalyzer
             return node.ReturnValue is not null ? node.ReturnValue.Accept(this, param with { Next = param.Return }) : param.Return;
         }
 
-        public override CodeTreeRoot VisitCodeBlock(CodeBlock node, ControlFlowVisitorParam param)
-        {
-            return node.Inner.Accept(this, param);
-        }
-
         public override CodeTreeRoot VisitInfix(Infix node, ControlFlowVisitorParam param)
         {
             if (node.Operator is not (Infix.Op.ScAnd or Infix.Op.ScOr))
@@ -153,18 +150,18 @@ public static class ControlFlowAnalyzer
 
         public override CodeTreeRoot VisitFunctionCall(FunctionCall node, ControlFlowVisitorParam param)
         {
-            var functionContext = _functionContextMap[_nameResolution.CalledFunctionDeclarations[node]];
-            CodeTreeRoot result, next = null;
-
-            var arguments = node.Arguments.Reverse().Select(argument =>
+            var last = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
+            CodeTreeRoot result = last;
+            var arguments = node.Arguments.Reverse().Select(argumentNode =>
             {
-                var tempVariable = _functionVariableFactory.NewIFunctionVariable();
-
-                result = argument.Accept(this, param with { Next = next, Result = tempVariable });
-
-                return _currentFunctionContext.GenerateVariableRead(tempVariable);
+                var (tempVariable, variableValueNode) = GenerateTemporary(argumentNode);
+                result = argumentNode.Accept(this, param with { Next = result, Result = tempVariable });
+                return variableValueNode;
             }).Reverse();
-            functionContext.GenerateCall(arguments).CodeGraph;//TODO: arguments first or prologue???
+
+            var functionCall = new FunctionCall(node.FunctionName, arguments, node.LocationRange);
+            last.NextTree = _pullOutSideEffects(functionCall, param.Next);
+            return result;
         }
 
         public override CodeTreeRoot VisitFunctionDefinition(FunctionDefinition node, ControlFlowVisitorParam param)
@@ -175,6 +172,30 @@ public static class ControlFlowAnalyzer
         public override CodeTreeRoot VisitIdentifier(Identifier node, ControlFlowVisitorParam param)
         {
             throw new NotSupportedException("AAAA");
+        }
+
+        public override CodeTreeRoot VisitVariableDeclaration(VariableDeclaration node, ControlFlowVisitorParam param)
+        {
+            return base.VisitVariableDeclaration(node, param);
+        }
+
+        public override CodeTreeRoot VisitAssignment(Assignment node, ControlFlowVisitorParam param)
+        {
+            return base.VisitAssignment(node, param);
+        }
+
+        private (IFunctionVariable, VariableValue) GenerateTemporary(AstNode node)
+        {
+            var identifier = new Identifier("TempVar@" + node.GetHashCode(), node.LocationRange);
+            var tempVariable = new VariableDeclaration(
+                identifier,
+                null,
+                null,
+                false,
+                node.LocationRange);
+            _currentFunctionContext.AddLocal(tempVariable, false);
+            var variableValue = new VariableValue(identifier, node.LocationRange);
+            return (tempVariable, variableValue);
         }
     }
 }
