@@ -62,7 +62,7 @@ public class CfgComparison
 
     private bool Same(IReadOnlyList<CodeTreeNode> x, IReadOnlyList<CodeTreeNode> y)
     {
-        if(x.Count != y.Count)
+        if (x.Count != y.Count)
         {
             return false;
         }
