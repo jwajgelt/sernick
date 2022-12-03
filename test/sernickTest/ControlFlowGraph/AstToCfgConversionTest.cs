@@ -93,7 +93,7 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramN }, true);
+        var fContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramN }, true);
 
         var fCall = fContext.GenerateCall(new[] { new Constant(new RegisterValue(5)) });
         var fCallInner1 = fContext.GenerateCall(new[] { N.Value - 1 });
@@ -164,8 +164,8 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramX }, true);
-        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramY }, true);
+        var fContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramX }, true);
+        var gContext = funFactory.CreateFunction(fContext, new IFunctionParam[] { paramY }, true);
 
         var gCall1 = gContext.GenerateCall(new[] { X.Value - 1 });
         var gCall2 = gContext.GenerateCall(new[] { X.Value - 2 });
@@ -253,10 +253,10 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var f1Context = funFactory.CreateFunction(null, new IFunctionParam[] { paramP1 }, true);
-        var f2Context = funFactory.CreateFunction(null, new IFunctionParam[] { paramP2 }, true);
-        var f3Context = funFactory.CreateFunction(null, new IFunctionParam[] { paramP3 }, true);
-        var f4Context = funFactory.CreateFunction(null, new IFunctionParam[] { paramP4 }, true);
+        var f1Context = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramP1 }, true);
+        var f2Context = funFactory.CreateFunction(f1Context, new IFunctionParam[] { paramP2 }, true);
+        var f3Context = funFactory.CreateFunction(f2Context, new IFunctionParam[] { paramP3 }, true);
+        var f4Context = funFactory.CreateFunction(f3Context, new IFunctionParam[] { paramP4 }, true);
 
         var f1Call = f1Context.GenerateCall(new[] { new Constant(new RegisterValue(1)) });
         var f2Callv1 = f2Context.GenerateCall(new[] { V1.Value });
@@ -328,8 +328,8 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramX, paramY }, true);
-        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramZ }, true);
+        var fContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramX, paramY }, true);
+        var gContext = funFactory.CreateFunction(fContext, new IFunctionParam[] { paramZ }, true);
 
         var fCall = fContext.GenerateCall(new[] { new Constant(new RegisterValue(3)), new Constant(new RegisterValue(2)) });
         var gCall = gContext.GenerateCall(new[] { new Constant(new RegisterValue(3)) });
@@ -377,8 +377,8 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, true);
-        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, true);
+        var fContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] {}, true);
+        var gContext = funFactory.CreateFunction(fContext, new IFunctionParam[] {}, true);
 
         var fCall = fContext.GenerateCall(new CodeTreeValueNode[] {});
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] {});
@@ -441,10 +441,10 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var hContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var zContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var fContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] {}, false);
+        var gContext = funFactory.CreateFunction(fContext, new IFunctionParam[] {}, false);
+        var hContext = funFactory.CreateFunction(fContext, new IFunctionParam[] {}, false);
+        var zContext = funFactory.CreateFunction(hContext, new IFunctionParam[] {}, false);
 
         var fCall = fContext.GenerateCall(new CodeTreeValueNode[] {});
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] {});
@@ -512,9 +512,9 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramV }, false);
-        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var hContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
+        var fContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramV }, false);
+        var gContext = funFactory.CreateFunction(fContext, new IFunctionParam[] {}, false);
+        var hContext = funFactory.CreateFunction(fContext, new IFunctionParam[] {}, false);
 
         var fCallInMain = fContext.GenerateCall(new CodeTreeValueNode[] { new Constant(new RegisterValue(1)) });
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] {});
@@ -587,8 +587,8 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramF }, true);
-        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramG }, true);
+        var fContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramF }, true);
+        var gContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramG }, true);
 
         var fCall = fContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
@@ -660,8 +660,8 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramF }, true);
-        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramG }, true);
+        var fContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramF }, true);
+        var gContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramG }, true);
 
         var fCall = fContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
@@ -740,9 +740,9 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
-        var fContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramF }, true);
-        var gContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramG }, true);
-        var hContext = funFactory.CreateFunction(null, new IFunctionParam[] { paramH }, true);
+        var fContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramF }, true);
+        var gContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramG }, true);
+        var hContext = funFactory.CreateFunction(mainContext, new IFunctionParam[] { paramH }, true);
 
         var fCall = fContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { Y.Value });
