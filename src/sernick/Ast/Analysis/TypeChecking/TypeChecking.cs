@@ -299,7 +299,7 @@ public static class TypeChecking
                     case Infix.Op.Plus:
                     case Infix.Op.Minus:
                         {
-                        if(commonType.ToString() == new BoolType().ToString())
+                        if(commonType is BoolType)
                             {
                                 this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                                 
@@ -311,7 +311,7 @@ public static class TypeChecking
                     case Infix.Op.Less:
                     case Infix.Op.LessOrEquals:
                         {
-                            if(commonType.ToString() != new IntType().ToString())
+                            if(commonType is IntType)
                             {
                                 this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                             }
@@ -320,7 +320,7 @@ public static class TypeChecking
                     case Infix.Op.ScAnd:
                     case Infix.Op.ScOr:
                         {
-                            if(commonType.ToString() != new BoolType().ToString())
+                            if(commonType is BoolType)
                             {
                                 this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                             }
