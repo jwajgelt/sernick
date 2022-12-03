@@ -221,8 +221,7 @@ public static class TypeChecking
             // TODO do we need to visit node.children here?
             _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
-            var result = new TypeInformation(childrenTypes);
-            result.Add(node, new UnitType());
+            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
             return result;
         }
@@ -243,8 +242,7 @@ public static class TypeChecking
                 }
             }
 
-            var result = new TypeInformation(childrenTypes);
-            result.Add(node, typeOfTrueBranch);
+            var result = new TypeInformation(childrenTypes) { { node, typeOfTrueBranch } };
             _partialResult[node] = typeOfTrueBranch;
             _pendingNodes.Remove(node);
             return result;
