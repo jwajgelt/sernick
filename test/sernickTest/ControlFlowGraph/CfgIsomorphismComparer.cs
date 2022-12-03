@@ -4,9 +4,9 @@ using sernick.ControlFlowGraph.CodeTree;
 
 public class CfgComparison
 {
-    Dictionary<Register, int> _registerLabels;
-    int _labelsCount;
-    Dictionary<CodeTreeRoot, CodeTreeRoot> _visitMap;
+    private readonly Dictionary<Register, int> _registerLabels;
+    private int _labelsCount;
+    private readonly Dictionary<CodeTreeRoot, CodeTreeRoot> _visitMap;
     public bool AreEqual { get; }
 
     public CfgComparison(CodeTreeRoot? x, CodeTreeRoot? y)
@@ -16,29 +16,30 @@ public class CfgComparison
         _visitMap = new Dictionary<CodeTreeRoot, CodeTreeRoot>(ReferenceEqualityComparer.Instance);
         AreEqual = Same(x, y);
     }
-    bool Same(CodeTreeRoot? x, CodeTreeRoot? y)
+
+    private bool Same(CodeTreeRoot? x, CodeTreeRoot? y)
     {
-        if(x is null && y is null)
+        if (x is null && y is null)
         {
             return true;
         }
 
-        if(x is null || y is null)
+        if (x is null || y is null)
         {
             return false;
         }
 
-        if(_visitMap.ContainsKey(x) && _visitMap[x] != y)
+        if (_visitMap.ContainsKey(x) && _visitMap[x] != y)
         {
             return false;
         }
 
-        if(_visitMap.ContainsKey(y) && _visitMap[y] != x)
+        if (_visitMap.ContainsKey(y) && _visitMap[y] != x)
         {
             return false;
         }
 
-        if(_visitMap.ContainsKey(x) || _visitMap.ContainsKey(y))
+        if (_visitMap.ContainsKey(x) || _visitMap.ContainsKey(y))
         {
             return true;
         }
@@ -49,7 +50,7 @@ public class CfgComparison
         return (x, y) switch
         {
             (null, null) => true,
-            (SingleExitNode xSingle, SingleExitNode ySingle) => 
+            (SingleExitNode xSingle, SingleExitNode ySingle) =>
                 Same(xSingle.Operations, ySingle.Operations) &&
                 Same(xSingle.NextTree, ySingle.NextTree),
             (ConditionalJumpNode xConditional, ConditionalJumpNode yConditional) =>
@@ -60,20 +61,22 @@ public class CfgComparison
         };
     }
 
-    bool Same(IReadOnlyList<CodeTreeNode> x, IReadOnlyList<CodeTreeNode> y)
+    private bool Same(IReadOnlyList<CodeTreeNode> x, IReadOnlyList<CodeTreeNode> y)
     {
-        bool same = true;
-        for(int i=0;i<x.Count;i++)
+        var same = true;
+        for (var i = 0; i < x.Count; i++)
         {
             same = same && Same(x[i], y[i]);
         }
+
         return same;
     }
-    bool Same(CodeTreeNode x, CodeTreeNode y)
+
+    private bool Same(CodeTreeNode x, CodeTreeNode y)
     {
         return (x, y) switch
         {
-            (BinaryOperationNode xBinOp, BinaryOperationNode yBinOp) => 
+            (BinaryOperationNode xBinOp, BinaryOperationNode yBinOp) =>
                 xBinOp.Operation.Equals(yBinOp.Operation) &&
                 Same(xBinOp.Right, yBinOp.Right) &&
                 Same(xBinOp.Left, yBinOp.Left),
@@ -84,7 +87,7 @@ public class CfgComparison
 
             (MemoryRead xMemRd, MemoryRead yMemRd) =>
                 Same(xMemRd.MemoryLocation, yMemRd.MemoryLocation),
-            
+
             (MemoryWrite xMemWrt, MemoryWrite yMemWrt) =>
                 Same(xMemWrt.MemoryLocation, yMemWrt.MemoryLocation) &&
                 Same(xMemWrt.Value, yMemWrt.Value),
@@ -92,7 +95,7 @@ public class CfgComparison
             (RegisterRead xRegRd, RegisterRead yRegRd) =>
                 Same(xRegRd.Register, yRegRd.Register),
 
-            (RegisterWrite xRegWrt, RegisterWrite yRegWrt) => 
+            (RegisterWrite xRegWrt, RegisterWrite yRegWrt) =>
                 Same(xRegWrt.Register, yRegWrt.Register) &&
                 Same(xRegWrt.Value, yRegWrt.Value),
 
@@ -100,24 +103,24 @@ public class CfgComparison
         };
     }
 
-    bool Same(Register x, Register y)
+    private bool Same(Register x, Register y)
     {
-        if(x is HardwareRegister && y is HardwareRegister)
+        if (x is HardwareRegister && y is HardwareRegister)
         {
             return x.Equals(y);
         }
 
-        if(x is HardwareRegister || y is HardwareRegister)
+        if (x is HardwareRegister || y is HardwareRegister)
         {
             return false;
         }
 
-        if(_registerLabels.ContainsKey(x) && _registerLabels.ContainsKey(y))
+        if (_registerLabels.ContainsKey(x) && _registerLabels.ContainsKey(y))
         {
             return _registerLabels[x] == _registerLabels[y];
         }
 
-        if(_registerLabels.ContainsKey(x) || _registerLabels.ContainsKey(y))
+        if (_registerLabels.ContainsKey(x) || _registerLabels.ContainsKey(y))
         {
             return false;
         }
@@ -132,7 +135,7 @@ public class CfgComparison
 public sealed class CfgIsomorphismComparer : IEqualityComparer<CodeTreeRoot>
 {
     public bool Equals(CodeTreeRoot? x, CodeTreeRoot? y)
-    {   
+    {
         var cfgComparison = new CfgComparison(x, y);
         return cfgComparison.AreEqual;
     }
