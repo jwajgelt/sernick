@@ -1,14 +1,11 @@
 namespace sernick.Ast.Analysis.TypeChecking;
 
-using System.Reflection.Metadata;
 using Diagnostics;
 using NameResolution;
 using Nodes;
 using Utility;
 
-
-
-using TypeInformation = Dictionary<Ast.Nodes.AstNode, Type>;
+using TypeInformation = Dictionary<Nodes.AstNode, Type>;
 
 
 
@@ -39,14 +36,14 @@ public static class TypeChecking
         /// Invariant: when visiting AstNode X, types for all children of X are known
         /// and stored in partialExpressionTypes dictionary
         /// </summary>
-        private readonly NameResolutionResult nameResolution;
+        private readonly NameResolutionResult _nameResolution;
         private readonly IDiagnostics _diagnostics;
         /// <summary>
         /// Sometimes we would like to know the result for our ancestor,
         /// so to avoid recalculation (visiting the same ancestor from multiple nodes)
         /// we will have this helper object, containing type information for some AST nodes
         /// </summary>
-        private readonly TypeInformation partialResult;
+        private readonly TypeInformation _partialResult;
         /// <summary>
         /// Our Type-checking Algorighm is a top-down postorder
         /// But sometimes, nodes need to know information about some other nodes higher up the tree
@@ -55,21 +52,21 @@ public static class TypeChecking
         /// For example, a case like this:
         /// var x : Int = { 23; x = 23; } // here  a usage of x needs information about the type of x
         /// </summary>
-        private readonly HashSet<AstNode> pendingNodes;
+        private readonly HashSet<AstNode> _pendingNodes;
 
         public TypeCheckingAstVisitor(NameResolutionResult nameResolution, IDiagnostics diagnostics)
         {
-            this.nameResolution = nameResolution;
+            this._nameResolution = nameResolution;
             this._diagnostics = diagnostics;
-            this.partialResult = new TypeInformation();
-            this.pendingNodes = new HashSet<AstNode>();
+            this._partialResult = new TypeInformation();
+            this._pendingNodes = new HashSet<AstNode>();
         }
 
         protected override TypeInformation VisitAstNode(AstNode node, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var result = node.Accept(this, expectedReturnTypeOfReturnExpr);
-            pendingNodes.Remove(node);
+            _pendingNodes.Remove(node);
             return result;
         }
 
@@ -95,13 +92,13 @@ public static class TypeChecking
             //}
             //catch { }
 
-            partialResult[identifierNode] = new UnitType();
+            _partialResult[identifierNode] = new UnitType();
             return new TypeInformation() { { identifierNode, new UnitType() } };
         }
 
         public override TypeInformation VisitVariableDeclaration(VariableDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
             var result = new TypeInformation(childrenTypes);
 
@@ -116,24 +113,24 @@ public static class TypeChecking
             }
 
             result.Add(node, new UnitType());
-            pendingNodes.Remove(node);
+            _pendingNodes.Remove(node);
             return result;
 
         }
 
         public override TypeInformation VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
-            pendingNodes.Remove(node);
+            _pendingNodes.Remove(node);
             return result;
         }
 
         public override TypeInformation VisitFunctionDefinition(FunctionDefinition node, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var declaredReturnType = node.ReturnType;
             var childrenTypes = this.visitNodeChildren(node, declaredReturnType);
             var result = new TypeInformation(childrenTypes);
@@ -145,40 +142,40 @@ public static class TypeChecking
 
             
             result.Add(node, new UnitType());
-            pendingNodes.Remove(node);
+            _pendingNodes.Remove(node);
             return result;
         }
 
         public override TypeInformation VisitCodeBlock(CodeBlock node, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             // simply return what expression inside returns?
             var result = new TypeInformation(childrenTypes);
             result.Add(node, childrenTypes[node.Inner]);
-            pendingNodes.Remove(node);
+            _pendingNodes.Remove(node);
             return result;
 
         }
 
         public override TypeInformation VisitExpressionJoin(ExpressionJoin node, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var result = new TypeInformation(childrenTypes);
             result.Add(node, childrenTypes[node.Second]); // just return the last expressions' type
-            pendingNodes.Remove(node);
+            _pendingNodes.Remove(node);
             return result;
         }
 
         public override TypeInformation VisitFunctionCall(FunctionCall functionCallNode, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(functionCallNode);
+            _pendingNodes.Add(functionCallNode);
             var childrenTypes = this.visitNodeChildren(functionCallNode, expectedReturnTypeOfReturnExpr);
 
-            var functionDeclarationNode = nameResolution.CalledFunctionDeclarations[functionCallNode];
+            var functionDeclarationNode = _nameResolution.CalledFunctionDeclarations[functionCallNode];
             var declaredReturnType = functionDeclarationNode.ReturnType;
 
             
@@ -205,8 +202,8 @@ public static class TypeChecking
 
             var result = new TypeInformation(childrenTypes);
             result.Add(functionCallNode, declaredReturnType);
-            partialResult[functionCallNode] = declaredReturnType;
-            pendingNodes.Remove(functionCallNode);
+            _partialResult[functionCallNode] = declaredReturnType;
+            _pendingNodes.Remove(functionCallNode);
             return result;
 
         }
@@ -214,18 +211,18 @@ public static class TypeChecking
         public override TypeInformation VisitContinueStatement(ContinueStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             // TODO do we need to visit node.children here?
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var result = new TypeInformation(childrenTypes);
             result.Add(node, new UnitType());
-            pendingNodes.Remove(node);
+            _pendingNodes.Remove(node);
             return result;
         }
 
         public override TypeInformation VisitReturnStatement(ReturnStatement node, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var result = new TypeInformation(childrenTypes);
@@ -242,25 +239,25 @@ public static class TypeChecking
                 this._diagnostics.Report(new ReturnTypeError(expectedReturnTypeOfReturnExpr, returnValueType, node.LocationRange.Start));
 
             }
-            pendingNodes.Remove(node);
+            _pendingNodes.Remove(node);
             return result;
         }
 
         public override TypeInformation VisitBreakStatement(BreakStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             // TODO do we need to visit node.children here?
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
             var result = new TypeInformation(childrenTypes);
             result.Add(node, new UnitType());
-            pendingNodes.Remove(node);
+            _pendingNodes.Remove(node);
             return result;
         }
 
 
         public override TypeInformation VisitIfStatement(IfStatement node, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var typeOfTrueBranch = childrenTypes[node.IfBlock];
@@ -275,8 +272,8 @@ public static class TypeChecking
 
             var result = new TypeInformation(childrenTypes);
             result.Add(node, typeOfTrueBranch);
-            partialResult[node] = typeOfTrueBranch;
-            pendingNodes.Remove(node);
+            _partialResult[node] = typeOfTrueBranch;
+            _pendingNodes.Remove(node);
             return result;
         }
 
@@ -290,19 +287,19 @@ public static class TypeChecking
         /// <returns></returns>
         public override TypeInformation VisitLoopStatement(LoopStatement node, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var result = new TypeInformation(childrenTypes);
             result.Add(node, new UnitType());
-            pendingNodes.Remove(node);
+            _pendingNodes.Remove(node);
             return result;
         }
 
 
         public override TypeInformation VisitInfix(Infix node, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var typeOfLeftOperand = childrenTypes[node.Left];
@@ -313,7 +310,7 @@ public static class TypeChecking
                 this._diagnostics.Report(new InfixOperatorTypeError(new UnitType(), new UnitType(), node.LocationRange.Start));
                 var result = new TypeInformation(childrenTypes);
                 result.Add(node, new UnitType());
-                pendingNodes.Remove(node);
+                _pendingNodes.Remove(node);
                 return result;
             }
 
@@ -324,7 +321,7 @@ public static class TypeChecking
                 // TODO does it make sense to return anything here? maybe a Unit type? But it could propagate the error up the tree 
                 var result = new TypeInformation(childrenTypes);
                 result.Add(node, new UnitType());
-                pendingNodes.Remove(node);
+                _pendingNodes.Remove(node);
                 return result;
             }
             else
@@ -371,14 +368,14 @@ public static class TypeChecking
                 }
                 var result = new TypeInformation(childrenTypes);
                 result.Add(node, commonType);
-                pendingNodes.Remove(node);
+                _pendingNodes.Remove(node);
                 return result;
             }
         }
 
         public override TypeInformation VisitAssignment(Assignment node, Type expectedReturnTypeOfReturnExpr)
         {
-            pendingNodes.Add(node);
+            _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var typeOfLeftSide = childrenTypes[node.Left];
@@ -391,14 +388,14 @@ public static class TypeChecking
             // Regardless of the error, let's return a Unit type for assignment and get more type checking information
             var result = new TypeInformation(childrenTypes);
             result.Add(node, typeOfLeftSide);
-            pendingNodes.Remove(node);
+            _pendingNodes.Remove(node);
             return result;
         }
 
         public override TypeInformation VisitVariableValue(VariableValue node, Type expectedReturnTypeOfReturnExpr)
         {
-            var variableDeclarationNode = nameResolution.UsedVariableDeclarations[node];
-            var typeOfVariable = partialResult[variableDeclarationNode];
+            var variableDeclarationNode = _nameResolution.UsedVariableDeclarations[node];
+            var typeOfVariable = _partialResult[variableDeclarationNode];
             var result = new TypeInformation() { { node, typeOfVariable } };
             return result;
         }
@@ -429,10 +426,10 @@ public static class TypeChecking
         /// <returns></returns>
         private TypeInformation visitNodeChildren(AstNode node, Type expectedReturnTypeOfReturnExpr)
         {
-            var avoidRecalculation = partialResult.ContainsKey(node);
+            var avoidRecalculation = _partialResult.ContainsKey(node);
             if (avoidRecalculation)
             {
-                return partialResult;
+                return _partialResult;
             }
 
             return node.Children.Aggregate(new TypeInformation(),
