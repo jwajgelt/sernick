@@ -69,7 +69,7 @@ public class CfgComparison
             same = same && Same(x[i], y[i]);
         }
 
-        return same;
+        return x.Zip(y).All(p => Same(p.First, p.Second));
     }
 
     private bool Same(CodeTreeNode x, CodeTreeNode y)
