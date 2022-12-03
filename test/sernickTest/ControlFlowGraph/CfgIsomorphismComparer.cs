@@ -29,7 +29,7 @@ public class CfgComparison
             return false;
         }
 
-        if (_visitMap.ContainsKey(x) && _visitMap[x] != y)
+        if (_visitMap.TryGetValue(x, out var visitX) && visitX != y)
         {
             return false;
         }
