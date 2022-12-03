@@ -11,7 +11,7 @@ public class CfgComparison
 
     public CfgComparison(CodeTreeRoot? x, CodeTreeRoot? y)
     {
-        _registerLabels = new Dictionary<Register, int>();
+        _registerLabels = new Dictionary<Register, int>(ReferenceEqualityComparer.Instance);
         _labelsCount = 0;
         _visitMap = new Dictionary<CodeTreeRoot, CodeTreeRoot>(ReferenceEqualityComparer.Instance);
         AreEqual = Same(x, y);
@@ -49,7 +49,6 @@ public class CfgComparison
 
         return (x, y) switch
         {
-            (null, null) => true,
             (SingleExitNode xSingle, SingleExitNode ySingle) =>
                 Same(xSingle.Operations, ySingle.Operations) &&
                 Same(xSingle.NextTree, ySingle.NextTree),
@@ -63,10 +62,9 @@ public class CfgComparison
 
     private bool Same(IReadOnlyList<CodeTreeNode> x, IReadOnlyList<CodeTreeNode> y)
     {
-        var same = true;
-        for (var i = 0; i < x.Count; i++)
+        if(x.Count != y.Count)
         {
-            same = same && Same(x[i], y[i]);
+            return false;
         }
 
         return x.Zip(y).All(p => Same(p.First, p.Second));
