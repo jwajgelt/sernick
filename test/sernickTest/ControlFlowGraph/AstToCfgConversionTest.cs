@@ -9,7 +9,7 @@ using sernick.Compiler.Function;
 public class AstToCfgConversionTest
 {
     private const int PointerSize = 8;
-    private CodeTreeValueNode displayAddress = new Constant(new RegisterValue(0)); // TODO idk where it is
+    private CodeTreeValueNode displayAddress = new Constant(new RegisterValue(0)); // TODO use GlobalAddress after it's merged
     // TODO call AST -> CFG conversion and compare result to what's expected
 
     [Fact]
@@ -89,7 +89,7 @@ public class AstToCfgConversionTest
             "f".Call().Argument(Literal(5))
         );
 
-        var N = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var N = Reg(HardwareRegister.RDI);
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
@@ -159,8 +159,8 @@ public class AstToCfgConversionTest
             )
         );
 
-        var X = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
-        var Y = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize); // TODO ? rbp changes so this should be correct
+        var X = Reg(HardwareRegister.RDI);
+        var Y = Reg(HardwareRegister.RDI);
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
@@ -244,14 +244,12 @@ public class AstToCfgConversionTest
             "f1".Call().Argument(Literal(1))
         );
 
-        var V1 = Mem(displayAddress); // TODO update this
-        var V2 = Mem(displayAddress); // TODO update this
-        var V3 = Mem(displayAddress); // TODO update this
-        var V4 = Mem(displayAddress); // TODO update this
-        var P1 = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
-        var P2 = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
-        var P3 = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
-        var P4 = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        // TODO update display addressing
+        var V1 = Mem(displayAddress);
+        var V2 = Mem(displayAddress);
+        var V3 = Mem(displayAddress);
+        var V4 = Mem(displayAddress);
+        var P = Reg(HardwareRegister.RDI); // P1,P2,P3,P4 are always under RDI 
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
@@ -269,21 +267,21 @@ public class AstToCfgConversionTest
         var f4Ret = new SingleExitNode(null, new[] { f2Callv3.ResultLocation! });
         var f2Callv3Tree = new SingleExitNode(f4Ret, f2Callv3.CodeGraph);
         var v1v4 = new SingleExitNode(f2Callv3Tree, new[] { V1.Write(V4.Value) });
-        var v4 = new SingleExitNode(v1v4, new[] { V4.Write(V1.Value + V2.Value + V3.Value + P4.Value )});
+        var v4 = new SingleExitNode(v1v4, new[] { V4.Write(V1.Value + V2.Value + V3.Value + P.Value )});
         
         var f3Ret = new SingleExitNode(null, new[] { f4Call.ResultLocation! });
         var f4CallTree = new SingleExitNode(f3Ret, f4Call.CodeGraph);
         var v2Plusv3 = new SingleExitNode(f4CallTree, new[] { V2.Write(V2.Value + V3.Value) });
-        var v3 = new SingleExitNode(v2Plusv3, new[] { V3.Write(V1.Value + V2.Value + P3.Value )});
+        var v3 = new SingleExitNode(v2Plusv3, new[] { V3.Write(V1.Value + V2.Value + P.Value )});
         
         var f2Ret = new SingleExitNode(null, new[] { f3Call.ResultLocation! });
         var f3CallTree = new SingleExitNode(f2Ret, f3Call.CodeGraph);
         var v1Plusv2 = new SingleExitNode(f3CallTree, new[] { V1.Write(V1.Value + V2.Value) });
-        var v2 = new SingleExitNode(v1Plusv2, new[] { V2.Write(V1.Value + P2.Value)});
+        var v2 = new SingleExitNode(v1Plusv2, new[] { V2.Write(V1.Value + P.Value)});
         
         var f1Ret = new SingleExitNode(null, new[] { f2Callv1.ResultLocation! });
         var f2Callv1Tree = new SingleExitNode(f1Ret, f2Callv1.CodeGraph);
-        var v1 = new SingleExitNode(f2Callv1Tree, new[] { V1.Write(P1.Value)});
+        var v1 = new SingleExitNode(f2Callv1Tree, new[] { V1.Write(P.Value)});
 
         var f1CallTree = new SingleExitNode(null, f1Call.CodeGraph);
 
@@ -324,9 +322,9 @@ public class AstToCfgConversionTest
             "f".Call().Argument(Literal(3))
         );
 
-        var X = Mem(Reg(HardwareRegister.RBP).Value + 3*PointerSize);
-        var Y = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
-        var Z = Mem(Reg(HardwareRegister.RBP).Value + 3*PointerSize);
+        var X = Reg(HardwareRegister.RDI);
+        var Y = Reg(HardwareRegister.RSI);
+        var Z = Reg(HardwareRegister.RDI);
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
@@ -510,7 +508,7 @@ public class AstToCfgConversionTest
         );
 
         var X = Mem(displayAddress);
-        var V = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var V = Reg(HardwareRegister.RDI);
 
         var funFactory = new FunctionFactory();
         var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] {}, false);
@@ -584,8 +582,7 @@ public class AstToCfgConversionTest
         );
 
         var X = Mem(displayAddress);
-        var Vf = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
-        var Vg = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var V = Reg(HardwareRegister.RDI);
         var Y = Reg(new Register());
 
         var funFactory = new FunctionFactory();
@@ -604,9 +601,9 @@ public class AstToCfgConversionTest
         // TODO not sure how loops are supposed to work
         var xy = new SingleExitNode(cond1, new CodeTreeNode[] { X.Write(1), Y.Write(0) });
         
-        var gRet = new SingleExitNode(null, new[] { Vg.Value <= X.Value });
+        var gRet = new SingleExitNode(null, new[] { V.Value <= X.Value });
         var xPlus1InG = new SingleExitNode(gRet, new[] { X.Write(X.Value + 1) });
-        var fRet = new SingleExitNode(null, new CodeTreeNode[] { X.Write(X.Value + 1), Vf.Value <= 5 });
+        var fRet = new SingleExitNode(null, new CodeTreeNode[] { X.Write(X.Value + 1), V.Value <= 5 });
 
         var expected = new List<CodeTreeRoot> {xy,fCallTree,cond1,gCallTree,cond2,yPlus1,fRet,xPlus1InG,gRet};
     }
@@ -658,8 +655,7 @@ public class AstToCfgConversionTest
         );
 
         var X = Mem(displayAddress);
-        var Vf = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
-        var Vg = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var V = Reg(HardwareRegister.RDI);
         var Y = Reg(new Register());
 
         var funFactory = new FunctionFactory();
@@ -678,9 +674,9 @@ public class AstToCfgConversionTest
         // TODO not sure how loops are supposed to work
         var xy = new SingleExitNode(cond1, new CodeTreeNode[] { X.Write(1), Y.Write(0) });
         
-        var gRet = new SingleExitNode(null, new[] { Vg.Value <= X.Value });
+        var gRet = new SingleExitNode(null, new[] { V.Value <= X.Value });
         var xPlus1InG = new SingleExitNode(gRet, new[] { X.Write(X.Value + 1) });
-        var fRet = new SingleExitNode(null, new CodeTreeNode[] { X.Write(X.Value + 1), Vf.Value <= 5 });
+        var fRet = new SingleExitNode(null, new CodeTreeNode[] { X.Write(X.Value + 1), V.Value <= 5 });
 
         var expected = new List<CodeTreeRoot> {xy,fCallTree,cond1,gCallTree,cond2,yPlus1,fRet,xPlus1InG,gRet};
     }
@@ -739,9 +735,7 @@ public class AstToCfgConversionTest
         );
 
         var X = Mem(displayAddress);
-        var Vf = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
-        var Vg = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
-        var Vh = Mem(Reg(HardwareRegister.RBP).Value + 2*PointerSize);
+        var V = Reg(HardwareRegister.RDI);
         var Y = Reg(new Register());
 
         var funFactory = new FunctionFactory();
@@ -764,9 +758,9 @@ public class AstToCfgConversionTest
         // TODO not sure how loops are supposed to work
         var xy = new SingleExitNode(cond1, new CodeTreeNode[] { X.Write(10), Y.Write(0) });
         
-        var hRet = new SingleExitNode(null, new[] { X.Value <= Vh.Value });
-        var gRet = new SingleExitNode(null, new[] { Vg.Value <= X.Value });
-        var fRet = new SingleExitNode(null, new[] { Vf.Value <= 5 });
+        var hRet = new SingleExitNode(null, new[] { X.Value <= V.Value });
+        var gRet = new SingleExitNode(null, new[] { V.Value <= X.Value });
+        var fRet = new SingleExitNode(null, new[] { V.Value <= 5 });
 
         var expected = new List<CodeTreeRoot> {xy,fCallTree,cond1,gCallTree,cond2,hCallTree,cond3,yPlus1,fRet,gRet,hRet};
     }
