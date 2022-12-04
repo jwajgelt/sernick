@@ -4,6 +4,7 @@ using Diagnostics;
 using NameResolution;
 using Nodes;
 using Utility;
+using System.Linq;
 
 using TypeInformation = Dictionary<Nodes.AstNode, Type>;
 
@@ -166,7 +167,7 @@ public static class TypeChecking
                 this._diagnostics.Report(new FunctionArgumentsMismatchError(declaredArguments.Count(), actualArguments.Count(), functionCallNode.LocationRange.Start));
             }
 
-            var _notNeeded = declaredArguments.Zip<FunctionParameterDeclaration,Expression, Unit>(actualArguments, (declaredArgument, actualArgument) =>
+            foreach (var (declaredArgument, actualArgument) in declaredArguments.Zip(actualArguments))
             {
                 // let us do type checking right here
                 var expectedType = declaredArgument.Type;
@@ -175,8 +176,7 @@ public static class TypeChecking
                 {
                     this._diagnostics.Report(new WrongFunctionArgumentError(expectedType, actualType, functionCallNode.LocationRange.Start));
                 }
-                return Unit.I;
-            });
+            };
 
 
             var result = new TypeInformation(childrenTypes) { { functionCallNode, declaredReturnType } };
