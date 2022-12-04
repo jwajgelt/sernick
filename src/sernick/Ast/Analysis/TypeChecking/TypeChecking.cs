@@ -39,7 +39,8 @@ public static class TypeChecking
         /// so to avoid recalculation (visiting the same ancestor from multiple nodes)
         /// we will have this helper object, containing type information for some AST nodes
         /// </summary>
-        private readonly TypeInformation _partialResult;
+        private readonly TypeInformation _memoizedVariableTypes;
+        private readonly TypeInformation _memoizedFunctionParameterTypes;
         /// <summary>
         /// Our Type-checking Algorighm is a top-down postorder
         /// But sometimes, nodes need to know information about some other nodes higher up the tree
@@ -52,8 +53,9 @@ public static class TypeChecking
         {
             _nameResolution = nameResolution;
             _diagnostics = diagnostics;
-            _partialResult = new TypeInformation(ReferenceEqualityComparer.Instance);
-            _pendingNodes = new HashSet<AstNode>();
+            _memoizedVariableTypes = new TypeInformation(ReferenceEqualityComparer.Instance);
+            _memoizedFunctionParameterTypes = new TypeInformation(ReferenceEqualityComparer.Instance);
+            _pendingNodes = new HashSet<AstNode>(ReferenceEqualityComparer.Instance);
         }
 
         protected override TypeInformation VisitAstNode(AstNode node, Type expectedReturnTypeOfReturnExpr)
@@ -66,7 +68,6 @@ public static class TypeChecking
 
         public override TypeInformation VisitIdentifier(Identifier identifierNode, Type expectedReturnTypeOfReturnExpr)
         {
-            _partialResult[identifierNode] = new UnitType();
             return new TypeInformation(ReferenceEqualityComparer.Instance) { { identifierNode, new UnitType() } };
         }
 
@@ -83,9 +84,11 @@ public static class TypeChecking
                 {
                     _diagnostics.Report(new TypeCheckingError(declaredType, rhsType, node.LocationRange.Start));
                 }
+                _memoizedVariableTypes[node.Name] = declaredType;
             }
 
             var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
+            
             _pendingNodes.Remove(node);
             return result;
 
@@ -97,6 +100,7 @@ public static class TypeChecking
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
+            _memoizedFunctionParameterTypes[node] = node.Type;
             _pendingNodes.Remove(node);
             return result;
         }
@@ -169,8 +173,8 @@ public static class TypeChecking
                 }
             }
 
+            _memoizedFunctionParameterTypes[functionCallNode] = declaredReturnType;
             var result = new TypeInformation(childrenTypes) { { functionCallNode, declaredReturnType } };
-            _partialResult[functionCallNode] = declaredReturnType;
             _pendingNodes.Remove(functionCallNode);
             return result;
         }
@@ -209,7 +213,6 @@ public static class TypeChecking
         public override TypeInformation VisitBreakStatement(BreakStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             // Break statement should have no children
-            _partialResult[node] = new UnitType();
             var result = new TypeInformation(ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             return result;
         }
@@ -236,7 +239,6 @@ public static class TypeChecking
             }
 
             var result = new TypeInformation(childrenTypes) { { node, typeOfTrueBranch } };
-            _partialResult[node] = typeOfTrueBranch;
             _pendingNodes.Remove(node);
             return result;
         }
@@ -261,7 +263,6 @@ public static class TypeChecking
 
         public override TypeInformation VisitEmptyExpression(EmptyExpression node, Type _)
         {
-            _partialResult[node] = new UnitType();
             return new TypeInformation(ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
         }
 
@@ -338,7 +339,8 @@ public static class TypeChecking
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
-            var typeOfLeftSide = _partialResult[_nameResolution.AssignedVariableDeclarations[node]];
+            var variableDeclarationNode = _nameResolution.AssignedVariableDeclarations[node];
+            var typeOfLeftSide = _memoizedVariableTypes[variableDeclarationNode];
             var typeOfRightSide = childrenTypes[node.Right];
             if (typeOfLeftSide.ToString() != typeOfRightSide.ToString())
             {
@@ -354,7 +356,7 @@ public static class TypeChecking
         public override TypeInformation VisitVariableValue(VariableValue node, Type expectedReturnTypeOfReturnExpr)
         {
             var variableDeclarationNode = _nameResolution.UsedVariableDeclarations[node];
-            var typeOfVariable = _partialResult[variableDeclarationNode];
+            var typeOfVariable = _memoizedVariableTypes[variableDeclarationNode];
             var result = new TypeInformation(ReferenceEqualityComparer.Instance) { { node, typeOfVariable } };
             return result;
         }
@@ -385,12 +387,6 @@ public static class TypeChecking
         /// <returns></returns>
         private TypeInformation VisitNodeChildren(AstNode node, Type expectedReturnTypeOfReturnExpr)
         {
-            var avoidRecalculation = _partialResult.ContainsKey(node);
-            if (avoidRecalculation)
-            {
-                return _partialResult;
-            }
-
             return node.Children.Aggregate(new TypeInformation(ReferenceEqualityComparer.Instance),
                 (partialTypeInformation, childNode) =>
                 {
