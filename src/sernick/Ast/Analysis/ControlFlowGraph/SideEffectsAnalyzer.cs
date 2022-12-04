@@ -1,11 +1,13 @@
 namespace sernick.Ast.Analysis.ControlFlowGraph;
 
+using CallGraph;
 using Compiler.Function;
 using FunctionContextMap;
 using NameResolution;
 using Nodes;
 using sernick.ControlFlowGraph.CodeTree;
 using Utility;
+using VariableAccess;
 using AstFunctionCall = Nodes.FunctionCall;
 using CodeTreeFunctionCall = sernick.ControlFlowGraph.CodeTree.FunctionCall;
 using SideEffectsVisitorParam = Utility.Unit;
@@ -13,9 +15,16 @@ using Variable = Nodes.VariableDeclaration;
 
 public static class SideEffectsAnalyzer
 {
-    public static IReadOnlyList<SingleExitNode> PullOutSideEffects(AstNode root, NameResolutionResult nameResolution, IFunctionContext currentFunctionContext, FunctionContextMap functionContextMap)
+    public static IReadOnlyList<SingleExitNode> PullOutSideEffects(
+        AstNode root,
+        NameResolutionResult nameResolution,
+        IFunctionContext currentFunctionContext,
+        FunctionContextMap functionContextMap,
+        CallGraph callGraph,
+        VariableAccessMap variableAccessMap
+    )
     {
-        var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext, functionContextMap);
+        var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext, functionContextMap, callGraph, variableAccessMap);
         var visitorResult = root.Accept(visitor, Unit.I);
 
         if (!visitorResult.Any())
@@ -32,8 +41,8 @@ public static class SideEffectsAnalyzer
         foreach (var tree in visitorResult)
         {
             if (operations.Count != 0 && (
-                    !tree.CanMerge 
-                    || tree.Affects(readVariables) 
+                    !tree.CanMerge
+                    || tree.Affects(readVariables)
                     || tree.AffectedBy(writtenVariables)))
             {
                 result.Add(new SingleExitNode(null, operations));
@@ -80,14 +89,15 @@ public static class SideEffectsAnalyzer
     private class SideEffectsVisitor : AstVisitor<List<TreeWithEffects>, SideEffectsVisitorParam>
     {
         public SideEffectsVisitor(
-            NameResolutionResult nameResolution, 
-            IFunctionContext currentFunctionContext, 
-            FunctionContextMap functionContextMap
-        ) 
+            NameResolutionResult nameResolution,
+            IFunctionContext currentFunctionContext,
+            FunctionContextMap functionContextMap, CallGraph callGraph, VariableAccessMap variableAccessMap)
         {
             _nameResolution = nameResolution;
             _currentFunctionContext = currentFunctionContext;
             _functionContextMap = functionContextMap;
+            _callGraph = callGraph;
+            _variableAccessMap = variableAccessMap;
         }
 
         protected override List<TreeWithEffects> VisitAstNode(AstNode node, SideEffectsVisitorParam param)
@@ -171,16 +181,64 @@ public static class SideEffectsAnalyzer
             var functionCallTrees = functionCall.SelectMany(
                 callTree => callTree.Operations.Select(
                     (tree, index) => new TreeWithEffects(
-                        new HashSet<VariableDeclaration>(), 
+                        new HashSet<VariableDeclaration>(),
                         new HashSet<VariableDeclaration>(),
                         tree,
                         index != 0)
                 )).ToList();
 
+            functionCallTrees = functionCallTrees.Select(tree =>
+            {
+                if (tree.CodeTree is not CodeTreeFunctionCall)
+                {
+                    return tree;
+                }
+
+                var calledFunctionDefinition = _nameResolution.CalledFunctionDeclarations[node];
+                var writtenVariables = new HashSet<Variable>();
+                var readVariables = new HashSet<Variable>();
+
+                var accessibleFunctions = _callGraph.Graph[calledFunctionDefinition];
+
+                foreach (var function in accessibleFunctions)
+                {
+                    var accessedVariables = _variableAccessMap[function];
+                    foreach (var (variable, accessMode) in accessedVariables)
+                    {
+                        if (variable is not VariableDeclaration variableDeclaration)
+                        {
+                            continue;
+                        }
+
+                        switch (accessMode)
+                        {
+                            case VariableAccessMode.ReadOnly:
+                                readVariables.Add(variableDeclaration);
+                                break;
+                            case VariableAccessMode.WriteAndRead:
+                                readVariables.Add(variableDeclaration);
+                                writtenVariables.Add(variableDeclaration);
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                }
+
+                return tree with { WrittenVariables = writtenVariables, ReadVariables = readVariables, };
+            }).ToList();
+
+            // the called function has no arguments - we may merge the call
+            // with some previous code tree (assuming no visible variable access)
             if (functionCallTrees[0].CodeTree is CodeTreeFunctionCall)
             {
-                // TODO: add read and written variables here
                 functionCallTrees[0] = functionCallTrees[0] with { CanMerge = true };
+            }
+            // the called function doesn't return a value - we may merge the call
+            // with some next code tree (assuming no visible variable access)
+            else if (functionCallTrees[^1].CodeTree is CodeTreeFunctionCall)
+            {
+                functionCallTrees[^1] = functionCallTrees[^1] with { CanMerge = true };
             }
 
             var resultTree = resultLocation != null ? new TreeWithEffects(
@@ -367,5 +425,7 @@ public static class SideEffectsAnalyzer
         private readonly NameResolutionResult _nameResolution;
         private readonly IFunctionContext _currentFunctionContext;
         private readonly FunctionContextMap _functionContextMap;
+        private readonly CallGraph _callGraph;
+        private readonly VariableAccessMap _variableAccessMap;
     }
 }
