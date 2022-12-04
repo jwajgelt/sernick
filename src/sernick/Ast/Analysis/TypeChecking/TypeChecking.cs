@@ -55,7 +55,7 @@ public static class TypeChecking
         {
             this._nameResolution = nameResolution;
             this._diagnostics = diagnostics;
-            this._partialResult = new TypeInformation();
+            this._partialResult = new TypeInformation(ReferenceEqualityComparer.Instance);
             this._pendingNodes = new HashSet<AstNode>();
         }
 
