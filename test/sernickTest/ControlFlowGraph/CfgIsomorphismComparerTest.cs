@@ -14,8 +14,7 @@ public class CfgIsomorphismComparerTest
         var cfgA = new SingleExitNode(null, new List<CodeTreeNode> { raxRead });
         var cfgB = new SingleExitNode(null, new List<CodeTreeNode> { rbxRead });
 
-        var comparer = new CfgIsomorphismComparer();
-        Assert.False(comparer.Equals(cfgA, cfgB));
+        Assert.NotEqual(cfgA, cfgB, new CfgIsomorphismComparer());
     }
 
     [Fact]
@@ -45,8 +44,7 @@ public class CfgIsomorphismComparerTest
         var cfgA = new SingleExitNode(null, new List<CodeTreeNode> { aRegRead, aRegWrite });
         var cfgB = new SingleExitNode(null, new List<CodeTreeNode> { bRegRead, bRegWrite });
 
-        var comparer = new CfgIsomorphismComparer();
-        Assert.True(comparer.Equals(cfgA, cfgB));
+        Assert.Equal(cfgA, cfgB, new CfgIsomorphismComparer());
     }
 
     [Fact]
@@ -66,7 +64,53 @@ public class CfgIsomorphismComparerTest
         var cfgA = new SingleExitNode(null, new List<CodeTreeNode> { aRegRead, cRegWrite });
         var cfgB = new SingleExitNode(null, new List<CodeTreeNode> { bRegRead, bRegWrite });
 
+        Assert.NotEqual(cfgA, cfgB, new CfgIsomorphismComparer());
+    }
+
+    [Fact]
+    public void EquivalentCycles()
+    {
+        var aReg = Reg(new Register());
+        var cReg = Reg(new Register());
+
+        var bReg = Reg(new Register());
+        var dReg = Reg(new Register());
+
+        var aNodeOne = new SingleExitNode(null, new List<CodeTreeNode> { aReg.Read() });
+        var aNodeTwo = new SingleExitNode(aNodeOne, new List<CodeTreeNode> { cReg.Read() });
+        var aNodeThree = new SingleExitNode(aNodeTwo, new List<CodeTreeNode> { aReg.Read() });
+        aNodeOne.NextTree = aNodeThree;
+
+        var bNodeOne = new SingleExitNode(null, new List<CodeTreeNode> { bReg.Read() });
+        var bNodeTwo = new SingleExitNode(bNodeOne, new List<CodeTreeNode> { dReg.Read() });
+        var bNodeThree = new SingleExitNode(bNodeTwo, new List<CodeTreeNode> { bReg.Read() });
+        bNodeOne.NextTree = bNodeThree;
+
+        // Assert.Equal causes stack overflow due to default ToString implementation
         var comparer = new CfgIsomorphismComparer();
-        Assert.False(comparer.Equals(cfgA, cfgB));
+        Assert.True(comparer.Equals(aNodeThree, bNodeThree));
+    }
+
+    [Fact]
+    public void DifferentCycles()
+    {
+        var aReg = Reg(new Register());
+        var cReg = Reg(new Register());
+
+        var bReg = Reg(new Register());
+        var dReg = Reg(new Register());
+
+        var aNodeOne = new SingleExitNode(null, new List<CodeTreeNode> { aReg.Read() });
+        var aNodeTwo = new SingleExitNode(aNodeOne, new List<CodeTreeNode> { cReg.Read() });
+        var aNodeThree = new SingleExitNode(aNodeTwo, new List<CodeTreeNode> { aReg.Read() });
+        aNodeOne.NextTree = aNodeThree;
+
+        var bNodeOne = new SingleExitNode(null, new List<CodeTreeNode> { bReg.Read() });
+        var bNodeTwo = new SingleExitNode(bNodeOne, new List<CodeTreeNode> { dReg.Read() });
+        var bNodeThree = new SingleExitNode(bNodeTwo, new List<CodeTreeNode> { bReg.Read() });
+        bNodeOne.NextTree = bNodeTwo;
+
+        var comparer = new CfgIsomorphismComparer();
+        Assert.False(comparer.Equals(aNodeThree, bNodeThree));
     }
 }

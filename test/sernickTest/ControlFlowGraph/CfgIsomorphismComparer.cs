@@ -29,12 +29,12 @@ public class CfgComparison
             return false;
         }
 
-        if (_visitMap.TryGetValue(x, out var visitX) && visitX != y)
+        if (_visitMap.TryGetValue(x, out var visitX) && !Object.ReferenceEquals(visitX, y))
         {
             return false;
         }
 
-        if (_visitMap.ContainsKey(y) && _visitMap[y] != x)
+        if (_visitMap.ContainsKey(y) && !Object.ReferenceEquals(_visitMap[y], x))
         {
             return false;
         }
