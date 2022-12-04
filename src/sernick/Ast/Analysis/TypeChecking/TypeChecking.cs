@@ -81,7 +81,6 @@ public static class TypeChecking
         {
             _pendingNodes.Add(node);
             var childrenTypes = this.VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
-            var result = new TypeInformation(childrenTypes);
 
             var declaredType = node.Type;
             if(declaredType != null && node.InitValue != null)
@@ -93,7 +92,7 @@ public static class TypeChecking
                 }
             }
 
-            result.Add(node, new UnitType());
+            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
             return result;
 
@@ -286,7 +285,7 @@ public static class TypeChecking
 
             if(typeOfLeftOperand is UnitType || typeOfRightOperand is UnitType)
             {
-                this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+                this._diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                 var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
                 _pendingNodes.Remove(node);
                 return result;
@@ -294,7 +293,7 @@ public static class TypeChecking
 
             if (typeOfLeftOperand.ToString() != typeOfRightOperand.ToString())
             {
-                this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+                this._diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
 
                 // TODO does it make sense to return anything here? maybe a Unit type? But it could propagate the error up the tree 
                 var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
@@ -308,33 +307,25 @@ public static class TypeChecking
                 // let's cover some special cases e.g. adding two bools or shirt-curcuiting two ints
                 switch (node.Operator)
                 {
-                    case Infix.Op.Plus:
-                    case Infix.Op.Minus:
+                    case Infix.Op.ScAnd:
+                    case Infix.Op.ScOr:
                         {
-                        if(commonType is BoolType)
+                            if(commonType is not BoolType)
                             {
-                                this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
-                                
+                                this._diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                             }
                             break;
                         }
+                    case Infix.Op.Plus:
+                    case Infix.Op.Minus:
                     case Infix.Op.Greater:
                     case Infix.Op.GreaterOrEquals:
                     case Infix.Op.Less:
                     case Infix.Op.LessOrEquals:
                         {
-                            if(commonType is IntType)
+                            if(commonType is not IntType)
                             {
-                                this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
-                            }
-                            break;
-                        }
-                    case Infix.Op.ScAnd:
-                    case Infix.Op.ScOr:
-                        {
-                            if(commonType is BoolType)
-                            {
-                                this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+                                this._diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                             }
                             break;
                         }
