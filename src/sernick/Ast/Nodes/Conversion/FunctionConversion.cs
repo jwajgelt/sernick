@@ -25,12 +25,12 @@ public static class FunctionConversion
     /// Requires the top Production to be a valid functionArguments production:
     /// 1. functionArguments => arg * "," * arg * "," * ...
     /// </summary>
-    private static IEnumerable<Expression> ToArguments(this IParseTree<Symbol> node) => node switch
+    private static IReadOnlyCollection<Expression> ToArguments(this IParseTree<Symbol> node) => node switch
     {
         {
             Symbol: NonTerminal { Inner: NonTerminalSymbol.FunctionArguments },
             Children: var children
-        } => children.SkipCommas().SelectExpressions(),
+        } => children.SkipCommas().SelectExpressions().ToList(),
         _ => throw new ArgumentException("Invalid ParseTree for FunctionArguments")
     };
 
@@ -99,13 +99,14 @@ public static class FunctionConversion
     /// Requires the top Production to be a valid functionParameters production:
     /// 1. functionParameters -> param * "," * param * "," * ...
     /// </summary>
-    private static IEnumerable<FunctionParameterDeclaration> ToFunctionParameters(this IParseTree<Symbol> node) =>
+    private static IReadOnlyCollection<FunctionParameterDeclaration> ToFunctionParameters(this IParseTree<Symbol> node) =>
         node switch
         {
             { Symbol: NonTerminal { Inner: NonTerminalSymbol.FunctionParameters }, Children: var children }
                 => children
                     .SkipCommas()
-                    .Select(param => param.ToFunctionParameterDeclaration()),
+                    .Select(param => param.ToFunctionParameterDeclaration())
+                    .ToList(),
 
             _ => throw new ArgumentException("Invalid ParseTree for FunctionParameterDefinition")
         };

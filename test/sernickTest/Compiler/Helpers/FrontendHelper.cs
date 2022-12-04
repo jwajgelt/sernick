@@ -2,8 +2,10 @@ namespace sernickTest.Compiler.Helpers;
 
 using Diagnostics;
 using sernick.Compiler;
+using sernick.Grammar.Syntax;
 using sernick.Input;
 using sernick.Input.String;
+using sernick.Parser;
 using sernick.Utility;
 
 public static class FrontendHelper
@@ -16,9 +18,9 @@ public static class FrontendHelper
         {
             CompilerFrontend.Process(input, diagnostics);
         }
-        catch
+        catch (Exception e) when (e is CompilationException or ParsingException<Symbol>)
         {
-            // exceptions ignored, so the diagnostics can be analyzed in the tests
+            // compilation exceptions ignored, so the diagnostics can be analyzed in the tests
         }
 
         return diagnostics;
