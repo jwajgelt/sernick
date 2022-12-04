@@ -15,7 +15,7 @@ using static sernick.Compiler.PlatformConstants;
 
 public class AstToCfgConversionTest
 {
-    private readonly CodeTreeValueNode _displayAddress = new Constant(new RegisterValue(0)); // TODO use GlobalAddress after it's merged
+    private readonly CodeTreeValueNode _displayAddress = new GlobalAddress("display"); // TODO use GlobalAddress after it's merged
     private readonly CodeTreeRoot _empty = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
 
     [Fact]

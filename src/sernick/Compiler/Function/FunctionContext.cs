@@ -58,7 +58,7 @@ public sealed class FunctionContext : IFunctionContext
         _functionParameters = parameters;
         _valueIsReturned = returnsValue;
         _localsOffset = 0;
-        _displayEntry = new GlobalAddress("display") + PointerSize * Depth;
+        _displayEntry = new GlobalAddress("display") + POINTER_SIZE * Depth;
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _oldDisplayValReg = new Register();
 
@@ -108,25 +108,6 @@ public sealed class FunctionContext : IFunctionContext
 
         var rspRead = Reg(rsp).Read();
         var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
-
-        // Add default arguments if necessary
-        var allArgs = new List<CodeTreeValueNode>(arguments);
-        while (allArgs.Count < _functionParameters.Count)
-        {
-            allArgs.Add(_functionParameters[allArgs.Count - 1].GetDefaultValue());
-        }
-
-        // Divide args into register and stack
-        var regArgs = new List<CodeTreeValueNode>();
-        var stackArgs = new List<CodeTreeValueNode>();
-
-        for (var i = 0; i < allArgs.Count; i++)
-        {
-            (i < 6 ? regArgs : stackArgs).Add(allArgs[i]);
-        }
-
-        // Put args into registers
-        operations.AddRange(argumentRegisters.Zip(regArgs).Select(p => Reg(p.First).Write(p.Second)));
 
         // Add default arguments if necessary
         var allArgs = new List<CodeTreeValueNode>(arguments);
