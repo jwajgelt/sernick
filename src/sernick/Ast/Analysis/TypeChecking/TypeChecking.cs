@@ -231,12 +231,17 @@ public static class TypeChecking
             var childrenTypes = this.VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var typeOfTrueBranch = childrenTypes[node.IfBlock];
+            var typeOfCondition = childrenTypes[node.Condition];
+            if (typeOfCondition is not BoolType)
+            {
+                this._diagnostics.Report(new TypeCheckingError(new BoolType(), typeOfCondition, node.LocationRange.Start));
+            }
             if(node.ElseBlock != null)
             {
                 var typeOfFalseBranch = childrenTypes[node.ElseBlock];
                 if(typeOfTrueBranch != typeOfFalseBranch)
                 {
-                    this._diagnostics.Report(new TypeCheckingError(typeOfTrueBranch, typeOfFalseBranch, node.LocationRange.Start));
+                    this._diagnostics.Report(new UnequalBranchTypeError(typeOfTrueBranch, typeOfFalseBranch, node.LocationRange.Start));
                 }
             }
 
