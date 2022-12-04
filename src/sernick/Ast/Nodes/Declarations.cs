@@ -39,7 +39,7 @@ public sealed record FunctionParameterDeclaration(Identifier Name,
 }
 
 public record FunctionDefinition(Identifier Name,
-    IEnumerable<FunctionParameterDeclaration> Parameters,
+    IReadOnlyCollection<FunctionParameterDeclaration> Parameters,
     Type ReturnType,
     CodeBlock Body,
     Range<ILocation> LocationRange) : Declaration(Name, LocationRange)
