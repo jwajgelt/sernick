@@ -163,7 +163,9 @@ public static class TypeChecking
                 var actualType = childrenTypes[actualArgument];
                 if (expectedType != actualType)
                 {
-                    _diagnostics.Report(new WrongFunctionArgumentError(expectedType, actualType, functionCallNode.LocationRange.Start));
+                    _diagnostics.Report(
+                        new WrongFunctionArgumentError(expectedType, actualType, functionCallNode.LocationRange.Start)
+                    );
                 }
             };
 
@@ -292,7 +294,7 @@ public static class TypeChecking
             {
                 var commonType = typeOfLeftOperand;
 
-                // let's cover some special cases e.g. adding two bools or shirt-curcuiting two ints
+                // let's cover some special cases e.g. adding two bools or shirt-circuiting two ints
                 switch (node.Operator)
                 {
                     case Infix.Op.ScAnd:
