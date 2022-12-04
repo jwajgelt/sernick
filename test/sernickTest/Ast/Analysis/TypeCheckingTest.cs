@@ -283,20 +283,16 @@ public class TypeCheckingTest
         [Fact]
         public void FunctionReturnsBool_OK()
         {
-            var funDecl = Fun<BoolType>("returnsBool");
-            funDecl.Body(
-                Loop(
-                    Block(
-                        Literal(23),
-                        Return(true)
-                    )
-                ),
-                Literal(false)
-            );
-
-            var tree = (
-                funDecl
-            );
+            var tree = Fun<BoolType>("returnsBool")
+                .Body(
+                    Loop(
+                        Block(
+                            Literal(23),
+                            Return(true)
+                        )
+                    ),
+                    Literal(false)
+                ).Get(out _);
 
             var diagnostics = new Mock<IDiagnostics>();
             diagnostics.SetupAllProperties();
