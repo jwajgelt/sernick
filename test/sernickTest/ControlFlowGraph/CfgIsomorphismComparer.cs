@@ -62,12 +62,7 @@ public class CfgComparison
 
     private bool Same(IReadOnlyList<CodeTreeNode> x, IReadOnlyList<CodeTreeNode> y)
     {
-        if (x.Count != y.Count)
-        {
-            return false;
-        }
-
-        return x.Zip(y).All(p => Same(p.First, p.Second));
+        return x.Count == y.Count && x.Zip(y).All(p => Same(p.First, p.Second));
     }
 
     private bool Same(CodeTreeNode x, CodeTreeNode y)
