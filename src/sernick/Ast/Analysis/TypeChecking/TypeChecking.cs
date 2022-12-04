@@ -44,10 +44,8 @@ public static class TypeChecking
         /// <summary>
         /// Our Type-checking Algorighm is a top-down postorder
         /// But sometimes, nodes need to know information about some other nodes higher up the tree
-        /// And in case we need to know a type information about our direct ancestor -- that's a circular dependency
-        /// Which we have to uncover and report
-        /// For example, a case like this:
-        /// var x : Int = { 23; x = 23; } // here  a usage of x needs information about the type of x
+        /// For example, when we are visiting a variable value
+        /// But variable declaration would be somewhere up the tree (and the type for it also)
         /// </summary>
         private readonly HashSet<AstNode> _pendingNodes;
 
