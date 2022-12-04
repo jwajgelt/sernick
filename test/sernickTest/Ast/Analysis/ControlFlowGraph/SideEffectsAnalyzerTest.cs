@@ -14,9 +14,9 @@ using static Helpers.AstNodesExtensions;
 
 public class SideEffectsAnalyzerTest
 {
-    private static CallGraph callGraph = new CallGraph();
-    private static VariableAccessMap variableAccessMap = new VariableAccessMap();
-    
+    private static readonly CallGraph callGraph = new CallGraph();
+    private static readonly VariableAccessMap variableAccessMap = new VariableAccessMap();
+
     [Theory]
     [InlineData(Infix.Op.Plus, BinaryOperation.Add)]
     [InlineData(Infix.Op.Minus, BinaryOperation.Sub)]
