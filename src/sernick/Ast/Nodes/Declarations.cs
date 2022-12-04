@@ -25,6 +25,17 @@ public sealed record FunctionParameterDeclaration(Identifier Name,
 
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitFunctionParameterDeclaration(this, param);
+
+    public object? TryGetDefaultValue()
+    {
+        return DefaultValue switch
+        {
+            null => null,
+            IntLiteralValue intValue => intValue.Value,
+            BoolLiteralValue boolValue => boolValue.Value,
+            _ => throw new Exception("Default value of unsupported type."),
+        };
+    }
 }
 
 public record FunctionDefinition(Identifier Name,
