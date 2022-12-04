@@ -9,62 +9,127 @@ using FunctionCall = Nodes.FunctionCall;
 
 public static class ControlFlowAnalyzer
 {
+    /// <summary>
+    /// This method returns a control flow graph for a given function represented by an AST
+    /// </summary>
+    /// <param name="pullOutSideEffects">function that, given an AST without any control flow expressions, returns a linear list of CFG nodes</param>
     public static CodeTreeRoot UnravelControlFlow(
-        AstNode root,
+        FunctionDefinition functionDefinition,
         NameResolutionResult nameResolution,
         FunctionContextMap contextMap,
-        Func<AstNode, NameResolutionResult, IFunctionContext, IReadOnlyList<SingleExitNode>> pullOutSideEffects)
+        Func<AstNode, NameResolutionResult, IFunctionContext, FunctionContextMap, IReadOnlyList<SingleExitNode>>
+            pullOutSideEffects
+    )
     {
-        var visitor = new ControlFlowVisitor(nameResolution, currentFunctionContext, pullOutSideEffects);
-        IFunctionVariable variable;
-        currentFunctionContext.AddLocal(variable, false);
-        return root.Body.Accept(visitor, new ControlFlowVisitorParam(null, null, null, ))
+        var nodesWithControlFlow = new HashSet<AstNode>();
+        functionDefinition.Body.Accept(new ContainsControlFlowVisitor(), nodesWithControlFlow);
+
+        var currentFunctionContext = contextMap[functionDefinition];
+        var variableFactory = new TemporaryLocalVariableFactory(currentFunctionContext);
+
+        var visitor =
+            new ControlFlowVisitor(
+                currentFunctionContext,
+                nodesWithControlFlow,
+                (root, next, resultVariable) =>
+                {
+                    var nodes = pullOutSideEffects(root, nameResolution, currentFunctionContext, contextMap);
+                    if (nodes.Count == 0)
+                    {
+                        return next;
+                    }
+
+                    if (nodes[^1].Operations[^1] is not CodeTreeValueNode valueNode)
+                    {
+                        throw new NotSupportedException("");
+                    }
+
+                    foreach (var (node, nextNode) in nodes.Zip(nodes.Skip(1)))
+                    {
+                        node.NextTree = nextNode;
+                    }
+
+                    if (resultVariable is not null)
+                    {
+                        nodes[^1].NextTree = new SingleExitNode(next,
+                            new[] { currentFunctionContext.GenerateVariableWrite(resultVariable, valueNode) });
+                    }
+
+                    return nodes[0];
+                },
+                variableFactory
+            );
+
+        var resultVariable = variableFactory.NewVariable();
+
+        var prologue = currentFunctionContext.GeneratePrologue();
+        var epilogue =
+            currentFunctionContext.GenerateEpilogue(currentFunctionContext.GenerateVariableRead(resultVariable));
+
+        prologue[^1].NextTree = functionDefinition.Body.Accept(visitor,
+            new ControlFlowVisitorParam(
+                epilogue[0],
+                null,
+                null,
+                epilogue[0],
+                resultVariable
+            ));
+
+        return prologue[0];
     }
 
     private sealed record ControlFlowVisitorParam
     (
-        CodeTreeRoot? Next,
-        CodeTreeRoot? Break,
-        CodeTreeRoot? Continue,
-        CodeTreeRoot Return,
-        IFunctionVariable Result
+        CodeTreeRoot Next, // CFG node that will be visited after the CFG for the currently processed AST 
+        CodeTreeRoot? Break, // CFG node that will be visited after a break statement
+        CodeTreeRoot? Continue, // CFG node that will be visited after a continue statement
+        CodeTreeRoot Return, // CFG node that will be visited after a return statement
+        IFunctionVariable? ResultVariable // variable in which the result should be stored
     );
 
-    private interface ILocalFunctionVariableFactory
+    private class TemporaryLocalVariable : IFunctionVariable { }
+
+    private class TemporaryLocalVariableFactory
     {
-        IFunctionVariable NewIFunctionVariable();
+        private readonly IFunctionContext _functionContext;
+        public TemporaryLocalVariableFactory(IFunctionContext functionContext)
+        {
+            _functionContext = functionContext;
+        }
+        public IFunctionVariable NewVariable()
+        {
+            var temp = new TemporaryLocalVariable();
+            _functionContext.AddLocal(temp, false);
+            return temp;
+        }
     }
 
     private sealed class ControlFlowVisitor : AstVisitor<CodeTreeRoot, ControlFlowVisitorParam>
     {
-        private readonly Func<AstNode, CodeTreeRoot?, CodeTreeRoot>
-            _pullOutSideEffects;
-
-        private readonly NameResolutionResult _nameResolution;
+        private readonly Func<AstNode, CodeTreeRoot, IFunctionVariable?, CodeTreeRoot> _pullOutSideEffects;
         private readonly IFunctionContext _currentFunctionContext;
-        private readonly Dictionary<AstNode, bool> _containsControlFlow;
-        private readonly FunctionContextMap _functionContextMap;
-        private readonly ILocalFunctionVariableFactory _functionVariableFactory;
+        private readonly IReadOnlySet<AstNode> _nodesWithControlFlow;
+        private readonly TemporaryLocalVariableFactory _variableFactory;
 
         public ControlFlowVisitor
         (
-            NameResolutionResult nameResolution,
             IFunctionContext currentFunctionContext,
-            Dictionary<AstNode, bool> containsControlFlow,
-            Func<AstNode, CodeTreeRoot?, CodeTreeRoot> pullOutSideEffects
+            IReadOnlySet<AstNode> nodesWithControlFlow,
+            Func<AstNode, CodeTreeRoot, IFunctionVariable?, CodeTreeRoot> pullOutSideEffects,
+            TemporaryLocalVariableFactory variableFactory
         )
         {
             _pullOutSideEffects = pullOutSideEffects;
-            _nameResolution = nameResolution;
             _currentFunctionContext = currentFunctionContext;
-            _containsControlFlow = containsControlFlow;
+            _nodesWithControlFlow = nodesWithControlFlow;
+            _variableFactory = variableFactory;
         }
 
-        protected override CodeTreeRoot VisitAstNode(AstNode node, ControlFlowVisitorParam param) //TODO: how does Result work in this case??
+        protected override CodeTreeRoot VisitAstNode(AstNode node, ControlFlowVisitorParam param)
         {
-            if (!_containsControlFlow[node])
+            if (!_nodesWithControlFlow.Contains(node))
             {
-                return _pullOutSideEffects(node, param.Next);
+                return _pullOutSideEffects(node, param.Next, param.ResultVariable);
             }
 
             var result = param.Next;
@@ -72,41 +137,51 @@ public static class ControlFlowAnalyzer
             foreach (var currentNode in node.Children.Reverse())
             {
                 result = currentNode.Accept(this, nextParam);
-                nextParam = nextParam with { Next = result };
+                nextParam = nextParam with { Next = result, ResultVariable = null };
             }
 
             return result;
         }
 
-        public override CodeTreeRoot VisitLoopStatement(LoopStatement node, ControlFlowVisitorParam param) //TODO: what does loop return? is it always Unit???
+        public override CodeTreeRoot VisitLoopStatement(LoopStatement node, ControlFlowVisitorParam param)
         {
-            var x = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
-            x.NextTree = node.Inner.Accept(this, param with { Next = x, Break = param.Next, Continue = x });
-            return x;
+            var result = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
+            result.NextTree = node.Inner.Accept(this, param with { Next = result, Break = param.Next, Continue = result });
+            return result;
         }
 
         public override CodeTreeRoot VisitIfStatement(IfStatement node, ControlFlowVisitorParam param)
         {
-            var tempVariable = _functionVariableFactory.NewIFunctionVariable();
+            var tempVariable = _variableFactory.NewVariable();
 
             return node.Condition.Accept(this, param with
             {
                 Next = new ConditionalJumpNode(
                     node.IfBlock.Accept(this, param),
-                    node.ElseBlock is null ? param.Next! : node.ElseBlock.Accept(this, param),
+                    node.ElseBlock is null ? param.Next : node.ElseBlock.Accept(this, param),
                     _currentFunctionContext.GenerateVariableRead(tempVariable)
                 ),
-                Result = tempVariable
+                ResultVariable = tempVariable
             });
         }
 
         public override CodeTreeRoot VisitBreakStatement(BreakStatement node, ControlFlowVisitorParam param)
         {
-            return param.Break!;
+            if (param.Break is null)
+            {
+                throw new ArgumentException("A break statement was encountered, but param.Break is null");
+            }
+
+            return param.Break;
         }
 
         public override CodeTreeRoot VisitContinueStatement(ContinueStatement node, ControlFlowVisitorParam param)
         {
+            if (param.Continue is null)
+            {
+                throw new ArgumentException("A continue statement was encountered, but param.Continue is null");
+            }
+
             return param.Continue!;
         }
 
@@ -119,22 +194,44 @@ public static class ControlFlowAnalyzer
         {
             if (node.Operator is not (Infix.Op.ScAnd or Infix.Op.ScOr))
             {
-                return VisitAstNode(node, param);
+                var (leftVariable, leftVariableValueNode) = GenerateTemporaryWithAst(node.Left);
+                var (rightVariable, rightVariableValueNode) = GenerateTemporaryWithAst(node.Right);
+                var infix = new Infix(leftVariableValueNode, rightVariableValueNode, node.Operator, node.LocationRange);
+                return node.Left.Accept(this,
+                    param with
+                    {
+                        Next = node.Right.Accept(this,
+                            param with
+                            {
+                                Next = _pullOutSideEffects(infix, param.Next, param.ResultVariable),
+                                ResultVariable = rightVariable
+                            }),
+                        ResultVariable = leftVariable
+                    }
+                );
             }
 
-            var leftTempVariable = _functionVariableFactory.NewIFunctionVariable();
-            var rightTempVariable = _functionVariableFactory.NewIFunctionVariable();
+            var leftTempVariable = _variableFactory.NewVariable();
+            var rightTempVariable = _variableFactory.NewVariable();
             var evaluateRight = node.Right.Accept(this,
                 param with
                 {
-                    Next = new SingleExitNode(param.Next, new[]{
-                        _currentFunctionContext.GenerateVariableWrite(param.Result,
-                            _currentFunctionContext.GenerateVariableRead(rightTempVariable))}),
-                    Result = rightTempVariable
+                    Next = param.ResultVariable is not null
+                        ? new SingleExitNode(param.Next, new[]
+                        {
+                            _currentFunctionContext.GenerateVariableWrite(param.ResultVariable,
+                                _currentFunctionContext.GenerateVariableRead(rightTempVariable))
+                        })
+                        : param.Next,
+                    ResultVariable = rightTempVariable
                 });
-            var returnLeft = new SingleExitNode(param.Next, new[]{
-                _currentFunctionContext.GenerateVariableWrite(param.Result,
-                    _currentFunctionContext.GenerateVariableRead(leftTempVariable))});
+            var returnLeft = param.ResultVariable is not null
+                ? new SingleExitNode(param.Next, new[]
+                {
+                    _currentFunctionContext.GenerateVariableWrite(param.ResultVariable,
+                        _currentFunctionContext.GenerateVariableRead(leftTempVariable))
+                })
+                : param.Next;
 
             return node.Left.Accept(this, param with
             {
@@ -143,7 +240,7 @@ public static class ControlFlowAnalyzer
                     node.Operator is Infix.Op.ScAnd ? returnLeft : evaluateRight,
                     _currentFunctionContext.GenerateVariableRead(leftTempVariable)
                 ),
-                Result = leftTempVariable
+                ResultVariable = leftTempVariable
             });
 
         }
@@ -154,37 +251,71 @@ public static class ControlFlowAnalyzer
             CodeTreeRoot result = last;
             var arguments = node.Arguments.Reverse().Select(argumentNode =>
             {
-                var (tempVariable, variableValueNode) = GenerateTemporary(argumentNode);
-                result = argumentNode.Accept(this, param with { Next = result, Result = tempVariable });
+                var (tempVariable, variableValueNode) = GenerateTemporaryWithAst(argumentNode);
+                result = argumentNode.Accept(this, param with { Next = result, ResultVariable = tempVariable });
                 return variableValueNode;
             }).Reverse();
 
             var functionCall = new FunctionCall(node.FunctionName, arguments, node.LocationRange);
-            last.NextTree = _pullOutSideEffects(functionCall, param.Next);
+            last.NextTree = _pullOutSideEffects(functionCall, param.Next, param.ResultVariable);
             return result;
         }
 
         public override CodeTreeRoot VisitFunctionDefinition(FunctionDefinition node, ControlFlowVisitorParam param)
         {
-            return null;
-        }
-
-        public override CodeTreeRoot VisitIdentifier(Identifier node, ControlFlowVisitorParam param)
-        {
-            throw new NotSupportedException("AAAA");
+            // skip any function definition, because the cfg is calculated separately for every function
+            return param.Next;
         }
 
         public override CodeTreeRoot VisitVariableDeclaration(VariableDeclaration node, ControlFlowVisitorParam param)
         {
-            return base.VisitVariableDeclaration(node, param);
+            if (!_nodesWithControlFlow.Contains(node) || node.InitValue is null)
+            {
+                return _pullOutSideEffects(node, param.Next, param.ResultVariable);
+            }
+
+            var (tempVariable, variableValueNode) = GenerateTemporaryWithAst(node.InitValue);
+
+            var variableDeclaration =
+                new VariableDeclaration(node.Name, node.Type, variableValueNode, node.IsConst, node.LocationRange);
+            return node.InitValue.Accept(this, param with { ResultVariable = tempVariable, Next = _pullOutSideEffects(variableDeclaration, param.Next, param.ResultVariable) });
         }
 
         public override CodeTreeRoot VisitAssignment(Assignment node, ControlFlowVisitorParam param)
         {
-            return base.VisitAssignment(node, param);
+            if (!_nodesWithControlFlow.Contains(node))
+            {
+                return _pullOutSideEffects(node, param.Next, param.ResultVariable);
+            }
+
+            var (tempVariable, variableValueNode) = GenerateTemporaryWithAst(node.Right);
+
+            var assignment =
+                new Assignment(node.Left, variableValueNode, node.LocationRange);
+            return node.Right.Accept(this, param with { ResultVariable = tempVariable, Next = _pullOutSideEffects(assignment, param.Next, param.ResultVariable) });
         }
 
-        private (IFunctionVariable, VariableValue) GenerateTemporary(AstNode node)
+        public override CodeTreeRoot VisitIdentifier(Identifier node, ControlFlowVisitorParam param)
+        {
+            throw new NotSupportedException("Control flow analysis shouldn't descend into Identifiers");
+        }
+
+        public override CodeTreeRoot VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, ControlFlowVisitorParam param)
+        {
+            throw new NotSupportedException("Control flow analysis shouldn't descend into function parameter declaration");
+        }
+
+        protected override CodeTreeRoot VisitSimpleValue(SimpleValue node, ControlFlowVisitorParam param)
+        {
+            throw new NotSupportedException("Control flow analysis shouldn't descend into simple values");
+        }
+
+        protected override CodeTreeRoot VisitLiteralValue(LiteralValue node, ControlFlowVisitorParam param)
+        {
+            throw new NotSupportedException("Control flow analysis shouldn't descend into literal values");
+        }
+
+        private (IFunctionVariable, VariableValue) GenerateTemporaryWithAst(AstNode node)
         {
             var identifier = new Identifier("TempVar@" + node.GetHashCode(), node.LocationRange);
             var tempVariable = new VariableDeclaration(
@@ -196,6 +327,24 @@ public static class ControlFlowAnalyzer
             _currentFunctionContext.AddLocal(tempVariable, false);
             var variableValue = new VariableValue(identifier, node.LocationRange);
             return (tempVariable, variableValue);
+        }
+    }
+
+    private sealed class ContainsControlFlowVisitor : AstVisitor<bool, ISet<AstNode>>
+    {
+        protected override bool VisitAstNode(AstNode node, ISet<AstNode> set)
+        {
+            var children = node.Children.Select(childNode => childNode.Accept(this, set)).ToList();
+
+            if (node is not (FlowControlStatement or Infix { Operator: Infix.Op.ScAnd or Infix.Op.ScOr }) &&
+                children.TrueForAll(value => !value))
+            {
+                return false;
+            }
+
+            set.Add(node);
+            return true;
+
         }
     }
 }
