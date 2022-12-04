@@ -8,8 +8,6 @@ using System.Linq;
 
 using TypeInformation = Dictionary<Nodes.AstNode, Type>;
 
-
-
 public static class TypeChecking
 {
     /// <summary>
@@ -23,13 +21,11 @@ public static class TypeChecking
         public override string ToString() => "Any";
     }
 
-
     public static TypeInformation CheckTypes(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
     {
         var visitor = new TypeCheckingAstVisitor(nameResolution, diagnostics);
         return visitor.VisitAstTree(ast, new AnyType());
     }
-
 
     private class TypeCheckingAstVisitor : AstVisitor<TypeInformation, Type>
     {
@@ -113,15 +109,14 @@ public static class TypeChecking
             _pendingNodes.Add(node);
             var declaredReturnType = node.ReturnType;
             var childrenTypes = this.VisitNodeChildren(node, declaredReturnType);
-            var result = new TypeInformation(childrenTypes);
             var bodyReturnType = childrenTypes[node.Body];
             if(declaredReturnType != bodyReturnType)
             {
                 this._diagnostics.Report(new TypeCheckingError(declaredReturnType, bodyReturnType, node.LocationRange.Start));
             }
 
-            
-            result.Add(node, new UnitType());
+
+            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
             return result;
         }

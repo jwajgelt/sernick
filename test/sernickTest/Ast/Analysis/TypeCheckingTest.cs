@@ -15,8 +15,6 @@ using static Helpers.AstNodesExtensions;
 
 public class TypeCheckingTest
 {
-    private static readonly Range<ILocation> loc = new(new FakeLocation(), new FakeLocation());
-
     public class TestSimpleExpressions
     {
         [Fact]
