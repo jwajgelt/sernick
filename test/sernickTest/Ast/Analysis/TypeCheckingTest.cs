@@ -156,7 +156,7 @@ public class TypeCheckingTest
         [Fact]
         public void AddingTwoIntegerLiterals_OK()
         {
-            var plusExpr = Helpers.AstNodesExtensions.Plus(Literal(43), Literal(34));
+            var plusExpr = Literal(43).Plus(Literal(10));
             var tree = plusExpr;
 
             var diagnostics = new Mock<IDiagnostics>();
@@ -172,7 +172,7 @@ public class TypeCheckingTest
         [Fact]
         public void AddingTwoBooleans_ERROR()
         {
-            var plusExpr = Helpers.AstNodesExtensions.Plus(Literal(true), Literal(false));
+            var plusExpr = Literal(true).Plus(Literal(false));
             var tree = plusExpr;
 
             var diagnostics = new Mock<IDiagnostics>();
@@ -187,7 +187,7 @@ public class TypeCheckingTest
         [Fact]
         public void AddingIntAndBoolean_ERROR()
         {
-            var plusExpr = Helpers.AstNodesExtensions.Plus(Literal(true), Literal(123));
+            var plusExpr = Literal(true).Plus(Literal(123));
             var tree = plusExpr;
 
             var diagnostics = new Mock<IDiagnostics>();
@@ -202,7 +202,7 @@ public class TypeCheckingTest
         [Fact]
         public void AddingTwoUnitExpressions_ERROR()
         {
-            var plusExpr = Helpers.AstNodesExtensions.Plus(Block(Var("x")), Block(Var("y")));
+            var plusExpr = Block(Var("x")).Plus(Block(Var("y")));
             var tree = plusExpr;
 
             var diagnostics = new Mock<IDiagnostics>();
@@ -217,7 +217,7 @@ public class TypeCheckingTest
         [Fact]
         public void AddingIntAndUnit_ERROR()
         {
-            var plusExpr = Helpers.AstNodesExtensions.Plus(Literal(23), Block(Var("y")));
+            var plusExpr = Literal(23).Plus(Block(Var("y")));
             var tree = Program(plusExpr);
 
             var diagnostics = new Mock<IDiagnostics>();

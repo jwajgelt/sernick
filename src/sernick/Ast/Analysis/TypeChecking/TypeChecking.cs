@@ -219,6 +219,7 @@ public static class TypeChecking
         public override TypeInformation VisitBreakStatement(BreakStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             // Break statement should have no children
+            _partialResult[node] = new UnitType();
             var result = new TypeInformation() { { node, new UnitType() } };
             return result;
         }
