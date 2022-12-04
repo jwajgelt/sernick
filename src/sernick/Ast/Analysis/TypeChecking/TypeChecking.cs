@@ -349,7 +349,7 @@ public static class TypeChecking
             _pendingNodes.Add(node);
             var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
-            var typeOfLeftSide = childrenTypes[node.Left];
+            var typeOfLeftSide = _partialResult[_nameResolution.AssignedVariableDeclarations[node]];
             var typeOfRightSide = childrenTypes[node.Right];
             if (typeOfLeftSide.ToString() != typeOfRightSide.ToString())
             {
