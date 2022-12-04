@@ -26,5 +26,14 @@ public sealed record ConditionalJumpNode
 /// </summary>
 /// <param name="NextTree"> Tree representing the code to be evaluated after this code tree </param>
 /// <param name="Operations"> The operation to be performed in this code tree </param>
-public sealed record SingleExitNode
-    (CodeTreeRoot? NextTree, IReadOnlyList<CodeTreeNode> Operations) : CodeTreeRoot;
+public sealed record SingleExitNode : CodeTreeRoot
+{
+    public SingleExitNode(CodeTreeRoot? NextTree, IReadOnlyList<CodeTreeNode> Operations)
+    {
+        this.NextTree = NextTree;
+        this.Operations = Operations;
+    }
+
+    public CodeTreeRoot? NextTree { get; set; }
+    public IReadOnlyList<CodeTreeNode> Operations { get; }
+}
