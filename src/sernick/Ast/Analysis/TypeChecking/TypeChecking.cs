@@ -263,6 +263,12 @@ public static class TypeChecking
             return result;
         }
 
+        public override TypeInformation VisitEmptyExpression(EmptyExpression node, Type _)
+        {
+            _partialResult[node] = new UnitType();
+            return new TypeInformation() { { node, new UnitType() } };
+        }
+
 
         public override TypeInformation VisitInfix(Infix node, Type expectedReturnTypeOfReturnExpr)
         {
