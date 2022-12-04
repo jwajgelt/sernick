@@ -70,7 +70,7 @@ public static class TypeChecking
         public override TypeInformation VisitIdentifier(Identifier identifierNode, Type expectedReturnTypeOfReturnExpr)
         {
             _partialResult[identifierNode] = new UnitType();
-            return new TypeInformation() { { identifierNode, new UnitType() } };
+            return new TypeInformation(ReferenceEqualityComparer.Instance) { { identifierNode, new UnitType() } };
         }
 
         public override TypeInformation VisitVariableDeclaration(VariableDeclaration node, Type expectedReturnTypeOfReturnExpr)
@@ -183,7 +183,7 @@ public static class TypeChecking
         public override TypeInformation VisitContinueStatement(ContinueStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             // Continue statement has no children, so we do not visit them
-            var result = new TypeInformation() { { node, new UnitType() } };
+            var result = new TypeInformation(ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             return result;
         }
 
@@ -214,7 +214,7 @@ public static class TypeChecking
         {
             // Break statement should have no children
             _partialResult[node] = new UnitType();
-            var result = new TypeInformation() { { node, new UnitType() } };
+            var result = new TypeInformation(ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             return result;
         }
 
@@ -266,7 +266,7 @@ public static class TypeChecking
         public override TypeInformation VisitEmptyExpression(EmptyExpression node, Type _)
         {
             _partialResult[node] = new UnitType();
-            return new TypeInformation() { { node, new UnitType() } };
+            return new TypeInformation(ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
         }
 
 
@@ -357,7 +357,7 @@ public static class TypeChecking
         {
             var variableDeclarationNode = _nameResolution.UsedVariableDeclarations[node];
             var typeOfVariable = _partialResult[variableDeclarationNode];
-            var result = new TypeInformation() { { node, typeOfVariable } };
+            var result = new TypeInformation(ReferenceEqualityComparer.Instance) { { node, typeOfVariable } };
             return result;
         }
 
@@ -365,7 +365,7 @@ public static class TypeChecking
         {
             // No need to visit node children here
 
-            var result = new TypeInformation() { { node, new BoolType() } };
+            var result = new TypeInformation(ReferenceEqualityComparer.Instance) { { node, new BoolType() } };
             return result;
         }
 
@@ -373,7 +373,7 @@ public static class TypeChecking
         {
             // No need to visit node children here
 
-            var result = new TypeInformation() { { node, new IntType() } };
+            var result = new TypeInformation(ReferenceEqualityComparer.Instance) { { node, new IntType() } };
             return result;
         }
 
@@ -393,7 +393,7 @@ public static class TypeChecking
                 return _partialResult;
             }
 
-            return node.Children.Aggregate(new TypeInformation(),
+            return node.Children.Aggregate(new TypeInformation(ReferenceEqualityComparer.Instance),
                 (partialTypeInformation, childNode) =>
                 {
                     var resultForChildNode = childNode.Accept(this, expectedReturnTypeOfReturnExpr);
