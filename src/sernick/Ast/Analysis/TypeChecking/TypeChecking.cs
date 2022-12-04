@@ -79,7 +79,7 @@ public static class TypeChecking
         public override TypeInformation VisitVariableDeclaration(VariableDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
-            var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var childrenTypes = this.VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
             var result = new TypeInformation(childrenTypes);
 
             var declaredType = node.Type;
@@ -101,7 +101,7 @@ public static class TypeChecking
         public override TypeInformation VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
-            var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var childrenTypes = this.VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
@@ -112,7 +112,7 @@ public static class TypeChecking
         {
             _pendingNodes.Add(node);
             var declaredReturnType = node.ReturnType;
-            var childrenTypes = this.visitNodeChildren(node, declaredReturnType);
+            var childrenTypes = this.VisitNodeChildren(node, declaredReturnType);
             var result = new TypeInformation(childrenTypes);
             var bodyReturnType = childrenTypes[node.Body];
             if(declaredReturnType != bodyReturnType)
@@ -129,7 +129,7 @@ public static class TypeChecking
         public override TypeInformation VisitCodeBlock(CodeBlock node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
-            var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var childrenTypes = this.VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             // simply return what expression inside returns?
             var result = new TypeInformation(childrenTypes) { { node, childrenTypes[node.Inner] } };
@@ -141,7 +141,7 @@ public static class TypeChecking
         public override TypeInformation VisitExpressionJoin(ExpressionJoin node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
-            var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var childrenTypes = this.VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             // just return the last expressions' type
             var result = new TypeInformation(childrenTypes) { { node, childrenTypes[node.Second] } };
@@ -152,7 +152,7 @@ public static class TypeChecking
         public override TypeInformation VisitFunctionCall(FunctionCall functionCallNode, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(functionCallNode);
-            var childrenTypes = this.visitNodeChildren(functionCallNode, expectedReturnTypeOfReturnExpr);
+            var childrenTypes = this.VisitNodeChildren(functionCallNode, expectedReturnTypeOfReturnExpr);
 
             var functionDeclarationNode = _nameResolution.CalledFunctionDeclarations[functionCallNode];
             var declaredReturnType = functionDeclarationNode.ReturnType;
@@ -196,7 +196,7 @@ public static class TypeChecking
         public override TypeInformation VisitReturnStatement(ReturnStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
-            var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var childrenTypes = this.VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var result = new TypeInformation(childrenTypes);
             // Return Value is in a subtree, so its type should be already calculated by now
@@ -228,7 +228,7 @@ public static class TypeChecking
         public override TypeInformation VisitIfStatement(IfStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
-            var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var childrenTypes = this.VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var typeOfTrueBranch = childrenTypes[node.IfBlock];
             if(node.ElseBlock != null)
@@ -257,7 +257,7 @@ public static class TypeChecking
         public override TypeInformation VisitLoopStatement(LoopStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
-            var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var childrenTypes = this.VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
@@ -274,7 +274,7 @@ public static class TypeChecking
         public override TypeInformation VisitInfix(Infix node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
-            var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var childrenTypes = this.VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var typeOfLeftOperand = childrenTypes[node.Left];
             var typeOfRightOperand = childrenTypes[node.Right];
@@ -347,7 +347,7 @@ public static class TypeChecking
         public override TypeInformation VisitAssignment(Assignment node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
-            var childrenTypes = this.visitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var childrenTypes = this.VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var typeOfLeftSide = _partialResult[_nameResolution.AssignedVariableDeclarations[node]];
             var typeOfRightSide = childrenTypes[node.Right];
@@ -394,7 +394,7 @@ public static class TypeChecking
         /// </summary>
         /// <param name="node"></param>
         /// <returns></returns>
-        private TypeInformation visitNodeChildren(AstNode node, Type expectedReturnTypeOfReturnExpr)
+        private TypeInformation VisitNodeChildren(AstNode node, Type expectedReturnTypeOfReturnExpr)
         {
             var avoidRecalculation = _partialResult.ContainsKey(node);
             if (avoidRecalculation)
@@ -406,14 +406,10 @@ public static class TypeChecking
                 (partialTypeInformation, childNode) =>
                 {
                     var resultForChildNode = childNode.Accept(this, expectedReturnTypeOfReturnExpr);
-                    return (new List<TypeInformation> { partialTypeInformation, resultForChildNode }).SelectMany(dict => dict)
-                         .ToDictionary(pair => pair.Key, pair => pair.Value);
+                    return new TypeInformation(
+                        partialTypeInformation.JoinWith(resultForChildNode, ReferenceEqualityComparer.Instance));
                 }
            );
         }
-
     }
-
-
-    
 }
