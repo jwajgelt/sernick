@@ -202,7 +202,7 @@ public static class TypeChecking
             // Return Value is in a subtree, so its type should be already calculated by now
             var returnValueType = (node.ReturnValue != null) ? childrenTypes[node.ReturnValue] : new UnitType();
 
-            if(returnValueType == expectedReturnTypeOfReturnExpr || expectedReturnTypeOfReturnExpr == new AnyType())
+            if(returnValueType == expectedReturnTypeOfReturnExpr || expectedReturnTypeOfReturnExpr is AnyType)
             {
                 result.Add(node, returnValueType);
             }
@@ -279,9 +279,9 @@ public static class TypeChecking
             var typeOfLeftOperand = childrenTypes[node.Left];
             var typeOfRightOperand = childrenTypes[node.Right];
 
-            if(typeOfLeftOperand == new UnitType() || typeOfRightOperand == new UnitType())
+            if(typeOfLeftOperand is UnitType || typeOfRightOperand is UnitType)
             {
-                this._diagnostics.Report(new InfixOperatorTypeError(new UnitType(), new UnitType(), node.LocationRange.Start));
+                this._diagnostics.Report(new InfixOperatorTypeError(typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                 var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
                 _pendingNodes.Remove(node);
                 return result;
