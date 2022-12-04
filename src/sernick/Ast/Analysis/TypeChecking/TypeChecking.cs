@@ -99,8 +99,17 @@ public static class TypeChecking
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
-            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
             _memoizedFunctionParameterTypes[node] = node.Type;
+            if(node.Type is UnitType)
+            {
+                _diagnostics.Report(new UnitTypeNotAllowedInFunctionArgumentError(node.LocationRange.Start));
+            }
+            var defaultValueType = childrenTypes[node.DefaultValue];
+            if (defaultValueType != node.Type)
+            {
+                _diagnostics.Report(new TypeCheckingError(node.Type, defaultValueType, node.LocationRange.Start));
+            }
+            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
             return result;
         }
