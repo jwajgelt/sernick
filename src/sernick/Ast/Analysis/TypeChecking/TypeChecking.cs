@@ -87,7 +87,7 @@ public static class TypeChecking
                 _memoizedVariableTypes[node.Name] = declaredType;
             }
 
-            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
+            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             
             _pendingNodes.Remove(node);
             return result;
@@ -109,7 +109,7 @@ public static class TypeChecking
             {
                 _diagnostics.Report(new TypeCheckingError(node.Type, defaultValueType, node.LocationRange.Start));
             }
-            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
+            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
             return result;
         }
@@ -125,7 +125,7 @@ public static class TypeChecking
                 _diagnostics.Report(new TypeCheckingError(declaredReturnType, bodyReturnType, node.LocationRange.Start));
             }
 
-            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
+            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
             return result;
         }
@@ -136,7 +136,7 @@ public static class TypeChecking
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             // simply return what expression inside returns?
-            var result = new TypeInformation(childrenTypes) { { node, childrenTypes[node.Inner] } };
+            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, childrenTypes[node.Inner] } };
             _pendingNodes.Remove(node);
             return result;
 
@@ -148,7 +148,7 @@ public static class TypeChecking
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             // just return the last expressions' type
-            var result = new TypeInformation(childrenTypes) { { node, childrenTypes[node.Second] } };
+            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, childrenTypes[node.Second] } };
             _pendingNodes.Remove(node);
             return result;
         }
@@ -183,7 +183,7 @@ public static class TypeChecking
             }
 
             _memoizedFunctionParameterTypes[functionCallNode] = declaredReturnType;
-            var result = new TypeInformation(childrenTypes) { { functionCallNode, declaredReturnType } };
+            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { functionCallNode, declaredReturnType } };
             _pendingNodes.Remove(functionCallNode);
             return result;
         }
@@ -200,7 +200,7 @@ public static class TypeChecking
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
-            var result = new TypeInformation(childrenTypes);
+            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance);
             // Return Value is in a subtree, so its type should be already calculated by now
             var returnValueType = (node.ReturnValue != null) ? childrenTypes[node.ReturnValue] : new UnitType();
 
@@ -247,7 +247,7 @@ public static class TypeChecking
                 }
             }
 
-            var result = new TypeInformation(childrenTypes) { { node, typeOfTrueBranch } };
+            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, typeOfTrueBranch } };
             _pendingNodes.Remove(node);
             return result;
         }
@@ -265,7 +265,7 @@ public static class TypeChecking
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
-            var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
+            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
             return result;
         }
@@ -286,7 +286,7 @@ public static class TypeChecking
             if (typeOfLeftOperand is UnitType || typeOfRightOperand is UnitType)
             {
                 _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
-                var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
+                var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
                 _pendingNodes.Remove(node);
                 return result;
             }
@@ -296,13 +296,14 @@ public static class TypeChecking
                 _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
 
                 // TODO does it make sense to return anything here? maybe a Unit type? But it could propagate the error up the tree 
-                var result = new TypeInformation(childrenTypes) { { node, new UnitType() } };
+                var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
                 _pendingNodes.Remove(node);
                 return result;
             }
             else
             {
                 var commonType = typeOfLeftOperand;
+                var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance);
 
                 // let's cover some special cases e.g. adding two bools or shirt-circuiting two ints
                 switch (node.Operator)
@@ -315,6 +316,7 @@ public static class TypeChecking
                                 _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                             }
 
+                            result.Add(node, new BoolType());
                             break;
                         }
                     case Infix.Op.Plus:
@@ -328,7 +330,7 @@ public static class TypeChecking
                             {
                                 _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                             }
-
+                            result.Add(node, new IntType());
                             break;
                         }
                     default:
@@ -337,7 +339,6 @@ public static class TypeChecking
                         }
                 }
 
-                var result = new TypeInformation(childrenTypes) { { node, commonType } };
                 _pendingNodes.Remove(node);
                 return result;
             }
@@ -357,7 +358,7 @@ public static class TypeChecking
             }
 
             // Regardless of the error, let's return a Unit type for assignment and get more type checking information
-            var result = new TypeInformation(childrenTypes) { { node, typeOfLeftSide } };
+            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, typeOfLeftSide } };
             _pendingNodes.Remove(node);
             return result;
         }
