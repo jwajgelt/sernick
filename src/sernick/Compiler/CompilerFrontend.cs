@@ -13,6 +13,7 @@ using Grammar.Syntax;
 using Input;
 using Parser;
 using Parser.ParseTree;
+using Tokenizer;
 using Tokenizer.Lexer;
 
 public static class CompilerFrontend
@@ -27,18 +28,19 @@ public static class CompilerFrontend
     {
         var lexer = lazyLexer.Value;
         var tokens = lexer.Process(input, diagnostics);
-        var parseLeaves = tokens
-            .Where(token => !token.Category.Equals(LexicalGrammarCategory.Whitespaces)) // strip whitespace
-            .Where(token => !token.Category.Equals(LexicalGrammarCategory.Comments)) // ignore comments
-            .Select(token =>
-                new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.LocationRange));
+        ThrowIfErrorsOccurred(diagnostics);
+        var parseLeaves = tokens.ProcessIntoLeaves();
         var parser = lazyParser.Value;
         var parseTree = parser.Process(parseLeaves, diagnostics);
+        ThrowIfErrorsOccurred(diagnostics);
         var ast = AstNode.From(parseTree);
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
-        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
         ThrowIfErrorsOccurred(diagnostics);
+        _ = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
+        _ = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        // commented since it throws NotImplemented, and will need merging anyway
+        // var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
+        // root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, SideEffectsAnalyzer.PullOutSideEffects));
     }
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
@@ -65,5 +67,15 @@ public static class CompilerFrontend
         {
             throw new CompilationException();
         }
+    }
+
+    private static IEnumerable<ParseTreeLeaf<Symbol>> ProcessIntoLeaves(
+        this IEnumerable<Token<LexicalGrammarCategory>> tokens)
+    {
+        return tokens
+            .Where(token => !token.Category.Equals(LexicalGrammarCategory.Whitespaces)) // strip whitespace
+            .Where(token => !token.Category.Equals(LexicalGrammarCategory.Comments)) // ignore comments
+            .Select(token =>
+                new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.LocationRange));
     }
 }

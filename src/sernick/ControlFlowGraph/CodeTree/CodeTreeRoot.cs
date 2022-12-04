@@ -12,8 +12,8 @@ public abstract record CodeTreeRoot : CodeTreeNode;
 /// <param name="ConditionEvaluation">Code tree for evaluating the condition</param>
 public sealed record ConditionalJumpNode
 (
-    CodeTreeRoot TrueCase,
-    CodeTreeRoot FalseCase,
+    CodeTreeRoot? TrueCase,
+    CodeTreeRoot? FalseCase,
     CodeTreeValueNode ConditionEvaluation
 ) : CodeTreeRoot;
 

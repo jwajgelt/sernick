@@ -2,6 +2,7 @@ namespace sernickTest.Compiler.Function.Helpers;
 
 using Castle.Core;
 using sernick.Compiler.Function;
+using sernick.Compiler.Instruction;
 using sernick.ControlFlowGraph.CodeTree;
 
 public sealed class FakeFunctionContext : IFunctionContext
@@ -10,7 +11,9 @@ public sealed class FakeFunctionContext : IFunctionContext
 
     public IReadOnlyDictionary<IFunctionVariable, bool> Locals => _locals;
 
-    public int Depth { get; }
+    public Label Label => "fake";
+
+    public int Depth => 0;
 
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere) => _locals[variable] = usedElsewhere;
     public IReadOnlyList<SingleExitNode> GeneratePrologue()
