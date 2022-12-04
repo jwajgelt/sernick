@@ -128,19 +128,6 @@ public class TypeCheckingTest
         }
     }
 
-    public class TestVariableValue
-    {
-        //[Fact]
-        //public void IntVariableValue_1()
-        //{
-        //    var tree = Program(
-        //        Var<IntType>("intX", Literal(23)),
-        //        Value("intX")
-        //    );
-        //}
-
-    }
-
     public class TestInfix
     {
         [Fact]
