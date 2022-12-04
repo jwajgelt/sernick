@@ -6,4 +6,7 @@ namespace sernick.Compiler.Function;
 /// </summary>
 public interface IFunctionVariable { }
 
-public interface IFunctionParam : IFunctionVariable { }
+public interface IFunctionParam : IFunctionVariable
+{
+    object? TryGetDefaultValue();
+}

@@ -1,4 +1,4 @@
-fun allDefault(argOne: Int = true, argTwo: Int = 14, argThree: Int = 2) : Int {
+fun allDefault(argOne: Bool = true, argTwo: Int = 14, argThree: Int = 2) : Int {
 	if(argOne) {
 		argTwo
 	} else {
