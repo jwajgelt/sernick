@@ -1,16 +1,9 @@
 namespace sernickTest.Ast.Analysis;
-
-using System.Collections.Immutable;
-using Input;
 using Moq;
 using sernick.Ast;
-using sernick.Ast.Analysis;
-using sernick.Ast.Analysis.TypeChecking;
 using sernick.Ast.Analysis.NameResolution;
-using sernick.Ast.Nodes;
+using sernick.Ast.Analysis.TypeChecking;
 using sernick.Diagnostics;
-using sernick.Input;
-using sernick.Utility;
 using static Helpers.AstNodesExtensions;
 
 public class TypeCheckingTest
@@ -43,7 +36,6 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
             var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
-
 
             Assert.IsType<BoolType>(result[literalTrue]);
             Assert.IsType<BoolType>(result[tree]);
@@ -228,7 +220,8 @@ public class TypeCheckingTest
         }
     }
 
-    public class TestLoop {
+    public class TestLoop
+    {
         [Fact]
         public void LoopNodeAlwaysReturnsUnit_1()
         {
@@ -328,7 +321,7 @@ public class TypeCheckingTest
 
             Assert.IsType<UnitType>(result[tree]);
             diagnostics.Verify(d => d.Report(It.IsAny<ReturnTypeError>()), Times.AtLeastOnce);
-         
+
         }
 
         [Fact]
@@ -390,4 +383,3 @@ public class TypeCheckingTest
     }
 }
 
-  
