@@ -3,6 +3,7 @@ namespace sernick.Compiler.Function;
 using ControlFlowGraph.CodeTree;
 using Instruction;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
+using static Compiler.PlatformConstants;
 
 public sealed class FunctionContext : IFunctionContext
 {
@@ -26,7 +27,6 @@ public sealed class FunctionContext : IFunctionContext
         HardwareRegister.RDX,
     };
 
-    private const int PointerSize = 8;
     private readonly IFunctionContext? _parentContext;
     private readonly IReadOnlyCollection<IFunctionParam> _functionParameters;
     private readonly bool _valueIsReturned;
@@ -54,11 +54,11 @@ public sealed class FunctionContext : IFunctionContext
 
         Depth = (parent?.Depth + 1) ?? 0;
 
-        var fistArgOffset = PointerSize * (1 + _functionParameters.Count);
+        var fistArgOffset = POINTER_SIZE * (1 + _functionParameters.Count);
         var argNum = 0;
         foreach (var param in _functionParameters)
         {
-            _localVariableLocation.Add(param, new MemoryLocation(-(fistArgOffset - PointerSize * argNum)));
+            _localVariableLocation.Add(param, new MemoryLocation(-(fistArgOffset - POINTER_SIZE * argNum)));
             argNum += 1;
         }
     }
@@ -69,7 +69,7 @@ public sealed class FunctionContext : IFunctionContext
     {
         if (usedElsewhere)
         {
-            _localsOffset += PointerSize;
+            _localsOffset += POINTER_SIZE;
             _localVariableLocation.Add(variable, new MemoryLocation(_localsOffset));
         }
         else
@@ -95,7 +95,7 @@ public sealed class FunctionContext : IFunctionContext
         Register rax = HardwareRegister.RAX;
 
         var rspRead = Reg(rsp).Read();
-        var pushRsp = Reg(rsp).Write(rspRead - PointerSize);
+        var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
 
         // Put args onto stack
         foreach (var arg in arguments)
@@ -108,7 +108,7 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(new FunctionCall(this));
 
         // Remove arguments from stack (we already returned from call)
-        operations.Add(Reg(rsp).Write(rspRead + PointerSize * arguments.Count));
+        operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE * arguments.Count));
 
         // If value is returned, then put it from RAX to virtual register
         CodeTreeValueNode? returnValueLocation = null;
@@ -139,7 +139,7 @@ public sealed class FunctionContext : IFunctionContext
         var rbp = HardwareRegister.RBP;
 
         var rspRead = Reg(rsp).Read();
-        var pushRsp = Reg(rsp).Write(rspRead - PointerSize);
+        var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
         var rbpRead = Reg(rbp).Read();
 
         // Allocate slot for old RBP value
@@ -192,7 +192,7 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(Reg(rbp).Write(Mem(rspRead).Read()));
 
         // Free RBP slot
-        operations.Add(Reg(rsp).Write(rspRead + PointerSize));
+        operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE));
 
         // Restore old display value
         if (_displayEntry == null)
@@ -239,7 +239,7 @@ public sealed class FunctionContext : IFunctionContext
 
     public void SetDisplayAddress(CodeTreeValueNode displayAddress)
     {
-        _displayEntry = displayAddress + PointerSize * Depth;
+        _displayEntry = displayAddress + POINTER_SIZE * Depth;
     }
 
     CodeTreeValueNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
