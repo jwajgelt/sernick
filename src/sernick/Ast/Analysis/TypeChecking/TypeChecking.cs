@@ -162,9 +162,10 @@ public static class TypeChecking
             var declaredReturnType = functionDeclarationNode.ReturnType;
 
             var declaredArguments = functionDeclarationNode.Parameters;
+            var parametersWithDefaultValuesCount = functionDeclarationNode.Parameters.Where(param => param.DefaultValue != null).Count();
             var actualArguments = functionCallNode.Arguments;
 
-            if (declaredArguments.Count() != actualArguments.Count())
+            if (declaredArguments.Count() != actualArguments.Count() + parametersWithDefaultValuesCount)
             {
                 _diagnostics.Report(new FunctionArgumentsMismatchError(declaredArguments.Count(), actualArguments.Count(), functionCallNode.LocationRange.Start));
             }
