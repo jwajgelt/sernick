@@ -253,14 +253,14 @@ public static class ControlFlowAnalyzer
         {
             var last = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
             CodeTreeRoot result = last;
-            IEnumerable<Expression> arguments = node.Arguments.Reverse().Select(argumentNode =>
+            var arguments = node.Arguments.Reverse().Select(argumentNode =>
             {
                 var (tempVariable, variableValueNode) = GenerateTemporaryAst(argumentNode);
                 result = argumentNode.Accept(this, param with { Next = result, ResultVariable = tempVariable });
                 return variableValueNode;
             }).Reverse();
 
-            var functionCall = node with { Arguments = arguments };
+            var functionCall = node with { Arguments = arguments.ToList() };
             last.NextTree = _pullOutSideEffects(functionCall, param.Next, param.ResultVariable);
             return result;
         }
