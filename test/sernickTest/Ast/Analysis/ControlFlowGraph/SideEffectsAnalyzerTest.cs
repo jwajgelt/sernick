@@ -99,45 +99,49 @@ public class SideEffectsAnalyzerTest
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
 
-    // [Theory(Skip = "Waiting for isomorphisms")]
-    // [InlineData(Infix.Op.Plus, BinaryOperation.Add)]
-    // [InlineData(Infix.Op.Minus, BinaryOperation.Sub)]
-    // [InlineData(Infix.Op.Equals, BinaryOperation.Equal)]
-    // [InlineData(Infix.Op.Less, BinaryOperation.LessThan)]
-    // [InlineData(Infix.Op.Greater, BinaryOperation.GreaterThan)]
-    // [InlineData(Infix.Op.LessOrEquals, BinaryOperation.LessThanEqual)]
-    // [InlineData(Infix.Op.GreaterOrEquals, BinaryOperation.GreaterThanEqual)]
-    // public void BinaryOperationsShouldInsertTempVariablesForIntermediateResults(Infix.Op astOp, BinaryOperation binOp)
-    // {
-    //     var functionContext = new FakeFunctionContext();
-    //     var functionContextMap = new FunctionContextMap();
-    //     // var x = 1;
-    //     // x `astOp` {x = x+1; x}
-    //     // The left-hand-side of operation
-    //     // "sees" the write in the right-hand-side.
-    //     // It should write it to a temporary variable.
-    //     Fun<UnitType>("f")
-    //         .Body(
-    //             Var("x", 1, out var declX),
-    //             new Infix(
-    //                 Value("x", out var xFirstUse),
-    //                 Block(
-    //                     "x".Assign(
-    //                         Value("x", out var xSecondUse).Plus(1),
-    //                         out var xAss
-    //                     ),
-    //                     Value("x", out var xThirdUse)
-    //                     ),
-    //                 astOp)
-    //         ).Get(out var tree);
-    //
-    //     var nameResolution = new NameResolutionResult().WithVars(
-    //         (xFirstUse, declX),
-    //         (xSecondUse, declX),
-    //         (xThirdUse, declX))
-    //         .WithAssigns((xAss, declX));
-    //     _ = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext);
-    // }
+    [Theory(Skip = "Waiting for isomorphisms")]
+    [InlineData(Infix.Op.Plus, BinaryOperation.Add)]
+    [InlineData(Infix.Op.Minus, BinaryOperation.Sub)]
+    [InlineData(Infix.Op.Equals, BinaryOperation.Equal)]
+    [InlineData(Infix.Op.Less, BinaryOperation.LessThan)]
+    [InlineData(Infix.Op.Greater, BinaryOperation.GreaterThan)]
+    [InlineData(Infix.Op.LessOrEquals, BinaryOperation.LessThanEqual)]
+    [InlineData(Infix.Op.GreaterOrEquals, BinaryOperation.GreaterThanEqual)]
+#pragma warning disable xUnit1026
+#pragma warning disable IDE0060
+    public void BinaryOperationsShouldInsertTempVariablesForIntermediateResults(Infix.Op astOp, BinaryOperation binOp)
+#pragma warning restore IDE0060
+#pragma warning restore xUnit1026
+    {
+        var functionContext = new FakeFunctionContext();
+        var functionContextMap = new FunctionContextMap();
+        // var x = 1;
+        // x `astOp` {x = x+1; x}
+        // The left-hand-side of operation
+        // "sees" the write in the right-hand-side.
+        // It should write it to a temporary variable.
+        Fun<UnitType>("f")
+            .Body(
+                Var("x", 1, out var declX),
+                new Infix(
+                    Value("x", out var xFirstUse),
+                    Block(
+                        "x".Assign(
+                            Value("x", out var xSecondUse).Plus(1),
+                            out var xAss
+                        ),
+                        Value("x", out var xThirdUse)
+                        ),
+                    astOp)
+            ).Get(out var tree);
+
+        var nameResolution = new NameResolutionResult().WithVars(
+            (xFirstUse, declX),
+            (xSecondUse, declX),
+            (xThirdUse, declX))
+            .WithAssigns((xAss, declX));
+        _ = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap);
+    }
 
     [Fact]
     public void AssignmentsAndReadsToSameVariableAreSeparated()

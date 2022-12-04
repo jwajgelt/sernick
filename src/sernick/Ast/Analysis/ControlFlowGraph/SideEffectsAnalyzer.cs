@@ -69,10 +69,16 @@ public static class SideEffectsAnalyzer
         bool CanMerge = true
     )
     {
+        public TreeWithEffects(CodeTreeNode codeTree, bool canMerge = true)
+            : this(
+                new HashSet<VariableDeclaration>(),
+                new HashSet<VariableDeclaration>(),
+                codeTree,
+                canMerge)
+        { }
+
         public bool AffectedBy(IReadOnlySet<VariableDeclaration> variableWrites) =>
-            ReadVariables.Overlaps(variableWrites)
-            || WrittenVariables.Overlaps(variableWrites)
-            || variableWrites.Overlaps(ReadVariables);
+            ReadVariables.Overlaps(variableWrites) || WrittenVariables.Overlaps(variableWrites);
 
         public bool AffectedBy(IEnumerable<TreeWithEffects> trees) =>
             trees.Any(tree => AffectedBy(tree.WrittenVariables));
@@ -165,12 +171,12 @@ public static class SideEffectsAnalyzer
                     }
 
                     var (tempRead, tempWrite) = GenerateTemporary(argsValues[i], args[i]);
-                    argsEvals[i][argsEvals[i].Count - 1] = currentArgValue with { CodeTree = tempWrite };
+                    argsEvals[i][^1] = currentArgValue with { CodeTree = tempWrite };
                     argsValues[i] = tempRead;
                     break;
                 }
 
-                if (argsEvals[i].Last() == currentArgValue)
+                if (ReferenceEquals(argsEvals[i].Last(), currentArgValue))
                 {
                     argsEvals[i].RemoveAt(argsEvals[i].Count - 1);
                 }
@@ -179,54 +185,13 @@ public static class SideEffectsAnalyzer
             var (functionCall, resultLocation) = _functionContextMap.Callers[node].GenerateCall(argsValues);
 
             var functionCallTrees = functionCall.SelectMany(
-                callTree => callTree.Operations.Select(
-                    (tree, index) => new TreeWithEffects(
-                        new HashSet<VariableDeclaration>(),
-                        new HashSet<VariableDeclaration>(),
-                        tree,
-                        index != 0)
-                )).ToList();
+                callTree => callTree.Operations
+                    .Select((tree, index) => new TreeWithEffects(tree, index != 0)))
+                    .ToList();
 
-            functionCallTrees = functionCallTrees.Select(tree =>
-            {
-                if (tree.CodeTree is not CodeTreeFunctionCall)
-                {
-                    return tree;
-                }
-
-                var calledFunctionDefinition = _nameResolution.CalledFunctionDeclarations[node];
-                var writtenVariables = new HashSet<Variable>();
-                var readVariables = new HashSet<Variable>();
-
-                var accessibleFunctions = _callGraph.Graph[calledFunctionDefinition];
-
-                foreach (var function in accessibleFunctions)
-                {
-                    var accessedVariables = _variableAccessMap[function];
-                    foreach (var (variable, accessMode) in accessedVariables)
-                    {
-                        if (variable is not VariableDeclaration variableDeclaration)
-                        {
-                            continue;
-                        }
-
-                        switch (accessMode)
-                        {
-                            case VariableAccessMode.ReadOnly:
-                                readVariables.Add(variableDeclaration);
-                                break;
-                            case VariableAccessMode.WriteAndRead:
-                                readVariables.Add(variableDeclaration);
-                                writtenVariables.Add(variableDeclaration);
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
-                        }
-                    }
-                }
-
-                return tree with { WrittenVariables = writtenVariables, ReadVariables = readVariables, };
-            }).ToList();
+            functionCallTrees = functionCallTrees
+                .Select(tree => AddFunctionCallSideEffects(tree, node))
+                .ToList();
 
             // the called function has no arguments - we may merge the call
             // with some previous code tree (assuming no visible variable access)
@@ -241,12 +206,7 @@ public static class SideEffectsAnalyzer
                 functionCallTrees[^1] = functionCallTrees[^1] with { CanMerge = true };
             }
 
-            var resultTree = resultLocation != null ? new TreeWithEffects(
-                new HashSet<VariableDeclaration>(),
-                new HashSet<VariableDeclaration>(),
-                resultLocation,
-                false
-            ) : null;
+            var resultTree = resultLocation != null ? new TreeWithEffects(resultLocation, false) : null;
 
             var operations = argsEvals.SelectMany(trees => trees).Concat(functionCallTrees).ToList();
             if (resultTree != null)
@@ -289,11 +249,7 @@ public static class SideEffectsAnalyzer
             {
                 var (tempRead, tempWrite) = GenerateTemporary(leftValue, node);
                 leftResult[^1] = leftResult[^1] with { CodeTree = tempWrite };
-                leftResult.Add(new TreeWithEffects(
-                    new HashSet<VariableDeclaration>(),
-                    new HashSet<VariableDeclaration>(),
-                    tempRead
-                ));
+                leftResult.Add(new TreeWithEffects(tempRead));
                 leftValue = tempRead;
             }
 
@@ -420,6 +376,47 @@ public static class SideEffectsAnalyzer
             var tempRead = _currentFunctionContext.GenerateVariableRead(tempVariable);
             var tempWrite = _currentFunctionContext.GenerateVariableWrite(tempVariable, value);
             return (tempRead, tempWrite);
+        }
+
+        private TreeWithEffects AddFunctionCallSideEffects(TreeWithEffects tree, AstFunctionCall node)
+        {
+            if (tree.CodeTree is not CodeTreeFunctionCall)
+            {
+                return tree;
+            }
+
+            var calledFunctionDefinition = _nameResolution.CalledFunctionDeclarations[node];
+            var writtenVariables = new HashSet<Variable>();
+            var readVariables = new HashSet<Variable>();
+
+            var accessibleFunctions = _callGraph.Graph[calledFunctionDefinition];
+
+            foreach (var function in accessibleFunctions)
+            {
+                var accessedVariables = _variableAccessMap[function];
+                foreach (var (variable, accessMode) in accessedVariables)
+                {
+                    if (variable is not VariableDeclaration variableDeclaration)
+                    {
+                        continue;
+                    }
+
+                    switch (accessMode)
+                    {
+                        case VariableAccessMode.ReadOnly:
+                            readVariables.Add(variableDeclaration);
+                            break;
+                        case VariableAccessMode.WriteAndRead:
+                            readVariables.Add(variableDeclaration);
+                            writtenVariables.Add(variableDeclaration);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+            }
+
+            return tree with { WrittenVariables = writtenVariables, ReadVariables = readVariables };
         }
 
         private readonly NameResolutionResult _nameResolution;
