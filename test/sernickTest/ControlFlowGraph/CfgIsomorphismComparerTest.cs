@@ -86,7 +86,7 @@ public class CfgIsomorphismComparerTest
         var bNodeThree = new SingleExitNode(bNodeTwo, new List<CodeTreeNode> { bReg.Read() });
         bNodeOne.NextTree = bNodeThree;
 
-        // Assert.Equal causes stack overflow due to default ToString implementation
+        // Assert.Equal causes stack overflow (on failure) due to default ToString implementation
         var comparer = new CfgIsomorphismComparer();
         Assert.True(comparer.Equals(aNodeThree, bNodeThree));
     }
