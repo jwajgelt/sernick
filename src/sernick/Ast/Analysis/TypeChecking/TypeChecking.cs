@@ -247,7 +247,7 @@ public static class TypeChecking
 
         /// <summary>
         /// Loop always returns a `Unit` type
-        /// Break/return inside the loop would exit the entire function
+        /// break/return inside the loop would exit the loop
         /// and have no effect on the loop 
         /// </summary>
         /// <param name="node"></param>
