@@ -167,7 +167,7 @@ public static class TypeChecking
                         new WrongFunctionArgumentError(expectedType, actualType, functionCallNode.LocationRange.Start)
                     );
                 }
-            };
+            }
 
             var result = new TypeInformation(childrenTypes) { { functionCallNode, declaredReturnType } };
             _partialResult[functionCallNode] = declaredReturnType;
