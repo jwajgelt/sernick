@@ -48,6 +48,7 @@ public class CompilerFrontendTest
         Assert.False(diagnostics.DidErrorOccur);
     }
 
+    [Theory]
     [MemberTupleData(nameof(IncorrectExamplesData))]
     public void TestIncorrectExamples(string group, string fileName, IEnumerable<IDiagnosticItem> expectedErrors)
     {
@@ -61,7 +62,7 @@ public class CompilerFrontendTest
         Assert.Equal(expectedErrors, diagnostics.DiagnosticItems);
     }
 
-    [Theory]
+    [Theory(Skip = "Wrong from type checking POV")]
     [InlineData("a")]
     [InlineData("5")]
     [InlineData("{x}")]
