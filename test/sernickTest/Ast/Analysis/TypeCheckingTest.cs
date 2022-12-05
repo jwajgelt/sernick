@@ -107,7 +107,7 @@ public class TypeCheckingTest
 
             Assert.IsType<UnitType>(result[tree]);
             Assert.IsType<UnitType>(result[declX]);
-            diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingError>()), Times.AtLeastOnce);
+            diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingErrorBase>()), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -124,7 +124,7 @@ public class TypeCheckingTest
 
             Assert.IsType<UnitType>(result[tree]);
             Assert.IsType<UnitType>(result[declX]);
-            diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingError>()));
+            diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingErrorBase>()));
         }
     }
 

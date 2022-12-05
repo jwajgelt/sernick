@@ -84,7 +84,7 @@ public static class TypeChecking
                 {
                     if (declaredType != rhsType)
                     {
-                        _diagnostics.Report(new TypeCheckingError(declaredType, rhsType, node.LocationRange.Start));
+                        _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.LocationRange.Start));
                     }
                     _memoizedVariableTypes[node] = declaredType;
                 }
@@ -129,7 +129,7 @@ public static class TypeChecking
                 var defaultValueType = childrenTypes[node.DefaultValue];
                 if (defaultValueType != node.Type)
                 {
-                    _diagnostics.Report(new TypeCheckingError(node.Type, defaultValueType, node.LocationRange.Start));
+                    _diagnostics.Report(new TypesMismatchError(node.Type, defaultValueType, node.LocationRange.Start));
                 }
             }
             var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
@@ -145,7 +145,7 @@ public static class TypeChecking
             var bodyReturnType = childrenTypes[node.Body];
             if (declaredReturnType != bodyReturnType)
             {
-                _diagnostics.Report(new TypeCheckingError(declaredReturnType, bodyReturnType, node.LocationRange.Start));
+                _diagnostics.Report(new TypesMismatchError(declaredReturnType, bodyReturnType, node.LocationRange.Start));
             }
 
             var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
@@ -260,7 +260,7 @@ public static class TypeChecking
             var typeOfCondition = childrenTypes[node.Condition];
             if (typeOfCondition is not BoolType)
             {
-                _diagnostics.Report(new TypeCheckingError(new BoolType(), typeOfCondition, node.LocationRange.Start));
+                _diagnostics.Report(new TypesMismatchError(new BoolType(), typeOfCondition, node.LocationRange.Start));
             }
 
             if (node.ElseBlock != null)
@@ -387,7 +387,7 @@ public static class TypeChecking
             var typeOfRightSide = childrenTypes[node.Right];
             if (typeOfLeftSide.ToString() != typeOfRightSide.ToString())
             {
-                _diagnostics.Report(new TypeCheckingError(typeOfLeftSide, typeOfRightSide, node.LocationRange.Start));
+                _diagnostics.Report(new TypesMismatchError(typeOfLeftSide, typeOfRightSide, node.LocationRange.Start));
             }
 
             // Regardless of the error, let's return a Unit type for assignment and get more type checking information
