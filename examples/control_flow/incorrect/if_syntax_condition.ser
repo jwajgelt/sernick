@@ -1,0 +1,4 @@
+const condition = true;
+
+// syntax error: condition should be wrapped in parenthesis ()
+if condition { var x = 1; }

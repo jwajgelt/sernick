@@ -77,8 +77,9 @@ public class HardwareRegister : Register
 }
 
 public sealed record RegisterRead(Register Register) : CodeTreeValueNode;
-
 public sealed record RegisterWrite(Register Register, CodeTreeValueNode Value) : CodeTreeNode;
+
+public sealed record GlobalAddress(string Label) : CodeTreeValueNode;
 
 public sealed record MemoryRead(CodeTreeValueNode MemoryLocation) : CodeTreeValueNode;
 public sealed record MemoryWrite(CodeTreeValueNode MemoryLocation, CodeTreeValueNode Value) : CodeTreeNode;
