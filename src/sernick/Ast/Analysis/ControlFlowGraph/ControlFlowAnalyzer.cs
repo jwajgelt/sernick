@@ -5,6 +5,7 @@ using FunctionContextMap;
 using NameResolution;
 using Nodes;
 using sernick.ControlFlowGraph.CodeTree;
+using sernick.Ast.Analysis.TypeChecking;
 using FunctionCall = Nodes.FunctionCall;
 
 public static class ControlFlowAnalyzer
@@ -17,7 +18,7 @@ public static class ControlFlowAnalyzer
         FunctionDefinition functionDefinition,
         NameResolutionResult nameResolution,
         FunctionContextMap contextMap,
-        TypeChecking typeChecking,
+        TypeCheckingResult typeCheckingResult,
         Func<AstNode, NameResolutionResult, IFunctionContext, FunctionContextMap, IReadOnlyList<SingleExitNode>>
             pullOutSideEffects
     )
@@ -54,7 +55,7 @@ public static class ControlFlowAnalyzer
                     return nodes[0];
                 },
                 variableFactory,
-                typeChecking
+                typeCheckingResult
             );
 
         var resultVariable = variableFactory.NewVariable();
@@ -107,7 +108,7 @@ public static class ControlFlowAnalyzer
         private readonly IFunctionContext _currentFunctionContext;
         private readonly IReadOnlySet<AstNode> _nodesWithControlFlow;
         private readonly TemporaryLocalVariableFactory _variableFactory;
-        private readonly TypeChecking _typeChecking;
+        private readonly TypeCheckingResult _typeChecking;
 
         public ControlFlowVisitor
         (
@@ -115,7 +116,7 @@ public static class ControlFlowAnalyzer
             IReadOnlySet<AstNode> nodesWithControlFlow,
             Func<AstNode, CodeTreeRoot, IFunctionVariable?, CodeTreeRoot> pullOutSideEffects,
             TemporaryLocalVariableFactory variableFactory,
-            TypeChecking typeChecking
+            TypeCheckingResult typeChecking
         )
         {
             _pullOutSideEffects = pullOutSideEffects;
@@ -322,7 +323,7 @@ public static class ControlFlowAnalyzer
             var identifier = new Identifier($"TempVar@{node.GetHashCode()}", node.LocationRange);
             var tempVariable = new VariableDeclaration(
                 identifier,
-                _typeChecking.ExpressionTypes[node],
+                _typeChecking.ExpressionsTypes[node],
                 null,
                 false,
                 node.LocationRange);

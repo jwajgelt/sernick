@@ -7,6 +7,8 @@ using Nodes;
 using Utility;
 using TypeInformation = Dictionary<Nodes.AstNode, Type>;
 
+public sealed record TypeCheckingResult(TypeInformation ExpressionsTypes) { }
+
 public static class TypeChecking
 {
     /// <summary>
@@ -20,13 +22,13 @@ public static class TypeChecking
         public override string ToString() => "Any";
     }
 
-    public static TypeInformation CheckTypes(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
+    public static Dictionary<AstNode, Type> CheckTypes(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
     {
         var visitor = new TypeCheckingAstVisitor(nameResolution, diagnostics);
         return visitor.VisitAstTree(ast, new AnyType());
     }
 
-    private class TypeCheckingAstVisitor : AstVisitor<TypeInformation, Type>
+    private class TypeCheckingAstVisitor : AstVisitor<Dictionary<AstNode, Type>, Type>
     {
         /// <summary>
         /// Invariant: when visiting AstNode X, types for all children of X are known
@@ -39,8 +41,8 @@ public static class TypeChecking
         /// so to avoid recalculation (visiting the same ancestor from multiple nodes)
         /// we will have this helper object, containing type information for some AST nodes
         /// </summary>
-        private readonly TypeInformation _memoizedVariableTypes;
-        private readonly TypeInformation _memoizedFunctionParameterTypes;
+        private readonly Dictionary<AstNode, Type> _memoizedVariableTypes;
+        private readonly Dictionary<AstNode, Type> _memoizedFunctionParameterTypes;
         /// <summary>
         /// Our Type-checking Algorighm is a top-down postorder
         /// But sometimes, nodes need to know information about some other nodes higher up the tree
@@ -53,12 +55,12 @@ public static class TypeChecking
         {
             _nameResolution = nameResolution;
             _diagnostics = diagnostics;
-            _memoizedVariableTypes = new TypeInformation(ReferenceEqualityComparer.Instance);
-            _memoizedFunctionParameterTypes = new TypeInformation(ReferenceEqualityComparer.Instance);
+            _memoizedVariableTypes = new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance);
+            _memoizedFunctionParameterTypes = new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance);
             _pendingNodes = new HashSet<AstNode>(ReferenceEqualityComparer.Instance);
         }
 
-        protected override TypeInformation VisitAstNode(AstNode node, Type expectedReturnTypeOfReturnExpr)
+        protected override Dictionary<AstNode, Type> VisitAstNode(AstNode node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
             var result = node.Accept(this, expectedReturnTypeOfReturnExpr);
@@ -66,12 +68,12 @@ public static class TypeChecking
             return result;
         }
 
-        public override TypeInformation VisitIdentifier(Identifier identifierNode, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitIdentifier(Identifier identifierNode, Type expectedReturnTypeOfReturnExpr)
         {
-            return new TypeInformation(ReferenceEqualityComparer.Instance) { { identifierNode, new UnitType() } };
+            return new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance) { { identifierNode, new UnitType() } };
         }
 
-        public override TypeInformation VisitVariableDeclaration(VariableDeclaration node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitVariableDeclaration(VariableDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
@@ -97,14 +99,14 @@ public static class TypeChecking
             }
 
             // Regardless of error and types, var decl node itself has a unit type
-            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
+            var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             
             _pendingNodes.Remove(node);
             return result;
 
         }
 
-        public override TypeInformation VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
@@ -122,12 +124,12 @@ public static class TypeChecking
                     _diagnostics.Report(new TypesMismatchError(node.Type, defaultValueType, node.LocationRange.Start));
                 }
             }
-            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
+            var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
             return result;
         }
 
-        public override TypeInformation VisitFunctionDefinition(FunctionDefinition node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitFunctionDefinition(FunctionDefinition node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
             var declaredReturnType = node.ReturnType;
@@ -138,35 +140,35 @@ public static class TypeChecking
                 _diagnostics.Report(new TypesMismatchError(declaredReturnType, bodyReturnType, node.LocationRange.Start));
             }
 
-            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
+            var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
             return result;
         }
 
-        public override TypeInformation VisitCodeBlock(CodeBlock node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitCodeBlock(CodeBlock node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             // simply return what expression inside returns?
-            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, childrenTypes[node.Inner] } };
+            var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, childrenTypes[node.Inner] } };
             _pendingNodes.Remove(node);
             return result;
 
         }
 
-        public override TypeInformation VisitExpressionJoin(ExpressionJoin node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitExpressionJoin(ExpressionJoin node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             // just return the last expressions' type
-            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, childrenTypes[node.Second] } };
+            var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, childrenTypes[node.Second] } };
             _pendingNodes.Remove(node);
             return result;
         }
 
-        public override TypeInformation VisitFunctionCall(FunctionCall functionCallNode, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitFunctionCall(FunctionCall functionCallNode, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(functionCallNode);
             var childrenTypes = VisitNodeChildren(functionCallNode, expectedReturnTypeOfReturnExpr);
@@ -198,24 +200,24 @@ public static class TypeChecking
             }
 
             _memoizedFunctionParameterTypes[functionCallNode] = declaredReturnType;
-            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { functionCallNode, declaredReturnType } };
+            var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { functionCallNode, declaredReturnType } };
             _pendingNodes.Remove(functionCallNode);
             return result;
         }
 
-        public override TypeInformation VisitContinueStatement(ContinueStatement node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitContinueStatement(ContinueStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             // Continue statement has no children, so we do not visit them
-            var result = new TypeInformation(ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
+            var result = new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             return result;
         }
 
-        public override TypeInformation VisitReturnStatement(ReturnStatement node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitReturnStatement(ReturnStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
-            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance);
+            var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance);
             // Return Value is in a subtree, so its type should be already calculated by now
             var returnValueType = (node.ReturnValue != null) ? childrenTypes[node.ReturnValue] : new UnitType();
 
@@ -234,14 +236,14 @@ public static class TypeChecking
             return result;
         }
 
-        public override TypeInformation VisitBreakStatement(BreakStatement node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitBreakStatement(BreakStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             // Break statement should have no children
-            var result = new TypeInformation(ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
+            var result = new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             return result;
         }
 
-        public override TypeInformation VisitIfStatement(IfStatement node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitIfStatement(IfStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
@@ -262,7 +264,7 @@ public static class TypeChecking
                 }
             }
 
-            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, typeOfTrueBranch } };
+            var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, typeOfTrueBranch } };
             _pendingNodes.Remove(node);
             return result;
         }
@@ -275,22 +277,22 @@ public static class TypeChecking
         /// <param name="node"></param>
         /// <param name="_"></param>
         /// <returns></returns>
-        public override TypeInformation VisitLoopStatement(LoopStatement node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitLoopStatement(LoopStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
-            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
+            var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
             return result;
         }
 
-        public override TypeInformation VisitEmptyExpression(EmptyExpression node, Type _)
+        public override Dictionary<AstNode, Type> VisitEmptyExpression(EmptyExpression node, Type _)
         {
-            return new TypeInformation(ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
+            return new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
         }
 
-        public override TypeInformation VisitInfix(Infix node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitInfix(Infix node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
@@ -301,7 +303,7 @@ public static class TypeChecking
             if (typeOfLeftOperand is UnitType || typeOfRightOperand is UnitType)
             {
                 _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
-                var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
+                var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
                 _pendingNodes.Remove(node);
                 return result;
             }
@@ -311,14 +313,14 @@ public static class TypeChecking
                 _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
 
                 // TODO does it make sense to return anything here? maybe a Unit type? But it could propagate the error up the tree 
-                var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
+                var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
                 _pendingNodes.Remove(node);
                 return result;
             }
             else
             {
                 var commonType = typeOfLeftOperand;
-                var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance);
+                var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance);
 
                 // let's cover some special cases e.g. adding two bools or shirt-circuiting two ints
                 switch (node.Operator)
@@ -367,7 +369,7 @@ public static class TypeChecking
             }
         }
 
-        public override TypeInformation VisitAssignment(Assignment node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitAssignment(Assignment node, Type expectedReturnTypeOfReturnExpr)
         {
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
@@ -381,32 +383,32 @@ public static class TypeChecking
             }
 
             // Regardless of the error, let's return a Unit type for assignment and get more type checking information
-            var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, typeOfLeftSide } };
+            var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, typeOfLeftSide } };
             _pendingNodes.Remove(node);
             return result;
         }
 
-        public override TypeInformation VisitVariableValue(VariableValue node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitVariableValue(VariableValue node, Type expectedReturnTypeOfReturnExpr)
         {
             var variableDeclarationNode = _nameResolution.UsedVariableDeclarations[node];
             var typeOfVariable = _memoizedVariableTypes[variableDeclarationNode];
-            var result = new TypeInformation(ReferenceEqualityComparer.Instance) { { node, typeOfVariable } };
+            var result = new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance) { { node, typeOfVariable } };
             return result;
         }
 
-        public override TypeInformation VisitBoolLiteralValue(BoolLiteralValue node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitBoolLiteralValue(BoolLiteralValue node, Type expectedReturnTypeOfReturnExpr)
         {
             // No need to visit node children here
 
-            var result = new TypeInformation(ReferenceEqualityComparer.Instance) { { node, new BoolType() } };
+            var result = new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance) { { node, new BoolType() } };
             return result;
         }
 
-        public override TypeInformation VisitIntLiteralValue(IntLiteralValue node, Type expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitIntLiteralValue(IntLiteralValue node, Type expectedReturnTypeOfReturnExpr)
         {
             // No need to visit node children here
 
-            var result = new TypeInformation(ReferenceEqualityComparer.Instance) { { node, new IntType() } };
+            var result = new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance) { { node, new IntType() } };
             return result;
         }
 
@@ -418,13 +420,13 @@ public static class TypeChecking
         /// </summary>
         /// <param name="node"></param>
         /// <returns></returns>
-        private TypeInformation VisitNodeChildren(AstNode node, Type expectedReturnTypeOfReturnExpr)
+        private Dictionary<AstNode, Type> VisitNodeChildren(AstNode node, Type expectedReturnTypeOfReturnExpr)
         {
-            return node.Children.Aggregate(new TypeInformation(ReferenceEqualityComparer.Instance),
+            return node.Children.Aggregate(new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance),
                 (partialTypeInformation, childNode) =>
                 {
                     var resultForChildNode = childNode.Accept(this, expectedReturnTypeOfReturnExpr);
-                    return new TypeInformation(
+                    return new Dictionary<AstNode, Type>(
                         partialTypeInformation.JoinWith(resultForChildNode, ReferenceEqualityComparer.Instance));
                 }
            );

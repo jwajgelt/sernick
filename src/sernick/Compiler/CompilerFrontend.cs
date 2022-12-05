@@ -36,7 +36,7 @@ public static class CompilerFrontend
         ThrowIfErrorsOccurred(diagnostics);
         var ast = AstNode.From(parseTree);
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
-        _ = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
+        _ = TypeCheckingResult.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
         _ = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
         _ = VariableAccessMapPreprocess.Process(ast, nameResolution);
