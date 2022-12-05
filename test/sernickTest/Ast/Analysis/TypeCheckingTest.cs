@@ -285,8 +285,8 @@ public class TypeCheckingTest
         [Fact]
         public void FunctionReturnsBoolAndInt_BAD()
         {
-            var funDecl = Fun<BoolType>("returnsBool");
-            funDecl.Body(
+            var tree = Fun<BoolType>("returnsBool")
+                .Body(
                 Loop(
                     Block(
                         Literal(23),
@@ -294,11 +294,7 @@ public class TypeCheckingTest
                     )
                 ),
                 Literal(false)
-            );
-
-            var tree = (
-                funDecl
-            );
+            ).Get(out _);
 
             var diagnostics = new Mock<IDiagnostics>();
             diagnostics.SetupAllProperties();
@@ -314,8 +310,8 @@ public class TypeCheckingTest
         [Fact]
         public void FunctionReturnsInt_OK()
         {
-            var funDecl = Fun<IntType>("returnsInt");
-            funDecl.Body(
+            var tree = Fun<IntType>("returnsInt")
+                .Body(
                 Loop(
                     Block(
                         Literal(23),
@@ -323,11 +319,7 @@ public class TypeCheckingTest
                     )
                 ),
                 Literal(33)
-            );
-
-            var tree = (
-                funDecl
-            );
+            ).Get(out _);
 
             var diagnostics = new Mock<IDiagnostics>();
             diagnostics.SetupAllProperties();
@@ -342,8 +334,8 @@ public class TypeCheckingTest
         [Fact]
         public void FunctionReturnsIntAndBool_bad()
         {
-            var funDecl = Fun<IntType>("returnsInt");
-            funDecl.Body(
+            var tree = Fun<IntType>("returnsInt")
+                .Body(
                 Loop(
                     Block(
                         Literal(23),
@@ -352,11 +344,7 @@ public class TypeCheckingTest
                 ),
                 Return(0),
                 Literal(33)
-            );
-
-            var tree = (
-                funDecl
-            );
+            ).Get(out _);
 
             var diagnostics = new Mock<IDiagnostics>();
             diagnostics.SetupAllProperties();
