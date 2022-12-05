@@ -10,14 +10,12 @@ using sernick.Ast.Nodes;
 using sernick.Compiler.Function;
 using sernick.ControlFlowGraph.CodeTree;
 using static Ast.Helpers.AstNodesExtensions;
-using static sernick.Compiler.PlatformConstants;
 using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
+using static sernick.Compiler.PlatformConstants;
 
 public class AstToCfgConversionTest
 {
-    private readonly CodeTreeValueNode
-        _displayAddress = new GlobalAddress("display");
-
+    private readonly CodeTreeValueNode _displayAddress = new GlobalAddress("display");
     private readonly CodeTreeRoot _empty = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
 
     [Fact]
@@ -41,8 +39,9 @@ public class AstToCfgConversionTest
         var c = new SingleExitNode(null, new[] { varC.Write(varA.Value + varB.Value) });
         var ab = new SingleExitNode(c, new[] { varA.Write(1), varB.Write(2) });
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance) { { main, ab } });
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, ab}
+        });
     }
 
     [Fact]
@@ -69,12 +68,16 @@ public class AstToCfgConversionTest
 
         var b4 = new SingleExitNode(null, new[] { varB.Write(4) });
         var a3 = new SingleExitNode(null, new[] { varA.Write(3) });
-        var cond = new BinaryOperationNode(BinaryOperation.Equal, varA.Value, varB.Value);
-        var ifBlock = new ConditionalJumpNode(a3, b4, cond);
-        var ab = new SingleExitNode(ifBlock, new[] { varA.Write(1), varB.Write(2) });
+        var tmpReg = Reg(new Register());
+        var ifBlock = new ConditionalJumpNode(a3, b4, tmpReg.Value);
+        var condEval = new SingleExitNode(ifBlock, new[] { 
+            tmpReg.Write(new BinaryOperationNode(BinaryOperation.Equal, varA.Value, varB.Value))
+        });
+        var ab = new SingleExitNode(condEval, new[] { varA.Write(1), varB.Write(2) });
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance) { { main, ab } });
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, ab}
+        });
     }
 
     [Fact]
@@ -111,15 +114,20 @@ public class AstToCfgConversionTest
 
         var fCallTree = new SingleExitNode(null, fCall.CodeGraph);
         var retF = new SingleExitNode(null, new[] { fCallInner1.ResultLocation! + fCallInner2.ResultLocation! });
-        var fCallsInner = new SingleExitNode(retF, fCallInner1.CodeGraph.Concat(fCallInner2.CodeGraph).ToList());
+        var fCallInner2Tree = new SingleExitNode(retF, fCallInner2.CodeGraph);
+        var fCallInner1Tree = new SingleExitNode(fCallInner2Tree, fCallInner1.CodeGraph);
         var ret1 = new SingleExitNode(null, new[] { new Constant(new RegisterValue(1)) });
-        var ifBlock = new ConditionalJumpNode(ret1, fCallsInner, varN.Value <= 1);
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance)
-            {
-                { main, fCallTree }, { f, ifBlock }
-            });
+        var tmpReg = Reg(new Register());
+        var ifBlock = new ConditionalJumpNode(ret1, fCallInner1Tree, tmpReg.Value);
+        var condEval = new SingleExitNode(ifBlock, new[] { 
+            tmpReg.Write(varN.Value <= 1)
+        });
+
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, fCallTree},
+            {f, ifBlock}
+        });
     }
 
     [Fact]
@@ -144,13 +152,23 @@ public class AstToCfgConversionTest
 
         var varX = Reg(new Register());
 
-        // TODO loop
-        // var cond = new BinaryOperationNode(BinaryOperation.Equal, X.Value, 10);
-        var loopBlock = _empty;
-        var x = new SingleExitNode(loopBlock, new[] { varX.Write(0) });
+        var loopBlock = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance) { { main, x } });
+        var cond = new BinaryOperationNode(BinaryOperation.Equal, varX.Value, 10);
+        var tmpReg = Reg(new Register());
+        var ifBlock = new ConditionalJumpNode(null, loopBlock, tmpReg.Value);
+        var condEval = new SingleExitNode(ifBlock, new[] { 
+            tmpReg.Write(cond)
+        });
+
+        var xPlus1 = new SingleExitNode(ifBlock, new[] { varX.Write(varX.Value + 1) });
+        loopBlock.NextTree = xPlus1;
+
+        var x = new SingleExitNode(xPlus1, new[] { varX.Write(0) });
+
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, x}
+        });
     }
 
     [Fact]
@@ -190,11 +208,11 @@ public class AstToCfgConversionTest
         var fRet = new SingleExitNode(null, new[] { gCall1.ResultLocation! + gCall2.ResultLocation! });
         var gCalls = new SingleExitNode(fRet, gCall1.CodeGraph.Concat(gCall2.CodeGraph).ToList());
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance)
-            {
-                { main, _empty }, { f, gCalls }, { g, gRet }
-            });
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, _empty},
+            {f, gCalls},
+            {g, gRet}
+        });
     }
 
     [Fact]
@@ -304,15 +322,13 @@ public class AstToCfgConversionTest
 
         var f1CallTree = new SingleExitNode(null, f1Call.CodeGraph);
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance)
-            {
-                { main, f1CallTree },
-                { f1, v1 },
-                { f2, v2 },
-                { f3, v3 },
-                { f4, v4 }
-            });
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, f1CallTree},
+            {f1, v1},
+            {f2, v2},
+            {f3, v3},
+            {f4, v4}
+        });
     }
 
     [Fact]
@@ -330,16 +346,16 @@ public class AstToCfgConversionTest
         var main = Program
         (
             Fun<IntType>("f")
-                .Parameter<IntType>("x", Literal(1), out var paramX)
-                .Parameter<IntType>("y", Literal(2), out var paramY)
-                .Body
+            .Parameter<IntType>("x", Literal(1), out var paramX)
+            .Parameter<IntType>("y", Literal(2), out var paramY)
+            .Body
+            (
+                Fun<IntType>("g").Parameter<IntType>("z", Literal(3), out var paramZ).Body
                 (
-                    Fun<IntType>("g").Parameter<IntType>("z", Literal(3), out var paramZ).Body
-                    (
-                        Return(Value("z"))
-                    ).Get(out var g),
-                    Return("x".Plus("y").Plus("g".Call()))
-                ).Get(out var f),
+                    Return(Value("z"))
+                ).Get(out var g),
+                Return("x".Plus("y").Plus("g".Call()))
+            ).Get(out var f),
             "f".Call().Argument(Literal(3))
         );
 
@@ -360,11 +376,11 @@ public class AstToCfgConversionTest
         var gCallTree = new SingleExitNode(fRet, gCall.CodeGraph);
         var gRet = new SingleExitNode(null, new[] { varZ.Value });
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance)
-            {
-                { main, fCallTree }, { f, gCallTree }, { g, gRet }
-            });
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, fCallTree},
+            {f, gCallTree},
+            {g, gRet}
+        });
     }
 
     [Fact]
@@ -414,11 +430,11 @@ public class AstToCfgConversionTest
         var xxx = new SingleExitNode(gRet, new[] { varXg.Write(varXg.Value + varXg.Value) });
         var x2 = new SingleExitNode(xxx, new[] { varXg.Write(2) });
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance)
-            {
-                { main, _empty }, { f, x1 }, { g, x2 }
-            });
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, _empty},
+            {f, x1},
+            {g, x2}
+        });
     }
 
     [Fact]
@@ -484,15 +500,13 @@ public class AstToCfgConversionTest
         var hCallTree = new SingleExitNode(null, hCall.CodeGraph);
         var zCallTree = new SingleExitNode(null, zCall.CodeGraph);
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance)
-            {
-                { main, fCallTree },
-                { f, hCallTree },
-                { g, fCallTree },
-                { h, zCallTree },
-                { z, gCallTree }
-            });
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, fCallTree},
+            {f, hCallTree},
+            {g, fCallTree},
+            {h, zCallTree},
+            {z, gCallTree}
+        });
     }
 
     [Fact]
@@ -562,17 +576,22 @@ public class AstToCfgConversionTest
         var x1 = new SingleExitNode(fCallInMainTree, new[] { varX.Write(1) });
         var gCallTree = new SingleExitNode(null, gCall.CodeGraph);
         var hCallTree = new SingleExitNode(null, hCall.CodeGraph);
-        var ifBlock = new ConditionalJumpNode(gCallTree, hCallTree, varV.Value);
+        
+        var tmpReg = Reg(new Register());
+        var ifBlock = new ConditionalJumpNode(gCallTree, hCallTree, tmpReg.Value);
+        var condEval = new SingleExitNode(ifBlock, new[] { tmpReg.Write(varV.Value) });
+
         var fCallInHTree = new SingleExitNode(null, fCallInH.CodeGraph);
         var xMinus1 = new SingleExitNode(fCallInHTree, new[] { varX.Write(varX.Value - 1) });
         var fCallInGTree = new SingleExitNode(null, fCallInG.CodeGraph);
         var xPlus1 = new SingleExitNode(fCallInGTree, new[] { varX.Write(varX.Value + 1) });
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance)
-            {
-                { main, x1 }, { f, ifBlock }, { g, xPlus1 }, { h, xMinus1 }
-            });
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, x1},
+            {f, ifBlock},
+            {g, xPlus1},
+            {h, xMinus1}
+        });
     }
 
     [Fact]
@@ -633,23 +652,25 @@ public class AstToCfgConversionTest
         var fCall = fContext.GenerateCall(new CodeTreeValueNode[] { varY.Value });
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { varY.Value });
 
-        var yPlus1 = new SingleExitNode(null, new[] { varY.Write(varY.Value + 1) });
+        var loopBlock = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
+        var yPlus1 = new SingleExitNode(loopBlock, new[] { varY.Write(varY.Value + 1) });
         var cond2 = new ConditionalJumpNode(null, yPlus1, gCall.ResultLocation!);
         var gCallTree = new SingleExitNode(cond2, gCall.CodeGraph);
         var cond1 = new ConditionalJumpNode(null, gCallTree, fCall.ResultLocation!);
-        _ = new SingleExitNode(cond1, fCall.CodeGraph);
-        // TODO not sure how loops are supposed to work
+        var fCallTree = new SingleExitNode(cond1, fCall.CodeGraph);
+        loopBlock.NextTree = fCallTree;
+
         var xy = new SingleExitNode(cond1, new CodeTreeNode[] { varX.Write(1), varY.Write(0) });
 
         var gRet = new SingleExitNode(null, new[] { varV.Value <= varX.Value });
         var xPlus1InG = new SingleExitNode(gRet, new[] { varX.Write(varX.Value + 1) });
         var fRet = new SingleExitNode(null, new CodeTreeNode[] { varX.Write(varX.Value + 1), varV.Value <= 5 });
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance)
-            {
-                { main, xy }, { f, fRet }, { g, xPlus1InG }
-            });
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, xy},
+            {f, fRet},
+            {g, xPlus1InG}
+        });
     }
 
     [Fact]
@@ -710,23 +731,25 @@ public class AstToCfgConversionTest
         var fCall = fContext.GenerateCall(new CodeTreeValueNode[] { varY.Value });
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { varY.Value });
 
-        var yPlus1 = new SingleExitNode(null, new[] { varY.Write(varY.Value + 1) });
+        var loopBlock = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
+        var yPlus1 = new SingleExitNode(loopBlock, new[] { varY.Write(varY.Value + 1) });
         var cond2 = new ConditionalJumpNode(null, yPlus1, gCall.ResultLocation!);
         var gCallTree = new SingleExitNode(cond2, gCall.CodeGraph);
         var cond1 = new ConditionalJumpNode(gCallTree, yPlus1, fCall.ResultLocation!);
-        _ = new SingleExitNode(cond1, fCall.CodeGraph);
-        // TODO not sure how loops are supposed to work
+        var fCallTree = new SingleExitNode(cond1, fCall.CodeGraph);
+        loopBlock.NextTree = fCallTree;
+
         var xy = new SingleExitNode(cond1, new CodeTreeNode[] { varX.Write(1), varY.Write(0) });
 
         var gRet = new SingleExitNode(null, new[] { varV.Value <= varX.Value });
         var xPlus1InG = new SingleExitNode(gRet, new[] { varX.Write(varX.Value + 1) });
         var fRet = new SingleExitNode(null, new CodeTreeNode[] { varX.Write(varX.Value + 1), varV.Value <= 5 });
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance)
-            {
-                { main, xy }, { f, fRet }, { g, xPlus1InG }
-            });
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, xy},
+            {f, fRet},
+            {g, xPlus1InG}
+        });
     }
 
     [Fact]
@@ -796,14 +819,16 @@ public class AstToCfgConversionTest
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { varY.Value });
         var hCall = hContext.GenerateCall(new CodeTreeValueNode[] { varY.Value });
 
-        var yPlus1 = new SingleExitNode(null, new[] { varY.Write(varY.Value + 1) });
+        var loopBlock = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
+        var yPlus1 = new SingleExitNode(loopBlock, new[] { varY.Write(varY.Value + 1) });
         var cond3 = new ConditionalJumpNode(null, yPlus1, hCall.ResultLocation!);
         var hCallTree = new SingleExitNode(cond3, gCall.CodeGraph);
         var cond2 = new ConditionalJumpNode(null, hCallTree, gCall.ResultLocation!);
         var gCallTree = new SingleExitNode(cond2, gCall.CodeGraph);
         var cond1 = new ConditionalJumpNode(gCallTree, yPlus1, fCall.ResultLocation!);
-        _ = new SingleExitNode(cond1, fCall.CodeGraph);
-        // TODO not sure how loops are supposed to work
+        var fCallTree = new SingleExitNode(cond1, fCall.CodeGraph);
+        loopBlock.NextTree = fCallTree;
+
         var xy = new SingleExitNode(cond1, new CodeTreeNode[] { varX.Write(10), varY.Write(0) });
 
         var hRet = new SingleExitNode(null, new[] { varX.Value <= varV.Value });
@@ -1109,8 +1134,7 @@ public class AstToCfgConversionTest
         var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
-            root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap,
-                SideEffectsAnalyzer.PullOutSideEffects));
+            root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, SideEffectsAnalyzer.PullOutSideEffects));
 
         foreach (var (fun, codeTree) in expected)
         {
