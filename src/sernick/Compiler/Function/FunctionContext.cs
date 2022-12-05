@@ -26,21 +26,30 @@ public sealed class FunctionContext : IFunctionContext
         HardwareRegister.RDX,
     };
 
+    private static readonly HardwareRegister[] argumentRegisters = {
+        HardwareRegister.RDI,
+        HardwareRegister.RSI,
+        HardwareRegister.RDX,
+        HardwareRegister.RCX,
+        HardwareRegister.R8,
+        HardwareRegister.R9,
+    };
+
     private const int PointerSize = 8;
     private readonly IFunctionContext? _parentContext;
-    private readonly IReadOnlyCollection<IFunctionParam> _functionParameters;
+    private readonly IReadOnlyList<IFunctionParam> _functionParameters;
     private readonly bool _valueIsReturned;
 
     // Maps accesses to registers/memory
     private readonly Dictionary<IFunctionVariable, VariableLocation> _localVariableLocation;
     private int _localsOffset;
-    private CodeTreeValueNode? _displayEntry;
+    private readonly CodeTreeValueNode _displayEntry;
     private readonly Register _oldDisplayValReg;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
     public int Depth { get; }
     public FunctionContext(
         IFunctionContext? parent,
-        IReadOnlyCollection<IFunctionParam> parameters,
+        IReadOnlyList<IFunctionParam> parameters,
         bool returnsValue
         )
     {
@@ -49,16 +58,17 @@ public sealed class FunctionContext : IFunctionContext
         _functionParameters = parameters;
         _valueIsReturned = returnsValue;
         _localsOffset = 0;
+        _displayEntry = new GlobalAddress("display") + PointerSize * Depth;
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _oldDisplayValReg = new Register();
 
         Depth = (parent?.Depth + 1) ?? 0;
 
-        var fistArgOffset = PointerSize * (1 + _functionParameters.Count);
+        var fistArgOffset = PointerSize * (1 + _functionParameters.Count - 6);
         var argNum = 0;
-        foreach (var param in _functionParameters)
+        for (var i = 6; i < _functionParameters.Count; i++)
         {
-            _localVariableLocation.Add(param, new MemoryLocation(-(fistArgOffset - PointerSize * argNum)));
+            _localVariableLocation.Add(_functionParameters[i], new MemoryLocation(-(fistArgOffset - PointerSize * argNum)));
             argNum += 1;
         }
     }
@@ -69,12 +79,14 @@ public sealed class FunctionContext : IFunctionContext
     {
         if (usedElsewhere)
         {
-            _localsOffset += PointerSize;
-            _localVariableLocation.Add(variable, new MemoryLocation(_localsOffset));
+            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset + PointerSize)))
+            {
+                _localsOffset += PointerSize;
+            }
         }
         else
         {
-            _localVariableLocation.Add(variable, new RegisterLocation());
+            _localVariableLocation.TryAdd(variable, new RegisterLocation());
         }
     }
 
@@ -97,8 +109,27 @@ public sealed class FunctionContext : IFunctionContext
         var rspRead = Reg(rsp).Read();
         var pushRsp = Reg(rsp).Write(rspRead - PointerSize);
 
+        // Add default arguments if necessary
+        var allArgs = new List<CodeTreeValueNode>(arguments);
+        while (allArgs.Count < _functionParameters.Count)
+        {
+            allArgs.Add(_functionParameters[allArgs.Count - 1].GetDefaultValue());
+        }
+
+        // Divide args into register and stack
+        var regArgs = new List<CodeTreeValueNode>();
+        var stackArgs = new List<CodeTreeValueNode>();
+
+        for (var i = 0; i < allArgs.Count; i++)
+        {
+            (i < 6 ? regArgs : stackArgs).Add(allArgs[i]);
+        }
+
+        // Put args into registers
+        operations.AddRange(argumentRegisters.Zip(regArgs).Select(p => Reg(p.First).Write(p.Second)));
+
         // Put args onto stack
-        foreach (var arg in arguments)
+        foreach (var arg in stackArgs)
         {
             operations.Add(pushRsp);
             operations.Add(Mem(rspRead).Write(arg));
@@ -152,16 +183,17 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(Reg(rbp).Write(rspRead));
 
         // Save and update display entry
-        if (_displayEntry == null)
-        {
-            throw new Exception("DisplayAddress should be set before generating code");
-        }
-
         operations.Add(Reg(_oldDisplayValReg).Write(Mem(_displayEntry).Read()));
         operations.Add(Mem(_displayEntry).Write(rbpRead));
 
         // Allocate memory for variables
         operations.Add(Reg(rsp).Write(rspRead - _localsOffset));
+
+        // Write arguments to known locations
+        var paramNum = _functionParameters.Count;
+        var regParamsNum = Math.Min(paramNum, 6);
+        operations.AddRange(_functionParameters.Zip(argumentRegisters).Take(regParamsNum)
+            .Select(p => GenerateVariableWrite(p.First, Reg(p.Second).Read())));
 
         // Callee-saved registers
         foreach (var reg in calleeToSave)
@@ -195,11 +227,6 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(Reg(rsp).Write(rspRead + PointerSize));
 
         // Restore old display value
-        if (_displayEntry == null)
-        {
-            throw new Exception("DisplayAddress should be set before generating code");
-        }
-
         operations.Add(Mem(_displayEntry).Write(Reg(_oldDisplayValReg).Read()));
 
         // Save return value to rax
@@ -237,11 +264,6 @@ public sealed class FunctionContext : IFunctionContext
             ? location.GenerateWrite(value)
             : new MemoryWrite(GetParentsIndirectVariableLocation(variable), value);
 
-    public void SetDisplayAddress(CodeTreeValueNode displayAddress)
-    {
-        _displayEntry = displayAddress + PointerSize * Depth;
-    }
-
     CodeTreeValueNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
     {
         if (!_localVariableLocation.TryGetValue(variable, out var local))
@@ -249,11 +271,6 @@ public sealed class FunctionContext : IFunctionContext
             // If variable isn't in this context then it should be is the context of some ancestor.
             return _parentContext?.GetIndirectVariableLocation(variable) ??
                    throw new ArgumentException("Variable is undefined");
-        }
-
-        if (_displayEntry == null)
-        {
-            throw new Exception("DisplayAddress should be set before generating code");
         }
 
         if (local is not MemoryLocation localMemory)

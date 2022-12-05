@@ -1,17 +1,21 @@
-var x : Int = 0;
-
-loop {
-    var y : Int = 0;
+fun f(): Int {
+    var x : Int = 0;
+    
     loop {
-        y = y + 1;
-        if(y == 10) {
-            x = x + y;
-            if(x == 100) {
-                return x;
+        var y : Int = 0;
+        loop {
+            y = y + 1;
+            if(y == 10) {
+                x = x + y;
+                if(x == 100) {
+                    return x;
+                }
+                break;
             }
-            break;
         }
     }
+    
+    0
 }
-
-// x should equal 100
+    
+f(); // should equal 100
