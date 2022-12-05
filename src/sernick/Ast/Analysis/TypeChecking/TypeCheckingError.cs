@@ -63,8 +63,6 @@ public sealed record UnitTypeNotAllowedInFunctionArgumentError(ILocation Locatio
     {
         return $"Unit type is not allowed as a function argument type: at {Location}";
     }
-
-    public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
 }
 
 public sealed record WrongFunctionArgumentError(Type Required, Type Provided, ILocation Location) : TypeCheckingErrorBase
