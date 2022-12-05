@@ -80,30 +80,20 @@ public static class TypeChecking
             if (node.InitValue != null)
             {
                 var rhsType = childrenTypes[node.InitValue];
-                if (declaredType != null)
+                if (declaredType != null && declaredType != rhsType)
                 {
-                    if (declaredType != rhsType)
-                    {
-                        _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.LocationRange.Start));
-                    }
-                    _memoizedVariableTypes[node] = declaredType;
+                    _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.LocationRange.Start));
                 }
-                else
-                {
-                    _memoizedVariableTypes[node] = rhsType;
-                }
+                _memoizedVariableTypes[node] = declaredType ?? rhsType;
             }
             else
             {
-                if(declaredType != null)
-                {
-                    _memoizedVariableTypes[node] = declaredType;
-                }
-                else
+                if(declaredType == null)
                 {
                     _diagnostics.Report(new TypeOrInitialValueShouldBePresentError(node.LocationRange.Start));
-                    _memoizedVariableTypes[node] = new UnitType(); // maybe it will not lead to more errors; maybe it will
+                    
                 }
+                _memoizedVariableTypes[node] = declaredType ?? new UnitType(); // maybe it will not lead to more errors; maybe it will
             }
 
             // Regardless of error and types, var decl node itself has a unit type
