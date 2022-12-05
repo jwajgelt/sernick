@@ -10,8 +10,8 @@ using sernick.Ast.Nodes;
 using sernick.Compiler.Function;
 using sernick.ControlFlowGraph.CodeTree;
 using static Ast.Helpers.AstNodesExtensions;
-using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static sernick.Compiler.PlatformConstants;
+using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
 
 public class AstToCfgConversionTest
 {
@@ -70,7 +70,7 @@ public class AstToCfgConversionTest
         var a3 = new SingleExitNode(null, new[] { varA.Write(3) });
         var tmpReg = Reg(new Register());
         var ifBlock = new ConditionalJumpNode(a3, b4, tmpReg.Value);
-        var condEval = new SingleExitNode(ifBlock, new[] { 
+        var condEval = new SingleExitNode(ifBlock, new[] {
             tmpReg.Write(new BinaryOperationNode(BinaryOperation.Equal, varA.Value, varB.Value))
         });
         var ab = new SingleExitNode(condEval, new[] { varA.Write(1), varB.Write(2) });
@@ -157,7 +157,7 @@ public class AstToCfgConversionTest
         var cond = new BinaryOperationNode(BinaryOperation.Equal, varX.Value, 10);
         var tmpReg = Reg(new Register());
         var ifBlock = new ConditionalJumpNode(null, loopBlock, tmpReg.Value);
-        var condEval = new SingleExitNode(ifBlock, new[] { 
+        _ = new SingleExitNode(ifBlock, new[] {
             tmpReg.Write(cond)
         });
 
@@ -576,7 +576,7 @@ public class AstToCfgConversionTest
         var x1 = new SingleExitNode(fCallInMainTree, new[] { varX.Write(1) });
         var gCallTree = new SingleExitNode(null, gCall.CodeGraph);
         var hCallTree = new SingleExitNode(null, hCall.CodeGraph);
-        
+
         var tmpReg = Reg(new Register());
         var ifBlock = new ConditionalJumpNode(gCallTree, hCallTree, tmpReg.Value);
         var condEval = new SingleExitNode(ifBlock, new[] { tmpReg.Write(varV.Value) });
@@ -1152,15 +1152,9 @@ public class AstToCfgConversionTest
 
         foreach (var node in epiloguePredecessors)
         {
-            switch (node)
+            if (node is SingleExitNode singleExitNode)
             {
-                case SingleExitNode singleExitNode:
-                    singleExitNode.NextTree ??= epilogue[0];
-                    break;
-                case ConditionalJumpNode conditionalJumpNode:
-                    conditionalJumpNode.TrueCase ??= epilogue[0];
-                    conditionalJumpNode.FalseCase ??= epilogue[0];
-                    break;
+                singleExitNode.NextTree ??= epilogue[0];
             }
         }
 
