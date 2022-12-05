@@ -77,16 +77,36 @@ public static class TypeChecking
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var declaredType = node.Type;
-            if (declaredType != null && node.InitValue != null)
+            if (node.InitValue != null)
             {
                 var rhsType = childrenTypes[node.InitValue];
-                if (declaredType != rhsType)
+                if (declaredType != null)
                 {
-                    _diagnostics.Report(new TypeCheckingError(declaredType, rhsType, node.LocationRange.Start));
+                    if (declaredType != rhsType)
+                    {
+                        _diagnostics.Report(new TypeCheckingError(declaredType, rhsType, node.LocationRange.Start));
+                    }
+                    _memoizedVariableTypes[node] = declaredType;
                 }
-                _memoizedVariableTypes[node] = declaredType;
+                else
+                {
+                    _memoizedVariableTypes[node] = rhsType;
+                }
+            }
+            else
+            {
+                if(declaredType != null)
+                {
+                    _memoizedVariableTypes[node] = declaredType;
+                }
+                else
+                {
+                    _diagnostics.Report(new TypeOrInitialValueShouldBePresentError(node.LocationRange.Start));
+                    _memoizedVariableTypes[node] = new UnitType(); // maybe it will not lead to more errors; maybe it will
+                }
             }
 
+            // Regardless of error and types, var decl node itself has a unit type
             var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             
             _pendingNodes.Remove(node);
