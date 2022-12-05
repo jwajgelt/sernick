@@ -86,21 +86,23 @@ public static class TypeChecking
                 {
                     _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.LocationRange.Start));
                 }
+
                 _memoizedVariableTypes[node] = declaredType ?? rhsType;
             }
             else
             {
-                if(declaredType == null)
+                if (declaredType == null)
                 {
                     _diagnostics.Report(new TypeOrInitialValueShouldBePresentError(node.LocationRange.Start));
-                    
+
                 }
+
                 _memoizedVariableTypes[node] = declaredType ?? new UnitType(); // maybe it will not lead to more errors; maybe it will
             }
 
             // Regardless of error and types, var decl node itself has a unit type
             var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
-            
+
             _pendingNodes.Remove(node);
             return result;
 
@@ -112,11 +114,12 @@ public static class TypeChecking
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             _memoizedFunctionParameterTypes[node] = node.Type;
-            if(node.Type is UnitType)
+            if (node.Type is UnitType)
             {
                 _diagnostics.Report(new UnitTypeNotAllowedInFunctionArgumentError(node.LocationRange.Start));
             }
-            if(node.DefaultValue != null)
+
+            if (node.DefaultValue != null)
             {
                 var defaultValueType = childrenTypes[node.DefaultValue];
                 if (defaultValueType != node.Type)
@@ -124,6 +127,7 @@ public static class TypeChecking
                     _diagnostics.Report(new TypesMismatchError(node.Type, defaultValueType, node.LocationRange.Start));
                 }
             }
+
             var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
             return result;
@@ -179,7 +183,6 @@ public static class TypeChecking
             var declaredArguments = functionDeclarationNode.Parameters;
             var parametersWithDefaultValuesCount = functionDeclarationNode.Parameters.Count(param => param.DefaultValue != null);
             var actualArguments = functionCallNode.Arguments;
-            
 
             if (declaredArguments.Count() != actualArguments.Count() + parametersWithDefaultValuesCount)
             {
@@ -343,6 +346,7 @@ public static class TypeChecking
                             {
                                 _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                             }
+
                             result.Add(node, new IntType());
                             break;
                         }
@@ -355,6 +359,7 @@ public static class TypeChecking
                             {
                                 _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                             }
+
                             result.Add(node, new BoolType());
                             break;
                         }

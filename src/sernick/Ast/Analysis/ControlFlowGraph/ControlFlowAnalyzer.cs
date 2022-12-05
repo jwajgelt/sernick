@@ -4,8 +4,8 @@ using Compiler.Function;
 using FunctionContextMap;
 using NameResolution;
 using Nodes;
-using sernick.ControlFlowGraph.CodeTree;
 using sernick.Ast.Analysis.TypeChecking;
+using sernick.ControlFlowGraph.CodeTree;
 using FunctionCall = Nodes.FunctionCall;
 
 public static class ControlFlowAnalyzer
