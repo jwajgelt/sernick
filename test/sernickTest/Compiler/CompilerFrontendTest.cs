@@ -48,7 +48,6 @@ public class CompilerFrontendTest
         Assert.False(diagnostics.DidErrorOccur);
     }
 
-    [Theory(Skip = "Type checking is not ready")]
     [MemberTupleData(nameof(IncorrectExamplesData))]
     public void TestIncorrectExamples(string group, string fileName, IEnumerable<IDiagnosticItem> expectedErrors)
     {
