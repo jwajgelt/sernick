@@ -84,7 +84,7 @@ public static class TypeChecking
                 {
                     _diagnostics.Report(new TypeCheckingError(declaredType, rhsType, node.LocationRange.Start));
                 }
-                _memoizedVariableTypes[node.Name] = declaredType;
+                _memoizedVariableTypes[node] = declaredType;
             }
 
             var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
@@ -104,10 +104,13 @@ public static class TypeChecking
             {
                 _diagnostics.Report(new UnitTypeNotAllowedInFunctionArgumentError(node.LocationRange.Start));
             }
-            var defaultValueType = childrenTypes[node.DefaultValue];
-            if (defaultValueType != node.Type)
+            if(node.DefaultValue != null)
             {
-                _diagnostics.Report(new TypeCheckingError(node.Type, defaultValueType, node.LocationRange.Start));
+                var defaultValueType = childrenTypes[node.DefaultValue];
+                if (defaultValueType != node.Type)
+                {
+                    _diagnostics.Report(new TypeCheckingError(node.Type, defaultValueType, node.LocationRange.Start));
+                }
             }
             var result = new TypeInformation(childrenTypes, ReferenceEqualityComparer.Instance) { { node, new UnitType() } };
             _pendingNodes.Remove(node);
@@ -162,8 +165,9 @@ public static class TypeChecking
             var declaredReturnType = functionDeclarationNode.ReturnType;
 
             var declaredArguments = functionDeclarationNode.Parameters;
-            var parametersWithDefaultValuesCount = functionDeclarationNode.Parameters.Where(param => param.DefaultValue != null).Count();
+            var parametersWithDefaultValuesCount = functionDeclarationNode.Parameters.Count(param => param.DefaultValue != null);
             var actualArguments = functionCallNode.Arguments;
+            
 
             if (declaredArguments.Count() != actualArguments.Count() + parametersWithDefaultValuesCount)
             {
@@ -322,6 +326,14 @@ public static class TypeChecking
                         }
                     case Infix.Op.Plus:
                     case Infix.Op.Minus:
+                        {
+                            if (commonType is not IntType)
+                            {
+                                _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+                            }
+                            result.Add(node, new IntType());
+                            break;
+                        }
                     case Infix.Op.Greater:
                     case Infix.Op.GreaterOrEquals:
                     case Infix.Op.Less:
@@ -331,7 +343,7 @@ public static class TypeChecking
                             {
                                 _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                             }
-                            result.Add(node, new IntType());
+                            result.Add(node, new BoolType());
                             break;
                         }
                     default:
