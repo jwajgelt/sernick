@@ -1,0 +1,5 @@
+const condition = true;
+
+// syntax error: `if-then-else` branches have to be wrapped
+// in brackets {}
+if (condition) var x = 1;

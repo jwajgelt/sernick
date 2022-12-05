@@ -34,7 +34,7 @@ public sealed record ExpressionJoin
 /// <summary>
 /// Class representing function calls
 /// </summary>
-public sealed record FunctionCall(Identifier FunctionName, IEnumerable<Expression> Arguments,
+public sealed record FunctionCall(Identifier FunctionName, IReadOnlyCollection<Expression> Arguments,
     Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode[] { FunctionName }.Concat(Arguments);

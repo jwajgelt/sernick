@@ -1,4 +1,4 @@
-fun callConflict(argOne: Int) {
+fun callConflict(argOne: Int): Int {
 	argOne
 }
 

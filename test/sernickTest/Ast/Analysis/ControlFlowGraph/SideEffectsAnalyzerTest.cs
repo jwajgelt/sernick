@@ -3,14 +3,20 @@ namespace sernickTest.Ast.Analysis.ControlFlowGraph;
 using Compiler.Function.Helpers;
 using Helpers;
 using sernick.Ast;
+using sernick.Ast.Analysis.CallGraph;
 using sernick.Ast.Analysis.ControlFlowGraph;
+using sernick.Ast.Analysis.FunctionContextMap;
 using sernick.Ast.Analysis.NameResolution;
+using sernick.Ast.Analysis.VariableAccess;
 using sernick.Ast.Nodes;
 using sernick.ControlFlowGraph.CodeTree;
 using static Helpers.AstNodesExtensions;
 
 public class SideEffectsAnalyzerTest
 {
+    private static readonly CallGraph callGraph = new CallGraph();
+    private static readonly VariableAccessMap variableAccessMap = new VariableAccessMap();
+
     [Theory]
     [InlineData(Infix.Op.Plus, BinaryOperation.Add)]
     [InlineData(Infix.Op.Minus, BinaryOperation.Sub)]
@@ -23,6 +29,7 @@ public class SideEffectsAnalyzerTest
     {
         // 1 `astOp` 2
         var functionContext = new FakeFunctionContext();
+        var functionContextMap = new FunctionContextMap();
         Fun<UnitType>("f")
             .Body(
                 new Infix(Literal(1), Literal(2), astOp)
@@ -38,7 +45,7 @@ public class SideEffectsAnalyzerTest
             })
         };
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, new NameResolutionResult(), functionContext);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, new NameResolutionResult(), functionContext, functionContextMap, callGraph, variableAccessMap);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
@@ -54,6 +61,7 @@ public class SideEffectsAnalyzerTest
     public void BinaryOperationsAreCompiledIntoBinaryOperationNodesWithVariableReads(Infix.Op astOp, BinaryOperation binOp)
     {
         var functionContext = new FakeFunctionContext();
+        var functionContextMap = new FunctionContextMap();
         // var x = 1; var y = 2;
         // x `astOp` y
         // The declarations can happen in the same tree,
@@ -86,15 +94,60 @@ public class SideEffectsAnalyzerTest
             (xUse, declX),
             (yUse, declY));
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
+    }
+
+    [Theory(Skip = "Waiting for isomorphisms")]
+    [InlineData(Infix.Op.Plus, BinaryOperation.Add)]
+    [InlineData(Infix.Op.Minus, BinaryOperation.Sub)]
+    [InlineData(Infix.Op.Equals, BinaryOperation.Equal)]
+    [InlineData(Infix.Op.Less, BinaryOperation.LessThan)]
+    [InlineData(Infix.Op.Greater, BinaryOperation.GreaterThan)]
+    [InlineData(Infix.Op.LessOrEquals, BinaryOperation.LessThanEqual)]
+    [InlineData(Infix.Op.GreaterOrEquals, BinaryOperation.GreaterThanEqual)]
+#pragma warning disable xUnit1026
+#pragma warning disable IDE0060
+    public void BinaryOperationsShouldInsertTempVariablesForIntermediateResults(Infix.Op astOp, BinaryOperation binOp)
+#pragma warning restore IDE0060
+#pragma warning restore xUnit1026
+    {
+        var functionContext = new FakeFunctionContext();
+        var functionContextMap = new FunctionContextMap();
+        // var x = 1;
+        // x `astOp` {x = x+1; x}
+        // The left-hand-side of operation
+        // "sees" the write in the right-hand-side.
+        // It should write it to a temporary variable.
+        Fun<UnitType>("f")
+            .Body(
+                Var("x", 1, out var declX),
+                new Infix(
+                    Value("x", out var xFirstUse),
+                    Block(
+                        "x".Assign(
+                            Value("x", out var xSecondUse).Plus(1),
+                            out var xAss
+                        ),
+                        Value("x", out var xThirdUse)
+                        ),
+                    astOp)
+            ).Get(out var tree);
+
+        var nameResolution = new NameResolutionResult().WithVars(
+            (xFirstUse, declX),
+            (xSecondUse, declX),
+            (xThirdUse, declX))
+            .WithAssigns((xAss, declX));
+        _ = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap);
     }
 
     [Fact]
     public void AssignmentsAndReadsToSameVariableAreSeparated()
     {
         var functionContext = new FakeFunctionContext();
+        var functionContextMap = new FunctionContextMap();
         // var x = 1;
         // var y = x
         // The `y` declaration cannot happen in the same tree as `x` declaration
@@ -117,7 +170,7 @@ public class SideEffectsAnalyzerTest
 
         var nameResolution = new NameResolutionResult().WithVars((xUse, declX));
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
@@ -126,6 +179,7 @@ public class SideEffectsAnalyzerTest
     public void ReadsAndAssignmentsToSameVariableAreSeparated()
     {
         var functionContext = new FakeFunctionContext();
+        var functionContextMap = new FunctionContextMap();
         // var x = 1;
         // var y = x;
         // x = y
@@ -156,7 +210,7 @@ public class SideEffectsAnalyzerTest
             .WithVars((xUse, declX), (yUse, declY))
             .WithAssigns((xAss, declX));
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
@@ -165,6 +219,7 @@ public class SideEffectsAnalyzerTest
     public void AssignmentsCanUseSameVariableInRightHandSide()
     {
         var functionContext = new FakeFunctionContext();
+        var functionContextMap = new FunctionContextMap();
         // var x = 1;
         // x = x+1
         // The assignment can happen in the same tree
@@ -197,7 +252,7 @@ public class SideEffectsAnalyzerTest
             .WithVars((xUse, declX))
             .WithAssigns((xAss, declX));
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
