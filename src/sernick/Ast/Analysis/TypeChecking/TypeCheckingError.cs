@@ -17,11 +17,19 @@ public sealed record TypesMismatchError(Type Required, Type Provided, ILocation 
     }
 }
 
+public sealed record InferredBadFunctionReturnType(Type Declared, Type Inferred, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"Inferred function return type is not equal to declared return type: declared \"{Declared}\", inferred \"{Inferred}\" at {Location}";
+    }
+}
+
 public sealed record FunctionArgumentsMismatchError(int Expected, int Actual, ILocation Location) : TypeCheckingErrorBase
 {
     public override string ToString()
     {
-        return $"Wrong number of arguments in a function call: expected \"{Expected}\", provided \"{Actual}\" at {Location}";
+        return $"Wrong number of arguments in a function call: expected at least \"{Expected}\", provided \"{Actual}\" at {Location}";
     }
 }
 

@@ -2,6 +2,7 @@ namespace sernickTest.Compiler;
 
 using Helpers;
 using Moq;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 using sernick.Ast;
 using sernick.Ast.Analysis;
 using sernick.Ast.Analysis.TypeChecking;
@@ -59,7 +60,7 @@ public class CompilerFrontendTest
             Assert.True(diagnostics.DidErrorOccur);
         }
 
-        Assert.Equal(expectedErrors, diagnostics.DiagnosticItems);
+        Assert.True(expectedErrors.SequenceEqual(diagnostics.DiagnosticItems));
     }
 
     [Theory(Skip = "Wrong from type checking POV")]
@@ -136,7 +137,7 @@ public class CompilerFrontendTest
             // argument-types
             ("argument-types", "call-type-conflict", new IDiagnosticItem[]
             {
-                new TypesMismatchError(new IntType(), new BoolType(), FileUtility.LocationAt(7, 14))
+                new WrongFunctionArgumentError(new IntType(), new BoolType(), FileUtility.LocationAt(7, 14))
             }),
             ("argument-types", "no-types", new IDiagnosticItem[]
             {
@@ -151,7 +152,7 @@ public class CompilerFrontendTest
             }),
             ("argument-types", "return-value-conflict", new IDiagnosticItem[]
             {
-                new TypesMismatchError(new UnitType(), new BoolType(), FileUtility.LocationAt(4, 5))
+                new WrongFunctionArgumentError(new UnitType(), new BoolType(), FileUtility.LocationAt(4, 5))
             }),
             
             // code-blocks
