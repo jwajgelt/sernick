@@ -97,7 +97,9 @@ public static class SideEffectsAnalyzer
         public SideEffectsVisitor(
             NameResolutionResult nameResolution,
             IFunctionContext currentFunctionContext,
-            FunctionContextMap functionContextMap, CallGraph callGraph, VariableAccessMap variableAccessMap)
+            FunctionContextMap functionContextMap,
+            CallGraph callGraph,
+            VariableAccessMap variableAccessMap)
         {
             _nameResolution = nameResolution;
             _currentFunctionContext = currentFunctionContext;
