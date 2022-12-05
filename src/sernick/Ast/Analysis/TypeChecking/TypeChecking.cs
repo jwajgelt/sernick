@@ -40,9 +40,10 @@ public static class TypeChecking
         /// Sometimes we would like to know the result for our ancestor,
         /// so to avoid recalculation (visiting the same ancestor from multiple nodes)
         /// we will have this helper object, containing type information for some AST nodes
+        ///
+        /// This object contains types for variable and function parameter types
         /// </summary>
-        private readonly Dictionary<AstNode, Type> _memoizedVariableTypes;
-        private readonly Dictionary<AstNode, Type> _memoizedFunctionParameterTypes;
+        private readonly Dictionary<AstNode, Type> _memoizedDeclarationTypes;
         /// <summary>
         /// Our Type-checking Algorighm is a top-down postorder
         /// But sometimes, nodes need to know information about some other nodes higher up the tree
@@ -55,8 +56,7 @@ public static class TypeChecking
         {
             _nameResolution = nameResolution;
             _diagnostics = diagnostics;
-            _memoizedVariableTypes = new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance);
-            _memoizedFunctionParameterTypes = new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance);
+            _memoizedDeclarationTypes = new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance);
             _pendingNodes = new HashSet<AstNode>(ReferenceEqualityComparer.Instance);
         }
 
@@ -87,7 +87,7 @@ public static class TypeChecking
                     _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.LocationRange.Start));
                 }
 
-                _memoizedVariableTypes[node] = declaredType ?? rhsType;
+                _memoizedDeclarationTypes[node] = declaredType ?? rhsType;
             }
             else
             {
@@ -97,7 +97,7 @@ public static class TypeChecking
 
                 }
 
-                _memoizedVariableTypes[node] = declaredType ?? new UnitType(); // maybe it will not lead to more errors; maybe it will
+                _memoizedDeclarationTypes[node] = declaredType ?? new UnitType(); // maybe it will not lead to more errors; maybe it will
             }
 
             // Regardless of error and types, var decl node itself has a unit type
@@ -113,7 +113,7 @@ public static class TypeChecking
             _pendingNodes.Add(node);
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
-            _memoizedFunctionParameterTypes[node] = node.Type;
+            _memoizedDeclarationTypes[node] = node.Type;
             if (node.Type is UnitType)
             {
                 _diagnostics.Report(new UnitTypeNotAllowedInFunctionArgumentError(node.LocationRange.Start));
@@ -202,7 +202,6 @@ public static class TypeChecking
                 }
             }
 
-            _memoizedFunctionParameterTypes[functionCallNode] = declaredReturnType;
             var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { functionCallNode, declaredReturnType } };
             _pendingNodes.Remove(functionCallNode);
             return result;
@@ -380,7 +379,7 @@ public static class TypeChecking
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var variableDeclarationNode = _nameResolution.AssignedVariableDeclarations[node];
-            var typeOfLeftSide = _memoizedVariableTypes[variableDeclarationNode];
+            var typeOfLeftSide = _memoizedDeclarationTypes[variableDeclarationNode];
             var typeOfRightSide = childrenTypes[node.Right];
             if (typeOfLeftSide.ToString() != typeOfRightSide.ToString())
             {
@@ -396,7 +395,7 @@ public static class TypeChecking
         public override Dictionary<AstNode, Type> VisitVariableValue(VariableValue node, Type expectedReturnTypeOfReturnExpr)
         {
             var variableDeclarationNode = _nameResolution.UsedVariableDeclarations[node];
-            var typeOfVariable = _memoizedVariableTypes[variableDeclarationNode];
+            var typeOfVariable = _memoizedDeclarationTypes[variableDeclarationNode];
             var result = new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance) { { node, typeOfVariable } };
             return result;
         }
