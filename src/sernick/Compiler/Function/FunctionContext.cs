@@ -2,8 +2,8 @@ namespace sernick.Compiler.Function;
 
 using ControlFlowGraph.CodeTree;
 using Instruction;
-using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static Compiler.PlatformConstants;
+using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 
 public sealed class FunctionContext : IFunctionContext
 {

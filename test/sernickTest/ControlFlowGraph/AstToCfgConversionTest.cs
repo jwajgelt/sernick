@@ -15,7 +15,7 @@ using static sernick.Compiler.PlatformConstants;
 
 public class AstToCfgConversionTest
 {
-    private readonly CodeTreeValueNode _displayAddress = new GlobalAddress("display"); // TODO use GlobalAddress after it's merged
+    private readonly CodeTreeValueNode _displayAddress = new GlobalAddress("display");
     private readonly CodeTreeRoot _empty = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
 
     [Fact]
@@ -68,9 +68,12 @@ public class AstToCfgConversionTest
 
         var b4 = new SingleExitNode(null, new[] { varB.Write(4) });
         var a3 = new SingleExitNode(null, new[] { varA.Write(3) });
-        var cond = new BinaryOperationNode(BinaryOperation.Equal, varA.Value, varB.Value);
-        var ifBlock = new ConditionalJumpNode(a3, b4, cond);
-        var ab = new SingleExitNode(ifBlock, new[] { varA.Write(1), varB.Write(2) });
+        var tmpReg = Reg(new Register());
+        var ifBlock = new ConditionalJumpNode(a3, b4, tmpReg.Value);
+        var condEval = new SingleExitNode(ifBlock, new[] { 
+            tmpReg.Write(new BinaryOperationNode(BinaryOperation.Equal, varA.Value, varB.Value))
+        });
+        var ab = new SingleExitNode(condEval, new[] { varA.Write(1), varB.Write(2) });
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
             {main, ab}
@@ -111,9 +114,10 @@ public class AstToCfgConversionTest
 
         var fCallTree = new SingleExitNode(null, fCall.CodeGraph);
         var retF = new SingleExitNode(null, new[] { fCallInner1.ResultLocation! + fCallInner2.ResultLocation! });
-        var fCallsInner = new SingleExitNode(retF, fCallInner1.CodeGraph.Concat(fCallInner2.CodeGraph).ToList());
+        var fCallInner2Tree = new SingleExitNode(retF, fCallInner2.CodeGraph);
+        var fCallInner1Tree = new SingleExitNode(fCallInner2Tree, fCallInner1.CodeGraph);
         var ret1 = new SingleExitNode(null, new[] { new Constant(new RegisterValue(1)) });
-        var ifBlock = new ConditionalJumpNode(ret1, fCallsInner, varN.Value <= 1);
+        var ifBlock = new ConditionalJumpNode(ret1, fCallInner1Tree, varN.Value <= 1);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
             {main, fCallTree},
@@ -143,10 +147,13 @@ public class AstToCfgConversionTest
 
         var varX = Reg(new Register());
 
-        // TODO loop
-        // var cond = new BinaryOperationNode(BinaryOperation.Equal, X.Value, 10);
-        var loopBlock = _empty;
-        var x = new SingleExitNode(loopBlock, new[] { varX.Write(0) });
+        var loopBlock = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
+        var cond = new BinaryOperationNode(BinaryOperation.Equal, varX.Value, 10);
+        var ifBlock = new ConditionalJumpNode(null, loopBlock, cond);
+        var xPlus1 = new SingleExitNode(ifBlock, new[] { varX.Write(varX.Value + 1) });
+        loopBlock.NextTree = xPlus1;
+
+        var x = new SingleExitNode(xPlus1, new[] { varX.Write(0) });
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
             {main, x}
@@ -630,12 +637,14 @@ public class AstToCfgConversionTest
         var fCall = fContext.GenerateCall(new CodeTreeValueNode[] { varY.Value });
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { varY.Value });
 
-        var yPlus1 = new SingleExitNode(null, new[] { varY.Write(varY.Value + 1) });
+        var loopBlock = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
+        var yPlus1 = new SingleExitNode(loopBlock, new[] { varY.Write(varY.Value + 1) });
         var cond2 = new ConditionalJumpNode(null, yPlus1, gCall.ResultLocation!);
         var gCallTree = new SingleExitNode(cond2, gCall.CodeGraph);
         var cond1 = new ConditionalJumpNode(null, gCallTree, fCall.ResultLocation!);
-        _ = new SingleExitNode(cond1, fCall.CodeGraph);
-        // TODO not sure how loops are supposed to work
+        var fCallTree = new SingleExitNode(cond1, fCall.CodeGraph);
+        loopBlock.NextTree = fCallTree;
+
         var xy = new SingleExitNode(cond1, new CodeTreeNode[] { varX.Write(1), varY.Write(0) });
 
         var gRet = new SingleExitNode(null, new[] { varV.Value <= varX.Value });
@@ -707,12 +716,14 @@ public class AstToCfgConversionTest
         var fCall = fContext.GenerateCall(new CodeTreeValueNode[] { varY.Value });
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { varY.Value });
 
-        var yPlus1 = new SingleExitNode(null, new[] { varY.Write(varY.Value + 1) });
+        var loopBlock = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
+        var yPlus1 = new SingleExitNode(loopBlock, new[] { varY.Write(varY.Value + 1) });
         var cond2 = new ConditionalJumpNode(null, yPlus1, gCall.ResultLocation!);
         var gCallTree = new SingleExitNode(cond2, gCall.CodeGraph);
         var cond1 = new ConditionalJumpNode(gCallTree, yPlus1, fCall.ResultLocation!);
-        _ = new SingleExitNode(cond1, fCall.CodeGraph);
-        // TODO not sure how loops are supposed to work
+        var fCallTree = new SingleExitNode(cond1, fCall.CodeGraph);
+        loopBlock.NextTree = fCallTree;
+
         var xy = new SingleExitNode(cond1, new CodeTreeNode[] { varX.Write(1), varY.Write(0) });
 
         var gRet = new SingleExitNode(null, new[] { varV.Value <= varX.Value });
@@ -793,14 +804,16 @@ public class AstToCfgConversionTest
         var gCall = gContext.GenerateCall(new CodeTreeValueNode[] { varY.Value });
         var hCall = hContext.GenerateCall(new CodeTreeValueNode[] { varY.Value });
 
-        var yPlus1 = new SingleExitNode(null, new[] { varY.Write(varY.Value + 1) });
+        var loopBlock = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
+        var yPlus1 = new SingleExitNode(loopBlock, new[] { varY.Write(varY.Value + 1) });
         var cond3 = new ConditionalJumpNode(null, yPlus1, hCall.ResultLocation!);
         var hCallTree = new SingleExitNode(cond3, gCall.CodeGraph);
         var cond2 = new ConditionalJumpNode(null, hCallTree, gCall.ResultLocation!);
         var gCallTree = new SingleExitNode(cond2, gCall.CodeGraph);
         var cond1 = new ConditionalJumpNode(gCallTree, yPlus1, fCall.ResultLocation!);
-        _ = new SingleExitNode(cond1, fCall.CodeGraph);
-        // TODO not sure how loops are supposed to work
+        var fCallTree = new SingleExitNode(cond1, fCall.CodeGraph);
+        loopBlock.NextTree = fCallTree;
+
         var xy = new SingleExitNode(cond1, new CodeTreeNode[] { varX.Write(10), varY.Write(0) });
 
         var hRet = new SingleExitNode(null, new[] { varX.Value <= varV.Value });
