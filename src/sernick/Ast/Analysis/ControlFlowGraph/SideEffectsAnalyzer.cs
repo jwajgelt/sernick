@@ -83,10 +83,8 @@ public static class SideEffectsAnalyzer
         public bool AffectedBy(IEnumerable<TreeWithEffects> trees) =>
             trees.Any(tree => AffectedBy(tree.WrittenVariables));
 
-        public bool Affects(IEnumerable<VariableDeclaration> variableReads)
-        {
-            return WrittenVariables.Overlaps(variableReads);
-        }
+        public bool Affects(IEnumerable<VariableDeclaration> variableReads) =>
+            WrittenVariables.Overlaps(variableReads);
 
         public bool Affects(IEnumerable<TreeWithEffects> trees) =>
             trees.Any(tree => Affects(tree.ReadVariables));
