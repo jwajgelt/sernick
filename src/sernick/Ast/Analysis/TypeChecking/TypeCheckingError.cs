@@ -77,6 +77,6 @@ public sealed record WrongFunctionArgumentError(Type Required, Type Provided, IL
 {
     public override string ToString()
     {
-        return $"Wrong function argument type \"{Required}\", provided \"{Provided}\" at {Location}";
+        return $"Wrong function argument type: expected \"{Required}\", provided \"{Provided}\" at {Location}";
     }
 }
