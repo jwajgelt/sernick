@@ -126,7 +126,7 @@ public class AstToCfgConversionTest
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
             {main, fCallTree},
-            {f, ifBlock}
+            {f, condEval}
         });
     }
 
@@ -157,11 +157,11 @@ public class AstToCfgConversionTest
         var cond = new BinaryOperationNode(BinaryOperation.Equal, varX.Value, 10);
         var tmpReg = Reg(new Register());
         var ifBlock = new ConditionalJumpNode(null, loopBlock, tmpReg.Value);
-        _ = new SingleExitNode(ifBlock, new[] {
+        var condEval = new SingleExitNode(ifBlock, new[] {
             tmpReg.Write(cond)
         });
 
-        var xPlus1 = new SingleExitNode(ifBlock, new[] { varX.Write(varX.Value + 1) });
+        var xPlus1 = new SingleExitNode(condEval, new[] { varX.Write(varX.Value + 1) });
         loopBlock.NextTree = xPlus1;
 
         var x = new SingleExitNode(xPlus1, new[] { varX.Write(0) });
@@ -588,7 +588,7 @@ public class AstToCfgConversionTest
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
             {main, x1},
-            {f, ifBlock},
+            {f, condEval},
             {g, xPlus1},
             {h, xMinus1}
         });
