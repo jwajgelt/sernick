@@ -39,7 +39,7 @@ public class CfgComparison
             return false;
         }
 
-        if (_visitMap.ContainsKey(x) || _visitMap.ContainsKey(y))
+        if (visitX is not null || visitY is not null)
         {
             return true;
         }
