@@ -32,6 +32,9 @@ public class AstToCfgConversionTest
             Var<IntType>("c", "a".Plus("b"))
         );
 
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] { }, false);
+
         var varA = Reg(new Register());
         var varB = Reg(new Register());
         var varC = Reg(new Register());
@@ -39,8 +42,10 @@ public class AstToCfgConversionTest
         var c = new SingleExitNode(null, new[] { varC.Write(varA.Value + varB.Value) });
         var ab = new SingleExitNode(c, new[] { varA.Write(1), varB.Write(2) });
 
+        var mainRoot = WrapInContext(mainContext, ab, new[] { c }, null);
+
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
-            {main, ab}
+            {main, mainRoot}
         });
     }
 
@@ -66,6 +71,9 @@ public class AstToCfgConversionTest
         var varA = Reg(new Register());
         var varB = Reg(new Register());
 
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] { }, false);
+
         var b4 = new SingleExitNode(null, new[] { varB.Write(4) });
         var a3 = new SingleExitNode(null, new[] { varA.Write(3) });
         var tmpReg = Reg(new Register());
@@ -75,8 +83,10 @@ public class AstToCfgConversionTest
         });
         var ab = new SingleExitNode(condEval, new[] { varA.Write(1), varB.Write(2) });
 
+        var mainRoot = WrapInContext(mainContext, ab, new[] { a3, b4 }, null);
+
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
-            {main, ab}
+            {main, mainRoot}
         });
     }
 
@@ -123,10 +133,13 @@ public class AstToCfgConversionTest
         var condEval = new SingleExitNode(ifBlock, new[] { 
             tmpReg.Write(varN.Value <= 1)
         });
+        
+        var mainRoot = WrapInContext(mainContext, fCallTree, new[] { fCallTree }, null);
+        var fRoot = WrapInContext(fContext, condEval, new[] { ret1, retF }, fCall.ResultLocation);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
-            {main, fCallTree},
-            {f, condEval}
+            {main, mainRoot},
+            {f, fRoot}
         });
     }
 
@@ -152,6 +165,9 @@ public class AstToCfgConversionTest
 
         var varX = Reg(new Register());
 
+        var funFactory = new FunctionFactory();
+        var mainContext = funFactory.CreateFunction(null, new IFunctionParam[] { }, false);
+
         var loopBlock = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
 
         var cond = new BinaryOperationNode(BinaryOperation.Equal, varX.Value, 10);
@@ -165,9 +181,11 @@ public class AstToCfgConversionTest
         loopBlock.NextTree = xPlus1;
 
         var x = new SingleExitNode(xPlus1, new[] { varX.Write(0) });
+        
+        var mainRoot = WrapInContext(mainContext, x, new[] { ifBlock }, null);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
-            {main, x}
+            {main, mainRoot}
         });
     }
 
@@ -207,11 +225,15 @@ public class AstToCfgConversionTest
         var gRet = new SingleExitNode(null, new[] { varY.Value + varY.Value });
         var fRet = new SingleExitNode(null, new[] { gCall1.ResultLocation! + gCall2.ResultLocation! });
         var gCalls = new SingleExitNode(fRet, gCall1.CodeGraph.Concat(gCall2.CodeGraph).ToList());
+        
+        var mainRoot = WrapInContext(mainContext, _empty, new[] { _empty }, null);
+        var fRoot = WrapInContext(fContext, gCalls, new[] { fRet }, null);
+        var gRoot = WrapInContext(gContext, gRet, new[] { gRet }, gCall1.ResultLocation);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
-            {main, _empty},
-            {f, gCalls},
-            {g, gRet}
+            {main, mainRoot},
+            {f, fRoot},
+            {g, gRoot}
         });
     }
 
@@ -321,13 +343,19 @@ public class AstToCfgConversionTest
         var v1 = new SingleExitNode(f2Callv1Tree, new[] { varV1.Write(varP.Value) });
 
         var f1CallTree = new SingleExitNode(null, f1Call.CodeGraph);
+        
+        var mainRoot = WrapInContext(mainContext, f1CallTree, new[] { f1CallTree }, null);
+        var f1Root = WrapInContext(f1Context, v1, new[] { f1Ret }, f1Call.ResultLocation);
+        var f2Root = WrapInContext(f2Context, v2, new[] { f2Ret }, f2Callv1.ResultLocation);
+        var f3Root = WrapInContext(f3Context, v3, new[] { f3Ret }, f3Call.ResultLocation);
+        var f4Root = WrapInContext(f4Context, v4, new[] { f4Ret }, f4Call.ResultLocation);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
-            {main, f1CallTree},
-            {f1, v1},
-            {f2, v2},
-            {f3, v3},
-            {f4, v4}
+            {main, mainRoot},
+            {f1, f1Root},
+            {f2, f2Root},
+            {f3, f3Root},
+            {f4, f4Root}
         });
     }
 
@@ -375,11 +403,15 @@ public class AstToCfgConversionTest
         var fRet = new SingleExitNode(null, new[] { varX.Value + varY.Value + gCall.ResultLocation! });
         var gCallTree = new SingleExitNode(fRet, gCall.CodeGraph);
         var gRet = new SingleExitNode(null, new[] { varZ.Value });
+        
+        var mainRoot = WrapInContext(mainContext, fCallTree, new[] { fCallTree }, null);
+        var fRoot = WrapInContext(fContext, gCallTree, new[] { fRet }, fCall.ResultLocation);
+        var gRoot = WrapInContext(gContext, gRet, new[] { gRet }, gCall.ResultLocation);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
-            {main, fCallTree},
-            {f, gCallTree},
-            {g, gRet}
+            {main, mainRoot},
+            {f, fRoot},
+            {g, gRoot}
         });
     }
 
@@ -429,11 +461,15 @@ public class AstToCfgConversionTest
         var gRet = new SingleExitNode(null, new[] { varXg.Value });
         var xxx = new SingleExitNode(gRet, new[] { varXg.Write(varXg.Value + varXg.Value) });
         var x2 = new SingleExitNode(xxx, new[] { varXg.Write(2) });
+        
+        var mainRoot = WrapInContext(mainContext, _empty, new[] { _empty }, null);
+        var fRoot = WrapInContext(fContext, gCallTree, new[] { fRet }, null);
+        var gRoot = WrapInContext(gContext, gRet, new[] { gRet }, gCall.ResultLocation);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
-            {main, _empty},
-            {f, x1},
-            {g, x2}
+            {main, mainRoot},
+            {f, fRoot},
+            {g, gRoot}
         });
     }
 
@@ -499,13 +535,19 @@ public class AstToCfgConversionTest
         var gCallTree = new SingleExitNode(null, gCall.CodeGraph);
         var hCallTree = new SingleExitNode(null, hCall.CodeGraph);
         var zCallTree = new SingleExitNode(null, zCall.CodeGraph);
+        
+        var mainRoot = WrapInContext(mainContext, fCallTree, new[] { fCallTree }, null);
+        var fRoot = WrapInContext(fContext, hCallTree, new[] { hCallTree }, fCall.ResultLocation);
+        var gRoot = WrapInContext(gContext, fCallTree, new[] { fCallTree }, gCall.ResultLocation);
+        var hRoot = WrapInContext(hContext, zCallTree, new[] { zCallTree }, hCall.ResultLocation);
+        var zRoot = WrapInContext(zContext, gCallTree, new[] { gCallTree }, zCall.ResultLocation);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
-            {main, fCallTree},
-            {f, hCallTree},
-            {g, fCallTree},
-            {h, zCallTree},
-            {z, gCallTree}
+            {main, mainRoot},
+            {f, fRoot},
+            {g, gRoot},
+            {h, hRoot},
+            {z, zRoot}
         });
     }
 
@@ -585,12 +627,17 @@ public class AstToCfgConversionTest
         var xMinus1 = new SingleExitNode(fCallInHTree, new[] { varX.Write(varX.Value - 1) });
         var fCallInGTree = new SingleExitNode(null, fCallInG.CodeGraph);
         var xPlus1 = new SingleExitNode(fCallInGTree, new[] { varX.Write(varX.Value + 1) });
+        
+        var mainRoot = WrapInContext(mainContext, x1, new[] { fCallInMainTree }, null);
+        var fRoot = WrapInContext(fContext, condEval, new[] { gCallTree, hCallTree }, fCallInMain.ResultLocation);
+        var gRoot = WrapInContext(gContext, xPlus1, new[] { fCallInGTree }, gCall.ResultLocation);
+        var hRoot = WrapInContext(hContext, xMinus1, new[] { fCallInHTree }, hCall.ResultLocation);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
-            {main, x1},
-            {f, condEval},
-            {g, xPlus1},
-            {h, xMinus1}
+            {main, mainRoot},
+            {f, fRoot},
+            {g, gRoot},
+            {h, hRoot}
         });
     }
 
@@ -665,11 +712,15 @@ public class AstToCfgConversionTest
         var gRet = new SingleExitNode(null, new[] { varV.Value <= varX.Value });
         var xPlus1InG = new SingleExitNode(gRet, new[] { varX.Write(varX.Value + 1) });
         var fRet = new SingleExitNode(null, new CodeTreeNode[] { varX.Write(varX.Value + 1), varV.Value <= 5 });
+        
+        var mainRoot = WrapInContext(mainContext, xy, new[] { cond1, cond2 }, null);
+        var fRoot = WrapInContext(fContext, fRet, new[] { fRet }, fCall.ResultLocation);
+        var gRoot = WrapInContext(gContext, xPlus1InG, new[] { gRet }, gCall.ResultLocation);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
-            {main, xy},
-            {f, fRet},
-            {g, xPlus1InG}
+            {main, mainRoot},
+            {f, fRoot},
+            {g, gRoot}
         });
     }
 
@@ -744,11 +795,15 @@ public class AstToCfgConversionTest
         var gRet = new SingleExitNode(null, new[] { varV.Value <= varX.Value });
         var xPlus1InG = new SingleExitNode(gRet, new[] { varX.Write(varX.Value + 1) });
         var fRet = new SingleExitNode(null, new CodeTreeNode[] { varX.Write(varX.Value + 1), varV.Value <= 5 });
+        
+        var mainRoot = WrapInContext(mainContext, xy, new[] { cond1, cond2 }, null);
+        var fRoot = WrapInContext(fContext, fRet, new[] { fRet }, fCall.ResultLocation);
+        var gRoot = WrapInContext(gContext, xPlus1InG, new[] { gRet }, gCall.ResultLocation);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
-            {main, xy},
-            {f, fRet},
-            {g, xPlus1InG}
+            {main, mainRoot},
+            {f, fRoot},
+            {g, gRoot}
         });
     }
 
@@ -834,12 +889,18 @@ public class AstToCfgConversionTest
         var hRet = new SingleExitNode(null, new[] { varX.Value <= varV.Value });
         var gRet = new SingleExitNode(null, new[] { varV.Value <= varX.Value });
         var fRet = new SingleExitNode(null, new[] { varV.Value <= 5 });
+        
+        var mainRoot = WrapInContext(mainContext, xy, new[] { cond2, cond3 }, null);
+        var fRoot = WrapInContext(fContext, fRet, new[] { fRet }, fCall.ResultLocation);
+        var gRoot = WrapInContext(gContext, gRet, new[] { gRet }, gCall.ResultLocation);
+        var hRoot = WrapInContext(hContext, hRet, new[] { hRet }, hCall.ResultLocation);
 
-        Verify(main,
-            new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance)
-            {
-                { main, xy }, { f, fRet }, { g, gRet }, { h, hRet }
-            });
+        Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
+            {main, mainRoot},
+            {f, fRoot},
+            {g, gRoot},
+            {h, hRoot}
+        });
     }
 
     [Fact]
@@ -1152,9 +1213,15 @@ public class AstToCfgConversionTest
 
         foreach (var node in epiloguePredecessors)
         {
-            if (node is SingleExitNode singleExitNode)
+            switch (node)
             {
-                singleExitNode.NextTree ??= epilogue[0];
+                case SingleExitNode singleExitNode:
+                    singleExitNode.NextTree ??= epilogue[0];
+                    break;
+                case ConditionalJumpNode conditionalJumpNode:
+                    conditionalJumpNode.TrueCase ??= epilogue[0];
+                    conditionalJumpNode.FalseCase ??= epilogue[0];
+                    break;
             }
         }
 
