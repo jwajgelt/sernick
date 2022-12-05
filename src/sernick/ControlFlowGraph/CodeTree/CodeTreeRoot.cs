@@ -12,10 +12,20 @@ public abstract record CodeTreeRoot : CodeTreeNode;
 /// <param name="ConditionEvaluation">Code tree for evaluating the condition</param>
 public sealed record ConditionalJumpNode
 (
-    CodeTreeRoot? TrueCase,
-    CodeTreeRoot? FalseCase,
     CodeTreeValueNode ConditionEvaluation
-) : CodeTreeRoot;
+) : CodeTreeRoot
+{
+    public ConditionalJumpNode(CodeTreeRoot? trueCase,
+        CodeTreeRoot? falseCase,
+        CodeTreeValueNode conditionEvaluation) : this(conditionEvaluation)
+    {
+        TrueCase = trueCase;
+        FalseCase = falseCase;
+    }
+
+    public CodeTreeRoot? TrueCase { get; set; } = null;
+    public CodeTreeRoot? FalseCase { get; set; } = null;
+}
 
 /// <summary>
 /// The root of a code tree for an operation that has a single exit point,
@@ -26,5 +36,12 @@ public sealed record ConditionalJumpNode
 /// </summary>
 /// <param name="NextTree"> Tree representing the code to be evaluated after this code tree </param>
 /// <param name="Operations"> The operation to be performed in this code tree </param>
-public sealed record SingleExitNode
-    (CodeTreeRoot? NextTree, IReadOnlyList<CodeTreeNode> Operations) : CodeTreeRoot;
+public sealed record SingleExitNode(IReadOnlyList<CodeTreeNode> Operations) : CodeTreeRoot
+{
+    public SingleExitNode(CodeTreeRoot? nextTree, IReadOnlyList<CodeTreeNode> operations) : this(operations)
+    {
+        NextTree = nextTree;
+    }
+
+    public CodeTreeRoot? NextTree { get; set; } = null;
+}
