@@ -117,7 +117,12 @@ public class AstToCfgConversionTest
         var fCallInner2Tree = new SingleExitNode(retF, fCallInner2.CodeGraph);
         var fCallInner1Tree = new SingleExitNode(fCallInner2Tree, fCallInner1.CodeGraph);
         var ret1 = new SingleExitNode(null, new[] { new Constant(new RegisterValue(1)) });
-        var ifBlock = new ConditionalJumpNode(ret1, fCallInner1Tree, varN.Value <= 1);
+
+        var tmpReg = Reg(new Register());
+        var ifBlock = new ConditionalJumpNode(ret1, fCallInner1Tree, tmpReg.Value);
+        var condEval = new SingleExitNode(ifBlock, new[] { 
+            tmpReg.Write(varN.Value <= 1)
+        });
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
             {main, fCallTree},
@@ -148,8 +153,14 @@ public class AstToCfgConversionTest
         var varX = Reg(new Register());
 
         var loopBlock = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
+
         var cond = new BinaryOperationNode(BinaryOperation.Equal, varX.Value, 10);
-        var ifBlock = new ConditionalJumpNode(null, loopBlock, cond);
+        var tmpReg = Reg(new Register());
+        var ifBlock = new ConditionalJumpNode(null, loopBlock, tmpReg.Value);
+        var condEval = new SingleExitNode(ifBlock, new[] { 
+            tmpReg.Write(cond)
+        });
+
         var xPlus1 = new SingleExitNode(ifBlock, new[] { varX.Write(varX.Value + 1) });
         loopBlock.NextTree = xPlus1;
 
@@ -565,7 +576,11 @@ public class AstToCfgConversionTest
         var x1 = new SingleExitNode(fCallInMainTree, new[] { varX.Write(1) });
         var gCallTree = new SingleExitNode(null, gCall.CodeGraph);
         var hCallTree = new SingleExitNode(null, hCall.CodeGraph);
-        var ifBlock = new ConditionalJumpNode(gCallTree, hCallTree, varV.Value);
+        
+        var tmpReg = Reg(new Register());
+        var ifBlock = new ConditionalJumpNode(gCallTree, hCallTree, tmpReg.Value);
+        var condEval = new SingleExitNode(ifBlock, new[] { tmpReg.Write(varV.Value) });
+
         var fCallInHTree = new SingleExitNode(null, fCallInH.CodeGraph);
         var xMinus1 = new SingleExitNode(fCallInHTree, new[] { varX.Write(varX.Value - 1) });
         var fCallInGTree = new SingleExitNode(null, fCallInG.CodeGraph);
