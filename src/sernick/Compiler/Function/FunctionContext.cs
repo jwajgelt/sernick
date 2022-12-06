@@ -152,7 +152,7 @@ public sealed class FunctionContext : IFunctionContext
         }
 
         // Retrieve values of caller-saved registers
-        foreach (var reg in calleeToSave)
+        foreach (var reg in callerToSave)
         {
             var tempReg = callerSavedMap[reg];
             var tempVal = Reg(tempReg).Read();
