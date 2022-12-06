@@ -555,7 +555,8 @@ public class CompilerFrontendTest
             }),
             ("types-and-naming", "nonexistent-type", new IDiagnosticItem[]
             {
-                // nonexistent type, error not detected yet
+                new UnknownTypeError("String",
+                    (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 14)))
             }),
 
             //variable-declaration-initialization

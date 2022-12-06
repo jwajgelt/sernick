@@ -4,6 +4,7 @@ using Ast.Analysis.FunctionContextMap;
 using Ast.Analysis.NameResolution;
 using Ast.Analysis.VariableAccess;
 using Ast.Nodes;
+using Ast.Nodes.Conversion;
 using Common.Dfa;
 using Common.Regex;
 using Diagnostics;
@@ -15,6 +16,7 @@ using Parser;
 using Parser.ParseTree;
 using Tokenizer;
 using Tokenizer.Lexer;
+using Utility;
 
 public static class CompilerFrontend
 {
@@ -33,7 +35,18 @@ public static class CompilerFrontend
         var parser = lazyParser.Value;
         var parseTree = parser.Process(parseLeaves, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        var ast = AstNode.From(parseTree);
+
+        AstNode ast;
+        try
+        {
+            ast = AstNode.From(parseTree);
+        }
+        catch (UnknownTypeException e)
+        {
+            diagnostics.Report(new UnknownTypeError(e.Name, e.LocationRange));
+            throw new CompilationException();
+        }
+
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
         _ = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
@@ -78,4 +91,14 @@ public static class CompilerFrontend
             .Select(token =>
                 new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.LocationRange));
     }
+}
+
+public sealed record UnknownTypeError(string Name, Range<ILocation> LocationRange) : IDiagnosticItem
+{
+    public override string ToString()
+    {
+        return $"Unknown type name \"{Name}\" at ${LocationRange.Start}";
+    }
+
+    public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
 }
