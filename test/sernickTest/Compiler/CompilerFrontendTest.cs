@@ -60,7 +60,8 @@ public class CompilerFrontendTest
             Assert.True(diagnostics.DidErrorOccur);
         }
 
-        Assert.True(expectedErrors.SequenceEqual(diagnostics.DiagnosticItems));
+        //Assert.True(expectedErrors.SequenceEqual(diagnostics.DiagnosticItems));
+        Assert.Equal(expectedErrors, diagnostics.DiagnosticItems);
     }
 
     [Theory(Skip = "Wrong from type checking POV")]
@@ -361,11 +362,11 @@ public class CompilerFrontendTest
             }),
             ("control_flow", "if_else_expression", new IDiagnosticItem[]
             {
-                new TypesMismatchError(new IntType(), new BoolType(), FileUtility.LocationAt(8, 5))
+                new UnequalBranchTypeError(new IntType(), new BoolType(), FileUtility.LocationAt(8, 5))
             }),
             ("control_flow", "if_else_expression_unit", new IDiagnosticItem[]
             {
-                new TypesMismatchError(new IntType(), new UnitType(), FileUtility.LocationAt(10, 1))
+                new UnequalBranchTypeError(new IntType(), new UnitType(), FileUtility.LocationAt(10, 1))
             }),
             ("control_flow", "if_syntax", new IDiagnosticItem[]
             {
@@ -382,7 +383,7 @@ public class CompilerFrontendTest
             // default-arguments
             ("default-arguments", "non-default-call", new IDiagnosticItem[]
             {
-                new TypesMismatchError(new BoolType(), new UnitType(), FileUtility.LocationAt(6, 16))
+                new FunctionArgumentsMismatchError(1, 0, FileUtility.LocationAt(6, 16))
             }),
             ("default-arguments", "non-suffix", new IDiagnosticItem[]
             {
