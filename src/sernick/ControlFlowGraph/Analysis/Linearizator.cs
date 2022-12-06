@@ -5,11 +5,9 @@ using CodeTree;
 
 public class Linearizator
 {
-    private readonly InstructionCovering _instructionCovering;
-
     public Linearizator(InstructionCovering instructionCovering)
     {
-        _instructionCovering = instructionCovering;
+        throw new NotImplementedException();
     }
 
     public IReadOnlyList<IAsmable> Linearize(CodeTreeRoot root)
