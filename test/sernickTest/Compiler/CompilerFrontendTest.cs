@@ -546,10 +546,11 @@ public class CompilerFrontendTest
                     )
                 )
             }),
-            ("types-and-naming", "nonexistent-type", new IDiagnosticItem[]
-            {
-                // nonexistent type, error not detected yet
-            }),
+            // TODO https://github.com/jwajgelt/sernick/pull/148#issuecomment-1339621513
+            //("types-and-naming", "nonexistent-type", new IDiagnosticItem[]
+            //{
+            //    // nonexistent type, error not detected yet
+            //}),
 
             //variable-declaration-initialization
             ("variable-declaration-initialization", "const_bad_type_separator", new IDiagnosticItem[]
