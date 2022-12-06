@@ -151,7 +151,7 @@ public class CompilerFrontendTest
             }),
             ("argument-types", "return-value-conflict", new IDiagnosticItem[]
             {
-                new InferredBadFunctionReturnType(new UnitType(), new BoolType(), FileUtility.LocationAt(4, 5))
+                new InferredBadFunctionReturnType(new UnitType(), new BoolType(), FileUtility.LocationAt(4, 2))
             }),
             
             // code-blocks
