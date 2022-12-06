@@ -365,7 +365,18 @@ public class CompilerFrontendTest
             {
                 new TypeCheckingError(new IntType(), new UnitType(), FileUtility.LocationAt(10, 1))
             }),
-            ("control_flow", "if_syntax", new IDiagnosticItem[]
+            ("control_flow", "if_syntax_body", new IDiagnosticItem[]
+            {
+                new SyntaxError<Symbol>
+                (
+                    new ParseTreeLeaf<Symbol>
+                    (
+                        new Terminal(LexicalGrammarCategory.Keywords, "var"),
+                        (FileUtility.LocationAt(5, 16), FileUtility.LocationAt(5, 19))
+                    )
+                ),
+            }),
+            ("control_flow", "if_syntax_condition", new IDiagnosticItem[]
             {
                 new SyntaxError<Symbol>
                 (
