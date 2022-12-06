@@ -69,7 +69,7 @@ public static class TypeChecking
             if (node.InitValue != null)
             {
                 var rhsType = childrenTypes[node.InitValue];
-                if (declaredType != null && declaredType != rhsType)
+                if (declaredType != null && !Same(declaredType, rhsType))
                 {
                     _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.InitValue.LocationRange.Start));
                 }
@@ -81,7 +81,6 @@ public static class TypeChecking
                 if (declaredType == null)
                 {
                     _diagnostics.Report(new TypeOrInitialValueShouldBePresentError(node.LocationRange.Start));
-
                 }
 
                 _memoizedDeclarationTypes[node] = declaredType ?? new UnitType(); // maybe it will not lead to more errors; maybe it will
@@ -104,7 +103,7 @@ public static class TypeChecking
             if (node.DefaultValue != null)
             {
                 var defaultValueType = childrenTypes[node.DefaultValue];
-                if (defaultValueType != node.Type)
+                if (!Same(defaultValueType, node.Type))
                 {
                     _diagnostics.Report(new TypesMismatchError(node.Type, defaultValueType, node.DefaultValue.LocationRange.Start));
                 }
@@ -117,9 +116,10 @@ public static class TypeChecking
         {
             var declaredReturnType = node.ReturnType;
             var childrenTypes = VisitNodeChildren(node, declaredReturnType);
-            
+
             var bodyReturnType = childrenTypes[node.Body];
-            if (declaredReturnType != bodyReturnType)
+
+            if (!Same(declaredReturnType, bodyReturnType))
             {
                 _diagnostics.Report(new InferredBadFunctionReturnType(declaredReturnType, bodyReturnType, node.Body.Inner.LocationRange.Start));
             }
@@ -140,6 +140,13 @@ public static class TypeChecking
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance);
+
+            // return/break/continue with a semicolon makes the type of Join to be irrelevant
+            if (childrenTypes[node.First] is AnyType && node.Second is EmptyExpression)
+            {
+                result[node] = new AnyType();
+            }
+            else
             {
                 // just return the last expressions' type
                 result[node] = childrenTypes[node.Second];
@@ -168,7 +175,7 @@ public static class TypeChecking
                 // let us do type checking right here
                 var expectedType = declaredArgument.Type;
                 var actualType = childrenTypes[actualArgument];
-                if (expectedType != actualType)
+                if (!Same(actualType, expectedType))
                 {
                     _diagnostics.Report(
                         new WrongFunctionArgumentError(expectedType, actualType, actualArgument.LocationRange.Start)
@@ -186,21 +193,14 @@ public static class TypeChecking
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
-            var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance);
             // Return Value is in a subtree, so its type should be already calculated by now
             var returnValueType = (node.ReturnValue != null) ? childrenTypes[node.ReturnValue] : new UnitType();
-
-            if (returnValueType == expectedReturnTypeOfReturnExpr || expectedReturnTypeOfReturnExpr is AnyType)
+            if (!Same(returnValueType, expectedReturnTypeOfReturnExpr))
             {
-                result.Add(node, returnValueType);
-            }
-            else
-            {
-                result.Add(node, new UnitType());
                 _diagnostics.Report(new ReturnTypeError(expectedReturnTypeOfReturnExpr, returnValueType, node.LocationRange.Start));
             }
 
-            return result;
+            return AddTypeInformation<AnyType>(childrenTypes, node);
         }
 
         public override Dictionary<AstNode, Type> VisitBreakStatement(BreakStatement node, Type expectedReturnTypeOfReturnExpr) =>
@@ -220,7 +220,7 @@ public static class TypeChecking
             if (node.ElseBlock != null)
             {
                 var typeOfFalseBranch = childrenTypes[node.ElseBlock];
-                if (typeOfTrueBranch != typeOfFalseBranch)
+                if (!Same(typeOfTrueBranch, typeOfFalseBranch))
                 {
                     _diagnostics.Report(new UnequalBranchTypeError(typeOfTrueBranch, typeOfFalseBranch, node.LocationRange.Start));
                 }
@@ -257,7 +257,7 @@ public static class TypeChecking
                 return AddTypeInformation<UnitType>(childrenTypes, node);
             }
 
-            if (typeOfLeftOperand.ToString() != typeOfRightOperand.ToString())
+            if (!Same(typeOfLeftOperand, typeOfRightOperand))
             {
                 _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
 
@@ -265,7 +265,7 @@ public static class TypeChecking
                 return AddTypeInformation<UnitType>(childrenTypes, node);
             }
 
-            var commonType = typeOfLeftOperand;
+            var commonType = typeOfLeftOperand is AnyType ? typeOfRightOperand : typeOfLeftOperand;
             var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance);
 
             // let's cover some special cases e.g. adding two bools or shirt-circuiting two ints
@@ -274,7 +274,7 @@ public static class TypeChecking
                 case Infix.Op.ScAnd:
                 case Infix.Op.ScOr:
                     {
-                        if (commonType is not BoolType)
+                        if (commonType is not BoolType or AnyType)
                         {
                             _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                         }
@@ -285,7 +285,7 @@ public static class TypeChecking
                 case Infix.Op.Plus:
                 case Infix.Op.Minus:
                     {
-                        if (commonType is not IntType)
+                        if (commonType is not IntType or AnyType)
                         {
                             _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                         }
@@ -299,7 +299,7 @@ public static class TypeChecking
                 case Infix.Op.LessOrEquals:
                 case Infix.Op.Equals:
                     {
-                        if (commonType is not IntType)
+                        if (commonType is not IntType or AnyType)
                         {
                             _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
                         }
@@ -324,7 +324,7 @@ public static class TypeChecking
             var variableDeclarationNode = _nameResolution.AssignedVariableDeclarations[node];
             var typeOfLeftSide = _memoizedDeclarationTypes[variableDeclarationNode];
             var typeOfRightSide = childrenTypes[node.Right];
-            if (typeOfLeftSide.ToString() != typeOfRightSide.ToString())
+            if (!Same(typeOfLeftSide, typeOfRightSide))
             {
                 _diagnostics.Report(new TypesMismatchError(typeOfLeftSide, typeOfRightSide, node.Right.LocationRange.Start));
             }
@@ -366,7 +366,7 @@ public static class TypeChecking
 
         private static TypeInformation CreateTypeInformation<TType>(AstNode node) where TType : Type, new() =>
             CreateTypeInformation(node, new TType());
-        
+
         private static TypeInformation CreateTypeInformation(AstNode node, Type type) =>
             new(ReferenceEqualityComparer.Instance) { { node, type } };
 
@@ -376,5 +376,20 @@ public static class TypeChecking
 
         private static TypeInformation AddTypeInformation(TypeInformation types, AstNode node, Type type) =>
             new(types, ReferenceEqualityComparer.Instance) { { node, type } };
+
+        private static bool Same(Type t1, Type t2)
+        {
+            if (t1 is AnyType)
+            {
+                return true;
+            }
+
+            if (t2 is AnyType)
+            {
+                return true;
+            }
+
+            return t1 == t2;
+        }
     }
 }
