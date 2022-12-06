@@ -44,12 +44,6 @@ public static class TypeChecking
         /// This object contains types for variable and function parameter types
         /// </summary>
         private readonly Dictionary<Declaration, Type> _memoizedDeclarationTypes;
-        /// <summary>
-        /// Our Type-checking Algorighm is a top-down postorder
-        /// But sometimes, nodes need to know information about some other nodes higher up the tree
-        /// For example, when we are visiting a variable value
-        /// But variable declaration would be somewhere up the tree (and the type for it also)
-        /// </summary>
 
         public TypeCheckingAstVisitor(NameResolutionResult nameResolution, IDiagnostics diagnostics)
         {
@@ -132,7 +126,6 @@ public static class TypeChecking
             var bodyReturnType = childrenTypes[node.Body];
             if (declaredReturnType != bodyReturnType)
             {
-                // TODO issue #201
                 // _diagnostics.Report(new InferredBadFunctionReturnType(declaredReturnType, bodyReturnType, node.LocationRange.Start));
                 // Commenting out, since it seems like there's a problem with a test
                 // examples/default-arguments/correct/all-args.ser

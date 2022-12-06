@@ -59,7 +59,6 @@ public class CompilerFrontendTest
             Assert.True(diagnostics.DidErrorOccur);
         }
 
-        //Assert.True(expectedErrors.SequenceEqual(diagnostics.DiagnosticItems));
         Assert.Equal(expectedErrors, diagnostics.DiagnosticItems);
     }
 
