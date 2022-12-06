@@ -3,9 +3,9 @@ namespace sernick.CodeGeneration.RegisterAllocation;
 using ControlFlowGraph.CodeTree;
 using Graph = IReadOnlyDictionary<ControlFlowGraph.CodeTree.Register, IReadOnlyCollection<ControlFlowGraph.CodeTree.Register>>;
 
-public class RegisterAllocator
+public sealed class RegisterAllocator
 {
-    public RegisterAllocator(IReadOnlyList<HardwareRegister> hardwareRegisters)
+    public RegisterAllocator(IEnumerable<HardwareRegister> hardwareRegisters)
     {
         throw new NotImplementedException();
     }

@@ -1,7 +1,7 @@
 namespace sernick.Compiler.Function;
 
+using CodeGeneration;
 using ControlFlowGraph.CodeTree;
-using Instruction;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 
 public sealed class FunctionContext : IFunctionContext

@@ -6,11 +6,14 @@ public interface IAsmable { }
 
 public interface IInstruction : IAsmable
 {
-    IEnumerable<Register> RegistersDefined();
-    IEnumerable<Register> RegistersUsed();
+    IEnumerable<Register> RegistersDefined { get; }
+    IEnumerable<Register> RegistersUsed { get; }
     bool PossibleFollow { get; }
     Label? PossibleJump { get; }
     bool IsCopy { get; }
 }
 
-public record Label(string Value) : IAsmable;
+public sealed record Label(string Value) : IAsmable
+{
+    public static implicit operator Label(string name) => new(name);
+}

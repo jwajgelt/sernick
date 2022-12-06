@@ -1,7 +1,7 @@
 namespace sernick.Compiler.Function;
 
+using CodeGeneration;
 using ControlFlowGraph.CodeTree;
-using Instruction;
 
 public interface IFunctionCaller
 {

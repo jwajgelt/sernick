@@ -25,16 +25,8 @@ public sealed record MovInstruction(IInstructionOperand Target, IInstructionOper
         public MovInstruction FromImm(RegisterValue value) => new(Target, value.AsOperand());
     }
 
-    public IEnumerable<Register> RegistersDefined()
-    {
-        throw new NotImplementedException();
-    }
-
-    public IEnumerable<Register> RegistersUsed()
-    {
-        throw new NotImplementedException();
-    }
-
+    public IEnumerable<Register> RegistersDefined => throw new NotImplementedException();
+    public IEnumerable<Register> RegistersUsed => throw new NotImplementedException();
     public bool PossibleFollow => throw new NotImplementedException();
     public CodeGeneration.Label? PossibleJump => throw new NotImplementedException();
     public bool IsCopy => throw new NotImplementedException();
