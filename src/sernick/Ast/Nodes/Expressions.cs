@@ -61,7 +61,7 @@ public abstract record FlowControlStatement(Range<ILocation> LocationRange) : Ex
 public abstract record SimpleValue(Range<ILocation> LocationRange) : Expression(LocationRange);
 
 /// <summary>
-/// Class representing expression which don't do anything, like: '{}'
+/// Class representing expression which does not do anything, like: '{}'
 /// </summary>
 public sealed record EmptyExpression(Range<ILocation> LocationRange) : Expression(LocationRange)
 {

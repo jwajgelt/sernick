@@ -38,9 +38,9 @@ public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Dec
         );
     }
 
-    public static NameResolutionResult OfVariableUse(VariableValue node, Declaration declaration)
+    public static NameResolutionResult OfVariableUse(VariableValue node, Declaration variableDeclaration)
     {
-        return new NameResolutionResult(new Dictionary<VariableValue, Declaration> { { node, declaration } },
+        return new NameResolutionResult(new Dictionary<VariableValue, Declaration> { { node, variableDeclaration } },
             new Dictionary<Assignment, VariableDeclaration>(),
             new Dictionary<FunctionCall, FunctionDefinition>());
     }

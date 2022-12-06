@@ -14,6 +14,7 @@ using Grammar.Syntax;
 using Input;
 using Parser;
 using Parser.ParseTree;
+using sernick.Ast.Analysis.TypeChecking;
 using Tokenizer;
 using Tokenizer.Lexer;
 using Utility;
@@ -48,6 +49,8 @@ public static class CompilerFrontend
         }
 
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
+        ThrowIfErrorsOccurred(diagnostics);
+        _ = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
         _ = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
         _ = VariableAccessMapPreprocess.Process(ast, nameResolution);
