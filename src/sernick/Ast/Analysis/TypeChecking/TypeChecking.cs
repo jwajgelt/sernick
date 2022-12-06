@@ -171,7 +171,7 @@ public static class TypeChecking
             var declaredArguments = functionDeclarationNode.Parameters;
             var parametersWithDefaultValuesCount = functionDeclarationNode.Parameters.Count(param => param.DefaultValue != null);
             var actualArguments = functionCallNode.Arguments;
-            if(actualArguments.Count < declaredArguments.Count - parametersWithDefaultValuesCount)
+            if (actualArguments.Count < declaredArguments.Count - parametersWithDefaultValuesCount)
             {
                 _diagnostics.Report(new WrongNumberOfFunctionArgumentsError(declaredArguments.Count - parametersWithDefaultValuesCount, actualArguments.Count, functionCallNode.LocationRange.Start));
             }
@@ -246,7 +246,7 @@ public static class TypeChecking
                 if (typeOfTrueBranch != typeOfFalseBranch)
                 {
                     _diagnostics.Report(new UnequalBranchTypeError(typeOfTrueBranch, typeOfFalseBranch, node.LocationRange.Start));
-                }  
+                }
             }
 
             var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, typeOfTrueBranch } };
