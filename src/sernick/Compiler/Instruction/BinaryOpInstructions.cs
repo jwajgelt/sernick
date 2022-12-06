@@ -48,5 +48,19 @@ public sealed record BinaryOpInstruction(BinaryOp Op, IInstructionOperand Left, 
         public BinaryOpInstruction FromMem(Register location) => new(Op, _target!, location.AsMemOperand());
         public BinaryOpInstruction FromImm(RegisterValue value) => new(Op, _target!, value.AsOperand());
     }
+
+    public IEnumerable<Register> RegistersDefined()
+    {
+        throw new NotImplementedException();
+    }
+
+    public IEnumerable<Register> RegistersUsed()
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool PossibleFollow => throw new NotImplementedException();
+    public CodeGeneration.Label? PossibleJump => throw new NotImplementedException();
+    public bool IsCopy => throw new NotImplementedException();
 }
 
