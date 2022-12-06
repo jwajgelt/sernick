@@ -132,6 +132,7 @@ public static class TypeChecking
             var bodyReturnType = childrenTypes[node.Body];
             if (declaredReturnType != bodyReturnType)
             {
+                // TODO issue #201
                 // _diagnostics.Report(new InferredBadFunctionReturnType(declaredReturnType, bodyReturnType, node.LocationRange.Start));
                 // Commenting out, since it seems like there's a problem with a test
                 // examples/default-arguments/correct/all-args.ser
