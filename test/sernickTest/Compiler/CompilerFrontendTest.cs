@@ -2,7 +2,6 @@ namespace sernickTest.Compiler;
 
 using Helpers;
 using Moq;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
 using sernick.Ast;
 using sernick.Ast.Analysis;
 using sernick.Ast.Analysis.TypeChecking;
