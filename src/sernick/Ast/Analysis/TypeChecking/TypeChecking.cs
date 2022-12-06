@@ -79,7 +79,7 @@ public static class TypeChecking
                 var rhsType = childrenTypes[node.InitValue];
                 if (declaredType != null && declaredType != rhsType)
                 {
-                    _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.LocationRange.Start));
+                    _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.InitValue.LocationRange.Start));
                 }
 
                 _memoizedDeclarationTypes[node] = declaredType ?? rhsType;
@@ -117,7 +117,7 @@ public static class TypeChecking
                 var defaultValueType = childrenTypes[node.DefaultValue];
                 if (defaultValueType != node.Type)
                 {
-                    _diagnostics.Report(new TypesMismatchError(node.Type, defaultValueType, node.LocationRange.Start));
+                    _diagnostics.Report(new TypesMismatchError(node.Type, defaultValueType, node.DefaultValue.LocationRange.Start));
                 }
             }
 
@@ -173,7 +173,7 @@ public static class TypeChecking
             var actualArguments = functionCallNode.Arguments;
             if(actualArguments.Count < declaredArguments.Count - parametersWithDefaultValuesCount)
             {
-                _diagnostics.Report(new FunctionArgumentsMismatchError(declaredArguments.Count - parametersWithDefaultValuesCount, actualArguments.Count, functionCallNode.LocationRange.Start));
+                _diagnostics.Report(new WrongNumberOfFunctionArgumentsError(declaredArguments.Count - parametersWithDefaultValuesCount, actualArguments.Count, functionCallNode.LocationRange.Start));
             }
 
             foreach (var (declaredArgument, actualArgument) in declaredArguments.Zip(actualArguments))
@@ -246,7 +246,7 @@ public static class TypeChecking
                 if (typeOfTrueBranch != typeOfFalseBranch)
                 {
                     _diagnostics.Report(new UnequalBranchTypeError(typeOfTrueBranch, typeOfFalseBranch, node.LocationRange.Start));
-                }
+                }  
             }
 
             var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance) { { node, typeOfTrueBranch } };
@@ -360,7 +360,7 @@ public static class TypeChecking
             var typeOfRightSide = childrenTypes[node.Right];
             if (typeOfLeftSide.ToString() != typeOfRightSide.ToString())
             {
-                _diagnostics.Report(new TypesMismatchError(typeOfLeftSide, typeOfRightSide, node.LocationRange.Start));
+                _diagnostics.Report(new TypesMismatchError(typeOfLeftSide, typeOfRightSide, node.Right.LocationRange.Start));
             }
 
             // Regardless of the error, let's return a Unit type for assignment and get more type checking information

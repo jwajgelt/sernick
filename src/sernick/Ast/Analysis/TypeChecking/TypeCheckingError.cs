@@ -25,7 +25,7 @@ public sealed record InferredBadFunctionReturnType(Type Declared, Type Inferred,
     }
 }
 
-public sealed record FunctionArgumentsMismatchError(int Expected, int Actual, ILocation Location) : TypeCheckingErrorBase
+public sealed record WrongNumberOfFunctionArgumentsError(int Expected, int Actual, ILocation Location) : TypeCheckingErrorBase
 {
     public override string ToString()
     {
