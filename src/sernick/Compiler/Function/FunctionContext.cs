@@ -1,5 +1,6 @@
 namespace sernick.Compiler.Function;
 
+using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 using Instruction;
 using static Compiler.PlatformConstants;
@@ -152,7 +153,7 @@ public sealed class FunctionContext : IFunctionContext
         }
 
         // Retrieve values of caller-saved registers
-        foreach (var reg in calleeToSave)
+        foreach (var reg in callerToSave)
         {
             var tempReg = callerSavedMap[reg];
             var tempVal = Reg(tempReg).Read();
