@@ -3,7 +3,7 @@ namespace sernick.Compiler.Instruction;
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 
-public sealed record CallInstruction(Label Location) : IInstruction
+public abstract record TransferControlInstruction(Label Location) : IInstruction
 {
     public IEnumerable<Register> RegistersDefined => Enumerable.Empty<Register>();
 
@@ -15,3 +15,7 @@ public sealed record CallInstruction(Label Location) : IInstruction
 
     public bool IsCopy => false;
 }
+
+public sealed record CallInstruction(Label Location) : TransferControlInstruction(Location);
+
+public sealed record JmpInstruction(Label Location) : TransferControlInstruction(Location);

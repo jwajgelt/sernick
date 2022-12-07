@@ -145,6 +145,30 @@ public static class SernickInstructionSet
                             output);
                     });
             }
+
+            /* ROOT */
+
+            // jmp $label
+            {
+                yield return new SingleExitNodePatternRule(next => new List<IInstruction>
+                    {
+                        new JmpInstruction(next)
+                    }
+                );
+            }
+
+            // cmp *, 0
+            // jg $trueLabel
+            // jng $falseLabel
+            {
+                yield return new ConditionalJumpNodePatternRule((input, trueCase, falseCase) =>
+                    new List<IInstruction>
+                    {
+                        Bin.Cmp.ToReg(input).FromImm(new RegisterValue(0)),
+                        new JmpCcInstruction(ConditionCode.G, trueCase),
+                        new JmpCcInstruction(ConditionCode.Ng, falseCase)
+                    });
+            }
         }
     }
 }

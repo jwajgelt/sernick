@@ -40,3 +40,16 @@ public sealed record SetCcInstruction(ConditionCode Code, Register Register) : C
 
     public override bool IsCopy => false;
 }
+
+public sealed record JmpCcInstruction(ConditionCode Code, Label Location) : ConditionalInstruction(Code)
+{
+    public override IEnumerable<Register> RegistersDefined => Enumerable.Empty<Register>();
+
+    public override IEnumerable<Register> RegistersUsed => Enumerable.Empty<Register>();
+
+    public override bool PossibleFollow => true;
+
+    public override Label PossibleJump => Location;
+
+    public override bool IsCopy => false;
+}
