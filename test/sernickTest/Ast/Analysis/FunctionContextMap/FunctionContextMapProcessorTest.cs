@@ -25,7 +25,7 @@ public class FunctionContextMapProcessorTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var fContext = new Mock<IFunctionContext>().Object;
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, new[] { declA }, false))
+            .Setup(f => f.CreateFunction(mainContext, new[] { declA }, false, Ident("")))
             .Returns(fContext);
 
         var nameResolution = NameResolution().WithCalls((call, declaration));
@@ -52,7 +52,7 @@ public class FunctionContextMapProcessorTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false))
+            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false, Ident("")))
             .Returns(functionContext);
 
         var nameResolution = NameResolution();
@@ -92,10 +92,10 @@ public class FunctionContextMapProcessorTest
         var fContext = new FakeFunctionContext();
         var gContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false))
+            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false, Ident("")))
             .Returns(fContext);
         contextFactory
-            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), false, Ident("")))
             .Returns(gContext);
 
         var nameResolution = NameResolution()
@@ -140,7 +140,7 @@ public class FunctionContextMapProcessorTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false))
+            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false, Ident("")))
             .Returns(functionContext);
 
         var nameResolution = NameResolution()
@@ -187,13 +187,13 @@ public class FunctionContextMapProcessorTest
         var gContext = new FakeFunctionContext();
         var hContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(mainContext, Array.Empty<IFunctionParam>(), false, Ident("")))
             .Returns(fContext);
         contextFactory
-            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), false, Ident("")))
             .Returns(gContext);
         contextFactory
-            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), true))
+            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), true, Ident("")))
             .Returns(hContext);
 
         var nameResolution = NameResolution()
@@ -231,13 +231,13 @@ public class FunctionContextMapProcessorTest
         var gContext = new FakeFunctionContext();
         var hContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(mainContext, Array.Empty<IFunctionParam>(), false, Ident("")))
             .Returns(fContext);
         contextFactory
-            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), false, Ident("")))
             .Returns(gContext);
         contextFactory
-            .Setup(f => f.CreateFunction(gContext, Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(gContext, Array.Empty<IFunctionParam>(), false, Ident("")))
             .Returns(hContext);
 
         var nameResolution = NameResolution()
@@ -253,7 +253,7 @@ public class FunctionContextMapProcessorTest
         var contextFactory = new Mock<IFunctionFactory>();
         mainContext = new Mock<IFunctionContext>().Object;
         contextFactory
-            .Setup(f => f.CreateFunction(null, Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(null, Array.Empty<IFunctionParam>(), false, Ident("")))
             .Returns(mainContext);
         return contextFactory;
     }

@@ -13,7 +13,7 @@ using Grammar.Syntax;
 using Input;
 using Parser;
 using Parser.ParseTree;
-using sernick.Ast.Analysis.TypeChecking;
+using Ast.Analysis.TypeChecking;
 using Tokenizer;
 using Tokenizer.Lexer;
 
@@ -39,7 +39,7 @@ public static class CompilerFrontend
         ThrowIfErrorsOccurred(diagnostics);
         _ = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        _ = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
+        _ = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory(LabelGenerator.Generate));
         _ = VariableAccessMapPreprocess.Process(ast, nameResolution);
         // commented since it throws NotImplemented, and will need merging anyway
         // var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,

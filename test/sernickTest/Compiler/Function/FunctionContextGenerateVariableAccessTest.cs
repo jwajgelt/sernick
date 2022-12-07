@@ -11,7 +11,7 @@ public class FunctionContextGenerateVariableAccessTest
     [Fact]
     public void Generates_RegisterRead_for_exclusive_local_Variable()
     {
-        var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false);
+        var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         var variable = Var("x");
         context.AddLocal(variable, false);
 
@@ -23,7 +23,7 @@ public class FunctionContextGenerateVariableAccessTest
     [Fact]
     public void Generates_RegisterWrite_for_exclusive_local_Variable()
     {
-        var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false);
+        var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         var variable = Var("x");
         context.AddLocal(variable, false);
         var value = new Constant(new RegisterValue(1));
@@ -37,7 +37,7 @@ public class FunctionContextGenerateVariableAccessTest
     [Fact]
     public void Generates_MemoryRead_for_shared_Variable()
     {
-        var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false);
+        var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         var variable = Var("x");
         context.AddLocal(variable, true);
 
@@ -58,7 +58,7 @@ public class FunctionContextGenerateVariableAccessTest
         .Parameter<IntType>("e", out var e)
         .Parameter<IntType>("f", out var f)
         .Parameter<IntType>("arg", out var arg);
-        var context = new FunctionContext(null, new[] { a, b, c, d, e, f, arg }, false);
+        var context = new FunctionContext(null, new[] { a, b, c, d, e, f, arg }, false, "");
 
         var readCodeTree = context.GenerateVariableRead(arg);
 
@@ -69,7 +69,7 @@ public class FunctionContextGenerateVariableAccessTest
     [Fact]
     public void Generates_MemoryWrite_for_shared_Variable()
     {
-        var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false);
+        var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         var variable = Var("x");
         context.AddLocal(variable, true);
         var value = new Constant(new RegisterValue(1));
@@ -88,8 +88,8 @@ public class FunctionContextGenerateVariableAccessTest
         var undefinedVar = Var("undefined");
         var value = new Constant(new RegisterValue(1));
 
-        var parentContext = new FunctionContext(null, Array.Empty<IFunctionParam>(), false);
-        var context = new FunctionContext(parentContext, Array.Empty<IFunctionParam>(), false);
+        var parentContext = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
+        var context = new FunctionContext(parentContext, Array.Empty<IFunctionParam>(), false, "");
         parentContext.AddLocal(varX, true);
         context.AddLocal(varX, true);
         context.AddLocal(varY, false);
@@ -104,9 +104,9 @@ public class FunctionContextGenerateVariableAccessTest
         var variable = Var("x");
         var displayAddress = new GlobalAddress("display");
 
-        var parentContext = new FunctionContext(null, Array.Empty<IFunctionParam>(), false);
+        var parentContext = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         parentContext.AddLocal(variable, true);
-        var context = new FunctionContext(parentContext, Array.Empty<IFunctionParam>(), false);
+        var context = new FunctionContext(parentContext, Array.Empty<IFunctionParam>(), false, "");
 
         var readCodeTree = context.GenerateVariableRead(variable);
 
@@ -122,9 +122,9 @@ public class FunctionContextGenerateVariableAccessTest
         var value = new Constant(new RegisterValue(1));
         var displayAddress = new GlobalAddress("display");
 
-        var parentContext = new FunctionContext(null, Array.Empty<IFunctionParam>(), false);
+        var parentContext = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         parentContext.AddLocal(variable, true);
-        var context = new FunctionContext(parentContext, Array.Empty<IFunctionParam>(), false);
+        var context = new FunctionContext(parentContext, Array.Empty<IFunctionParam>(), false, "");
 
         var readCodeTree = context.GenerateVariableWrite(variable, value);
 

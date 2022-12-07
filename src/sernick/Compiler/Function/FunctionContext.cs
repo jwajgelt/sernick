@@ -50,13 +50,15 @@ public sealed class FunctionContext : IFunctionContext
     public FunctionContext(
         IFunctionContext? parent,
         IReadOnlyList<IFunctionParam> parameters,
-        bool returnsValue
+        bool returnsValue,
+        Label label
         )
     {
         _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
         _parentContext = parent;
         _functionParameters = parameters;
         _valueIsReturned = returnsValue;
+        Label = label;
         _localsOffset = 0;
         _displayEntry = new GlobalAddress("display") + PointerSize * Depth;
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
@@ -73,7 +75,7 @@ public sealed class FunctionContext : IFunctionContext
         }
     }
 
-    public Label Label => "TODO";
+    public Label Label { get; }
 
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
     {
