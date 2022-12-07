@@ -4,6 +4,7 @@ using Compiler.Function.Helpers;
 using Moq;
 using sernick.CodeGeneration.InstructionSelection;
 using sernick.ControlFlowGraph.CodeTree;
+using sernick.Utility;
 using Utility;
 using static sernick.CodeGeneration.InstructionSelection.CodeTreePatternPredicates;
 using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
@@ -113,4 +114,31 @@ public class CodeTreePatternMatcherTest
             new CodeTreeValueNode[] { Reg(register).Read(), 5 }
         )
     };
+
+    [Fact]
+    public void TestMatchSingleExitPattern()
+    {
+        var rule = new SingleExitNodePatternRule(new Mock<SingleExitNodePatternRule.GenerateInstructionsDelegate>().Object);
+
+        var codeTree = new SingleExitNode(
+            nextTree: new SingleExitNode(null, new List<CodeTreeNode>()),
+            operations: new List<CodeTreeNode> { Reg(register).Read() });
+
+        Assert.True(rule.TryMatchSingleExitNode(codeTree, out var leaves, out _));
+        Assert.Equal(Reg(register).Read().Enumerate(), leaves);
+    }
+
+    [Fact]
+    public void TestMatchConditionalJumpPattern()
+    {
+        var rule = new ConditionalJumpNodePatternRule(new Mock<ConditionalJumpNodePatternRule.GenerateInstructionsDelegate>().Object);
+
+        var codeTree = new ConditionalJumpNode(
+            TrueCase: new SingleExitNode(null, new List<CodeTreeNode>()),
+            FalseCase: new SingleExitNode(null, new List<CodeTreeNode>()),
+            ConditionEvaluation: Reg(register).Read());
+
+        Assert.True(rule.TryMatchConditionalJumpNode(codeTree, out var leaves, out _));
+        Assert.Equal(Reg(register).Read().Enumerate(), leaves);
+    }
 }
