@@ -2,9 +2,11 @@ namespace sernickTest.ControlFlowGraph;
 
 using Diagnostics;
 using sernick.Ast;
+using sernick.Ast.Analysis.CallGraph;
 using sernick.Ast.Analysis.ControlFlowGraph;
 using sernick.Ast.Analysis.FunctionContextMap;
 using sernick.Ast.Analysis.NameResolution;
+using sernick.Ast.Analysis.TypeChecking;
 using sernick.Ast.Analysis.VariableAccess;
 using sernick.Ast.Nodes;
 using sernick.Compiler.Function;
@@ -1193,9 +1195,11 @@ public class AstToCfgConversionTest
         var diagnostics = new FakeDiagnostics();
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
+        var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
-            root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, SideEffectsAnalyzer.PullOutSideEffects));
+            root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, SideEffectsAnalyzer.PullOutSideEffects));
 
         foreach (var (fun, codeTree) in expected)
         {

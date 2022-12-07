@@ -44,4 +44,9 @@ public sealed record SingleExitNode(IReadOnlyList<CodeTreeNode> Operations) : Co
     }
 
     public CodeTreeRoot? NextTree { get; set; } = null;
+
+    public override string ToString()
+    {
+        return string.Join(',', Operations) + '\n' + NextTree?.ToString();
+    }
 }

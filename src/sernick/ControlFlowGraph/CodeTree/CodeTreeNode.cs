@@ -5,7 +5,10 @@ using Compiler.Function;
 /// <summary>
 /// Struct for values which can fit in a register
 /// </summary>
-public record struct RegisterValue(long Value);
+public record struct RegisterValue(long Value)
+{
+    public override string ToString() => $"{Value}";
+}
 
 /// <summary>
 /// Base class nodes appear in CodeTree, which corresponds to a single node in our control-flow graph
@@ -30,21 +33,30 @@ public enum BinaryOperation
 }
 
 public sealed record BinaryOperationNode
-    (BinaryOperation Operation, CodeTreeValueNode Left, CodeTreeValueNode Right) : CodeTreeValueNode;
+    (BinaryOperation Operation, CodeTreeValueNode Left, CodeTreeValueNode Right) : CodeTreeValueNode
+{
+    public override string ToString() => $"{Left} {Operation} {Right}";
+}
 
 public enum UnaryOperation
 {
     Not, Negate
 }
 
-public sealed record UnaryOperationNode(UnaryOperation Operation, CodeTreeValueNode Operand) : CodeTreeValueNode;
+public sealed record UnaryOperationNode(UnaryOperation Operation, CodeTreeValueNode Operand) : CodeTreeValueNode
+{
+    public override string ToString() => $"{Operation} {Operand}";
+}
 
 /// <summary>
 /// Use new Register() if you want to say "I want to save the value, preferably to a register, but
 /// in the worst-case we could save it to memory". Then you'll get *some* register or memory location.
 /// Use static variables of HardwareRegister class if you want to get the exact register (one of callee-saved)
 /// </summary>
-public class Register { }
+public class Register
+{
+    public override string ToString() => $"Reg{this.GetHashCode()%100}";
+}
 
 #pragma warning disable IDE0052
 /// <summary>
@@ -76,14 +88,35 @@ public class HardwareRegister : Register
     public static readonly HardwareRegister R15 = new();
 }
 
-public sealed record RegisterRead(Register Register) : CodeTreeValueNode;
-public sealed record RegisterWrite(Register Register, CodeTreeValueNode Value) : CodeTreeNode;
+public sealed record RegisterRead(Register Register) : CodeTreeValueNode
+{
+    public override string ToString() => $"{Register}";
+}
+public sealed record RegisterWrite(Register Register, CodeTreeValueNode Value) : CodeTreeNode
+{
+    public override string ToString() => $"{Register} = {Value}";
+}
 
-public sealed record GlobalAddress(string Label) : CodeTreeValueNode;
+public sealed record GlobalAddress(string Label) : CodeTreeValueNode
+{
+    public override string ToString() => $"{Label}";
+}
 
-public sealed record MemoryRead(CodeTreeValueNode MemoryLocation) : CodeTreeValueNode;
-public sealed record MemoryWrite(CodeTreeValueNode MemoryLocation, CodeTreeValueNode Value) : CodeTreeNode;
+public sealed record MemoryRead(CodeTreeValueNode MemoryLocation) : CodeTreeValueNode
+{
+    public override string ToString() => $"Mem({MemoryLocation})";
+}
+public sealed record MemoryWrite(CodeTreeValueNode MemoryLocation, CodeTreeValueNode Value) : CodeTreeNode
+{
+    public override string ToString() => $"Mem({MemoryLocation}) = {Value}";
+}
 
-public sealed record Constant(RegisterValue Value) : CodeTreeValueNode;
+public sealed record Constant(RegisterValue Value) : CodeTreeValueNode
+{
+    public override string ToString() => $"{Value}";
+}
 
-public sealed record FunctionCall(IFunctionCaller FunctionCaller) : CodeTreeNode;
+public sealed record FunctionCall(IFunctionCaller FunctionCaller) : CodeTreeNode
+{
+    public override string ToString() => $"{FunctionCaller.Label}";
+}
