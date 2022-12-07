@@ -2,6 +2,7 @@ namespace sernick.Compiler.Instruction;
 
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
+using Utility;
 
 /// <summary>
 /// Create mov instructions using the builder.
@@ -25,9 +26,16 @@ public sealed record MovInstruction(IInstructionOperand Target, IInstructionOper
         public MovInstruction FromImm(RegisterValue value) => new(Target, value.AsOperand());
     }
 
-    public IEnumerable<Register> RegistersDefined => throw new NotImplementedException();
-    public IEnumerable<Register> RegistersUsed => throw new NotImplementedException();
-    public bool PossibleFollow => throw new NotImplementedException();
-    public CodeGeneration.Label? PossibleJump => throw new NotImplementedException();
-    public bool IsCopy => throw new NotImplementedException();
+    public IEnumerable<Register> RegistersDefined =>
+        Target.Enumerate().OfType<RegInstructionOperand>().Select(operand => operand.Register);
+
+    public IEnumerable<Register> RegistersUsed =>
+        Target.Enumerate().OfType<MemInstructionOperand>().Append(Source)
+            .SelectMany(operand => operand.RegistersUsed);
+
+    public bool PossibleFollow => true;
+
+    public Label? PossibleJump => null;
+
+    public bool IsCopy => Target is RegInstructionOperand && Source is RegInstructionOperand;
 }
