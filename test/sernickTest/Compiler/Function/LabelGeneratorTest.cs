@@ -1,4 +1,4 @@
-﻿namespace sernickTest.Compiler.Function;
+namespace sernickTest.Compiler.Function;
 
 using Moq;
 using sernick.Compiler.Function;
@@ -10,10 +10,10 @@ public class LabelGeneratorTest
     public void Generate_Case1()
     {
         var result = LabelGenerator.Generate(null, Ident("Shouldn't matter"));
-        
+
         Assert.Equal("Main", result.Value);
     }
-    
+
     [Fact]
     public void Generate_Case2()
     {
@@ -21,7 +21,7 @@ public class LabelGeneratorTest
         fMock.SetupGet(f => f.Label).Returns("Outer");
 
         var result = LabelGenerator.Generate(fMock.Object, Ident("Inner"));
-        
+
         Assert.Equal("Outer_Inner", result.Value);
     }
 }

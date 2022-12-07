@@ -2,6 +2,7 @@ namespace sernick.Compiler;
 
 using Ast.Analysis.FunctionContextMap;
 using Ast.Analysis.NameResolution;
+using Ast.Analysis.TypeChecking;
 using Ast.Analysis.VariableAccess;
 using Ast.Nodes;
 using Common.Dfa;
@@ -13,7 +14,6 @@ using Grammar.Syntax;
 using Input;
 using Parser;
 using Parser.ParseTree;
-using Ast.Analysis.TypeChecking;
 using Tokenizer;
 using Tokenizer.Lexer;
 

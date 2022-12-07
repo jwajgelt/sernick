@@ -4,6 +4,7 @@ using Compiler.Function.Helpers;
 using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis.FunctionContextMap;
+using sernick.Ast.Nodes;
 using sernick.Compiler.Function;
 using static Helpers.AstNodesExtensions;
 using static Helpers.NameResolutionResultBuilder;
@@ -25,7 +26,7 @@ public class FunctionContextMapProcessorTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var fContext = new Mock<IFunctionContext>().Object;
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, new[] { declA }, false, Ident("")))
+            .Setup(f => f.CreateFunction(mainContext, new[] { declA }, false, It.IsAny<Identifier>()))
             .Returns(fContext);
 
         var nameResolution = NameResolution().WithCalls((call, declaration));
@@ -52,7 +53,7 @@ public class FunctionContextMapProcessorTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false, Ident("")))
+            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false, It.IsAny<Identifier>()))
             .Returns(functionContext);
 
         var nameResolution = NameResolution();
@@ -92,10 +93,10 @@ public class FunctionContextMapProcessorTest
         var fContext = new FakeFunctionContext();
         var gContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false, Ident("")))
+            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false, It.IsAny<Identifier>()))
             .Returns(fContext);
         contextFactory
-            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), false, Ident("")))
+            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), false, It.IsAny<Identifier>()))
             .Returns(gContext);
 
         var nameResolution = NameResolution()
@@ -140,7 +141,7 @@ public class FunctionContextMapProcessorTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false, Ident("")))
+            .Setup(f => f.CreateFunction(mainContext, new[] { paramA }, false, It.IsAny<Identifier>()))
             .Returns(functionContext);
 
         var nameResolution = NameResolution()
@@ -187,13 +188,13 @@ public class FunctionContextMapProcessorTest
         var gContext = new FakeFunctionContext();
         var hContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Array.Empty<IFunctionParam>(), false, Ident("")))
+            .Setup(f => f.CreateFunction(mainContext, Array.Empty<IFunctionParam>(), false, It.IsAny<Identifier>()))
             .Returns(fContext);
         contextFactory
-            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), false, Ident("")))
+            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), false, It.IsAny<Identifier>()))
             .Returns(gContext);
         contextFactory
-            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), true, Ident("")))
+            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), true, It.IsAny<Identifier>()))
             .Returns(hContext);
 
         var nameResolution = NameResolution()
@@ -231,13 +232,13 @@ public class FunctionContextMapProcessorTest
         var gContext = new FakeFunctionContext();
         var hContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Array.Empty<IFunctionParam>(), false, Ident("")))
+            .Setup(f => f.CreateFunction(mainContext, Array.Empty<IFunctionParam>(), false, It.IsAny<Identifier>()))
             .Returns(fContext);
         contextFactory
-            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), false, Ident("")))
+            .Setup(f => f.CreateFunction(fContext, Array.Empty<IFunctionParam>(), false, It.IsAny<Identifier>()))
             .Returns(gContext);
         contextFactory
-            .Setup(f => f.CreateFunction(gContext, Array.Empty<IFunctionParam>(), false, Ident("")))
+            .Setup(f => f.CreateFunction(gContext, Array.Empty<IFunctionParam>(), false, It.IsAny<Identifier>()))
             .Returns(hContext);
 
         var nameResolution = NameResolution()
@@ -253,7 +254,7 @@ public class FunctionContextMapProcessorTest
         var contextFactory = new Mock<IFunctionFactory>();
         mainContext = new Mock<IFunctionContext>().Object;
         contextFactory
-            .Setup(f => f.CreateFunction(null, Array.Empty<IFunctionParam>(), false, Ident("")))
+            .Setup(f => f.CreateFunction(null, Array.Empty<IFunctionParam>(), false, It.IsAny<Identifier>()))
             .Returns(mainContext);
         return contextFactory;
     }
