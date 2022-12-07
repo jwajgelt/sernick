@@ -7,7 +7,13 @@ using Nodes;
 using Utility;
 using TypeInformation = Dictionary<Nodes.AstNode, Type>;
 
-public sealed record TypeCheckingResult(TypeInformation ExpressionsTypes) { }
+public sealed record TypeCheckingResult(TypeInformation ExpressionsTypes) 
+{
+    public Type this[AstNode key]
+    {
+        get => ExpressionsTypes[key];
+    }
+}
 
 public static class TypeChecking
 {
