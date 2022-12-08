@@ -63,7 +63,7 @@ public class CompilerFrontendTest
         Assert.Equal(expectedErrors, diagnostics.DiagnosticItems);
     }
 
-    [Theory(Skip = "Wrong from type checking POV")]
+    [Theory]
     [InlineData("a")]
     [InlineData("5")]
     [InlineData("{x}")]

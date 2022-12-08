@@ -1,12 +1,12 @@
-fun defaultSuffix(argOne: Int, argTwo: Int = 1, argThree: Int = 1) : Int {
+fun defaultSuffix(argOne: Int, argTwo: Int = 1, argThree: Int = 2) : Int {
 	(argOne - argTwo) + argThree
 }
 
 // This should return 2
 defaultSuffix(2, 2, 2);
 
-// This should return -1
+// This should return 0
 defaultSuffix(1, 3);
 
-// This should return 1
+// This should return 2
 defaultSuffix(1);
