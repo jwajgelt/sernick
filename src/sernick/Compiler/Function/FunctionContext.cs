@@ -2,7 +2,6 @@ namespace sernick.Compiler.Function;
 
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
-using Instruction;
 using static Compiler.PlatformConstants;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 

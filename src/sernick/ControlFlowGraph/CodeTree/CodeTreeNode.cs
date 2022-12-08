@@ -55,7 +55,7 @@ public sealed record UnaryOperationNode(UnaryOperation Operation, CodeTreeValueN
 /// </summary>
 public class Register
 {
-    public override string ToString() => $"Reg{this.GetHashCode()%100}";
+    public override string ToString() => $"Reg{GetHashCode() % 100}";
 }
 
 #pragma warning disable IDE0052
