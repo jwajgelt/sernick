@@ -1,5 +1,7 @@
 namespace sernick.Compiler;
 
+using Ast.Analysis.CallGraph;
+using Ast.Analysis.ControlFlowGraph;
 using Ast.Analysis.FunctionContextMap;
 using Ast.Analysis.NameResolution;
 using Ast.Analysis.TypeChecking;
@@ -15,9 +17,6 @@ using Grammar.Syntax;
 using Input;
 using Parser;
 using Parser.ParseTree;
-using sernick.Ast.Analysis.CallGraph;
-using sernick.Ast.Analysis.ControlFlowGraph;
-using sernick.Ast.Analysis.TypeChecking;
 using Tokenizer;
 using Tokenizer.Lexer;
 using Utility;
