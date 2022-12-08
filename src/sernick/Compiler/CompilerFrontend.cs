@@ -44,9 +44,6 @@ public static class CompilerFrontend
         var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
-        // commented since it throws NotImplemented, and will need merging anyway
-        // var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
-        // root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, SideEffectsAnalyzer.PullOutSideEffects));
 
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
             root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, SideEffectsAnalyzer.PullOutSideEffects));
