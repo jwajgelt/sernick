@@ -12,7 +12,6 @@ using Xunit.Sdk;
 /// The member must return something compatible with IEnumerable&lt;ITuple&gt; with the test data.
 /// Caution: the property is completely enumerated by .ToList() before any test is run. Hence it should return independent object sets.
 /// </summary>
-[CLSCompliant(false)]
 [DataDiscoverer("Xunit.Sdk.MemberDataDiscoverer", "xunit.core")]
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public sealed class MemberTupleDataAttribute : MemberDataAttributeBase

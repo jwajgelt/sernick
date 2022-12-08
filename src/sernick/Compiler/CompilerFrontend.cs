@@ -5,6 +5,7 @@ using Ast.Analysis.NameResolution;
 using Ast.Analysis.TypeChecking;
 using Ast.Analysis.VariableAccess;
 using Ast.Nodes;
+using Ast.Nodes.Conversion;
 using Common.Dfa;
 using Common.Regex;
 using Diagnostics;
@@ -14,8 +15,12 @@ using Grammar.Syntax;
 using Input;
 using Parser;
 using Parser.ParseTree;
+using sernick.Ast.Analysis.CallGraph;
+using sernick.Ast.Analysis.ControlFlowGraph;
+using sernick.Ast.Analysis.TypeChecking;
 using Tokenizer;
 using Tokenizer.Lexer;
+using Utility;
 
 public static class CompilerFrontend
 {
@@ -34,16 +39,28 @@ public static class CompilerFrontend
         var parser = lazyParser.Value;
         var parseTree = parser.Process(parseLeaves, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        var ast = AstNode.From(parseTree);
+
+        AstNode ast;
+        try
+        {
+            ast = AstNode.From(parseTree);
+        }
+        catch (UnknownTypeException e)
+        {
+            diagnostics.Report(new UnknownTypeError(e.Name, e.LocationRange));
+            throw new CompilationException();
+        }
+
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        _ = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
+        var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        _ = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory(LabelGenerator.Generate));
-        _ = VariableAccessMapPreprocess.Process(ast, nameResolution);
-        // commented since it throws NotImplemented, and will need merging anyway
-        // var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
-        // root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, SideEffectsAnalyzer.PullOutSideEffects));
+        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory(LabelGenerator.Generate));
+        var callGraph = CallGraphBuilder.Process(ast, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+
+        var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
+            root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, SideEffectsAnalyzer.PullOutSideEffects));
     }
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
@@ -81,4 +98,14 @@ public static class CompilerFrontend
             .Select(token =>
                 new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.LocationRange));
     }
+}
+
+public sealed record UnknownTypeError(string Name, Range<ILocation> LocationRange) : IDiagnosticItem
+{
+    public override string ToString()
+    {
+        return $"Unknown type name \"{Name}\" at ${LocationRange.Start}";
+    }
+
+    public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
 }

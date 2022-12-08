@@ -26,7 +26,7 @@ public static class StatementsConversion
 
     /// <summary>
     /// Joins list of expressions.
-    /// If the last expressions is closed then adds a special EmptyExpression at the end.
+    /// If it ends with a semicolon, then adds a special EmptyExpression at the end.
     /// </summary>
     /// <param name="nodes"></param>
     /// <param name="endLocation">
@@ -37,13 +37,13 @@ public static class StatementsConversion
     public static Expression ToExpressionJoin(this IEnumerable<IParseTree<Symbol>> nodes, ILocation endLocation)
     {
         var nodesList = nodes.ToList();
-        var isClosed = nodesList.LastOrDefault()?.IsSemicolonOrClosed() ?? false;
+        var isSemicolon = nodesList.LastOrDefault()?.IsSemicolon() ?? false;
 
         var expressions = nodesList.SkipSemicolons().SelectExpressions().ToList();
 
-        if (isClosed || !expressions.Any())
+        if (isSemicolon || !expressions.Any())
         {
-            // If list of statements is closed, insert a unit expression at the end.
+            // If list of statements is empty or ends with a semicolon, insert a unit expression at the end.
             // The joined list will have a Unit type
             expressions.Add(new EmptyExpression((endLocation, endLocation)));
         }
