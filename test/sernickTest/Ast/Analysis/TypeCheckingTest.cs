@@ -355,6 +355,80 @@ public class TypeCheckingTest
             Assert.IsType<UnitType>(result[tree]);
             diagnostics.Verify(d => d.Report(It.IsAny<ReturnTypeError>()), Times.AtLeastOnce);
         }
+
+        [Fact]
+        public void FunctionExplicitReturnAndSemicolon()
+        {
+            /*
+             * fun returnsInt(): Int {
+             *   { 1 }
+             *   return 0;
+             * }
+             */
+            var tree = Fun<IntType>("returnsInt")
+                .Body(
+                    Block(Literal(1)),
+                    Return(0), Close
+                ).Get(out _);
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingErrorBase>()), Times.Never);
+        }
+
+        [Fact]
+        public void FunctionExplicitReturnOnSomeControlFlowPath()
+        {
+            /*
+             * fun returnsInt(): Int {
+             *   if (true) {
+             *     0
+             *   } else {
+             *     return 1;
+             *   }
+             * }
+             */
+            var tree = Fun<IntType>("returnsInt")
+                .Body(
+                    If(true)
+                        .Then(Literal(0))
+                        .Else(Return(1), Close)
+                ).Get(out _);
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingErrorBase>()), Times.Never);
+        }
+
+        [Fact]
+        public void FunctionExplicitReturnInBlock()
+        {
+            /*
+             * fun returnsInt(): Int {
+             *   { return 1; }
+             * }
+             */
+            var tree = Fun<IntType>("returnsInt")
+                .Body(
+                    Block(Return(1), Close)
+                ).Get(out _);
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingErrorBase>()), Times.Never);
+        }
     }
 }
 
