@@ -1,8 +1,8 @@
 namespace sernickTest.Compiler.Function.Helpers;
 
 using Castle.Core;
+using sernick.CodeGeneration;
 using sernick.Compiler.Function;
-using sernick.Compiler.Instruction;
 using sernick.ControlFlowGraph.CodeTree;
 
 public sealed class FakeFunctionContext : IFunctionContext
