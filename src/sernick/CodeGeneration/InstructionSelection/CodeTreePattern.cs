@@ -3,6 +3,7 @@ namespace sernick.CodeGeneration.InstructionSelection;
 using System.Diagnostics.CodeAnalysis;
 using Compiler.Function;
 using ControlFlowGraph.CodeTree;
+using Utility;
 
 public static class CodeTreePatternPredicates
 {
@@ -13,7 +14,28 @@ public static class CodeTreePatternPredicates
     public static Predicate<T> IsAnyOf<T>(params T[] expected) => expected.Contains;
 }
 
-public abstract record CodeTreePattern
+public abstract record CodeTreePatternBase;
+
+public sealed record SingleExitNodePattern : CodeTreePatternBase
+{
+    // Linter forces this to be static, because it doesn't use instance data xd
+    public static bool TryMatch(SingleExitNode node, out IEnumerable<CodeTreeNode> leaves)
+    {
+        leaves = node.Operations;
+        return true;
+    }
+}
+
+public sealed record ConditionalJumpNodePattern : CodeTreePatternBase
+{
+    public static bool TryMatch(ConditionalJumpNode node, out IEnumerable<CodeTreeNode> leaves)
+    {
+        leaves = node.ConditionEvaluation.Enumerate();
+        return true;
+    }
+}
+
+public abstract record CodeTreePattern : CodeTreePatternBase
 {
     /// <summary>
     /// Tries to match itself onto <see cref="root"/>. If successful,

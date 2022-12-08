@@ -17,7 +17,7 @@ public static class SernickInstructionSet
         {
             // mov $reg, *
             {
-                yield return new CodeTreePatternRule(
+                yield return new CodeTreeNodePatternRule(
                     Pat.RegisterWrite(Any<Register>(), out var reg, Pat.WildcardNode),
                     (inputs, values) => (
                         instructions: new List<IInstruction>
@@ -29,7 +29,7 @@ public static class SernickInstructionSet
 
             // mov $reg, [*]
             {
-                yield return new CodeTreePatternRule(
+                yield return new CodeTreeNodePatternRule(
                     Pat.RegisterWrite(Any<Register>(), out var reg, Pat.MemoryRead(Pat.WildcardNode)),
                     (inputs, values) => (
                         instructions: new List<IInstruction>
@@ -41,7 +41,7 @@ public static class SernickInstructionSet
 
             // mov [*], *
             {
-                yield return new CodeTreePatternRule(
+                yield return new CodeTreeNodePatternRule(
                     Pat.MemoryWrite(Pat.WildcardNode, Pat.WildcardNode),
                     (inputs, _) => (
                         instructions: new List<IInstruction>
@@ -53,7 +53,7 @@ public static class SernickInstructionSet
 
             // mov $reg, $const
             {
-                yield return new CodeTreePatternRule(
+                yield return new CodeTreeNodePatternRule(
                     Pat.RegisterWrite(Any<Register>(), out var reg,
                         Pat.Constant(Any<RegisterValue>(), out var imm)),
                     (_, values) => (
@@ -66,7 +66,7 @@ public static class SernickInstructionSet
 
             // mov [*], $const
             {
-                yield return new CodeTreePatternRule(
+                yield return new CodeTreeNodePatternRule(
                     Pat.MemoryWrite(Pat.WildcardNode, Pat.Constant(Any<RegisterValue>(), out var imm)),
                     (inputs, values) => (
                         instructions: new List<IInstruction>
@@ -78,7 +78,7 @@ public static class SernickInstructionSet
 
             // call $label
             {
-                yield return new CodeTreePatternRule(
+                yield return new CodeTreeNodePatternRule(
                     Pat.FunctionCall(out var call),
                     (_, values) => (
                         instructions: new List<IInstruction>
@@ -90,7 +90,7 @@ public static class SernickInstructionSet
 
             // <op> *, *
             {
-                yield return new CodeTreePatternRule(
+                yield return new CodeTreeNodePatternRule(
                     Pat.BinaryOperationNode(
                         IsAnyOf(
                             BinaryOperation.Add, BinaryOperation.Sub,
@@ -116,7 +116,7 @@ public static class SernickInstructionSet
             // cmp *, *
             // set<cc> $out
             {
-                yield return new CodeTreePatternRule(
+                yield return new CodeTreeNodePatternRule(
                     Pat.BinaryOperationNode(
                         IsAnyOf(
                             BinaryOperation.Equal, BinaryOperation.NotEqual,
@@ -143,6 +143,30 @@ public static class SernickInstructionSet
                                 }
                             },
                             output);
+                    });
+            }
+
+            /* ROOT */
+
+            // jmp $label
+            {
+                yield return new SingleExitNodePatternRule(next => new List<IInstruction>
+                    {
+                        new JmpInstruction(next)
+                    }
+                );
+            }
+
+            // cmp *, 0
+            // jg $trueLabel
+            // jng $falseLabel
+            {
+                yield return new ConditionalJumpNodePatternRule((input, trueCase, falseCase) =>
+                    new List<IInstruction>
+                    {
+                        Bin.Cmp.ToReg(input).FromImm(new RegisterValue(0)),
+                        new JmpCcInstruction(ConditionCode.G, trueCase),
+                        new JmpCcInstruction(ConditionCode.Ng, falseCase)
                     });
             }
         }
