@@ -53,6 +53,7 @@ public static class FunctionContextMapProcessor
         {
             var functionContext = _contextFactory.CreateFunction(
                 parent: astContext.EnclosingFunction is not null ? ContextMap[astContext.EnclosingFunction] : null,
+                name: node.Name,
                 parameters: node.Parameters.ToList(),
                 returnsValue: !node.ReturnType.Equals(new UnitType()));
 

@@ -45,13 +45,16 @@ public sealed class FunctionContext : IFunctionContext
     private readonly CodeTreeValueNode _displayEntry;
     private readonly Register _oldDisplayValReg;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
+
+    public Label Label { get; }
     public int Depth { get; }
     public bool ValueIsReturned { get; }
 
     public FunctionContext(
         IFunctionContext? parent,
         IReadOnlyList<IFunctionParam> parameters,
-        bool returnsValue
+        bool returnsValue,
+        Label label
         )
     {
         _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
@@ -62,6 +65,7 @@ public sealed class FunctionContext : IFunctionContext
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _oldDisplayValReg = new Register();
 
+        Label = label;
         Depth = (parent?.Depth + 1) ?? 0;
         ValueIsReturned = returnsValue;
 
@@ -73,8 +77,6 @@ public sealed class FunctionContext : IFunctionContext
             argNum += 1;
         }
     }
-
-    public Label Label => "TODO";
 
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
     {
