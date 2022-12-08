@@ -1,10 +1,12 @@
 namespace sernick.Ast.Analysis.ControlFlowGraph;
 
+using CallGraph;
 using Compiler.Function;
 using FunctionContextMap;
 using NameResolution;
 using Nodes;
 using sernick.Ast.Analysis.TypeChecking;
+using sernick.Ast.Analysis.VariableAccess;
 using sernick.ControlFlowGraph.CodeTree;
 using FunctionCall = Nodes.FunctionCall;
 
@@ -18,8 +20,10 @@ public static class ControlFlowAnalyzer
         FunctionDefinition functionDefinition,
         NameResolutionResult nameResolution,
         FunctionContextMap contextMap,
+        CallGraph callGraph,
+        VariableAccessMap variableAccessMap,
         TypeCheckingResult typeCheckingResult,
-        Func<AstNode, NameResolutionResult, IFunctionContext, FunctionContextMap, IReadOnlyList<SingleExitNode>>
+        Func<AstNode, NameResolutionResult, IFunctionContext, FunctionContextMap, CallGraph, VariableAccessMap, IReadOnlyList<SingleExitNode>>
             pullOutSideEffects
     )
     {
@@ -35,7 +39,7 @@ public static class ControlFlowAnalyzer
                 nodesWithControlFlow,
                 (root, next, resultVariable) =>
                 {
-                    var nodes = pullOutSideEffects(root, nameResolution, currentFunctionContext, contextMap);
+                    var nodes = pullOutSideEffects(root, nameResolution, currentFunctionContext, contextMap, callGraph, variableAccessMap);
                     if (nodes.Count == 0)
                     {
                         return next;

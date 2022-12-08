@@ -13,6 +13,8 @@ using Grammar.Syntax;
 using Input;
 using Parser;
 using Parser.ParseTree;
+using sernick.Ast.Analysis.CallGraph;
+using sernick.Ast.Analysis.ControlFlowGraph;
 using sernick.Ast.Analysis.TypeChecking;
 using Tokenizer;
 using Tokenizer.Lexer;
@@ -37,13 +39,14 @@ public static class CompilerFrontend
         var ast = AstNode.From(parseTree);
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        _ = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
+        var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        _ = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
-        _ = VariableAccessMapPreprocess.Process(ast, nameResolution);
-        // commented since it throws NotImplemented, and will need merging anyway
-        // var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
-        // root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, SideEffectsAnalyzer.PullOutSideEffects));
+        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory());
+        var callGraph = CallGraphBuilder.Process(ast, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+
+        var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
+            root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, SideEffectsAnalyzer.PullOutSideEffects));
     }
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>

@@ -2,6 +2,7 @@ namespace sernick.Compiler.Function;
 
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
+using static Compiler.PlatformConstants;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 
 public sealed class FunctionContext : IFunctionContext
@@ -35,7 +36,6 @@ public sealed class FunctionContext : IFunctionContext
         HardwareRegister.R9,
     };
 
-    private const int PointerSize = 8;
     private readonly IFunctionContext? _parentContext;
     private readonly IReadOnlyList<IFunctionParam> _functionParameters;
     private readonly bool _valueIsReturned;
@@ -58,17 +58,17 @@ public sealed class FunctionContext : IFunctionContext
         _functionParameters = parameters;
         _valueIsReturned = returnsValue;
         _localsOffset = 0;
-        _displayEntry = new GlobalAddress("display") + PointerSize * Depth;
+        _displayEntry = new GlobalAddress("display") + POINTER_SIZE * Depth;
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _oldDisplayValReg = new Register();
 
         Depth = (parent?.Depth + 1) ?? 0;
 
-        var fistArgOffset = PointerSize * (1 + _functionParameters.Count - 6);
+        var fistArgOffset = POINTER_SIZE * (1 + _functionParameters.Count - 6);
         var argNum = 0;
         for (var i = 6; i < _functionParameters.Count; i++)
         {
-            _localVariableLocation.Add(_functionParameters[i], new MemoryLocation(-(fistArgOffset - PointerSize * argNum)));
+            _localVariableLocation.Add(_functionParameters[i], new MemoryLocation(-(fistArgOffset - POINTER_SIZE * argNum)));
             argNum += 1;
         }
     }
@@ -79,9 +79,9 @@ public sealed class FunctionContext : IFunctionContext
     {
         if (usedElsewhere)
         {
-            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset + PointerSize)))
+            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset + POINTER_SIZE)))
             {
-                _localsOffset += PointerSize;
+                _localsOffset += POINTER_SIZE;
             }
         }
         else
@@ -107,7 +107,7 @@ public sealed class FunctionContext : IFunctionContext
         Register rax = HardwareRegister.RAX;
 
         var rspRead = Reg(rsp).Read();
-        var pushRsp = Reg(rsp).Write(rspRead - PointerSize);
+        var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
 
         // Add default arguments if necessary
         var allArgs = new List<CodeTreeValueNode>(arguments);
@@ -139,7 +139,7 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(new FunctionCall(this));
 
         // Remove arguments from stack (we already returned from call)
-        operations.Add(Reg(rsp).Write(rspRead + PointerSize * arguments.Count));
+        operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE * arguments.Count));
 
         // If value is returned, then put it from RAX to virtual register
         CodeTreeValueNode? returnValueLocation = null;
@@ -170,7 +170,7 @@ public sealed class FunctionContext : IFunctionContext
         var rbp = HardwareRegister.RBP;
 
         var rspRead = Reg(rsp).Read();
-        var pushRsp = Reg(rsp).Write(rspRead - PointerSize);
+        var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
         var rbpRead = Reg(rbp).Read();
 
         // Allocate slot for old RBP value
@@ -224,7 +224,7 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(Reg(rbp).Write(Mem(rspRead).Read()));
 
         // Free RBP slot
-        operations.Add(Reg(rsp).Write(rspRead + PointerSize));
+        operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE));
 
         // Restore old display value
         operations.Add(Mem(_displayEntry).Write(Reg(_oldDisplayValReg).Read()));

@@ -7,7 +7,10 @@ using Nodes;
 using Utility;
 using TypeInformation = Dictionary<Nodes.AstNode, Type>;
 
-public sealed record TypeCheckingResult(TypeInformation ExpressionsTypes) { }
+public sealed record TypeCheckingResult(TypeInformation ExpressionsTypes)
+{
+    public Type this[AstNode key] => ExpressionsTypes[key];
+}
 
 public static class TypeChecking
 {
@@ -22,10 +25,10 @@ public static class TypeChecking
         public override string ToString() => "Any";
     }
 
-    public static Dictionary<AstNode, Type> CheckTypes(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
+    public static TypeCheckingResult CheckTypes(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
     {
         var visitor = new TypeCheckingAstVisitor(nameResolution, diagnostics);
-        return visitor.VisitAstTree(ast, new AnyType());
+        return new TypeCheckingResult(visitor.VisitAstTree(ast, new AnyType()));
     }
 
     private class TypeCheckingAstVisitor : AstVisitor<Dictionary<AstNode, Type>, Type>
