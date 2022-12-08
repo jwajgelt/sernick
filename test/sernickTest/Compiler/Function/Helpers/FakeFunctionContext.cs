@@ -14,6 +14,7 @@ public sealed class FakeFunctionContext : IFunctionContext
     public Label Label => "fake";
 
     public int Depth => 0;
+    public bool ValueIsReturned => false;
 
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere) => _locals[variable] = usedElsewhere;
     public IReadOnlyList<SingleExitNode> GeneratePrologue()

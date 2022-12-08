@@ -55,6 +55,10 @@ public static class ControlFlowAnalyzer
                         nodes[^1].NextTree = new SingleExitNode(next,
                             new[] { currentFunctionContext.GenerateVariableWrite(resultVariable, valueNode) });
                     }
+                    else
+                    {
+                        nodes[^1].NextTree = next;
+                    }
 
                     return nodes[0];
                 },
@@ -62,11 +66,16 @@ public static class ControlFlowAnalyzer
                 typeCheckingResult
             );
 
-        var resultVariable = variableFactory.NewVariable();
+        IFunctionVariable? resultVariable = null;
+        CodeTreeValueNode? valToReturn = null;
+        if (currentFunctionContext.ValueIsReturned)
+        {
+            resultVariable = variableFactory.NewVariable();
+            valToReturn = currentFunctionContext.GenerateVariableRead(resultVariable);
+        }
 
         var prologue = currentFunctionContext.GeneratePrologue();
-        var epilogue =
-            currentFunctionContext.GenerateEpilogue(currentFunctionContext.GenerateVariableRead(resultVariable));
+        var epilogue = currentFunctionContext.GenerateEpilogue(valToReturn);
 
         prologue[^1].NextTree = functionDefinition.Body.Accept(visitor,
             new ControlFlowVisitorParam(

@@ -66,26 +66,32 @@ public class Register
 /// </summary>
 public class HardwareRegister : Register
 {
-    private HardwareRegister() { }
-    public static readonly HardwareRegister RAX = new();
-    public static readonly HardwareRegister RBX = new();
-    public static readonly HardwareRegister RCX = new();
-    public static readonly HardwareRegister RDX = new();
+    private string label;
+    private HardwareRegister(string label)
+    {
+        this.label = label;
+    }
+    public override string ToString() => label;
+    
+    public static readonly HardwareRegister RAX = new("RAX");
+    public static readonly HardwareRegister RBX = new("RBX");
+    public static readonly HardwareRegister RCX = new("RCX");
+    public static readonly HardwareRegister RDX = new("RDX");
 
-    public static readonly HardwareRegister RSP = new();
-    public static readonly HardwareRegister RBP = new();
+    public static readonly HardwareRegister RSP = new("RSP");
+    public static readonly HardwareRegister RBP = new("RBP");
 
-    public static readonly HardwareRegister RDI = new();
-    public static readonly HardwareRegister RSI = new();
+    public static readonly HardwareRegister RDI = new("RDI");
+    public static readonly HardwareRegister RSI = new("RSI");
 
-    public static readonly HardwareRegister R8 = new();
-    public static readonly HardwareRegister R9 = new();
-    public static readonly HardwareRegister R10 = new();
-    public static readonly HardwareRegister R11 = new();
-    public static readonly HardwareRegister R12 = new();
-    public static readonly HardwareRegister R13 = new();
-    public static readonly HardwareRegister R14 = new();
-    public static readonly HardwareRegister R15 = new();
+    public static readonly HardwareRegister R8 = new("R8");
+    public static readonly HardwareRegister R9 = new("R9");
+    public static readonly HardwareRegister R10 = new("R10");
+    public static readonly HardwareRegister R11 = new("R11");
+    public static readonly HardwareRegister R12 = new("R12");
+    public static readonly HardwareRegister R13 = new("R13");
+    public static readonly HardwareRegister R14 = new("R14");
+    public static readonly HardwareRegister R15 = new("R15");
 }
 
 public sealed record RegisterRead(Register Register) : CodeTreeValueNode

@@ -20,7 +20,7 @@ public class AstToCfgConversionTest
     private readonly CodeTreeValueNode _displayAddress = new GlobalAddress("display");
     private readonly CodeTreeRoot _empty = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
 
-    [Fact(Skip = "To be debugged")]
+    [Fact]
     public void SimpleAddition()
     {
         // var a = 1;
