@@ -152,8 +152,7 @@ public class CompilerFrontendTest
             }),
             ("argument-types", "return-value-conflict", new IDiagnosticItem[]
             {
-                //new WrongFunctionArgumentError(new UnitType(), new BoolType(), FileUtility.LocationAt(4, 5))
-                // TODO uncomment to fix -- issue #201
+                new InferredBadFunctionReturnType(new UnitType(), new BoolType(), FileUtility.LocationAt(4, 2))
             }),
             
             // code-blocks
@@ -368,6 +367,17 @@ public class CompilerFrontendTest
             {
                 new UnequalBranchTypeError(new IntType(), new UnitType(), FileUtility.LocationAt(6, 11))
             }),
+            ("control_flow", "if_syntax_body", new IDiagnosticItem[]
+            {
+                new SyntaxError<Symbol>
+                (
+                    new ParseTreeLeaf<Symbol>
+                    (
+                        new Terminal(LexicalGrammarCategory.Keywords, "var"),
+                        (FileUtility.LocationAt(5, 16), FileUtility.LocationAt(5, 19))
+                    )
+                ),
+            }),
             ("control_flow", "if_syntax_condition", new IDiagnosticItem[]
             {
                 new SyntaxError<Symbol>
@@ -545,11 +555,11 @@ public class CompilerFrontendTest
                     )
                 )
             }),
-            // TODO https://github.com/jwajgelt/sernick/pull/148#issuecomment-1339621513
-            //("types-and-naming", "nonexistent-type", new IDiagnosticItem[]
-            //{
-            //    // nonexistent type, error not detected yet
-            //}),
+            ("types-and-naming", "nonexistent-type", new IDiagnosticItem[]
+            {
+                new UnknownTypeError("String",
+                    (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 14)))
+            }),
 
             //variable-declaration-initialization
             ("variable-declaration-initialization", "const_bad_type_separator", new IDiagnosticItem[]

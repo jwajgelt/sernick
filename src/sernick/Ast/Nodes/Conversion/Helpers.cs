@@ -34,25 +34,16 @@ public static class Helpers
         => nodes.Where((_, index) => index % 2 == 0);
 
     /// <summary>
-    /// Return true if node is a Semicolon terminal or one of closed Expressions:
-    ///  CodeBlock, CodeGroup, IfExpression, LoopExpression, FunctionDeclaration
+    /// Return true if node is a Semicolon terminal
     /// </summary>
-    public static bool IsSemicolonOrClosed(this IParseTree<Symbol> node) => node.Symbol switch
+    public static bool IsSemicolon(this IParseTree<Symbol> node) => node.Symbol switch
     {
         Terminal { Category: LexicalGrammarCategory.Semicolon } => true,
-        NonTerminal
-        {
-            Inner: NonTerminalSymbol.CodeBlock
-            or NonTerminalSymbol.CodeGroup
-            or NonTerminalSymbol.IfExpression
-            or NonTerminalSymbol.LoopExpression
-            or NonTerminalSymbol.FunctionDeclaration
-        } => true,
         _ => false
     };
 
     public static IEnumerable<IParseTree<Symbol>> SkipSemicolons(this IEnumerable<IParseTree<Symbol>> nodes)
-        => nodes.Where(node => node.Symbol is not Terminal { Category: LexicalGrammarCategory.Semicolon });
+        => nodes.Where(node => !node.IsSemicolon());
 
     public static IEnumerable<Expression> SelectExpressions(this IEnumerable<IParseTree<Symbol>> trees)
         => trees.Select(ExpressionConversion.ToExpression);

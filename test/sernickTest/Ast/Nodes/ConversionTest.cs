@@ -113,6 +113,48 @@ public class ConversionTest
     }
 
     [Fact]
+    public void Bracketed_BlockExpression_Conversion()
+    {
+        // { if (x) {} else {} }
+        var input = Node(NonTerminalSymbol.CodeBlock,
+            Leaf(LexicalGrammarCategory.BracesAndParentheses, "{"),
+            Node(NonTerminalSymbol.ExpressionSeq,
+                Node(NonTerminalSymbol.IfExpression,
+                    Leaf(LexicalGrammarCategory.Keywords, "if"),
+                    Node(NonTerminalSymbol.IfCondition,
+                        Leaf(LexicalGrammarCategory.BracesAndParentheses, "("),
+                        Node(NonTerminalSymbol.OpenExpression,
+                            Node(NonTerminalSymbol.LogicalOperand,
+                                Node(NonTerminalSymbol.ComparisonOperand,
+                                    Node(NonTerminalSymbol.ArithmeticOperand,
+                                        Node(NonTerminalSymbol.SimpleExpression,
+                                            Leaf(LexicalGrammarCategory.VariableIdentifiers, "x")))))),
+                        Leaf(LexicalGrammarCategory.BracesAndParentheses, ")")),
+                    Node(NonTerminalSymbol.CodeBlock,
+                        Leaf(LexicalGrammarCategory.BracesAndParentheses, "{"),
+                        Node(NonTerminalSymbol.ExpressionSeq),
+                        Leaf(LexicalGrammarCategory.BracesAndParentheses, "}")),
+                    Leaf(LexicalGrammarCategory.Keywords, "else"),
+                    Node(NonTerminalSymbol.CodeBlock,
+                        Leaf(LexicalGrammarCategory.BracesAndParentheses, "{"),
+                        Node(NonTerminalSymbol.ExpressionSeq),
+                        Leaf(LexicalGrammarCategory.BracesAndParentheses, "}")))),
+            Leaf(LexicalGrammarCategory.BracesAndParentheses, "}")
+        ).Convert();
+
+        // Converter should not add Unit expression after if-expr
+        Assert.True(AstNode.From(input) is CodeBlock
+        {
+            Inner: IfStatement
+            {
+                Condition: VariableValue { Identifier.Name: "x" },
+                IfBlock.Inner: EmptyExpression,
+                ElseBlock.Inner: EmptyExpression
+            }
+        });
+    }
+
+    [Fact]
     public void ArithmeticExpression_Conversion()
     {
         // 1 + 2
