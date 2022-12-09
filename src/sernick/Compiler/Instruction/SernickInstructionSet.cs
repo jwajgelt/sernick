@@ -15,6 +15,30 @@ public static class SernickInstructionSet
     {
         get
         {
+            // $const
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.Constant(Any<RegisterValue>(), out var imm),
+                    (_, values) =>
+                    {
+                        var output = new Register();
+                        return (
+                            instructions: new List<IInstruction>
+                            {
+                                Mov.ToReg(output).FromImm(values.Get<RegisterValue>(imm))
+                            }, output);
+                    });
+            }
+
+            // $reg
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.RegisterRead(Any<Register>(), out var reg),
+                    (_, values) => (
+                        instructions: Enumerable.Empty<IInstruction>(),
+                        output: values.Get<Register>(reg)));
+            }
+
             // mov $reg, *
             {
                 yield return new CodeTreeNodePatternRule(

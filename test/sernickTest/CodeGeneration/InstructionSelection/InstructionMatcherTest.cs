@@ -27,6 +27,24 @@ public class CodeTreePatternMatcherTest
         CodeTreeNode tree,
         IEnumerable<CodeTreeValueNode> expectedLeaves
     )[] TestData = {
+        // $const
+        (
+            new CodeTreeNodePatternRule(
+                Pat.Constant(Any<RegisterValue>(), out _),
+                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+            new Constant(new RegisterValue(1)),
+            Enumerable.Empty<CodeTreeValueNode>()
+        ),
+        
+        // reg
+        (
+            new CodeTreeNodePatternRule(
+                Pat.RegisterRead(Any<Register>(), out _),
+                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+            Reg(register).Read(),
+            Enumerable.Empty<CodeTreeValueNode>()
+        ),
+        
         // mov $reg, *
         (
             new CodeTreeNodePatternRule(
