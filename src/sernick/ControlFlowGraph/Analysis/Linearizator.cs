@@ -31,19 +31,20 @@ public sealed class Linearizator
             var nextTreeCover = dfs(nextTree);
             var labelForNextTree = new Label("nextTree");
             // TODO 1 -- should we care about colliding labels?
-            // TODO 2 -- how to attribute this label to a NextTree?
-            var nodeCover = _instructionCovering.Cover(node, labelForNextTree);
-            return nodeCover.Concat(nextTreeCover);
+            var nodeCover = (List<IAsmable>)_instructionCovering.Cover(node, labelForNextTree);
+            return nodeCover.Append(labelForNextTree).Concat(nextTreeCover);
         }
         else
         {
             var conditionalNode = (ConditionalJumpNode)v;
             var trueCaseCover = dfs(conditionalNode.TrueCase);
+            var trueCaseLabel = new Label("trueCase");
+
             var falseCaseCover = dfs(conditionalNode.FalseCase);
-            var trueCaseLabel = new Label("trueCase"); // TODO  -- how to attribute this label to a trueCase tree?
-            var falseCaseLabel = new Label("falseCase"); // TODO  -- how to attribute this label to a falseCase tree?
-            var conditionalNodeCover = _instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
-            return conditionalNodeCover.Concat(trueCaseCover).Concat(falseCaseCover);
+            var falseCaseLabel = new Label("falseCase");
+
+            var conditionalNodeCover = (List<IAsmable>)_instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
+            return conditionalNodeCover.Append(trueCaseLabel).Concat(trueCaseCover).Append(falseCaseLabel).Concat(falseCaseCover);
         }
     }
 }
