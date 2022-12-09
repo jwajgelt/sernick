@@ -29,90 +29,70 @@ public class CodeTreePatternMatcherTest
     )[] TestData = {
         // $const
         (
-            new CodeTreeNodePatternRule(
-                Pat.Constant(Any<RegisterValue>(), out _),
-                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+            Pat.Constant(Any<RegisterValue>(), out _).AsRule(),
             new Constant(new RegisterValue(1)),
             Enumerable.Empty<CodeTreeValueNode>()
         ),
         
         // reg
         (
-            new CodeTreeNodePatternRule(
-                Pat.RegisterRead(Any<Register>(), out _),
-                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+            Pat.RegisterRead(Any<Register>(), out _).AsRule(),
             Reg(register).Read(),
             Enumerable.Empty<CodeTreeValueNode>()
         ),
         
         // mov $reg, *
         (
-            new CodeTreeNodePatternRule(
-                Pat.RegisterWrite(Any<Register>(), out _, Pat.WildcardNode),
-                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+            Pat.RegisterWrite(Any<Register>(), out _, Pat.WildcardNode).AsRule(),
             Reg(register).Write((CodeTreeValueNode)5 + 5),
             new[] { (CodeTreeValueNode)5 + 5 }
         ),
         
         // mov $reg, [*]
         (
-            new CodeTreeNodePatternRule(
-                Pat.RegisterWrite(Any<Register>(), out _, Pat.MemoryRead(Pat.WildcardNode)),
-                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+            Pat.RegisterWrite(Any<Register>(), out _, Pat.MemoryRead(Pat.WildcardNode)).AsRule(),
             Reg(register).Write(Mem(5).Value),
             new CodeTreeValueNode[] { 5 }
         ),
         
         // mov [*], *
         (
-            new CodeTreeNodePatternRule(
-                Pat.MemoryWrite(Pat.WildcardNode, Pat.WildcardNode),
-                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+            Pat.MemoryWrite(Pat.WildcardNode, Pat.WildcardNode).AsRule(),
             Mem(5).Write((CodeTreeValueNode)5 + 5),
             new CodeTreeValueNode[] { 5, (CodeTreeValueNode)5 + 5 }
         ),
         
         // mov $reg, $const
         (
-            new CodeTreeNodePatternRule(
-                Pat.RegisterWrite(Any<Register>(), out _, Pat.Constant(Any<RegisterValue>(), out _)),
-                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+            Pat.RegisterWrite(Any<Register>(), out _, Pat.Constant(Any<RegisterValue>(), out _)).AsRule(),
             Reg(register).Write(5),
             Enumerable.Empty<CodeTreeValueNode>()
         ),
         
         // mov [*], $const
         (
-            new CodeTreeNodePatternRule(
-                Pat.MemoryWrite(Pat.WildcardNode, Pat.Constant(Any<RegisterValue>(), out _)),
-                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+            Pat.MemoryWrite(Pat.WildcardNode, Pat.Constant(Any<RegisterValue>(), out _)).AsRule(),
             Mem(5).Write(5),
             new CodeTreeValueNode[] { 5 }
         ),
 
         // mov $reg, 0 === xor $reg, $reg
         (
-            new CodeTreeNodePatternRule(
-                Pat.RegisterWrite(Any<Register>(), out _, Pat.Constant(IsZero, out _)),
-                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+            Pat.RegisterWrite(Any<Register>(), out _, Pat.Constant(IsZero, out _)).AsRule(),
             Reg(register).Write(0),
             Enumerable.Empty<CodeTreeValueNode>()
         ),
         
         // add *, *
         (
-            new CodeTreeNodePatternRule(
-                Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _, Pat.WildcardNode, Pat.WildcardNode),
-                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+            Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _, Pat.WildcardNode, Pat.WildcardNode).AsRule(),
             Reg(register).Read() + 5,
             new CodeTreeValueNode[] { Reg(register).Read(), 5 }
         ),
         
         // call $label
         (
-            new CodeTreeNodePatternRule(
-                Pat.FunctionCall(out _),
-                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+            Pat.FunctionCall(out _).AsRule(),
             new FunctionCall(new FakeFunctionContext()),
             Enumerable.Empty<CodeTreeValueNode>()
         ),
@@ -120,14 +100,12 @@ public class CodeTreePatternMatcherTest
         // cmp *, *
         // set<cc> *
         (
-            new CodeTreeNodePatternRule(
-                Pat.BinaryOperationNode(
+            Pat.BinaryOperationNode(
                     IsAnyOf(
                         BinaryOperation.Equal, BinaryOperation.NotEqual,
                         BinaryOperation.LessThan, BinaryOperation.GreaterThan,
                         BinaryOperation.LessThanEqual, BinaryOperation.GreaterThanEqual), out _,
-                    Pat.WildcardNode, Pat.WildcardNode),
-                new Mock<CodeTreeNodePatternRule.GenerateInstructionsDelegate>().Object),
+                    Pat.WildcardNode, Pat.WildcardNode).AsRule(),
             Reg(register).Read() < 5,
             new CodeTreeValueNode[] { Reg(register).Read(), 5 }
         )
