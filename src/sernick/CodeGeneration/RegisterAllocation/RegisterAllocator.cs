@@ -18,19 +18,24 @@ public sealed class RegisterAllocator
     public IReadOnlyDictionary<Register, HardwareRegister?> Process(Graph interferenceGraph, Graph copyGraph)
     {
         var mapping = new Dictionary<Register, HardwareRegister?>();
+        // colors of Register's neighbours
+        var neighboursRegisters = new Dictionary<Register, ISet<HardwareRegister>>();
         var orderedRegisters = EnumerateRegisters(interferenceGraph);
+
         foreach (var register in orderedRegisters)
         {
             if (IsHardwareRegister(register))
             {
                 mapping[register] = register as HardwareRegister;
             }
-            
+
             else
             {
                 var copies = copyGraph.GetValueOrDefault(register) ?? Array.Empty<Register>();
-                mapping[register] = GetOptimalRegister(register, interferenceGraph, mapping, copies);
+                mapping[register] = GetOptimalRegister(register, interferenceGraph, mapping, copies, neighboursRegisters);
             }
+
+            AddToNeighboursRegisters(interferenceGraph[register], mapping[register], neighboursRegisters);
         }
 
         return mapping;
@@ -40,10 +45,11 @@ public sealed class RegisterAllocator
         Register register,
         Graph interferenceGraph,
         IReadOnlyDictionary<Register, HardwareRegister?> mapping,
-        IReadOnlyCollection<Register> copies)
+        IReadOnlyCollection<Register> copies,
+        IDictionary<Register, ISet<HardwareRegister>> neighboursRegisters)
     {
         var availableRegisters = GetAvailableRegister(mapping, interferenceGraph, register);
-        
+
         // if the copy has available Register, then assign it
         foreach (var copy in copies)
         {
@@ -53,15 +59,11 @@ public sealed class RegisterAllocator
                 return copyRegister;
             }
         }
-        
+
         // otherwise assign Register not assigned to the neighbours of the copy
         foreach (var copy in copies)
         {
-            var copyNeighbours = interferenceGraph[copy];
-            var neighboursRegisters =
-                copyNeighbours.Select(mapping.GetValueOrDefault);
-            
-            var optimalRegisters = availableRegisters.Where(reg => !neighboursRegisters.Contains(reg));
+            var optimalRegisters = availableRegisters.Where(reg => !neighboursRegisters[copy].Contains(reg));
             var optimalRegister = optimalRegisters.FirstOrDefault();
             if (optimalRegister != null)
             {
@@ -74,7 +76,7 @@ public sealed class RegisterAllocator
     }
 
     private ICollection<HardwareRegister> GetAvailableRegister(
-        IReadOnlyDictionary<Register, HardwareRegister?> mapping, 
+        IReadOnlyDictionary<Register, HardwareRegister?> mapping,
         Graph interferenceGraph,
         Register register)
     {
@@ -83,9 +85,9 @@ public sealed class RegisterAllocator
         {
             availableRegisters.Remove(mapping.GetValueOrDefault(neighbour));
         }
-        
+
         return availableRegisters!;
-    } 
+    }
 
     private IEnumerable<Register> EnumerateRegisters(Graph graph)
     {
@@ -99,7 +101,7 @@ public sealed class RegisterAllocator
             registers.Add(register);
             RemoveRegister(mutableGraph, register);
         }
-        
+
         // add HardwareRegisters
         registers.AddRange(mutableGraph.Keys);
 
@@ -131,6 +133,25 @@ public sealed class RegisterAllocator
         return minRegister;
     }
 
+    private static void AddToNeighboursRegisters(IReadOnlyCollection<Register> neighbours, HardwareRegister? hardwareRegister,
+        IDictionary<Register, ISet<HardwareRegister>> neighboursRegisters)
+    {
+        if (hardwareRegister == null)
+        {
+            return;
+        }
+
+        foreach (var neighbour in neighbours)
+        {
+            if (!neighboursRegisters.TryGetValue(neighbour, out _))
+            {
+                neighboursRegisters[neighbour] = new HashSet<HardwareRegister>();
+            }
+
+            neighboursRegisters[neighbour].Add(hardwareRegister);
+        }
+    }
+
     private static void RemoveRegister(MutableGraph graph, Register register)
     {
         var neighbours = graph[register];
@@ -144,7 +165,7 @@ public sealed class RegisterAllocator
 
     private static MutableGraph CopyGraph(Graph graph) => graph.ToDictionary
     (
-        entry => entry.Key, 
+        entry => entry.Key,
         entry => (ICollection<Register>)new List<Register>(entry.Value)
     );
 }
