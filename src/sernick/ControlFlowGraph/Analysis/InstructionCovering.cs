@@ -51,7 +51,7 @@ public sealed class InstructionCovering
         return best;
     }
 
-    public IEnumerable<IInstruction> Cover(SingleExitNode node, Label next)
+    public IEnumerable<IInstruction> Cover(SingleExitNode node, Label? next)
     {
         SingleExitCoverResult? best = null;
         foreach (var patternRule in _rules)
