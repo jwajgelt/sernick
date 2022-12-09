@@ -6,7 +6,7 @@ using CodeTree;
 public sealed class Linearizator
 {
     private readonly InstructionCovering _instructionCovering;
-    
+
     public Linearizator(InstructionCovering instructionCovering)
     {
         _instructionCovering = instructionCovering;
@@ -19,14 +19,18 @@ public sealed class Linearizator
 
     public IEnumerable<IAsmable> dfs(CodeTreeRoot? v)
     {
-        if(v == null) { return new List<IAsmable>(); }
-        if (v is SingleExitNode)
+        if (v == null)
         {
-            var node = (SingleExitNode)v;
+            return new List<IAsmable>();
+        }
+
+        if (v is SingleExitNode node)
+        {
             if (node.NextTree == null)
             {
                 return _instructionCovering.Cover(node, null);
             }
+
             var nextTree = node.NextTree;
             var nextTreeCover = dfs(nextTree);
             var labelForNextTree = new Label("nextTree");
