@@ -39,14 +39,15 @@ public static class SernickInstructionSet
                         output: values.Get<Register>(reg)));
             }
 
-            // mov $reg, *
+            // mov $reg, $const
             {
                 yield return new CodeTreeNodePatternRule(
-                    Pat.RegisterWrite(Any<Register>(), out var reg, Pat.WildcardNode),
-                    (inputs, values) => (
+                    Pat.RegisterWrite(Any<Register>(), out var reg,
+                        Pat.Constant(Any<RegisterValue>(), out var imm)),
+                    (_, values) => (
                         instructions: new List<IInstruction>
                         {
-                            Mov.ToReg(values.Get<Register>(reg)).FromReg(inputs[0])
+                            Mov.ToReg(values.Get<Register>(reg)).FromImm(values.Get<RegisterValue>(imm))
                         },
                         output: null));
             }
@@ -63,27 +64,14 @@ public static class SernickInstructionSet
                         output: null));
             }
 
-            // mov [*], *
+            // mov $reg, *
             {
                 yield return new CodeTreeNodePatternRule(
-                    Pat.MemoryWrite(Pat.WildcardNode, Pat.WildcardNode),
-                    (inputs, _) => (
+                    Pat.RegisterWrite(Any<Register>(), out var reg, Pat.WildcardNode),
+                    (inputs, values) => (
                         instructions: new List<IInstruction>
                         {
-                            Mov.ToMem(inputs[0]).FromReg(inputs[1])
-                        },
-                        output: null));
-            }
-
-            // mov $reg, $const
-            {
-                yield return new CodeTreeNodePatternRule(
-                    Pat.RegisterWrite(Any<Register>(), out var reg,
-                        Pat.Constant(Any<RegisterValue>(), out var imm)),
-                    (_, values) => (
-                        instructions: new List<IInstruction>
-                        {
-                            Mov.ToReg(values.Get<Register>(reg)).FromImm(values.Get<RegisterValue>(imm))
+                            Mov.ToReg(values.Get<Register>(reg)).FromReg(inputs[0])
                         },
                         output: null));
             }
@@ -96,6 +84,18 @@ public static class SernickInstructionSet
                         instructions: new List<IInstruction>
                         {
                             Mov.ToMem(inputs[0]).FromImm(values.Get<RegisterValue>(imm))
+                        },
+                        output: null));
+            }
+
+            // mov [*], *
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.MemoryWrite(Pat.WildcardNode, Pat.WildcardNode),
+                    (inputs, _) => (
+                        instructions: new List<IInstruction>
+                        {
+                            Mov.ToMem(inputs[0]).FromReg(inputs[1])
                         },
                         output: null));
             }
