@@ -28,14 +28,52 @@ public sealed class RegisterAllocator
             
             else
             {
-                mapping[register] = GetAvailableRegister(mapping, interferenceGraph, register);
+                var copies = copyGraph.GetValueOrDefault(register) ?? Array.Empty<Register>();
+                mapping[register] = GetOptimalRegister(register, interferenceGraph, mapping, copies);
             }
         }
 
         return mapping;
     }
 
-    private HardwareRegister? GetAvailableRegister(
+    private HardwareRegister? GetOptimalRegister(
+        Register register,
+        Graph interferenceGraph,
+        IReadOnlyDictionary<Register, HardwareRegister?> mapping,
+        IReadOnlyCollection<Register> copies)
+    {
+        var availableRegisters = GetAvailableRegister(mapping, interferenceGraph, register);
+        
+        // if the copy has available Register, then assign it
+        foreach (var copy in copies)
+        {
+            var copyRegister = mapping.GetValueOrDefault(copy);
+            if (copyRegister != null && availableRegisters.Contains(copyRegister))
+            {
+                return copyRegister;
+            }
+        }
+        
+        // otherwise assign Register not assigned to the neighbours of the copy
+        foreach (var copy in copies)
+        {
+            var copyNeighbours = interferenceGraph[copy];
+            var neighboursRegisters =
+                copyNeighbours.Select(mapping.GetValueOrDefault);
+            
+            var optimalRegisters = availableRegisters.Where(reg => !neighboursRegisters.Contains(reg));
+            var optimalRegister = optimalRegisters.FirstOrDefault();
+            if (optimalRegister != null)
+            {
+                return optimalRegister;
+            }
+        }
+
+        // otherwise return any available register
+        return availableRegisters.FirstOrDefault();
+    }
+
+    private ICollection<HardwareRegister> GetAvailableRegister(
         IReadOnlyDictionary<Register, HardwareRegister?> mapping, 
         Graph interferenceGraph,
         Register register)
@@ -46,7 +84,7 @@ public sealed class RegisterAllocator
             availableRegisters.Remove(mapping.GetValueOrDefault(neighbour));
         }
         
-        return availableRegisters.FirstOrDefault();
+        return availableRegisters!;
     } 
 
     private IEnumerable<Register> EnumerateRegisters(Graph graph)
