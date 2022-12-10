@@ -37,9 +37,9 @@ public static class ControlFlowAnalyzer
             new ControlFlowVisitor(
                 currentFunctionContext,
                 nodesWithControlFlow,
-                (root, next, resultVariable) =>
+                (root, next, resultVariable, nameResolutionResult) =>
                 {
-                    var nodes = pullOutSideEffects(root, nameResolution, currentFunctionContext, contextMap, callGraph, variableAccessMap);
+                    var nodes = pullOutSideEffects(root, nameResolutionResult, currentFunctionContext, contextMap, callGraph, variableAccessMap);
                     if (nodes.Count == 0)
                     {
                         return next;
@@ -63,7 +63,8 @@ public static class ControlFlowAnalyzer
                     return nodes[0];
                 },
                 variableFactory,
-                typeCheckingResult
+                typeCheckingResult,
+                nameResolution
             );
 
         IFunctionVariable? resultVariable = null;
@@ -122,17 +123,20 @@ public static class ControlFlowAnalyzer
         private readonly IReadOnlySet<AstNode> _nodesWithControlFlow;
         private readonly TemporaryLocalVariableFactory _variableFactory;
         private readonly TypeCheckingResult _typeChecking;
+        private NameResolutionResult _nameResolution;
 
         public ControlFlowVisitor
         (
             IFunctionContext currentFunctionContext,
             IReadOnlySet<AstNode> nodesWithControlFlow,
-            Func<AstNode, CodeTreeRoot, IFunctionVariable?, CodeTreeRoot> pullOutSideEffects,
+            Func<AstNode, CodeTreeRoot, IFunctionVariable?, NameResolutionResult, CodeTreeRoot> pullOutSideEffects,
             TemporaryLocalVariableFactory variableFactory,
-            TypeCheckingResult typeChecking
+            TypeCheckingResult typeChecking,
+            NameResolutionResult nameResolution
         )
         {
-            _pullOutSideEffects = pullOutSideEffects;
+            _nameResolution = nameResolution;
+            _pullOutSideEffects = (root, next, resultVariable) => pullOutSideEffects(root, next, resultVariable, _nameResolution);
             _currentFunctionContext = currentFunctionContext;
             _nodesWithControlFlow = nodesWithControlFlow;
             _variableFactory = variableFactory;
@@ -332,6 +336,7 @@ public static class ControlFlowAnalyzer
                 node.LocationRange);
             _currentFunctionContext.AddLocal(tempVariable, false);
             var variableValue = new VariableValue(identifier, node.LocationRange);
+            _nameResolution = _nameResolution.JoinWith(NameResolutionResult.OfVariableUse(variableValue, tempVariable));
             return (tempVariable, variableValue);
         }
     }
