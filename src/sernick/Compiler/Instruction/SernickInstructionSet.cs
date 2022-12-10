@@ -131,6 +131,15 @@ public static class SernickInstructionSet
                         }.WithOutput(null));
             }
 
+            // ret
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.FunctionReturn, (_, _) => new List<IInstruction>
+                    {
+                        new RetInstruction()
+                    }.WithOutput(null));
+            }
+
             // <op> *, *
             {
                 yield return new CodeTreeNodePatternRule(

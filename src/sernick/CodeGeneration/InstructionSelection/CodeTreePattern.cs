@@ -129,6 +129,11 @@ public abstract record CodeTreePattern : CodeTreePatternBase
     public static CodeTreePattern FunctionCall(out CodeTreePattern id) => id = new FunctionCallPattern();
 
     /// <summary>
+    /// <see cref="FunctionReturn"/> pattern.
+    /// </summary>
+    public static CodeTreePattern FunctionReturn => new FunctionReturnPattern();
+
+    /// <summary>
     /// Wildcard pattern, which matches any <see cref="CodeTreeValueNode"/>.
     /// </summary>
     public static CodeTreePattern WildcardNode => new WildcardNodePattern();
@@ -253,6 +258,17 @@ public abstract record CodeTreePattern : CodeTreePatternBase
             leaves = Enumerable.Empty<CodeTreeValueNode>();
             return root is FunctionCall node &&
                    Run(values[this] = node.FunctionCaller);
+        }
+    }
+
+    private sealed record FunctionReturnPattern : CodeTreePattern
+    {
+        public override bool TryMatch(CodeTreeNode root,
+            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            IDictionary<CodeTreePattern, object> _)
+        {
+            leaves = Enumerable.Empty<CodeTreeValueNode>();
+            return root is FunctionReturn;
         }
     }
 

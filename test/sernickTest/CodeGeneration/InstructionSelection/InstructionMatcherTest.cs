@@ -118,6 +118,13 @@ public class CodeTreePatternMatcherTest
             Enumerable.Empty<CodeTreeValueNode>()
         ),
         
+        // ret
+        (
+            Pat.FunctionReturn.AsRule(),
+            new FunctionReturn(),
+            Enumerable.Empty<CodeTreeValueNode>()
+        ),
+        
         // cmp *, *
         // set<cc> *
         (
