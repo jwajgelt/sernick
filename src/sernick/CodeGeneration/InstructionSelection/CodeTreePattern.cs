@@ -44,6 +44,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
     /// <param name="values">Map of values matched in all non-wildcard nodes. Can be one of
     /// <list type="number">
     /// <item><see cref="RegisterValue"/></item>
+    /// <item><see cref="Label"/></item>
     /// <item><see cref="Register"/></item>
     /// <item><see cref="IFunctionCaller"/></item>
     /// <item><see cref="BinaryOperation"/></item>
@@ -102,6 +103,12 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         Predicate<Register> register,
         out CodeTreePattern id,
         CodeTreePattern value) => id = new RegisterWritePattern(register, value);
+
+    /// <summary>
+    /// <see cref="GlobalAddress"/> pattern.
+    /// </summary>
+    /// /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
+    public static CodeTreePattern GlobalAddress(out CodeTreePattern id) => id = new GlobalAddressPattern();
 
     /// <summary>
     /// <see cref="MemoryRead"/> pattern.
@@ -196,6 +203,18 @@ public abstract record CodeTreePattern : CodeTreePatternBase
                    Register.Invoke(node.Register) &&
                    Run(values[this] = node.Register) &&
                    Value.TryMatch(node.Value, out leaves, values);
+        }
+    }
+
+    private sealed record GlobalAddressPattern : CodeTreePattern
+    {
+        public override bool TryMatch(CodeTreeNode root,
+            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            IDictionary<CodeTreePattern, object> values)
+        {
+            leaves = Enumerable.Empty<CodeTreeValueNode>();
+            return root is GlobalAddress node &&
+                   Run(values[this] = node.Label);
         }
     }
 
