@@ -52,8 +52,8 @@ public sealed class Linearizator
         var nextDepth = depth + 1;
         var (nextTreeLabel, nextTreeCover) = getTreeLabelAndCover(node.NextTree, nextDepth);
 
-        var nodeCover = (List<IAsmable>)_instructionCovering.Cover(node, nextTreeLabel);
-        return nodeCover.Append(nextTreeLabel).Concat(nextTreeCover);
+        var nodeCover = _instructionCovering.Cover(node, nextTreeLabel);
+        return nodeCover.Append<IAsmable>(nextTreeLabel).Concat(nextTreeCover);
     }
 
     private IEnumerable<IAsmable> handleConditionalJumpNode(ConditionalJumpNode conditionalNode, int depth)
@@ -75,8 +75,8 @@ public sealed class Linearizator
 
         var (falseCaseLabel, falseCaseCover) = getTreeLabelAndCover(falseCaseNode, nextDepth);
 
-        var conditionalNodeCover = (List<IAsmable>)_instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
-        return conditionalNodeCover.Append(trueCaseLabel).Concat(trueCaseCover).Append(falseCaseLabel).Concat(falseCaseCover);
+        var conditionalNodeCover = _instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
+        return conditionalNodeCover.Append<IAsmable>(trueCaseLabel).Concat(trueCaseCover).Append<IAsmable>(falseCaseLabel).Concat(falseCaseCover);
     }
 
     private ValueTuple<Label, IEnumerable<IAsmable>> getTreeLabelAndCover(CodeTreeRoot tree, int depth)
