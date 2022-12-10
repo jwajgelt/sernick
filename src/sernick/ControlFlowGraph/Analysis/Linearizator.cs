@@ -86,7 +86,7 @@ public sealed class Linearizator
         {
             var label = _visitedRootsLabels[tree];
             // TODO should it be more like a conditional jump, not just a label? IDK how to do it with our API :|
-            var reuseTreeCover = new List<IAsmable>() { label };
+            var reuseTreeCover = label.Enumerate();
             return (label, reuseTreeCover);
         }
 
