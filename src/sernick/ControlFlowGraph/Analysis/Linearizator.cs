@@ -42,7 +42,7 @@ public sealed class Linearizator
         }
     }
 
-    private IEnumerable<IAsmable> handleSingleExitNode(SingleExitNode node, int depth)
+    private IEnumerable<IAsmable> HandleSingleExitNode(SingleExitNode node, int depth)
     {
         if (node.NextTree == null)
         {
