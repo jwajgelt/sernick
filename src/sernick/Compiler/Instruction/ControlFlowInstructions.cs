@@ -19,3 +19,16 @@ public abstract record TransferControlInstruction(Label Location) : IInstruction
 public sealed record CallInstruction(Label Location) : TransferControlInstruction(Location);
 
 public sealed record JmpInstruction(Label Location) : TransferControlInstruction(Location);
+
+public sealed record RetInstruction : IInstruction
+{
+    public IEnumerable<Register> RegistersDefined => Enumerable.Empty<Register>();
+
+    public IEnumerable<Register> RegistersUsed => Enumerable.Empty<Register>();
+
+    public bool PossibleFollow => false;
+
+    public Label? PossibleJump => null;
+
+    public bool IsCopy => false;
+}

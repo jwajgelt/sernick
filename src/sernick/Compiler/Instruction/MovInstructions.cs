@@ -19,10 +19,15 @@ public sealed record MovInstruction(IInstructionOperand Target, IInstructionOper
 
     public static MovInstructionBuilder ToMem(Register location) => new(location.AsMemOperand());
 
+    public static MovInstructionBuilder ToMem(Label baseAddress, RegisterValue displacement) =>
+        new((baseAddress, displacement).AsMemOperand());
+
     public sealed record MovInstructionBuilder(IInstructionOperand Target)
     {
         public MovInstruction FromReg(Register source) => new(Target, source.AsRegOperand());
         public MovInstruction FromMem(Register location) => new(Target, location.AsMemOperand());
+        public MovInstruction FromMem(Label baseAddress, RegisterValue displacement) =>
+            new(Target, (baseAddress, displacement).AsMemOperand());
         public MovInstruction FromImm(RegisterValue value) => new(Target, value.AsOperand());
     }
 
