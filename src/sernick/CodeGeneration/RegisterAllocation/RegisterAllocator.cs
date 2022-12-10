@@ -53,7 +53,7 @@ public sealed class RegisterAllocator
         // if the copy has available Register, then assign it
         foreach (var copy in copies)
         {
-            if (mapping.TryGetValue(copy, out var copyRegister) && availableRegisters.Contains(copyRegister!))
+            if (mapping.TryGetValue(copy, out var copyRegister) && copyRegister != null && availableRegisters.Contains(copyRegister))
             {
                 return copyRegister;
             }
@@ -109,11 +109,9 @@ public sealed class RegisterAllocator
     }
 
     // doesn't return HardwareRegisters, so they are assigned at the beginning
-    private Register? GetMinimalDegreeRegister(MutableGraph graph)
-    {
-        var nonHardware = graph.Where(entry => !IsHardwareRegister(entry.Key));
-        return nonHardware.Any() ? nonHardware.MinBy(entry => entry.Value.Count).Key : null;
-    }
+    private Register? GetMinimalDegreeRegister(MutableGraph graph) => graph.Where(entry => !IsHardwareRegister(entry.Key))
+        .DefaultIfEmpty(new KeyValuePair<Register, ICollection<Register>>(null, Array.Empty<Register>()))
+        .MinBy(entry => entry.Value.Count).Key;
 
     private static void AddToNeighboursRegisters(IReadOnlyCollection<Register> neighbours, HardwareRegister? hardwareRegister,
         IDictionary<Register, HashSet<HardwareRegister>> neighboursRegisters)
