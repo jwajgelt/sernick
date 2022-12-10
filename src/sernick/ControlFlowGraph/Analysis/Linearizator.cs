@@ -56,7 +56,7 @@ public sealed class Linearizator
         return nodeCover.Append<IAsmable>(nextTreeLabel).Concat(nextTreeCover);
     }
 
-    private IEnumerable<IAsmable> handleConditionalJumpNode(ConditionalJumpNode conditionalNode, int depth)
+    private IEnumerable<IAsmable> HandleConditionalJumpNode(ConditionalJumpNode conditionalNode, int depth)
     {
         var nextDepth = depth + 1;
         var trueCaseNode = conditionalNode.TrueCase;
