@@ -120,3 +120,8 @@ public sealed record FunctionCall(IFunctionCaller FunctionCaller) : CodeTreeNode
 {
     public override string ToString() => $"{FunctionCaller.Label}";
 }
+
+public sealed record FunctionReturn() : CodeTreeNode
+{
+    public override string ToString() => $"Ret";
+}
