@@ -48,7 +48,7 @@ public sealed class RegisterAllocator
         IReadOnlyCollection<Register> copies,
         IDictionary<Register, ISet<HardwareRegister>> neighboursRegisters)
     {
-        var availableRegisters = GetAvailableRegister(mapping, interferenceGraph, register);
+        var availableRegisters = GetAvailableRegisters(mapping, interferenceGraph, register);
 
         // if the copy has available Register, then assign it
         foreach (var copy in copies)
@@ -75,7 +75,7 @@ public sealed class RegisterAllocator
         return availableRegisters.FirstOrDefault();
     }
 
-    private ICollection<HardwareRegister> GetAvailableRegister(
+    private ICollection<HardwareRegister> GetAvailableRegisters(
         IReadOnlyDictionary<Register, HardwareRegister?> mapping,
         Graph interferenceGraph,
         Register register)
