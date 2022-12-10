@@ -44,7 +44,7 @@ public sealed class Linearizator
                     return handleConditionalJumpNode(conditionalNode, depth);
                 }
             default:
-                return new List<IAsmable>(); // this should never happen :P
+                throw new Exception("<Linearizator> called on a node which is neither a SingleExitNode nor ConditionalJumpNode :" + v);
         }
     }
 
