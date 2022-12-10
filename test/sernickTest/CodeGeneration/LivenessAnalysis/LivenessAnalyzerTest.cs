@@ -8,13 +8,13 @@ using Utility;
 
 public class LivenessAnalyzerTest
 {
-    private static readonly Register x = new ();
-    private static readonly Register y = new ();
+    private static readonly Register x = new();
+    private static readonly Register y = new();
 
-    private static readonly RegisterValue constant = new (0);
+    private static readonly RegisterValue constant = new(0);
 
     [Fact]
-    private void RegistersDefinedBetweenUsesInterfere()
+    public void RegistersDefinedBetweenUsesInterfere()
     {
         var instructions = new List<IInstruction>
         {
@@ -25,15 +25,15 @@ public class LivenessAnalyzerTest
         };
 
         var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
-        
-        Assert.Equal(interferenceGraph.Keys, new []{x, y});
-        Assert.Equal(copyGraph.Keys, new []{x, y});
+
+        Assert.Equal(interferenceGraph.Keys, new[] { x, y });
+        Assert.Equal(copyGraph.Keys, new[] { x, y });
         Assert.Single(interferenceGraph[x], y);
         Assert.Empty(copyGraph[x]);
     }
-    
+
     [Fact]
-    private void UnusedRegistersDefinedBetweenUsesInterfere()
+    public void UnusedRegistersDefinedBetweenUsesInterfere()
     {
         var instructions = new List<IInstruction>
         {
@@ -43,15 +43,15 @@ public class LivenessAnalyzerTest
         };
 
         var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
-        
-        Assert.Equal(interferenceGraph.Keys, new []{x, y});
-        Assert.Equal(copyGraph.Keys, new []{x, y});
+
+        Assert.Equal(interferenceGraph.Keys, new[] { x, y });
+        Assert.Equal(copyGraph.Keys, new[] { x, y });
         Assert.Single(interferenceGraph[x], y);
         Assert.Empty(copyGraph[x]);
     }
-    
+
     [Fact]
-    private void RegistersNotDefinedBetweenUsesDontInterfere()
+    public void RegistersNotDefinedBetweenUsesDontInterfere()
     {
         var instructions = new List<IInstruction>
         {
@@ -62,15 +62,15 @@ public class LivenessAnalyzerTest
         };
 
         var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
-        
-        Assert.Equal(interferenceGraph.Keys, new []{x, y});
-        Assert.Equal(copyGraph.Keys, new []{x, y});
+
+        Assert.Equal(interferenceGraph.Keys, new[] { x, y });
+        Assert.Equal(copyGraph.Keys, new[] { x, y });
         Assert.Empty(interferenceGraph[x]);
         Assert.Empty(copyGraph[x]);
     }
-    
+
     [Fact]
-    private void RedefinedRegistersDontInterfere()
+    public void RedefinedRegistersDontInterfere()
     {
         var instructions = new List<IInstruction>
         {
@@ -83,15 +83,15 @@ public class LivenessAnalyzerTest
         };
 
         var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
-        
-        Assert.Equal(interferenceGraph.Keys, new []{x, y});
-        Assert.Equal(copyGraph.Keys, new []{x, y});
+
+        Assert.Equal(interferenceGraph.Keys, new[] { x, y });
+        Assert.Equal(copyGraph.Keys, new[] { x, y });
         Assert.Empty(interferenceGraph[x]);
         Assert.Empty(copyGraph[x]);
     }
-    
+
     [Fact]
-    private void CopiesDontInterfere()
+    public void CopiesDontInterfere()
     {
         var instructions = new List<IInstruction>
         {
@@ -102,9 +102,9 @@ public class LivenessAnalyzerTest
         };
 
         var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
-        
-        Assert.Equal(interferenceGraph.Keys, new []{x, y});
-        Assert.Equal(copyGraph.Keys, new []{x, y});
+
+        Assert.Equal(interferenceGraph.Keys, new[] { x, y });
+        Assert.Equal(copyGraph.Keys, new[] { x, y });
         Assert.Empty(interferenceGraph[x]);
         Assert.Single(copyGraph[x], y);
     }
@@ -112,20 +112,21 @@ public class LivenessAnalyzerTest
 #pragma warning disable xUnit1026
     [Theory]
     [MemberTupleData(nameof(InstructionLists))]
-    private void GraphsAreSymmetric(List<IAsmable> instructions, object _)
+    public void GraphsAreSymmetric(List<IAsmable> instructions, object _)
     {
         var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
         foreach (var (register, conflicts) in interferenceGraph)
         {
             Assert.All(
-                conflicts, 
+                conflicts,
                 conflicting => Assert.Contains(register, interferenceGraph[conflicting])
                 );
         }
+
         foreach (var (register, conflicts) in copyGraph)
         {
             Assert.All(
-                conflicts, 
+                conflicts,
                 conflicting => Assert.Contains(register, copyGraph[conflicting])
             );
         }
@@ -134,7 +135,7 @@ public class LivenessAnalyzerTest
 
     [Theory]
     [MemberTupleData(nameof(InstructionLists))]
-    private void GraphsHaveVerticesForAllUsedRegisters(List<IAsmable> instructions, List<Register> registers)
+    public void GraphsHaveVerticesForAllUsedRegisters(List<IAsmable> instructions, List<Register> registers)
     {
         var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
         Assert.All(registers, register => Assert.Contains(register, interferenceGraph.Keys));

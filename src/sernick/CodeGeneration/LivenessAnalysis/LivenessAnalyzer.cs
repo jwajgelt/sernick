@@ -16,11 +16,11 @@ public static class LivenessAnalyzer
             IInstruction instruction => instruction.RegistersDefined.Union(instruction.RegistersUsed),
             _ => new Register[] { }
         }).ToHashSet();
-        
+
         var livenessInformation = instructionList
             .Select(
-                asmable => asmable is not IInstruction instruction 
-                    ? new LivenessAtInstruction(new HashSet<Register>(), new HashSet<Register>()) 
+                asmable => asmable is not IInstruction instruction
+                    ? new LivenessAtInstruction(new HashSet<Register>(), new HashSet<Register>())
                     : new LivenessAtInstruction(instruction.RegistersUsed.ToHashSet(), instruction.RegistersDefined.ToHashSet()))
             .ToList();
 
@@ -48,13 +48,14 @@ public static class LivenessAnalyzer
                     switch (asmable)
                     {
                         case Label:
-                            return i+1 < instructionCount ? new List<int> { i + 1 } : new List<int>();
+                            return i + 1 < instructionCount ? new List<int> { i + 1 } : new List<int>();
                         case IInstruction instruction:
                             var result = new List<int>();
-                            if (instruction.PossibleFollow && i+1 < instructionCount)
+                            if (instruction.PossibleFollow && i + 1 < instructionCount)
                             {
-                                result.Add(i+1);
+                                result.Add(i + 1);
                             }
+
                             if (instruction.PossibleJump != null)
                             {
                                 result.Add(labelLocations[instruction.PossibleJump]);
@@ -87,7 +88,7 @@ public static class LivenessAnalyzer
                     .Aggregate
                     (
                         changed,
-                        (changedBefore, register) => 
+                        (changedBefore, register) =>
                             livenessInformation[current].LiveAtExit.Add(register) || changedBefore
                     );
 
@@ -111,14 +112,22 @@ public static class LivenessAnalyzer
 
         foreach (var current in Enumerable.Range(0, instructionCount))
         {
-            if (instructionList[current] is not IInstruction instruction) { continue;}
+            if (instructionList[current] is not IInstruction instruction)
+            {
+                continue;
+            }
+
             var liveRegisters = livenessInformation[current].LiveAtExit;
             var definedRegisters = instruction.RegistersDefined.ToList();
             foreach (var x in definedRegisters)
             {
                 foreach (var y in liveRegisters)
                 {
-                    if (x == y) continue;
+                    if (x == y)
+                    {
+                        continue;
+                    }
+
                     if (instruction.IsCopy && instruction.RegistersUsed.Contains(y))
                     {
                         copyGraph[x].Add(y);
@@ -141,14 +150,14 @@ public static class LivenessAnalyzer
             }
         }
 
-        return 
+        return
         (
             interferenceGraph.ToDictionary(
-                kv => kv.Key, 
+                kv => kv.Key,
                 kv => (IReadOnlyCollection<Register>)kv.Value
-            ), 
+            ),
             copyGraph.ToDictionary(
-                kv => kv.Key, 
+                kv => kv.Key,
                 kv => (IReadOnlyCollection<Register>)kv.Value
             )
         );
