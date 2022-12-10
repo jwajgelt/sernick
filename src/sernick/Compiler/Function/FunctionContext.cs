@@ -237,6 +237,9 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(Reg(rax).Write(valToReturn));
         }
 
+        // Add ret instruction
+        operations.Add(new FunctionReturn());
+
         return CodeTreeListToSingleExitList(operations);
     }
 
