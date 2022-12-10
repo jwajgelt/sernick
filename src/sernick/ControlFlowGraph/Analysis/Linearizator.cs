@@ -79,7 +79,7 @@ public sealed class Linearizator
         return conditionalNodeCover.Append<IAsmable>(trueCaseLabel).Concat(trueCaseCover).Append<IAsmable>(falseCaseLabel).Concat(falseCaseCover);
     }
 
-    private ValueTuple<Label, IEnumerable<IAsmable>> getTreeLabelAndCover(CodeTreeRoot tree, int depth)
+    private ValueTuple<Label, IEnumerable<IAsmable>> GetTreeLabelAndCover(CodeTreeRoot tree, int depth)
     {
         var treeWasAlreadyVisited = _visitedRootsLabels.ContainsKey(tree);
         if (treeWasAlreadyVisited)
