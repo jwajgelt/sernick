@@ -27,12 +27,6 @@ public sealed class Linearizator
 
     private IEnumerable<IAsmable> dfs(CodeTreeRoot v, int depth)
     {
-        if (v == null)
-        {
-            return new List<IAsmable>();
-        }
-        
-
         switch (v)
         {
             case SingleExitNode node:
