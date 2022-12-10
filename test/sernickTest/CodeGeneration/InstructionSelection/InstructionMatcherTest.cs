@@ -134,9 +134,9 @@ public class CodeTreePatternMatcherTest
         var rule = new ConditionalJumpNodePatternRule(new Mock<ConditionalJumpNodePatternRule.GenerateInstructionsDelegate>().Object);
 
         var codeTree = new ConditionalJumpNode(
-            trueCase: new SingleExitNode(null, new List<CodeTreeNode>()),
-            falseCase: new SingleExitNode(null, new List<CodeTreeNode>()),
-            conditionEvaluation: Reg(register).Read());
+            TrueCase: new SingleExitNode(null, new List<CodeTreeNode>()),
+            FalseCase: new SingleExitNode(null, new List<CodeTreeNode>()),
+            ConditionEvaluation: Reg(register).Read());
 
         Assert.True(rule.TryMatchConditionalJumpNode(codeTree, out var leaves, out _));
         Assert.Equal(Reg(register).Read().Enumerate(), leaves);

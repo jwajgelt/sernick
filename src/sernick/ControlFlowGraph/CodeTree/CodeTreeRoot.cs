@@ -12,20 +12,11 @@ public abstract record CodeTreeRoot : CodeTreeNode;
 /// <param name="ConditionEvaluation">Code tree for evaluating the condition</param>
 public sealed record ConditionalJumpNode
 (
+    CodeTreeRoot TrueCase,
+    CodeTreeRoot FalseCase,
     CodeTreeValueNode ConditionEvaluation
 ) : CodeTreeRoot
-{
-    public ConditionalJumpNode(CodeTreeRoot? trueCase,
-        CodeTreeRoot? falseCase,
-        CodeTreeValueNode conditionEvaluation) : this(conditionEvaluation)
-    {
-        TrueCase = trueCase;
-        FalseCase = falseCase;
-    }
-
-    public CodeTreeRoot? TrueCase { get; set; } = null;
-    public CodeTreeRoot? FalseCase { get; set; } = null;
-}
+{ }
 
 /// <summary>
 /// The root of a code tree for an operation that has a single exit point,
