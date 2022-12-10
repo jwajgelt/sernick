@@ -10,6 +10,7 @@ public class LivenessAnalyzerTest
 {
     private static readonly Register x = new();
     private static readonly Register y = new();
+    private static readonly Label conditionTarget = new("ConditionTarget");
 
     private static readonly RegisterValue constant = new(0);
 
@@ -26,8 +27,6 @@ public class LivenessAnalyzerTest
 
         var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
 
-        Assert.Equal(interferenceGraph.Keys, new[] { x, y });
-        Assert.Equal(copyGraph.Keys, new[] { x, y });
         Assert.Single(interferenceGraph[x], y);
         Assert.Empty(copyGraph[x]);
     }
@@ -44,8 +43,6 @@ public class LivenessAnalyzerTest
 
         var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
 
-        Assert.Equal(interferenceGraph.Keys, new[] { x, y });
-        Assert.Equal(copyGraph.Keys, new[] { x, y });
         Assert.Single(interferenceGraph[x], y);
         Assert.Empty(copyGraph[x]);
     }
@@ -63,8 +60,6 @@ public class LivenessAnalyzerTest
 
         var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
 
-        Assert.Equal(interferenceGraph.Keys, new[] { x, y });
-        Assert.Equal(copyGraph.Keys, new[] { x, y });
         Assert.Empty(interferenceGraph[x]);
         Assert.Empty(copyGraph[x]);
     }
@@ -84,8 +79,6 @@ public class LivenessAnalyzerTest
 
         var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
 
-        Assert.Equal(interferenceGraph.Keys, new[] { x, y });
-        Assert.Equal(copyGraph.Keys, new[] { x, y });
         Assert.Empty(interferenceGraph[x]);
         Assert.Empty(copyGraph[x]);
     }
@@ -103,10 +96,47 @@ public class LivenessAnalyzerTest
 
         var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
 
-        Assert.Equal(interferenceGraph.Keys, new[] { x, y });
-        Assert.Equal(copyGraph.Keys, new[] { x, y });
         Assert.Empty(interferenceGraph[x]);
         Assert.Single(copyGraph[x], y);
+    }
+
+    [Fact]
+    public void ConditionalDefinitionsInterfere()
+    {
+        var instructions = new List<IAsmable>
+        {
+            new MovInstruction(x.AsRegOperand(), constant.AsOperand()),
+            new JmpCcInstruction(ConditionCode.E, conditionTarget),
+            new MovInstruction(y.AsRegOperand(), constant.AsOperand()),
+            new MovInstruction(constant.AsOperand(), y.AsRegOperand()),
+            conditionTarget,
+            new MovInstruction(constant.AsOperand(), x.AsRegOperand())
+        };
+
+        var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
+
+        Assert.Single(interferenceGraph[x], y);
+        Assert.Empty(copyGraph[x]);
+    }
+
+    [Fact]
+    public void ConditionalCopiesArentValid()
+    {
+        var instructions = new List<IAsmable>
+        {
+            new MovInstruction(y.AsRegOperand(), constant.AsOperand()),
+            new MovInstruction(x.AsRegOperand(), constant.AsOperand()),
+            new JmpCcInstruction(ConditionCode.E, conditionTarget),
+            new MovInstruction(y.AsRegOperand(), x.AsRegOperand()),
+            conditionTarget,
+            new MovInstruction(constant.AsOperand(), x.AsRegOperand()),
+            new MovInstruction(constant.AsOperand(), y.AsRegOperand()),
+        };
+
+        var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
+
+        Assert.Single(interferenceGraph[x], y);
+        Assert.Empty(copyGraph[x]);
     }
 
 #pragma warning disable xUnit1026
@@ -131,7 +161,6 @@ public class LivenessAnalyzerTest
             );
         }
     }
-#pragma warning restore xUnit1026
 
     [Theory]
     [MemberTupleData(nameof(InstructionLists))]
@@ -143,6 +172,33 @@ public class LivenessAnalyzerTest
         Assert.All(interferenceGraph.Keys, register => Assert.Contains(register, registers));
         Assert.All(copyGraph.Keys, register => Assert.Contains(register, registers));
     }
+
+    [Theory]
+    [MemberTupleData(nameof(InstructionLists))]
+    public void GraphsHaveNoLoops(List<IAsmable> instructions, List<Register> registers)
+    {
+        var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
+        Assert.All(registers, register => Assert.DoesNotContain(register, interferenceGraph[register]));
+        Assert.All(registers, register => Assert.DoesNotContain(register, copyGraph[register]));
+    }
+
+    [Theory]
+    [MemberTupleData(nameof(InstructionLists))]
+    public void InterferingPairAreNotCopies(List<IAsmable> instructions, List<Register> registers)
+    {
+        var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(instructions);
+        Assert.All
+        (
+            registers,
+            register =>
+                Assert.All
+                (
+                    interferenceGraph[register],
+                    conflict => Assert.DoesNotContain(conflict, copyGraph[register])
+                )
+        );
+    }
+#pragma warning restore xUnit1026
 
     public static readonly (List<IAsmable>, List<Register>)[] InstructionLists =
     {
@@ -175,5 +231,17 @@ public class LivenessAnalyzerTest
             },
             new List<Register> { x, y }
         ),
+        new (
+            new List<IAsmable>
+            {
+                new MovInstruction(x.AsRegOperand(), constant.AsOperand()),
+                new JmpCcInstruction(ConditionCode.E, conditionTarget),
+                new MovInstruction(y.AsRegOperand(), constant.AsOperand()),
+                new MovInstruction(constant.AsOperand(), y.AsRegOperand()),
+                conditionTarget,
+                new MovInstruction(constant.AsOperand(), x.AsRegOperand())
+            },
+            new List<Register> {x, y}
+        )
     };
 }
