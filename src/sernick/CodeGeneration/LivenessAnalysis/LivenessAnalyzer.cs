@@ -9,6 +9,8 @@ public static class LivenessAnalyzer
     {
         var instructionList = instructions.ToList();
 
+        var instructionCount = instructionList.Count;
+
         var registers = instructionList.SelectMany(asmable => asmable switch
         {
             IInstruction instruction => instruction.RegistersDefined.Union(instruction.RegistersUsed),
@@ -46,10 +48,10 @@ public static class LivenessAnalyzer
                     switch (asmable)
                     {
                         case Label:
-                            return new List<int> { i + 1 };
+                            return i+1 < instructionCount ? new List<int> { i + 1 } : new List<int>();
                         case IInstruction instruction:
                             var result = new List<int>();
-                            if (instruction.PossibleFollow)
+                            if (instruction.PossibleFollow && i+1 < instructionCount)
                             {
                                 result.Add(i+1);
                             }
@@ -66,7 +68,7 @@ public static class LivenessAnalyzer
             .ToList();
 
         var possiblePreviousInstructions = possibleNextInstructions.Select(_ => new List<int>()).ToList();
-        foreach (var current in Enumerable.Range(0, instructionList.Count))
+        foreach (var current in Enumerable.Range(0, instructionCount))
         {
             foreach (var next in possibleNextInstructions[current])
             {
@@ -78,7 +80,7 @@ public static class LivenessAnalyzer
         while (changed)
         {
             changed = false;
-            foreach (var current in Enumerable.Range(0, instructionList.Count))
+            foreach (var current in Enumerable.Range(0, instructionCount))
             {
                 changed = possibleNextInstructions[current]
                     .SelectMany(next => livenessInformation[next].LiveAtEntry)
@@ -107,7 +109,7 @@ public static class LivenessAnalyzer
         var interferenceGraph = registers.ToDictionary(register => register, _ => new HashSet<Register>());
         var copyGraph = registers.ToDictionary(register => register, _ => new HashSet<Register>());
 
-        foreach (var current in Enumerable.Range(0, instructionList.Count))
+        foreach (var current in Enumerable.Range(0, instructionCount))
         {
             if (instructionList[current] is not IInstruction instruction) { continue;}
             var liveRegisters = livenessInformation[current].LiveAtExit;
