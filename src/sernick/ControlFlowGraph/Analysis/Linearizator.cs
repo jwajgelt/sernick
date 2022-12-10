@@ -16,7 +16,7 @@ public sealed class Linearizator
 
     public IEnumerable<IAsmable> Linearize(CodeTreeRoot root)
     {
-        return dfs(root, 0);
+        return Dfs(root, 0);
     }
 
     private static Label GenerateLabel(int depth)
@@ -31,11 +31,11 @@ public sealed class Linearizator
         {
             case SingleExitNode node:
                 {
-                    return handleSingleExitNode(node, depth);
+                    return HandleSingleExitNode(node, depth);
                 }
             case ConditionalJumpNode conditionalNode:
                 {
-                    return handleConditionalJumpNode(conditionalNode, depth);
+                    return HandleConditionalJumpNode(conditionalNode, depth);
                 }
             default:
                 throw new Exception($"<Linearizator> called on a node which is neither a SingleExitNode nor ConditionalJumpNode : {v}");
@@ -50,7 +50,7 @@ public sealed class Linearizator
         }
 
         var nextDepth = depth + 1;
-        var (nextTreeLabel, nextTreeCover) = getTreeLabelAndCover(node.NextTree, nextDepth);
+        var (nextTreeLabel, nextTreeCover) = GetTreeLabelAndCover(node.NextTree, nextDepth);
 
         var nodeCover = _instructionCovering.Cover(node, nextTreeLabel);
         return nodeCover.Append<IAsmable>(nextTreeLabel).Concat(nextTreeCover);
@@ -65,7 +65,7 @@ public sealed class Linearizator
             throw new Exception($"<Linearizator> Node {conditionalNode} has TrueCase equal to null, but it should be non-nullable");
         }
 
-        var (trueCaseLabel, trueCaseCover) = getTreeLabelAndCover(trueCaseNode, nextDepth);
+        var (trueCaseLabel, trueCaseCover) = GetTreeLabelAndCover(trueCaseNode, nextDepth);
 
         var falseCaseNode = conditionalNode.FalseCase;
         if (falseCaseNode == null)
@@ -73,7 +73,7 @@ public sealed class Linearizator
             throw new Exception("<Linearizator> Node " + conditionalNode + " has TrueCase equal to null, but it should be non-nullable");
         }
 
-        var (falseCaseLabel, falseCaseCover) = getTreeLabelAndCover(falseCaseNode, nextDepth);
+        var (falseCaseLabel, falseCaseCover) = GetTreeLabelAndCover(falseCaseNode, nextDepth);
 
         var conditionalNodeCover = _instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
         return conditionalNodeCover.Append<IAsmable>(trueCaseLabel).Concat(trueCaseCover).Append<IAsmable>(falseCaseLabel).Concat(falseCaseCover);
@@ -84,12 +84,12 @@ public sealed class Linearizator
         if (_visitedRootsLabels.TryGetValue(tree, out var label))
         {
             // TODO should it be more like a conditional jump, not just a label? IDK how to do it with our API :|
-            var reuseTreeCover = label.Enumerate();
+            var reuseTreeCover = new List<IAsmable>() { label };
             return (label, reuseTreeCover);
         }
 
         var treeLabel = GenerateLabel(depth);
-        var treeCover = dfs(tree, depth + 1);
+        var treeCover = Dfs(tree, depth + 1);
         _visitedRootsLabels.Add(tree, treeLabel);
         return (treeLabel, treeCover);
     }
