@@ -21,8 +21,8 @@ public sealed class Linearizator
 
     private static Label generateLabel(int depth)
     {
-        // TODO labels should be unique on certain depth (and also unique overall)
-        return new Label("TODO ME LATER");
+        var enhancedGuid = Guid.NewGuid() + depth.ToString();
+        return new Label(enhancedGuid);
     }
 
     private IEnumerable<IAsmable> dfs(CodeTreeRoot v, int depth)
