@@ -50,10 +50,10 @@ public sealed class Linearizator
         }
 
         var nextDepth = depth + 1;
-        var (nextTreeLabel, nextTreeCover) = GetTreeLabelAndCover(node.NextTree, nextDepth);
+        var (nextTreeLabel, nextTreeCoverWithLabel) = GetTreeLabelAndCover(node.NextTree, nextDepth);
 
         var nodeCover = _instructionCovering.Cover(node, nextTreeLabel);
-        return nodeCover.Append<IAsmable>(nextTreeLabel).Concat(nextTreeCover);
+        return nodeCover.Concat(nextTreeCoverWithLabel);
     }
 
     private IEnumerable<IAsmable> HandleConditionalJumpNode(ConditionalJumpNode conditionalNode, int depth)
@@ -91,8 +91,8 @@ public sealed class Linearizator
         }
 
         var treeLabel = GenerateLabel(depth);
-        var treeCover = Dfs(tree, depth + 1).Append<IAsmable>(treeLabel);
+        var treeCoverWithLabel = new List<IAsmable>() { treeLabel }.Concat(Dfs(tree, depth + 1));
         _visitedRootsLabels.Add(tree, treeLabel);
-        return (treeLabel, treeCover);
+        return (treeLabel, treeCoverWithLabel);
     }
 }
