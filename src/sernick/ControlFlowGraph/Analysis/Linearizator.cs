@@ -6,10 +6,12 @@ using CodeTree;
 public sealed class Linearizator
 {
     private readonly InstructionCovering _instructionCovering;
+    private Dictionary<CodeTreeRoot, Label> _visitedRootsLabels;
 
     public Linearizator(InstructionCovering instructionCovering)
     {
         _instructionCovering = instructionCovering;
+        _visitedRootsLabels = new Dictionary<CodeTreeRoot, Label>();
     }
 
     public IEnumerable<IAsmable> Linearize(CodeTreeRoot root)
@@ -23,7 +25,7 @@ public sealed class Linearizator
         return new Label("TODO ME LATER");
     }
 
-    private IEnumerable<IAsmable> dfs(CodeTreeRoot? v, int depth)
+    private IEnumerable<IAsmable> dfs(CodeTreeRoot v, int depth)
     {
         if (v == null)
         {
@@ -41,17 +43,31 @@ public sealed class Linearizator
             var nextTree = node.NextTree;
             var nextTreeCover = dfs(nextTree, nextDepth);
             var labelForNextTree = generateLabel(depth);
+            _visitedRootsLabels[nextTree] = labelForNextTree;
+
             var nodeCover = (List<IAsmable>)_instructionCovering.Cover(node, labelForNextTree);
             return nodeCover.Append(labelForNextTree).Concat(nextTreeCover);
         }
         else
         {
             var conditionalNode = (ConditionalJumpNode)v;
-            var trueCaseCover = dfs(conditionalNode.TrueCase, nextDepth);
+            var trueCaseNode = conditionalNode.TrueCase;
+            if(trueCaseNode == null)
+            {
+                throw new Exception("<Linearizator> Node " + v + " has TrueCase equal to null, but it should be non-nullable");
+            }
             var trueCaseLabel = generateLabel(depth);
+            var trueCaseCover = dfs(trueCaseNode, nextDepth);
+            _visitedRootsLabels[trueCaseNode] = trueCaseLabel;
 
-            var falseCaseCover = dfs(conditionalNode.FalseCase, nextDepth);
+            var falseCaseNode = conditionalNode.FalseCase;
+            if (falseCaseNode == null)
+            {
+                throw new Exception("<Linearizator> Node " + v + " has TrueCase equal to null, but it should be non-nullable");
+            }
             var falseCaseLabel = generateLabel(depth);
+            var falseCaseCover = dfs(falseCaseNode, nextDepth);
+            _visitedRootsLabels[falseCaseNode] = falseCaseLabel;
 
             var conditionalNodeCover = (List<IAsmable>)_instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
             return conditionalNodeCover.Append(trueCaseLabel).Concat(trueCaseCover).Append(falseCaseLabel).Concat(falseCaseCover);
