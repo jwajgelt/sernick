@@ -56,7 +56,7 @@ public sealed class Linearizator
         }
 
         var nextDepth = depth + 1;
-        var (nextTreeLabel, nextTreeCover) = processTree(node.NextTree, nextDepth);
+        var (nextTreeLabel, nextTreeCover) = getTreeLabelAndCover(node.NextTree, nextDepth);
 
         var nodeCover = (List<IAsmable>)_instructionCovering.Cover(node, nextTreeLabel);
         return nodeCover.Append(nextTreeLabel).Concat(nextTreeCover);
@@ -70,27 +70,31 @@ public sealed class Linearizator
         {
             throw new Exception("<Linearizator> Node " + conditionalNode + " has TrueCase equal to null, but it should be non-nullable");
         }
-        var (trueCaseLabel, trueCaseCover) = processTree(trueCaseNode, nextDepth);
+
+        var (trueCaseLabel, trueCaseCover) = getTreeLabelAndCover(trueCaseNode, nextDepth);
 
         var falseCaseNode = conditionalNode.FalseCase;
         if (falseCaseNode == null)
         {
             throw new Exception("<Linearizator> Node " + conditionalNode + " has TrueCase equal to null, but it should be non-nullable");
         }
-        var (falseCaseLabel, falseCaseCover) = processTree(falseCaseNode, nextDepth);
+        var (falseCaseLabel, falseCaseCover) = getTreeLabelAndCover(falseCaseNode, nextDepth);
 
         var conditionalNodeCover = (List<IAsmable>)_instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
         return conditionalNodeCover.Append(trueCaseLabel).Concat(trueCaseCover).Append(falseCaseLabel).Concat(falseCaseCover);
     }
 
-    private ValueTuple<Label, IEnumerable<IAsmable>> processTree(CodeTreeRoot tree, int depth)
+    private ValueTuple<Label, IEnumerable<IAsmable>> getTreeLabelAndCover(CodeTreeRoot tree, int depth)
     {
-        if (_visitedRootsLabels.ContainsKey(tree))
+        var treeWasAlreadyVisited = _visitedRootsLabels.ContainsKey(tree);
+        if (treeWasAlreadyVisited)
         {
             var label = _visitedRootsLabels[tree];
-            var cover = new List<IAsmable>() { label };
-            return (label, cover);
+            // TODO should it be more like a conditional jump, not just a label? IDK how to do it with our API :|
+            var reuseTreeCover = new List<IAsmable>() { label };
+            return (label, reuseTreeCover);
         }
+
         var treeLabel = generateLabel(depth);
         var treeCover = dfs(tree, depth + 1);
         _visitedRootsLabels.Add(tree, treeLabel);
