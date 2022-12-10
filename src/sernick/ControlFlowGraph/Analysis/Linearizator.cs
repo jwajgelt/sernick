@@ -31,15 +31,31 @@ public sealed class Linearizator
         {
             return new List<IAsmable>();
         }
-        var nextDepth = depth + 1;
+        
 
-        if (v is SingleExitNode node)
+        switch (v)
+        {
+            case SingleExitNode node:
+                {
+                    return handleSingleExitNode(node, depth);
+                }
+            case ConditionalJumpNode conditionalNode:
+                {
+                    return handleConditionalJumpNode(conditionalNode, depth);
+                }
+            default:
+                return new List<IAsmable>(); // this should never happen :P
+        }
+    }
+
+        private IEnumerable<IAsmable> handleSingleExitNode(SingleExitNode node, int depth)
         {
             if (node.NextTree == null)
             {
                 return _instructionCovering.Cover(node, null);
             }
 
+            var nextDepth = depth + 1;
             var nextTree = node.NextTree;
             var nextTreeCover = dfs(nextTree, nextDepth);
             var labelForNextTree = generateLabel(depth);
@@ -48,13 +64,14 @@ public sealed class Linearizator
             var nodeCover = (List<IAsmable>)_instructionCovering.Cover(node, labelForNextTree);
             return nodeCover.Append(labelForNextTree).Concat(nextTreeCover);
         }
-        else
+
+        private IEnumerable<IAsmable> handleConditionalJumpNode(ConditionalJumpNode conditionalNode, int depth)
         {
-            var conditionalNode = (ConditionalJumpNode)v;
+            var nextDepth = depth + 1;
             var trueCaseNode = conditionalNode.TrueCase;
-            if(trueCaseNode == null)
+            if (trueCaseNode == null)
             {
-                throw new Exception("<Linearizator> Node " + v + " has TrueCase equal to null, but it should be non-nullable");
+                throw new Exception("<Linearizator> Node " + conditionalNode + " has TrueCase equal to null, but it should be non-nullable");
             }
             var trueCaseLabel = generateLabel(depth);
             var trueCaseCover = dfs(trueCaseNode, nextDepth);
@@ -63,7 +80,7 @@ public sealed class Linearizator
             var falseCaseNode = conditionalNode.FalseCase;
             if (falseCaseNode == null)
             {
-                throw new Exception("<Linearizator> Node " + v + " has TrueCase equal to null, but it should be non-nullable");
+                throw new Exception("<Linearizator> Node " + conditionalNode + " has TrueCase equal to null, but it should be non-nullable");
             }
             var falseCaseLabel = generateLabel(depth);
             var falseCaseCover = dfs(falseCaseNode, nextDepth);
@@ -71,6 +88,6 @@ public sealed class Linearizator
 
             var conditionalNodeCover = (List<IAsmable>)_instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
             return conditionalNodeCover.Append(trueCaseLabel).Concat(trueCaseCover).Append(falseCaseLabel).Concat(falseCaseCover);
+
         }
-    }
 }
