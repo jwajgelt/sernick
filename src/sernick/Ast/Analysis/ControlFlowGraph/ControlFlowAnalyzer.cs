@@ -64,7 +64,8 @@ public static class ControlFlowAnalyzer
                 },
                 variableFactory,
                 typeCheckingResult,
-                nameResolution
+                nameResolution,
+                contextMap
             );
 
         IFunctionVariable? resultVariable = null;
@@ -123,6 +124,7 @@ public static class ControlFlowAnalyzer
         private readonly IReadOnlySet<AstNode> _nodesWithControlFlow;
         private readonly TemporaryLocalVariableFactory _variableFactory;
         private readonly TypeCheckingResult _typeChecking;
+        private readonly FunctionContextMap _functionContextMap;
         private NameResolutionResult _nameResolution;
 
         public ControlFlowVisitor
@@ -132,7 +134,8 @@ public static class ControlFlowAnalyzer
             Func<AstNode, CodeTreeRoot, IFunctionVariable?, NameResolutionResult, CodeTreeRoot> pullOutSideEffects,
             TemporaryLocalVariableFactory variableFactory,
             TypeCheckingResult typeChecking,
-            NameResolutionResult nameResolution
+            NameResolutionResult nameResolution,
+            FunctionContextMap functionContextMap
         )
         {
             _nameResolution = nameResolution;
@@ -141,6 +144,7 @@ public static class ControlFlowAnalyzer
             _nodesWithControlFlow = nodesWithControlFlow;
             _variableFactory = variableFactory;
             _typeChecking = typeChecking;
+            _functionContextMap = functionContextMap;
         }
 
         protected override CodeTreeRoot VisitAstNode(AstNode node, ControlFlowVisitorParam param)
@@ -279,6 +283,9 @@ public static class ControlFlowAnalyzer
             }).Reverse();
 
             var functionCall = node with { Arguments = arguments.ToList() };
+            _nameResolution = _nameResolution.JoinWith(NameResolutionResult.OfFunctionCall(functionCall, _nameResolution.CalledFunctionDeclarations[node]));
+            _functionContextMap[functionCall] = _functionContextMap[node];
+
             last.NextTree = _pullOutSideEffects(functionCall, param.Next, param.ResultVariable);
             return result;
         }
@@ -296,10 +303,7 @@ public static class ControlFlowAnalyzer
                 return _pullOutSideEffects(node, param.Next, param.ResultVariable);
             }
 
-            var (tempVariable, variableValueNode) = GenerateTemporaryAst(node.InitValue);
-
-            var variableDeclaration = node with { InitValue = variableValueNode };
-            return node.InitValue.Accept(this, param with { ResultVariable = tempVariable, Next = _pullOutSideEffects(variableDeclaration, param.Next, param.ResultVariable) });
+            return node.InitValue.Accept(this, param with { ResultVariable = node });
         }
 
         public override CodeTreeRoot VisitAssignment(Assignment node, ControlFlowVisitorParam param)
@@ -309,10 +313,7 @@ public static class ControlFlowAnalyzer
                 return _pullOutSideEffects(node, param.Next, param.ResultVariable);
             }
 
-            var (tempVariable, variableValueNode) = GenerateTemporaryAst(node.Right);
-
-            var assignment = node with { Right = variableValueNode };
-            return node.Right.Accept(this, param with { ResultVariable = tempVariable, Next = _pullOutSideEffects(assignment, param.Next, param.ResultVariable) });
+            return node.Right.Accept(this, param with { ResultVariable = _nameResolution.AssignedVariableDeclarations[node] });
         }
 
         public override CodeTreeRoot VisitIdentifier(Identifier node, ControlFlowVisitorParam param)
