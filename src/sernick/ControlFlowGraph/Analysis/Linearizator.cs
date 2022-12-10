@@ -19,7 +19,7 @@ public sealed class Linearizator
         return dfs(root, 0);
     }
 
-    private static Label generateLabel(int depth)
+    private static Label GenerateLabel(int depth)
     {
         var enhancedGuid = Guid.NewGuid() + depth.ToString();
         return new Label(enhancedGuid);
@@ -72,6 +72,7 @@ public sealed class Linearizator
         {
             throw new Exception("<Linearizator> Node " + conditionalNode + " has TrueCase equal to null, but it should be non-nullable");
         }
+
         var (falseCaseLabel, falseCaseCover) = getTreeLabelAndCover(falseCaseNode, nextDepth);
 
         var conditionalNodeCover = (List<IAsmable>)_instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
@@ -89,9 +90,9 @@ public sealed class Linearizator
             return (label, reuseTreeCover);
         }
 
-        var treeLabel = generateLabel(depth);
+        var treeLabel = GenerateLabel(depth);
         var treeCover = dfs(tree, depth + 1);
         _visitedRootsLabels.Add(tree, treeLabel);
-        return ( treeLabel, treeCover );
+        return (treeLabel, treeCover);
     }
 }
