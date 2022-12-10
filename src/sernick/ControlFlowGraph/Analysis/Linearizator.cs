@@ -43,7 +43,7 @@ public sealed class Linearizator
             var nextTree = node.NextTree;
             var nextTreeCover = dfs(nextTree, nextDepth);
             var labelForNextTree = generateLabel(depth);
-            _visitedRootsLabels[nextTree] = labelForNextTree;
+            _visitedRootsLabels.Add(nextTree, labelForNextTree);
 
             var nodeCover = (List<IAsmable>)_instructionCovering.Cover(node, labelForNextTree);
             return nodeCover.Append(labelForNextTree).Concat(nextTreeCover);
@@ -58,7 +58,7 @@ public sealed class Linearizator
             }
             var trueCaseLabel = generateLabel(depth);
             var trueCaseCover = dfs(trueCaseNode, nextDepth);
-            _visitedRootsLabels[trueCaseNode] = trueCaseLabel;
+            _visitedRootsLabels.Add(trueCaseNode, trueCaseLabel);
 
             var falseCaseNode = conditionalNode.FalseCase;
             if (falseCaseNode == null)
@@ -67,7 +67,7 @@ public sealed class Linearizator
             }
             var falseCaseLabel = generateLabel(depth);
             var falseCaseCover = dfs(falseCaseNode, nextDepth);
-            _visitedRootsLabels[falseCaseNode] = falseCaseLabel;
+            _visitedRootsLabels.Add(falseCaseNode, falseCaseLabel);
 
             var conditionalNodeCover = (List<IAsmable>)_instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
             return conditionalNodeCover.Append(trueCaseLabel).Concat(trueCaseCover).Append(falseCaseLabel).Concat(falseCaseCover);
