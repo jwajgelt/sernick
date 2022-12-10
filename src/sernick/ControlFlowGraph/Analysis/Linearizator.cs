@@ -65,7 +65,7 @@ public sealed class Linearizator
             throw new Exception($"<Linearizator> Node {conditionalNode} has TrueCase equal to null, but it should be non-nullable");
         }
 
-        var (trueCaseLabel, trueCaseCover) = GetTreeLabelAndCover(trueCaseNode, nextDepth);
+        var (trueCaseLabel, trueCaseCoverWithLabel) = GetTreeLabelAndCover(trueCaseNode, nextDepth);
 
         var falseCaseNode = conditionalNode.FalseCase;
         if (falseCaseNode == null)
@@ -73,10 +73,12 @@ public sealed class Linearizator
             throw new Exception("<Linearizator> Node " + conditionalNode + " has TrueCase equal to null, but it should be non-nullable");
         }
 
-        var (falseCaseLabel, falseCaseCover) = GetTreeLabelAndCover(falseCaseNode, nextDepth);
+        var (falseCaseLabel, falseCaseCoverWithLabel) = GetTreeLabelAndCover(falseCaseNode, nextDepth);
 
         var conditionalNodeCover = _instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
-        return conditionalNodeCover.Append<IAsmable>(trueCaseLabel).Concat(trueCaseCover).Append<IAsmable>(falseCaseLabel).Concat(falseCaseCover);
+        // trueCaseCoverWithLabel and falseCaseCoverWithLabel are possibly empty lists, if those trees were already visited
+        // so we can Concat(..) them here without any conditional checks
+        return conditionalNodeCover.Concat(trueCaseCoverWithLabel).Concat(falseCaseCoverWithLabel);
     }
 
     private ValueTuple<Label, IEnumerable<IAsmable>> GetTreeLabelAndCover(CodeTreeRoot tree, int depth)
@@ -84,12 +86,12 @@ public sealed class Linearizator
         if (_visitedRootsLabels.TryGetValue(tree, out var label))
         {
             // TODO should it be more like a conditional jump, not just a label? IDK how to do it with our API :|
-            var reuseTreeCover = new List<IAsmable>() { label };
-            return (label, reuseTreeCover);
+            var emptyCover = new List<IAsmable>();
+            return (label, emptyCover);
         }
 
         var treeLabel = GenerateLabel(depth);
-        var treeCover = Dfs(tree, depth + 1);
+        var treeCover = Dfs(tree, depth + 1).Append<IAsmable>(treeLabel);
         _visitedRootsLabels.Add(tree, treeLabel);
         return (treeLabel, treeCover);
     }
