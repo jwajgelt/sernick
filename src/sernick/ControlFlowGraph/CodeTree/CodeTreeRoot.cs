@@ -23,8 +23,8 @@ public sealed record ConditionalJumpNode
         FalseCase = falseCase;
     }
 
-    public CodeTreeRoot TrueCase { get; set; } = new SingleExitNode(Array.Empty<CodeTreeNode>());
-    public CodeTreeRoot FalseCase { get; set; } = new SingleExitNode(Array.Empty<CodeTreeNode>());
+    public CodeTreeRoot TrueCase { get; } = new SingleExitNode(Array.Empty<CodeTreeNode>());
+    public CodeTreeRoot FalseCase { get; } = new SingleExitNode(Array.Empty<CodeTreeNode>());
 }
 
 /// <summary>
