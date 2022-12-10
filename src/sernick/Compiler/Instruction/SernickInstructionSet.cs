@@ -50,6 +50,19 @@ public static class SernickInstructionSet
                         }.WithOutput(null));
             }
 
+            // mov $reg, $addr[$displacement]
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.RegisterWrite(Any<Register>(), out var reg,
+                        Pat.MemoryRead(Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _,
+                            Pat.GlobalAddress(out var addr), CodeTreePattern.Constant(Any<RegisterValue>(), out var imm)))),
+                    (_, values) =>
+                        new List<IInstruction>
+                        {
+                            Mov.ToReg(values.Get<Register>(reg)).FromMem(values.Get<Label>(addr), values.Get<RegisterValue>(imm))
+                        }.WithOutput(null));
+            }
+
             // mov $reg, [*]
             {
                 yield return new CodeTreeNodePatternRule(
@@ -69,6 +82,19 @@ public static class SernickInstructionSet
                         new List<IInstruction>
                         {
                             Mov.ToReg(values.Get<Register>(reg)).FromReg(inputs[0])
+                        }.WithOutput(null));
+            }
+
+            // mov $addr[$displacement], *
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.MemoryWrite(Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _,
+                        Pat.GlobalAddress(out var addr), CodeTreePattern.Constant(Any<RegisterValue>(), out var imm)),
+                        Pat.WildcardNode),
+                    (inputs, values) =>
+                        new List<IInstruction>
+                        {
+                            Mov.ToMem(values.Get<Label>(addr), values.Get<RegisterValue>(imm)).FromReg(inputs[0])
                         }.WithOutput(null));
             }
 

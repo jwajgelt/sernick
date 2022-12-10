@@ -7,6 +7,7 @@ using sernick.ControlFlowGraph.CodeTree;
 using sernick.Utility;
 using Utility;
 using static sernick.CodeGeneration.InstructionSelection.CodeTreePatternPredicates;
+using static sernick.Compiler.PlatformConstants;
 using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using Pat = sernick.CodeGeneration.InstructionSelection.CodeTreePattern;
 
@@ -21,6 +22,7 @@ public class CodeTreePatternMatcherTest
     }
 
     private static readonly Register register = new();
+    private static readonly GlobalAddress address = new("addr");
 
     public static readonly (
         CodeTreePatternRule rule,
@@ -67,6 +69,25 @@ public class CodeTreePatternMatcherTest
             Pat.RegisterWrite(Any<Register>(), out _, Pat.Constant(Any<RegisterValue>(), out _)).AsRule(),
             Reg(register).Write(5),
             Enumerable.Empty<CodeTreeValueNode>()
+        ),
+        
+        // mov $reg, $addr[$displacement]
+        (
+            Pat.RegisterWrite(Any<Register>(), out _,
+                Pat.MemoryRead(Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _,
+                    Pat.GlobalAddress(out _),
+                    CodeTreePattern.Constant(Any<RegisterValue>(), out _)))).AsRule(),
+            Reg(register).Write(Mem(address + POINTER_SIZE).Read()),
+            Enumerable.Empty<CodeTreeValueNode>()
+        ),
+        
+        // mov $addr[$displacement], *
+        (
+            Pat.MemoryWrite(Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _,
+                    Pat.GlobalAddress(out _), CodeTreePattern.Constant(Any<RegisterValue>(), out _)),
+                Pat.WildcardNode).AsRule(),
+            Mem(address + POINTER_SIZE).Write(Reg(register).Read()),
+            Reg(register).Read().Enumerate()
         ),
         
         // mov [*], $const
