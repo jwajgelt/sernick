@@ -1,6 +1,7 @@
 namespace sernick.CodeGeneration.LivenessAnalysis;
 
 using ControlFlowGraph.CodeTree;
+using Utility;
 using Graph = IReadOnlyDictionary<ControlFlowGraph.CodeTree.Register, IReadOnlyCollection<ControlFlowGraph.CodeTree.Register>>;
 
 public static class LivenessAnalyzer
@@ -11,11 +12,9 @@ public static class LivenessAnalyzer
 
         var instructionCount = instructionList.Count;
 
-        var registers = instructionList.SelectMany(asmable => asmable switch
-        {
-            IInstruction instruction => instruction.RegistersDefined.Union(instruction.RegistersUsed),
-            _ => new Register[] { }
-        }).ToHashSet();
+        var registers = instructionList.OfType<IInstruction>().SelectMany(instruction =>
+            instruction.RegistersDefined.Union(instruction.RegistersUsed)
+        ).ToHashSet();
 
         var livenessInformation = instructionList
             .Select(
@@ -48,7 +47,7 @@ public static class LivenessAnalyzer
                     switch (asmable)
                     {
                         case Label:
-                            return i + 1 < instructionCount ? new List<int> { i + 1 } : new List<int>();
+                            return i + 1 < instructionCount ? (i + 1).Enumerate() : Enumerable.Empty<int>();
                         case IInstruction instruction:
                             var result = new List<int>();
                             if (instruction.PossibleFollow && i + 1 < instructionCount)
@@ -118,7 +117,7 @@ public static class LivenessAnalyzer
             }
 
             var liveRegisters = livenessInformation[current].LiveAtExit;
-            var definedRegisters = instruction.RegistersDefined.ToList();
+            var definedRegisters = instruction.RegistersDefined;
             foreach (var x in definedRegisters)
             {
                 foreach (var y in liveRegisters)
@@ -143,11 +142,7 @@ public static class LivenessAnalyzer
 
         foreach (var x in registers)
         {
-            foreach (var y in interferenceGraph[x])
-            {
-                copyGraph[x].Remove(y);
-                copyGraph[y].Remove(x);
-            }
+            copyGraph[x].ExceptWith(interferenceGraph[x]);
         }
 
         return
