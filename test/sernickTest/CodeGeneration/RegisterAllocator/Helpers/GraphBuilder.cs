@@ -63,6 +63,7 @@ public class GraphBuilder
         {
             builder.Edge(1, branch);
         }
+
         return builder.Build();
     }
 }
