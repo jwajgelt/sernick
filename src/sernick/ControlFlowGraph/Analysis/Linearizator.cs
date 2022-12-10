@@ -81,10 +81,8 @@ public sealed class Linearizator
 
     private ValueTuple<Label, IEnumerable<IAsmable>> GetTreeLabelAndCover(CodeTreeRoot tree, int depth)
     {
-        var treeWasAlreadyVisited = _visitedRootsLabels.ContainsKey(tree);
-        if (treeWasAlreadyVisited)
+        if (_visitedRootsLabels.TryGetValue(tree, out var label))
         {
-            var label = _visitedRootsLabels[tree];
             // TODO should it be more like a conditional jump, not just a label? IDK how to do it with our API :|
             var reuseTreeCover = label.Enumerate();
             return (label, reuseTreeCover);
