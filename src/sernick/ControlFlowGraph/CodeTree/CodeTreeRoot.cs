@@ -15,16 +15,16 @@ public sealed record ConditionalJumpNode
     CodeTreeValueNode ConditionEvaluation
 ) : CodeTreeRoot
 {
-    public ConditionalJumpNode(CodeTreeRoot? trueCase,
-        CodeTreeRoot? falseCase,
+    public ConditionalJumpNode(CodeTreeRoot trueCase,
+        CodeTreeRoot falseCase,
         CodeTreeValueNode conditionEvaluation) : this(conditionEvaluation)
     {
         TrueCase = trueCase;
         FalseCase = falseCase;
     }
 
-    public CodeTreeRoot? TrueCase { get; set; } = null;
-    public CodeTreeRoot? FalseCase { get; set; } = null;
+    public CodeTreeRoot TrueCase { get; } = new SingleExitNode(Array.Empty<CodeTreeNode>());
+    public CodeTreeRoot FalseCase { get; } = new SingleExitNode(Array.Empty<CodeTreeNode>());
 }
 
 /// <summary>
