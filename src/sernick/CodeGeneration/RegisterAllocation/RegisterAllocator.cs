@@ -109,9 +109,11 @@ public sealed class RegisterAllocator
     }
 
     // doesn't return HardwareRegisters, so they are assigned at the beginning
-    private Register? GetMinimalDegreeRegister(MutableGraph graph) => graph.Where(entry => !IsHardwareRegister(entry.Key))
-        .DefaultIfEmpty(new KeyValuePair<Register, ICollection<Register>>(null, Array.Empty<Register>()))
-        .MinBy(entry => entry.Value.Count).Key;
+    private Register? GetMinimalDegreeRegister(MutableGraph graph) => graph
+        .Where(entry => !IsHardwareRegister(entry.Key))
+        .Select(entry => entry as KeyValuePair<Register, ICollection<Register>>?)
+        .DefaultIfEmpty()
+        .MinBy(entry => entry?.Value.Count ?? 0)?.Key;
 
     private static void AddToNeighboursRegisters(IReadOnlyCollection<Register> neighbours, HardwareRegister? hardwareRegister,
         IDictionary<Register, HashSet<HardwareRegister>> neighboursRegisters)
