@@ -25,7 +25,7 @@ public sealed class Linearizator
         return new Label(enhancedGuid);
     }
 
-    private IEnumerable<IAsmable> dfs(CodeTreeRoot v, int depth)
+    private IEnumerable<IAsmable> Dfs(CodeTreeRoot v, int depth)
     {
         switch (v)
         {
