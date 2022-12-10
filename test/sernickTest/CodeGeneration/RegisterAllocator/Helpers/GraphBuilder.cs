@@ -55,4 +55,14 @@ public class GraphBuilder
         return registers.ToDictionary(register => register,
             register => (IReadOnlyCollection<Register>)registers.Where(neighbour => neighbour != register).ToList());
     }
+
+    public static Graph StarGraph(int branches)
+    {
+        var builder = new GraphBuilder();
+        foreach (var branch in Enumerable.Range(2, branches))
+        {
+            builder.Edge(1, branch);
+        }
+        return builder.Build();
+    }
 }

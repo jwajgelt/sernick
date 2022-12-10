@@ -185,11 +185,30 @@ public class RegisterAllocatorTest
                     .Edge(10, 6)
                     .Build(),
                 minAllocated: 10),
+
+            // Large special graphs
             (
                 hardwareRegisters: new FakeHardwareRegister[]{ 'A', 'B', 'C', 'D' },
-                interferenceGraph: Clique(32),
+                interferenceGraph: Clique(64),
                 copyGraph: Graph().Build(),
-                minAllocated: 4)
+                minAllocated: 4),
+            (
+                hardwareRegisters: new FakeHardwareRegister[]{ 'A', 'B'},
+                interferenceGraph: StarGraph(64),
+                copyGraph: Graph().Build(),
+                minAllocated: 65),
+
+            // Small Edge Cases
+            (
+                hardwareRegisters: new FakeHardwareRegister[]{ 'A' },
+                interferenceGraph: Graph().Build(),
+                copyGraph: Graph().Build(),
+                minAllocated: 0),
+            (
+                hardwareRegisters: new FakeHardwareRegister[]{ 'A', 'B' },
+                interferenceGraph: Graph().Edge(1, 2).Edge(3, 4).Edge(5, 6).Build(),
+                copyGraph: Graph().Build(),
+                minAllocated: 6),
         };
 
     /// <summary>
