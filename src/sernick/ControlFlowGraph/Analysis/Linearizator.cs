@@ -14,15 +14,22 @@ public sealed class Linearizator
 
     public IEnumerable<IAsmable> Linearize(CodeTreeRoot root)
     {
-        return dfs(root);
+        return dfs(root, 0);
     }
 
-    public IEnumerable<IAsmable> dfs(CodeTreeRoot? v)
+    private static Label generateLabel(int depth)
+    {
+        // TODO labels should be unique on certain depth (and also unique overall)
+        return new Label("TODO ME LATER");
+    }
+
+    private IEnumerable<IAsmable> dfs(CodeTreeRoot? v, int depth)
     {
         if (v == null)
         {
             return new List<IAsmable>();
         }
+        var nextDepth = depth + 1;
 
         if (v is SingleExitNode node)
         {
@@ -32,20 +39,19 @@ public sealed class Linearizator
             }
 
             var nextTree = node.NextTree;
-            var nextTreeCover = dfs(nextTree);
-            var labelForNextTree = new Label("nextTree");
-            // TODO 1 -- should we care about colliding labels?
+            var nextTreeCover = dfs(nextTree, nextDepth);
+            var labelForNextTree = generateLabel(depth);
             var nodeCover = (List<IAsmable>)_instructionCovering.Cover(node, labelForNextTree);
             return nodeCover.Append(labelForNextTree).Concat(nextTreeCover);
         }
         else
         {
             var conditionalNode = (ConditionalJumpNode)v;
-            var trueCaseCover = dfs(conditionalNode.TrueCase);
-            var trueCaseLabel = new Label("trueCase");
+            var trueCaseCover = dfs(conditionalNode.TrueCase, nextDepth);
+            var trueCaseLabel = generateLabel(depth);
 
-            var falseCaseCover = dfs(conditionalNode.FalseCase);
-            var falseCaseLabel = new Label("falseCase");
+            var falseCaseCover = dfs(conditionalNode.FalseCase, nextDepth);
+            var falseCaseLabel = generateLabel(depth);
 
             var conditionalNodeCover = (List<IAsmable>)_instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
             return conditionalNodeCover.Append(trueCaseLabel).Concat(trueCaseCover).Append(falseCaseLabel).Concat(falseCaseCover);
