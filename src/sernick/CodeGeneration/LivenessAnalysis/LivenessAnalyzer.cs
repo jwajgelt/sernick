@@ -25,14 +25,15 @@ public static class LivenessAnalyzer
 
         var labelLocations = instructionList
             .SelectMany(
+                // this essentially filters out non-label elements,
+                // but we can't use `OfType` here
+                // since we want the original indices
                 (asmable, i) =>
-                {
-                    return asmable switch
+                    asmable switch
                     {
-                        Label label => new[] { (label, i) },
-                        _ => new (Label, int)[] { },
-                    };
-                }
+                        Label label => (label, i).Enumerate(),
+                        _ => Enumerable.Empty<(Label, int)>(),
+                    }
             )
             .ToDictionary
             (
