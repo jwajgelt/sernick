@@ -56,7 +56,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         IDictionary<CodeTreePattern, object> values);
 
     /// <summary>
-    /// <see cref="BinaryOperationNode"/> pattern,
+    /// <see cref="BinaryOperationNodePattern"/> pattern,
     /// allowing to filter binary-operator of the matching node via <see cref="operation"/> predicate.
     /// </summary>
     /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
@@ -67,7 +67,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         CodeTreePattern right) => id = new BinaryOperationNodePattern(operation, left, right);
 
     /// <summary>
-    /// <see cref="UnaryOperationNode"/> pattern,
+    /// <see cref="UnaryOperationNodePattern"/> pattern,
     /// allowing to filter unary-operator of the matching node via <see cref="operation"/> predicate.
     /// </summary>
     /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
@@ -77,7 +77,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         CodeTreePattern operand) => id = new UnaryOperationNodePattern(operation, operand);
 
     /// <summary>
-    /// <see cref="Constant"/> pattern,
+    /// <see cref="ConstantPattern"/> pattern,
     /// allowing to filter constant value of the matching node via <see cref="value"/> predicate.
     /// </summary>
     /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
@@ -86,7 +86,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         out CodeTreePattern id) => id = new ConstantPattern(value);
 
     /// <summary>
-    /// <see cref="RegisterRead"/> pattern,
+    /// <see cref="RegisterReadPattern"/> pattern,
     /// allowing to filter register of the matching node via <see cref="Register"/> predicate.
     /// </summary>
     /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
@@ -95,7 +95,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         out CodeTreePattern id) => id = new RegisterReadPattern(register);
 
     /// <summary>
-    /// <see cref="RegisterWrite"/> pattern,
+    /// <see cref="RegisterWritePattern"/> pattern,
     /// allowing to filter register of the matching node via <see cref="Register"/> predicate.
     /// </summary>
     /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
@@ -105,31 +105,31 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         CodeTreePattern value) => id = new RegisterWritePattern(register, value);
 
     /// <summary>
-    /// <see cref="GlobalAddress"/> pattern.
+    /// <see cref="GlobalAddressPattern"/> pattern.
     /// </summary>
     /// /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
     public static CodeTreePattern GlobalAddress(out CodeTreePattern id) => id = new GlobalAddressPattern();
 
     /// <summary>
-    /// <see cref="MemoryRead"/> pattern.
+    /// <see cref="MemoryReadPattern"/> pattern.
     /// </summary>
     public static CodeTreePattern MemoryRead(CodeTreePattern location) => new MemoryReadPattern(location);
 
     /// <summary>
-    /// <see cref="MemoryWrite"/> pattern.
+    /// <see cref="MemoryWritePattern"/> pattern.
     /// </summary>
     public static CodeTreePattern MemoryWrite(
         CodeTreePattern location,
         CodeTreePattern value) => new MemoryWritePattern(location, value);
 
     /// <summary>
-    /// <see cref="FunctionCall"/> pattern.
+    /// <see cref="FunctionCallPattern"/> pattern.
     /// </summary>
     /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
     public static CodeTreePattern FunctionCall(out CodeTreePattern id) => id = new FunctionCallPattern();
 
     /// <summary>
-    /// <see cref="FunctionReturn"/> pattern.
+    /// <see cref="FunctionReturnPattern"/> pattern.
     /// </summary>
     public static CodeTreePattern FunctionReturn => new FunctionReturnPattern();
 
