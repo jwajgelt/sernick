@@ -321,16 +321,6 @@ public static class ControlFlowAnalyzer
             throw new NotSupportedException("Control flow analysis shouldn't descend into function parameter declaration");
         }
 
-        protected override CodeTreeRoot VisitSimpleValue(SimpleValue node, ControlFlowVisitorParam param)
-        {
-            throw new NotSupportedException("Control flow analysis shouldn't descend into simple values");
-        }
-
-        protected override CodeTreeRoot VisitLiteralValue(LiteralValue node, ControlFlowVisitorParam param)
-        {
-            throw new NotSupportedException("Control flow analysis shouldn't descend into literal values");
-        }
-
         private (IFunctionVariable, VariableValue) GenerateTemporaryAst(Expression node)
         {
             var identifier = new Identifier($"TempVar@{node.GetHashCode()}", node.LocationRange);
