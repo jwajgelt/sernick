@@ -62,7 +62,7 @@ public sealed class Linearizator
         var trueCaseNode = conditionalNode.TrueCase;
         if (trueCaseNode == null)
         {
-            throw new Exception("<Linearizator> Node " + conditionalNode + " has TrueCase equal to null, but it should be non-nullable");
+            throw new Exception($"<Linearizator> Node {conditionalNode} has TrueCase equal to null, but it should be non-nullable");
         }
 
         var (trueCaseLabel, trueCaseCover) = getTreeLabelAndCover(trueCaseNode, nextDepth);
