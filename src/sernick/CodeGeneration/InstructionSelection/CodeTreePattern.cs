@@ -174,7 +174,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
     private sealed record ConstantPattern(Predicate<RegisterValue> Value) : CodeTreePattern
     {
         public override bool TryMatch(CodeTreeNode root,
-            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            out IEnumerable<CodeTreeValueNode> leaves,
             IDictionary<CodeTreePattern, object> values)
         {
             leaves = Enumerable.Empty<CodeTreeValueNode>();
@@ -187,7 +187,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
     private sealed record RegisterReadPattern(Predicate<Register> Register) : CodeTreePattern
     {
         public override bool TryMatch(CodeTreeNode root,
-            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            out IEnumerable<CodeTreeValueNode> leaves,
             IDictionary<CodeTreePattern, object> values)
         {
             leaves = Enumerable.Empty<CodeTreeValueNode>();
@@ -214,7 +214,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
     private sealed record GlobalAddressPattern : CodeTreePattern
     {
         public override bool TryMatch(CodeTreeNode root,
-            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            out IEnumerable<CodeTreeValueNode> leaves,
             IDictionary<CodeTreePattern, object> values)
         {
             leaves = Enumerable.Empty<CodeTreeValueNode>();
@@ -252,7 +252,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
     private sealed record FunctionCallPattern : CodeTreePattern
     {
         public override bool TryMatch(CodeTreeNode root,
-            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            out IEnumerable<CodeTreeValueNode> leaves,
             IDictionary<CodeTreePattern, object> values)
         {
             leaves = Enumerable.Empty<CodeTreeValueNode>();
@@ -264,7 +264,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
     private sealed record FunctionReturnPattern : CodeTreePattern
     {
         public override bool TryMatch(CodeTreeNode root,
-            [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
+            out IEnumerable<CodeTreeValueNode> leaves,
             IDictionary<CodeTreePattern, object> _)
         {
             leaves = Enumerable.Empty<CodeTreeValueNode>();
@@ -284,7 +284,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
                 return false;
             }
 
-            leaves = Enumerable.Repeat(rootValue, 1);
+            leaves = rootValue.Enumerate();
             return true;
         }
     }
