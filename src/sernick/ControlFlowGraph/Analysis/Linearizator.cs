@@ -21,7 +21,7 @@ public sealed class Linearizator
 
     private static Label GenerateLabel(int depth)
     {
-        var enhancedGuid = Guid.NewGuid() + depth.ToString();
+        var enhancedGuid = $"{Guid.NewGuid()}{depth}";
         return new Label(enhancedGuid);
     }
 
