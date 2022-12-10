@@ -38,7 +38,7 @@ public sealed class Linearizator
                     return handleConditionalJumpNode(conditionalNode, depth);
                 }
             default:
-                throw new Exception("<Linearizator> called on a node which is neither a SingleExitNode nor ConditionalJumpNode :" + v);
+                throw new Exception($"<Linearizator> called on a node which is neither a SingleExitNode nor ConditionalJumpNode : {v}");
         }
     }
 
