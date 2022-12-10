@@ -11,7 +11,7 @@ public sealed class Linearizator
     public Linearizator(InstructionCovering instructionCovering)
     {
         _instructionCovering = instructionCovering;
-        _visitedRootsLabels = new Dictionary<CodeTreeRoot, Label>();
+        _visitedRootsLabels = new Dictionary<CodeTreeRoot, Label>(ReferenceEqualityComparer.Instance);
     }
 
     public IEnumerable<IAsmable> Linearize(CodeTreeRoot root)
