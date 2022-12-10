@@ -123,5 +123,5 @@ public sealed record FunctionCall(IFunctionCaller FunctionCaller) : CodeTreeNode
 
 public sealed record FunctionReturn() : CodeTreeNode
 {
-    public override string ToString() => $"Ret";
+    public override string ToString() => "Ret";
 }
