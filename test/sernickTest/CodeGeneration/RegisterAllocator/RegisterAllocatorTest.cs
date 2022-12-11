@@ -142,12 +142,13 @@ public class RegisterAllocatorTest
                     .Edge(4, "A")
                     .Edge(4, "B")
                     .Edge("A", "B")
+                    .IsolatedNode('C')
                     .Build(),
                 copyGraph: Graph()
                     .Edge(1, 3)
                     .Edge(2, 4)
                     .Build(),
-                minAllocated: 4),
+                minAllocated: 5),
             (
                 hardwareRegisters: new FakeHardwareRegister[]{ "A", "B"},
                 interferenceGraph: Graph()
@@ -185,13 +186,15 @@ public class RegisterAllocatorTest
                     .Edge(7, 8)
                     .Edge(8, 9)
                     .Edge(9, 10)
+                    .IsolatedNode(11)
                     .Build(),
                 copyGraph: Graph()
                     .Edge(6, 8)
                     .Edge(8, 10)
                     .Edge(10, 6)
+                    .Edge(10, 11)
                     .Build(),
-                minAllocated: 10),
+                minAllocated: 11),
 
             // Large special graphs
             (
@@ -216,6 +219,15 @@ public class RegisterAllocatorTest
                 interferenceGraph: Graph().Edge(1, 2).Edge(3, 4).Edge(5, 6).Build(),
                 copyGraph: Graph().Build(),
                 minAllocated: 6),
+            (
+                hardwareRegisters: new FakeHardwareRegister[]{ "A", "B" },
+                interferenceGraph: Graph()
+                    .IsolatedNode(1)
+                    .IsolatedNode('A')
+                    .IsolatedNode('B')
+                    .Build(),
+                copyGraph: Graph().Build(),
+                minAllocated: 3)
         };
 
     /// <summary>
