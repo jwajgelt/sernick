@@ -39,25 +39,25 @@ public static class ControlFlowAnalyzer
                 nodesWithControlFlow,
                 (root, next, resultVariable, nameResolutionResult) =>
                 {
-                    var nodes = pullOutSideEffects(root, nameResolutionResult, currentFunctionContext, contextMap, callGraph, variableAccessMap);
+                    var nodes = pullOutSideEffects(root, nameResolutionResult, currentFunctionContext, contextMap, callGraph, variableAccessMap).ToList();
                     if (nodes.Count == 0)
                     {
                         return next;
                     }
 
-                    foreach (var (node, nextNode) in nodes.Zip(nodes.Skip(1)))
-                    {
-                        node.NextTree = nextNode;
-                    }
-
                     if (resultVariable is not null && nodes[^1].Operations[^1] is CodeTreeValueNode valueNode)
                     {
-                        nodes[^1].NextTree = new SingleExitNode(next,
-                            new[] { currentFunctionContext.GenerateVariableWrite(resultVariable, valueNode) });
+                        nodes[^1] = new SingleExitNode(next,
+                            nodes[^1].Operations.SkipLast(1).Append(currentFunctionContext.GenerateVariableWrite(resultVariable, valueNode)).ToList());
                     }
                     else
                     {
                         nodes[^1].NextTree = next;
+                    }
+
+                    foreach (var (node, nextNode) in nodes.Zip(nodes.Skip(1)))
+                    {
+                        node.NextTree = nextNode;
                     }
 
                     return nodes[0];
@@ -214,6 +214,11 @@ public static class ControlFlowAnalyzer
 
         public override CodeTreeRoot VisitInfix(Infix node, ControlFlowVisitorParam param)
         {
+            if (!_nodesWithControlFlow.Contains(node))
+            {
+                return _pullOutSideEffects(node, param.Next, param.ResultVariable);
+            }
+
             if (node.Operator is not (Infix.Op.ScAnd or Infix.Op.ScOr))
             {
                 var (leftVariable, leftVariableValueNode) = GenerateTemporaryAst(node.Left);

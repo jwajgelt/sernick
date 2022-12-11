@@ -150,7 +150,7 @@ public class AstToCfgConversionTest
         });
     }
 
-    [Fact(Skip = "To be debugged")]
+    [Fact]
     public void SimpleLoop()
     {
         // var x = 0;
