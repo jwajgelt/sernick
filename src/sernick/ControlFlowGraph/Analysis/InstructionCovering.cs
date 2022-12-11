@@ -7,7 +7,16 @@ using CodeTree;
 
 public sealed class InstructionCovering
 {
-    record TreeCoverResult(int cost, IEnumerable<CodeTreeNode>? leaves, GenerateInstructions? generator);
+    class CoverResult
+    {
+        int Cost {get; set;}
+    }
+
+    abstract record CoverResult(int cost, IEnumerable<CodeTreeNode>? leaves);
+    record TreeCoverResult(int cost, IEnumerable<CodeTreeNode>? leaves, GenerateInstructions? generator): CoverResult;
+    record SingleExitCoverResult(GenerateSingleExitInstructions? generator): CoverResult;
+    record ConditionalJumpCoverResult(GenerateConditionalJumpInstructions? generator): CoverResult;
+    
     IEnumerable<CodeTreePatternRule> _rules;
 
     Dictionary<CodeTreeNode, TreeCoverResult?> _resMemoizer;
@@ -83,9 +92,36 @@ public sealed class InstructionCovering
         return cost;
     }
 
-    private IEnumerable<IInstruction> GenerateCovering(TreeCoverResult result)
+    private IEnumerable<IInstruction> GenerateCovering(TreeCoverResult result, out Register? output)
     {
-        throw new NotImplementedException();
+        var instructions = new List<IInstruction>();
+        var leafOutputs = new List<Register>();
+        if(result.leaves is not null)
+        {
+            foreach(CodeTreeNode leaf in result.leaves)
+            {
+                var leafCover = CoverTree(leaf);
+                if(leafCover is null)
+                {
+                    continue;
+                }
+                instructions.AddRange(GenerateCovering(leafCover, out Register? leafOutput));
+                
+                if(leafOutput is not null)
+                {
+                    leafOutputs.Add(leafOutput);
+                }
+            }
+        }
+
+        output = null;
+        if(result.generator is not null)
+        {
+            instructions.AddRange(result.generator(leafOutputs, out Register? genOutput));
+            output = genOutput;
+        }
+
+        return instructions;
     }
 
     private IEnumerable<IInstruction> GenerateSingleExitCovering(TreeCoverResult result, Label next)
