@@ -17,7 +17,7 @@ public sealed class InstructionCovering
     private readonly Dictionary<CodeTreeNode, TreeCoverResult?> _resMemoizer;
     public InstructionCovering(IEnumerable<CodeTreePatternRule> rules)
     {
-        _rules = rules;
+        _rules = rules.ToList();
         _resMemoizer = new Dictionary<CodeTreeNode, TreeCoverResult?>(ReferenceEqualityComparer.Instance);
     }
 
