@@ -38,6 +38,20 @@ public static class SernickInstructionSet
                             .WithOutput(values.Get<Register>(reg)));
             }
 
+            // [*]
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.MemoryRead(Pat.WildcardNode),
+                    (inputs, _) =>
+                    {
+                        var output = new Register();
+                        return new List<IInstruction>
+                        {
+                            Mov.ToReg(output).FromMem(inputs[0])
+                        }.WithOutput(output);
+                    });
+            }
+
             // mov $reg, $const
             {
                 yield return new CodeTreeNodePatternRule(

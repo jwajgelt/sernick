@@ -24,7 +24,7 @@ public class InstructionCoveringTest
         _ = covering.Cover(node, new Label(""));
     }
 
-    [Fact(Skip = "problem with Mem(Register)")]
+    [Fact]
     public void CoversOperators()
     {
         _ = Reg(HardwareRegister.RAX).Read();
