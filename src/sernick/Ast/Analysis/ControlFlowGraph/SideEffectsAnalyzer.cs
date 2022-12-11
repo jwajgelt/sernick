@@ -159,7 +159,7 @@ public static class SideEffectsAnalyzer
                 return argValue;
             }).ToList();
 
-            for (var i = 0; i < argsEvals.Count - 1; i++)
+            for (var i = 0; i < argsEvals.Count; i++)
             {
                 var currentArgValue = argsEvals[i].Last();
                 for (var j = i + 1; j < argsEvals.Count; j++)
