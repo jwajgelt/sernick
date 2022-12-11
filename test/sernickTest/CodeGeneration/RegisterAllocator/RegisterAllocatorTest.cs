@@ -13,7 +13,7 @@ public class RegisterAllocatorTest
     [Fact]
     public void Allocates_All_Registers()
     {
-        var hardwareRegisters = new FakeHardwareRegister[] { 'A', 'B', 'C' };
+        var hardwareRegisters = new FakeHardwareRegister[] { "A", "B", "C" };
         var interferenceGraph = Graph()
             .Edge(1, 2)
             .Edge(2, 3)
@@ -31,7 +31,7 @@ public class RegisterAllocatorTest
     [Fact]
     public void Allocates_Null_When_Impossible()
     {
-        var hardwareRegisters = new FakeHardwareRegister[] { 'A' };
+        var hardwareRegisters = new FakeHardwareRegister[] { "A" };
         var interferenceGraph = Graph()
             .Edge(1, 2)
             .Edge(2, 3)
@@ -49,7 +49,7 @@ public class RegisterAllocatorTest
     [Fact]
     public void Connects_Registers()
     {
-        var hardwareRegisters = new FakeHardwareRegister[] { 'A', 'B', 'C' };
+        var hardwareRegisters = new FakeHardwareRegister[] { "A", "B", "C" };
         var interferenceGraph = Graph()
             .Edge(1, 2)
             .Edge(2, 3)
@@ -70,10 +70,10 @@ public class RegisterAllocatorTest
     [Fact]
     public void Allocates_Same_HardwareRegisters()
     {
-        var hardwareRegisters = new FakeHardwareRegister[] { 'A', 'B', 'C' };
+        var hardwareRegisters = new FakeHardwareRegister[] { "A", "B", "C" };
         var interferenceGraph = Graph()
-            .Edge(2, 'A')
-            .Edge(3, 'A')
+            .Edge(2, "A")
+            .Edge(3, "A")
             .Edge(2, 3)
             .Build();
         var copyGraph = Graph().Build();
@@ -103,7 +103,7 @@ public class RegisterAllocatorTest
         minAllocated)[] ComplexCasesTestData =
         {
             (
-                hardwareRegisters: new FakeHardwareRegister[]{ 'A', 'B', 'C'},
+                hardwareRegisters: new FakeHardwareRegister[]{ "A", "B", "C"},
                 interferenceGraph: Graph()
                     .Edge(1, 2)
                     .Edge(1, 3)
@@ -111,10 +111,10 @@ public class RegisterAllocatorTest
                     .Edge(2, 3)
                     .Edge(2, 5)
                     .Edge(4, 6)
-                    .Edge(4, 'A')
+                    .Edge(4, "A")
                     .Edge(5, 6)
-                    .Edge(5, 'A')
-                    .Edge(6, 'A')
+                    .Edge(5, "A")
+                    .Edge(6, "A")
                     .Build(),
                 copyGraph: Graph()
                     .Edge(2, 6)
@@ -124,17 +124,17 @@ public class RegisterAllocatorTest
                     .Build(),
                 minAllocated: 3),
             (
-                hardwareRegisters: new FakeHardwareRegister[]{ 'A', 'B', 'C'},
+                hardwareRegisters: new FakeHardwareRegister[]{ "A", "B", "C"},
                 interferenceGraph: Graph()
                     .Edge(1, 2)
-                    .Edge(1, 'A')
-                    .Edge(1, 'B')
+                    .Edge(1, "A")
+                    .Edge(1, "B")
                     .Edge(2, 3)
                     .Edge(3, 4)
-                    .Edge(3, 'B')
-                    .Edge(4, 'A')
-                    .Edge(4, 'B')
-                    .Edge('A', 'B')
+                    .Edge(3, "B")
+                    .Edge(4, "A")
+                    .Edge(4, "B")
+                    .Edge("A", "B")
                     .Build(),
                 copyGraph: Graph()
                     .Edge(1, 3)
@@ -142,27 +142,27 @@ public class RegisterAllocatorTest
                     .Build(),
                 minAllocated: 4),
             (
-                hardwareRegisters: new FakeHardwareRegister[]{ 'A', 'B'},
+                hardwareRegisters: new FakeHardwareRegister[]{ "A", "B"},
                 interferenceGraph: Graph()
                     .Edge(1, 2)
                     .Edge(2, 3)
                     .Edge(3, 4)
                     .Edge(4, 5)
                     .Edge(5, 6)
-                    .Edge(6, 'A')
-                    .Edge(6, 'B')
+                    .Edge(6, "A")
+                    .Edge(6, "B")
                     .Edge(1, 4)
                     .Edge(2, 6)
-                    .Edge(3, 'A')
-                    .Edge(5, 'B')
+                    .Edge(3, "A")
+                    .Edge(5, "B")
                     .Build(),
                 copyGraph: Graph()
                     .Edge(1, 5)
-                    .Edge(3, 'B')
+                    .Edge(3, "B")
                     .Build(),
                 minAllocated: 5),
             (
-                hardwareRegisters: new FakeHardwareRegister[]{ 'A', 'B', 'C'},
+                hardwareRegisters: new FakeHardwareRegister[]{ "A", "B", "C"},
                 interferenceGraph: Graph()
                     .Edge(1, 2)
                     .Edge(1, 3)
@@ -188,24 +188,24 @@ public class RegisterAllocatorTest
 
             // Large special graphs
             (
-                hardwareRegisters: new FakeHardwareRegister[]{ 'A', 'B', 'C', 'D' },
+                hardwareRegisters: new FakeHardwareRegister[]{ "A", "B", "C", "D" },
                 interferenceGraph: Clique(64),
                 copyGraph: Graph().Build(),
                 minAllocated: 4),
             (
-                hardwareRegisters: new FakeHardwareRegister[]{ 'A', 'B'},
+                hardwareRegisters: new FakeHardwareRegister[]{ "A", "B"},
                 interferenceGraph: StarGraph(64),
                 copyGraph: Graph().Build(),
                 minAllocated: 65),
 
             // Small Edge Cases
             (
-                hardwareRegisters: new FakeHardwareRegister[]{ 'A' },
+                hardwareRegisters: new FakeHardwareRegister[]{ "A" },
                 interferenceGraph: Graph().Build(),
                 copyGraph: Graph().Build(),
                 minAllocated: 0),
             (
-                hardwareRegisters: new FakeHardwareRegister[]{ 'A', 'B' },
+                hardwareRegisters: new FakeHardwareRegister[]{ "A", "B" },
                 interferenceGraph: Graph().Edge(1, 2).Edge(3, 4).Edge(5, 6).Build(),
                 copyGraph: Graph().Build(),
                 minAllocated: 6),

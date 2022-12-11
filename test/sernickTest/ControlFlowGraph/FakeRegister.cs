@@ -22,9 +22,9 @@ public class FakeRegister : Register, IEquatable<FakeRegister>
 
 public class FakeHardwareRegister : HardwareRegister, IEquatable<FakeHardwareRegister>
 {
-    private readonly char _id;
+    private readonly string _id;
 
-    private FakeHardwareRegister(char id)
+    private FakeHardwareRegister(string id)
     {
         _id = id;
     }
@@ -32,8 +32,8 @@ public class FakeHardwareRegister : HardwareRegister, IEquatable<FakeHardwareReg
 
     public override bool Equals(object? obj) => obj is FakeHardwareRegister other && Equals(other);
 
-    public override int GetHashCode() => _id;
+    public override int GetHashCode() => _id.GetHashCode();
 
-    public static implicit operator FakeHardwareRegister(char id) => new(id);
+    public static implicit operator FakeHardwareRegister(string id) => new(id);
 }
 

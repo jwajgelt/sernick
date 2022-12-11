@@ -11,27 +11,21 @@ public class GraphBuilder
 
     public static GraphBuilder Graph() => new GraphBuilder();
 
-    public GraphBuilder Edge(Register register1, Register register2)
+    public GraphBuilder Edge(FakeRegister id1, FakeRegister id2)
     {
-        _edges.Add((register1, register2));
+        _edges.Add((id1, id2));
         return this;
     }
 
-    public GraphBuilder Edge(int id1, int id2)
+    public GraphBuilder Edge(FakeRegister id1, FakeHardwareRegister id2)
     {
-        _edges.Add(((FakeRegister)id1, (FakeRegister)id2));
+        _edges.Add((id1, id2));
         return this;
     }
 
-    public GraphBuilder Edge(int id1, char id2)
+    public GraphBuilder Edge(FakeHardwareRegister id1, FakeHardwareRegister id2)
     {
-        _edges.Add(((FakeRegister)id1, (FakeHardwareRegister)id2));
-        return this;
-    }
-
-    public GraphBuilder Edge(char id1, char id2)
-    {
-        _edges.Add(((FakeHardwareRegister)id1, (FakeHardwareRegister)id2));
+        _edges.Add((id1, id2));
         return this;
     }
 
@@ -51,7 +45,7 @@ public class GraphBuilder
 
     public static Graph Clique(int size)
     {
-        var registers = Enumerable.Range(1, size).Select(id => (Register)new FakeRegister(id)).ToList();
+        var registers = Enumerable.Range(1, size).Select(id => new FakeRegister(id)).ToList<Register>();
         return registers.ToDictionary(register => register,
             register => (IReadOnlyCollection<Register>)registers.Where(neighbour => neighbour != register).ToList());
     }
