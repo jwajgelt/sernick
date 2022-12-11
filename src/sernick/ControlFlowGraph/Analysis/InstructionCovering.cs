@@ -133,8 +133,7 @@ public sealed class InstructionCovering
             }
         }
 
-        instructions.AddRange(result.Generator(leafOutputs, out var genOutput));
-        output = genOutput;
+        instructions.AddRange(result.Generator(leafOutputs, out output));
 
         return instructions;
     }
