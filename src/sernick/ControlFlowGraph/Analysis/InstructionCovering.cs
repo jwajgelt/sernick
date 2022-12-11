@@ -166,7 +166,6 @@ public sealed class InstructionCovering
                     continue;
                 }
 
-                Register? leafOutput;
                 instructions.AddRange(GenerateCovering(leafCover, out _));
             }
         }
