@@ -113,7 +113,7 @@ public sealed class InstructionCovering
 
     private IEnumerable<IInstruction> GenerateCovering(TreeCoverResult result, out Register? output)
     {
-        var instructions = new List<IInstruction>();
+        var instructions = Enumerable.Empty<IInstruction>();
         var leafOutputs = new List<Register>();
         foreach (var leaf in result.Leaves)
         {
@@ -123,7 +123,7 @@ public sealed class InstructionCovering
                 continue;
             }
 
-            instructions.AddRange(GenerateCovering(leafCover, out var leafOutput));
+            instructions = instructions.Concat(GenerateCovering(leafCover, out var leafOutput));
 
             if (leafOutput is not null)
             {
@@ -131,9 +131,7 @@ public sealed class InstructionCovering
             }
         }
 
-        instructions.AddRange(result.Generator(leafOutputs, out output));
-
-        return instructions;
+        return instructions.Concat(result.Generator(leafOutputs, out output));
     }
 
     private IEnumerable<IInstruction> GenerateSingleExitCovering(SingleExitCoverResult result, Label next)
