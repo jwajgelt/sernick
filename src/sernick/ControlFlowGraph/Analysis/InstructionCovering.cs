@@ -114,22 +114,19 @@ public sealed class InstructionCovering
     {
         var instructions = new List<IInstruction>();
         var leafOutputs = new List<Register>();
-        if (result.Leaves is not null)
+        foreach (var leaf in result.Leaves)
         {
-            foreach (var leaf in result.Leaves)
+            var leafCover = CoverTree(leaf);
+            if (leafCover is null)
             {
-                var leafCover = CoverTree(leaf);
-                if (leafCover is null)
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                instructions.AddRange(GenerateCovering(leafCover, out var leafOutput));
+            instructions.AddRange(GenerateCovering(leafCover, out var leafOutput));
 
-                if (leafOutput is not null)
-                {
-                    leafOutputs.Add(leafOutput);
-                }
+            if (leafOutput is not null)
+            {
+                leafOutputs.Add(leafOutput);
             }
         }
 
@@ -141,22 +138,19 @@ public sealed class InstructionCovering
     private IEnumerable<IInstruction> GenerateSingleExitCovering(SingleExitCoverResult result, Label next)
     {
         var instructions = new List<IInstruction>();
-        if (result.Leaves is not null)
-        {
-            foreach (var leaf in result.Leaves)
-            {
-                var leafCover = CoverTree(leaf);
-                if (leafCover is null)
-                {
-                    continue;
-                }
 
-                instructions.AddRange(GenerateCovering(leafCover, out _));
+        foreach (var leaf in result.Leaves)
+        {
+            var leafCover = CoverTree(leaf);
+            if (leafCover is null)
+            {
+                continue;
             }
+
+            instructions.AddRange(GenerateCovering(leafCover, out _));
         }
 
         instructions.AddRange(result.Generator(next));
-
         return instructions;
     }
 
