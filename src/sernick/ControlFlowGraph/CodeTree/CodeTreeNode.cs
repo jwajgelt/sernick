@@ -66,13 +66,13 @@ public class Register
 /// </summary>
 public class HardwareRegister : Register
 {
-    private string label;
+    private readonly string label;
     private HardwareRegister(string label)
     {
         this.label = label;
     }
     public override string ToString() => label;
-    
+
     public static readonly HardwareRegister RAX = new("RAX");
     public static readonly HardwareRegister RBX = new("RBX");
     public static readonly HardwareRegister RCX = new("RCX");
@@ -124,7 +124,7 @@ public sealed record Constant(RegisterValue Value) : CodeTreeValueNode
 
 public sealed record FunctionCall(IFunctionCaller FunctionCaller) : CodeTreeNode
 {
-    public override string ToString() => $"{FunctionCaller.Label}";
+    public override string ToString() => $"Call {FunctionCaller.Label.Value}";
 }
 
 public sealed record FunctionReturn() : CodeTreeNode

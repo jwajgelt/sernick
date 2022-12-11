@@ -25,6 +25,11 @@ public sealed record ConditionalJumpNode
 
     public CodeTreeRoot TrueCase { get; } = new SingleExitNode(Array.Empty<CodeTreeNode>());
     public CodeTreeRoot FalseCase { get; } = new SingleExitNode(Array.Empty<CodeTreeNode>());
+
+    public override string ToString()
+    {
+        return $"If({ConditionEvaluation})" + "\nTHEN\n" + TrueCase + "ELSE\n" + FalseCase + '\n';
+    }
 }
 
 /// <summary>
@@ -45,8 +50,14 @@ public sealed record SingleExitNode(IReadOnlyList<CodeTreeNode> Operations) : Co
 
     public CodeTreeRoot? NextTree { get; set; } = null;
 
+    private bool visitedInToString = false;
     public override string ToString()
     {
+        if(visitedInToString)
+        {
+            return $"Visited -> {string.Join(',', Operations)}";
+        }
+        visitedInToString = true;
         return string.Join(',', Operations) + '\n' + NextTree?.ToString();
     }
 }

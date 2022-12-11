@@ -51,7 +51,7 @@ public class AstToCfgConversionTest
         });
     }
 
-    [Fact(Skip = "To be debugged")]
+    [Fact]
     public void SimpleConditional()
     {
         // var a = 1;
@@ -189,7 +189,7 @@ public class AstToCfgConversionTest
         var xPlus1 = new SingleExitNode(condEval, new[] { varX.Write(varX.Value + 1) });
         loopBlock.NextTree = xPlus1;
 
-        var x = new SingleExitNode(xPlus1, new[] { varX.Write(0) });
+        var x = new SingleExitNode(loopBlock, new[] { varX.Write(0) });
 
         var mainRoot = AddPrologue(mainContext, x);
 
