@@ -1,10 +1,12 @@
 namespace sernickTest.ControlFlowGraph;
 
-using sernick.ControlFlowGraph.CodeTree;
-using sernick.ControlFlowGraph.Analysis;
-using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
-using sernick.Compiler.Instruction;
 using sernick.CodeGeneration;
+using sernick.Compiler.Function;
+using sernick.Compiler.Instruction;
+using sernick.ControlFlowGraph.Analysis;
+using sernick.ControlFlowGraph.CodeTree;
+using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
+using static sernickTest.Ast.Helpers.AstNodesExtensions;
 
 public class InstructionCoveringTest
 {
@@ -18,36 +20,52 @@ public class InstructionCoveringTest
 
         var node = new SingleExitNode(null, new List<CodeTreeNode> { raxRead, rbxWrite, memWrite });
 
-        InstructionCovering covering = new InstructionCovering(SernickInstructionSet.Rules);
-        var instructions = covering.Cover(node, new Label(""));
+        var covering = new InstructionCovering(SernickInstructionSet.Rules);
+        _ = covering.Cover(node, new Label(""));
     }
 
-    [Fact(Skip = "debug?")]
+    [Fact(Skip = "problem with Mem(Register)")]
     public void CoversOperators()
     {
-        var raxRead = Reg(HardwareRegister.RAX).Read();
+        _ = Reg(HardwareRegister.RAX).Read();
         var rbxRead = Reg(HardwareRegister.RBX).Read();
         var regA = Reg(new Register());
         var memRead = Mem(regA.Read()).Read();
 
-        //var neg = new UnaryOperationNode(UnaryOperation.Not, raxRead);
+        // var neg = new UnaryOperationNode(UnaryOperation.Not, raxRead);
         var addition = rbxRead + memRead;
 
         var node = new SingleExitNode(null, new List<CodeTreeNode> { /*neg,*/ addition });
 
-        InstructionCovering covering = new InstructionCovering(SernickInstructionSet.Rules);
-        var instructions = covering.Cover(node, new Label(""));
+        var covering = new InstructionCovering(SernickInstructionSet.Rules);
+        _ = covering.Cover(node, new Label(""));
     }
 
-    /*[Fact]
+    [Fact]
     public void CoversConditionalJump()
     {
-        
+        var raxRead = Reg(HardwareRegister.RAX).Read();
+        var regRead = Reg(new Register()).Read();
+
+        var condition = raxRead < regRead;
+
+        var exitNode = new SingleExitNode(null, new List<CodeTreeNode> { });
+        var node = new ConditionalJumpNode(exitNode, exitNode, condition);
+
+        var covering = new InstructionCovering(SernickInstructionSet.Rules);
+        _ = covering.Cover(node, new Label("true"), new Label("false"));
     }
 
     [Fact]
     public void CoversFunctionCall()
     {
-        
-    }*/
+        var funFactory = new FunctionFactory((_, _) => "");
+        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
+        var call = new FunctionCall(mainContext);
+
+        var node = new SingleExitNode(null, new List<CodeTreeNode> { call });
+
+        var covering = new InstructionCovering(SernickInstructionSet.Rules);
+        var instructions = covering.Cover(node, new Label(""));
+    }
 }
