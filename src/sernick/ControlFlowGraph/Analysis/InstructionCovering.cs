@@ -7,11 +7,11 @@ using static sernick.CodeGeneration.InstructionSelection.CodeTreePatternRuleMatc
 
 public sealed class InstructionCovering
 {
-    private record TreeCoverResult(int Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateInstructions Generator);
+    private record TreeCoverResult(uint Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateInstructions Generator);
 
-    private record SingleExitCoverResult(int Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateSingleExitInstructions Generator);
+    private record SingleExitCoverResult(uint Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateSingleExitInstructions Generator);
 
-    private record ConditionalJumpCoverResult(int Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateConditionalJumpInstructions Generator);
+    private record ConditionalJumpCoverResult(uint Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateConditionalJumpInstructions Generator);
 
     private readonly IEnumerable<CodeTreePatternRule> _rules;
     private readonly Dictionary<CodeTreeNode, TreeCoverResult?> _resMemoizer;
@@ -103,7 +103,7 @@ public sealed class InstructionCovering
         return GenerateConditionalJumpCovering(best, trueCase, falseCase);
     }
 
-    private int? LeavesCost(IEnumerable<CodeTreeNode> leaves)
+    private uint? LeavesCost(IEnumerable<CodeTreeNode> leaves)
     {
         return leaves
             .Select(CoverTree)
