@@ -27,15 +27,15 @@ public class InstructionCoveringTest
     [Fact]
     public void CoversOperators()
     {
-        _ = Reg(HardwareRegister.RAX).Read();
+        var raxRead = Reg(HardwareRegister.RAX).Read();
         var rbxRead = Reg(HardwareRegister.RBX).Read();
         var regA = Reg(new Register());
         var memRead = Mem(regA.Read()).Read();
 
-        // var neg = new UnaryOperationNode(UnaryOperation.Not, raxRead);
+        var neg = new UnaryOperationNode(UnaryOperation.Not, raxRead);
         var addition = rbxRead + memRead;
 
-        var node = new SingleExitNode(null, new List<CodeTreeNode> { /*neg,*/ addition });
+        var node = new SingleExitNode(null, new List<CodeTreeNode> { neg, addition });
 
         var covering = new InstructionCovering(SernickInstructionSet.Rules);
         covering.Cover(node, new Label(""));

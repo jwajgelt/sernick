@@ -43,6 +43,13 @@ public class CodeTreePatternMatcherTest
             Enumerable.Empty<CodeTreeValueNode>()
         ),
         
+        // [*]
+        (
+            Pat.MemoryRead(Pat.WildcardNode).AsRule(),
+            Mem(Reg(register).Read()).Read(),
+            Reg(register).Read().Enumerate()
+        ),
+        
         // mov $reg, *
         (
             Pat.RegisterWrite(Any<Register>(), out _, Pat.WildcardNode).AsRule(),
@@ -109,6 +116,13 @@ public class CodeTreePatternMatcherTest
             Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _, Pat.WildcardNode, Pat.WildcardNode).AsRule(),
             Reg(register).Read() + 5,
             new CodeTreeValueNode[] { Reg(register).Read(), 5 }
+        ),
+        
+        // neg *
+        (
+            Pat.UnaryOperationNode(Is(UnaryOperation.Negate), out _, Pat.WildcardNode).AsRule(),
+            ~Reg(register).Read(),
+            new CodeTreeValueNode[] { Reg(register).Read() }
         ),
         
         // call $label
