@@ -45,14 +45,26 @@ public static class ControlFlowAnalyzer
                         return next;
                     }
 
-                    if (resultVariable is not null && nodes[^1].Operations[^1] is CodeTreeValueNode valueNode)
+                    // if there is a returned value
+                    if (nodes[^1].Operations[^1] is CodeTreeValueNode valueNode)
                     {
-                        nodes[^1] = new SingleExitNode(next,
-                            nodes[^1].Operations.SkipLast(1).Append(currentFunctionContext.GenerateVariableWrite(resultVariable, valueNode)).ToList());
-                    }
-                    else
-                    {
-                        nodes[^1].NextTree = next;
+                        // store the value in the result variable (if there is one)
+                        if (resultVariable is not null)
+                        {
+                            nodes[^1] = new SingleExitNode(next,
+                                nodes[^1].Operations.SkipLast(1)
+                                    .Append(currentFunctionContext.GenerateVariableWrite(resultVariable, valueNode))
+                                    .ToList());
+                        }
+                        // otherwise skip the value completely
+                        else if (nodes[^1].Operations.Count == 1)
+                        {
+                            nodes = nodes.SkipLast(1).ToList();
+                        }
+                        else
+                        {
+                            nodes[^1] = new SingleExitNode(next, nodes[^1].Operations.SkipLast(1).ToList());
+                        }
                     }
 
                     foreach (var (node, nextNode) in nodes.Zip(nodes.Skip(1)))
@@ -60,6 +72,12 @@ public static class ControlFlowAnalyzer
                         node.NextTree = nextNode;
                     }
 
+                    if (nodes.Count == 0)
+                    {
+                        return next;
+                    }
+
+                    nodes[^1].NextTree = next;
                     return nodes[0];
                 },
                 variableFactory,
@@ -282,6 +300,7 @@ public static class ControlFlowAnalyzer
             {
                 return _pullOutSideEffects(node, param.Next, param.ResultVariable);
             }
+
             var last = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
             CodeTreeRoot result = last;
             var arguments = node.Arguments.Reverse().Select(argumentNode =>
