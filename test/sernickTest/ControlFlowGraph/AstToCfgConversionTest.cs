@@ -239,10 +239,11 @@ public class AstToCfgConversionTest
 
         var gRet = new SingleExitNode(gEpilogue, varY.Value + varY.Value);
         var fRet = new SingleExitNode(fEpilogue, gCall1.ResultLocation! + gCall2.ResultLocation!);
-        var gCalls = new SingleExitNode(fRet, gCall1.CodeGraph.Concat(gCall2.CodeGraph).ToList()); // TODO absolutely not
+        var gCall2Tree = new SingleExitNode(fRet, gCall2.CodeGraph[0]);
+        var gCall1Tree = new SingleExitNode(gCall2Tree, gCall1.CodeGraph[0]);
 
         var mainRoot = AddPrologue(mainContext, mainEpilogue);
-        var fRoot = AddPrologue(fContext, gCalls);
+        var fRoot = AddPrologue(fContext, gCall1Tree);
         var gRoot = AddPrologue(gContext, gRet);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){
