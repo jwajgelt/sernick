@@ -103,24 +103,11 @@ public sealed class InstructionCovering
         return GenerateConditionalJumpCovering(best, trueCase, falseCase);
     }
 
-    private int? LeavesCost(IEnumerable<CodeTreeNode>? leaves)
+    private int? LeavesCost(IEnumerable<CodeTreeNode> leaves)
     {
-        var cost = 0;
-        if (leaves is not null)
-        {
-            foreach (var leaf in leaves)
-            {
-                var leafCover = CoverTree(leaf);
-                if (leafCover is null)
-                {
-                    return null;
-                }
-
-                cost += leafCover.Cost;
-            }
-        }
-
-        return cost;
+        return leaves
+            .Select(CoverTree)
+            .Aggregate(0u as uint?, (current, leafCover) => current + leafCover?.Cost);
     }
 
     private IEnumerable<IInstruction> GenerateCovering(TreeCoverResult result, out Register? output)
