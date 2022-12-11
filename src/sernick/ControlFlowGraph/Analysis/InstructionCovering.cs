@@ -13,6 +13,8 @@ public sealed class InstructionCovering
 
     private record ConditionalJumpCoverResult(uint Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateConditionalJumpInstructions Generator);
 
+    private const uint Inf = (int)(1e9);
+
     private readonly IEnumerable<CodeTreePatternRule> _rules;
     private readonly Dictionary<CodeTreeNode, TreeCoverResult?> _resMemoizer;
     public InstructionCovering(IEnumerable<CodeTreePatternRule> rules)
@@ -38,9 +40,9 @@ public sealed class InstructionCovering
             {
                 var leavesList = leaves.ToList();
                 var cost = 1 + LeavesCost(leavesList);
-                if (cost != null && (best == null || cost < best.Cost))
+                if (best == null || cost < best.Cost)
                 {
-                    best = new TreeCoverResult(cost.GetValueOrDefault(), leavesList, generateInstructions);
+                    best = new TreeCoverResult(cost, leavesList, generateInstructions);
                 }
             }
         }
@@ -62,14 +64,14 @@ public sealed class InstructionCovering
                 var leavesList = leaves.ToList();
                 var cost = 1 + LeavesCost(leavesList);
 
-                if (cost != null && (best == null || cost < best.Cost))
+                if (best == null || cost < best.Cost)
                 {
-                    best = new SingleExitCoverResult(cost.GetValueOrDefault(), leavesList, generateInstructions);
+                    best = new SingleExitCoverResult(cost, leavesList, generateInstructions);
                 }
             }
         }
 
-        if (best is null)
+        if (best is null || best.Cost >= Inf)
         {
             throw new Exception("Unable to cover with given covering rules set.");
         }
@@ -89,14 +91,14 @@ public sealed class InstructionCovering
             {
                 var leavesList = leaves.ToList();
                 var cost = 1 + LeavesCost(leavesList);
-                if (cost != null && (best == null || cost < best.Cost))
+                if (best == null || cost < best.Cost)
                 {
-                    best = new ConditionalJumpCoverResult(cost.GetValueOrDefault(), leavesList, generateInstructions);
+                    best = new ConditionalJumpCoverResult(cost, leavesList, generateInstructions);
                 }
             }
         }
 
-        if (best is null)
+        if (best is null || best.Cost >= Inf)
         {
             throw new Exception("Unable to cover with given covering rules set.");
         }
@@ -104,11 +106,11 @@ public sealed class InstructionCovering
         return GenerateConditionalJumpCovering(best, trueCase, falseCase);
     }
 
-    private uint? LeavesCost(IEnumerable<CodeTreeNode> leaves)
+    private uint LeavesCost(IEnumerable<CodeTreeNode> leaves)
     {
         return leaves
             .Select(CoverTree)
-            .Aggregate(0u as uint?, (current, leafCover) => current + leafCover?.Cost);
+            .Aggregate(0u, (current, leafCover) => current + (leafCover is null ? Inf : leafCover.Cost));
     }
 
     private IEnumerable<IInstruction> GenerateCovering(TreeCoverResult result, out Register? output)
