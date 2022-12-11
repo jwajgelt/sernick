@@ -43,6 +43,11 @@ public sealed record ConditionalJumpNode
 /// <param name="Operations"> The operation to be performed in this code tree </param>
 public sealed record SingleExitNode(IReadOnlyList<CodeTreeNode> Operations) : CodeTreeRoot
 {
+    public SingleExitNode(CodeTreeRoot? nextTree, CodeTreeNode operation) : this(new[] { operation })
+    {
+        NextTree = nextTree;
+    }
+
     public SingleExitNode(CodeTreeRoot? nextTree, IReadOnlyList<CodeTreeNode> operations) : this(operations)
     {
         NextTree = nextTree;
@@ -53,10 +58,11 @@ public sealed record SingleExitNode(IReadOnlyList<CodeTreeNode> Operations) : Co
     private bool visitedInToString = false;
     public override string ToString()
     {
-        if(visitedInToString)
+        if (visitedInToString)
         {
-            return $"Visited -> {string.Join(',', Operations)}";
+            return $"Visited -> {string.Join(',', Operations)}\n";
         }
+
         visitedInToString = true;
         return string.Join(',', Operations) + '\n' + NextTree?.ToString();
     }
