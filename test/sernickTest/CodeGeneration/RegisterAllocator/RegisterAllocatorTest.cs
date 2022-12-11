@@ -6,8 +6,8 @@ using sernick.CodeGeneration.RegisterAllocation;
 using sernick.ControlFlowGraph.CodeTree;
 using Utility;
 using static Helpers.GraphBuilder;
-using Graph = IReadOnlyDictionary<sernick.ControlFlowGraph.CodeTree.Register, IReadOnlyCollection<sernick.ControlFlowGraph.CodeTree.Register>>;
 using Allocation = IReadOnlyDictionary<sernick.ControlFlowGraph.CodeTree.Register, sernick.ControlFlowGraph.CodeTree.HardwareRegister?>;
+using Graph = IReadOnlyDictionary<sernick.ControlFlowGraph.CodeTree.Register, IReadOnlyCollection<sernick.ControlFlowGraph.CodeTree.Register>>;
 
 public class RegisterAllocatorTest
 {
@@ -264,7 +264,7 @@ public class RegisterAllocatorTest
         ICollection<HardwareRegister> hardwareRegisters)
     {
         var nonNullAllocation = allocation.Where((kv) => kv.Value != null);
-        Assert.All(nonNullAllocation, (kv) => 
+        Assert.All(nonNullAllocation, (kv) =>
         {
             Assert.Contains(kv.Value, hardwareRegisters);
         });

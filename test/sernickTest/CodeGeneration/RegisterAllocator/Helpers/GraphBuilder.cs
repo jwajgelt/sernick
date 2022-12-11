@@ -35,7 +35,7 @@ public class GraphBuilder
         _isolatedNodes.Add(register);
         return this;
     }
-    
+
     public GraphBuilder IsolatedNode(FakeHardwareRegister register)
     {
         _isolatedNodes.Add(register);
