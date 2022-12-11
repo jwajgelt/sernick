@@ -146,12 +146,8 @@ public sealed class InstructionCovering
             }
         }
 
-        output = null;
-        if (result.Generator is not null)
-        {
-            instructions.AddRange(result.Generator(leafOutputs, out var genOutput));
-            output = genOutput;
-        }
+        instructions.AddRange(result.Generator(leafOutputs, out var genOutput));
+        output = genOutput;
 
         return instructions;
     }
@@ -173,10 +169,7 @@ public sealed class InstructionCovering
             }
         }
 
-        if (result.Generator is not null)
-        {
-            instructions.AddRange(result.Generator(next));
-        }
+        instructions.AddRange(result.Generator(next));
 
         return instructions;
     }
@@ -204,10 +197,7 @@ public sealed class InstructionCovering
             throw new Exception("Condition should have output.");
         }
 
-        if (result.Generator is not null)
-        {
-            instructions.AddRange(result.Generator(conditionOutput, trueCase, falseCase));
-        }
+        instructions.AddRange(result.Generator(conditionOutput, trueCase, falseCase));
 
         return instructions;
     }
