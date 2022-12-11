@@ -158,7 +158,7 @@ public sealed class InstructionCovering
     private IEnumerable<IInstruction> GenerateConditionalJumpCovering(ConditionalJumpCoverResult result, Label trueCase, Label falseCase)
     {
         var instructions = new List<IInstruction>();
-        if (result.Leaves is null || result.Leaves.Count() != 1)
+        if (result.Leaves.Count != 1)
         {
             throw new Exception("Conditional jump should have exactly one leaf.");
         }
