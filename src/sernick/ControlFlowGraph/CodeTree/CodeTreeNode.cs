@@ -66,12 +66,12 @@ public class Register
 /// </summary>
 public class HardwareRegister : Register
 {
-    private readonly string label;
+    private readonly string _label;
     private HardwareRegister(string label)
     {
-        this.label = label;
+        _label = label;
     }
-    public override string ToString() => label;
+    public override string ToString() => _label;
 
     public static readonly HardwareRegister RAX = new("RAX");
     public static readonly HardwareRegister RBX = new("RBX");

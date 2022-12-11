@@ -278,6 +278,10 @@ public static class ControlFlowAnalyzer
 
         public override CodeTreeRoot VisitFunctionCall(FunctionCall node, ControlFlowVisitorParam param)
         {
+            if (!_nodesWithControlFlow.Contains(node))
+            {
+                return _pullOutSideEffects(node, param.Next, param.ResultVariable);
+            }
             var last = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
             CodeTreeRoot result = last;
             var arguments = node.Arguments.Reverse().Select(argumentNode =>
