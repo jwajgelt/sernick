@@ -62,7 +62,7 @@ public sealed class RegisterAllocator
         // otherwise assign Register not assigned to the neighbours of the copy
         foreach (var copy in copies)
         {
-            var optimalRegisters = availableRegisters.Where(reg => !neighboursRegisters[copy].Contains(reg));
+            var optimalRegisters = availableRegisters.Where(reg => !neighboursRegisters.GetOrAddEmpty(copy).Contains(reg));
             var optimalRegister = optimalRegisters.FirstOrDefault();
             if (optimalRegister != null)
             {
