@@ -110,7 +110,7 @@ public sealed class InstructionCovering
     {
         return leaves
             .Select(CoverTree)
-            .Aggregate(0u, (current, leafCover) => current + (leafCover is null ? Inf : leafCover.Cost));
+            .Aggregate(0u, (current, leafCover) => current + (leafCover?.Cost ?? Inf));
     }
 
     private IEnumerable<IInstruction> GenerateCovering(TreeCoverResult result, out Register? output)
