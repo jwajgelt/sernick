@@ -138,21 +138,11 @@ public sealed class InstructionCovering
 
     private IEnumerable<IInstruction> GenerateSingleExitCovering(SingleExitCoverResult result, Label next)
     {
-        var instructions = new List<IInstruction>();
-
-        foreach (var leaf in result.Leaves)
-        {
-            var leafCover = CoverTree(leaf);
-            if (leafCover is null)
-            {
-                continue;
-            }
-
-            instructions.AddRange(GenerateCovering(leafCover, out _));
-        }
-
-        instructions.AddRange(result.Generator(next));
-        return instructions;
+        return result.Leaves
+            .Select(CoverTree)
+            .OfType<TreeCoverResult>()
+            .SelectMany(leafCover => GenerateCovering(leafCover, out _))
+            .Concat(result.Generator(next));
     }
 
     private IEnumerable<IInstruction> GenerateConditionalJumpCovering(ConditionalJumpCoverResult result, Label trueCase, Label falseCase)
