@@ -2,48 +2,43 @@ namespace sernick.ControlFlowGraph.Analysis;
 
 using CodeGeneration;
 using CodeGeneration.InstructionSelection;
-using static sernick.CodeGeneration.InstructionSelection.CodeTreePatternRuleMatchExtensions;
 using CodeTree;
+using static sernick.CodeGeneration.InstructionSelection.CodeTreePatternRuleMatchExtensions;
 
 public sealed class InstructionCovering
 {
-    class CoverResult
-    {
-        int Cost {get; set;}
-    }
+    private record TreeCoverResult(int Cost, IEnumerable<CodeTreeNode> Leaves, GenerateInstructions? Generator);
 
-    abstract record CoverResult(int cost, IEnumerable<CodeTreeNode>? leaves);
-    record TreeCoverResult(int cost, IEnumerable<CodeTreeNode>? leaves, GenerateInstructions? generator): CoverResult;
-    record SingleExitCoverResult(GenerateSingleExitInstructions? generator): CoverResult;
-    record ConditionalJumpCoverResult(GenerateConditionalJumpInstructions? generator): CoverResult;
-    
-    IEnumerable<CodeTreePatternRule> _rules;
+    private record SingleExitCoverResult(int Cost, IEnumerable<CodeTreeNode> Leaves, GenerateSingleExitInstructions? Generator);
 
-    Dictionary<CodeTreeNode, TreeCoverResult?> _resMemoizer;
+    private record ConditionalJumpCoverResult(int Cost, IEnumerable<CodeTreeNode> Leaves, GenerateConditionalJumpInstructions? Generator);
+
+    private readonly IEnumerable<CodeTreePatternRule> _rules;
+    private readonly Dictionary<CodeTreeNode, TreeCoverResult?> _resMemoizer;
     public InstructionCovering(IEnumerable<CodeTreePatternRule> rules)
     {
         _rules = rules;
-        _resMemoizer = new Dictionary<CodeTreeNode, TreeCoverResult?>(ReferenceEqualityComparer.Instance);    
+        _resMemoizer = new Dictionary<CodeTreeNode, TreeCoverResult?>(ReferenceEqualityComparer.Instance);
     }
 
     private TreeCoverResult? CoverTree(CodeTreeNode node)
     {
-        if(_resMemoizer.TryGetValue(node, out TreeCoverResult? result))
+        if (_resMemoizer.TryGetValue(node, out var result))
         {
             return result;
         }
 
-        TreeCoverResult? best = null; 
-        foreach(CodeTreePatternRule patternRule in _rules)
+        TreeCoverResult? best = null;
+        foreach (var patternRule in _rules)
         {
-            if(patternRule.TryMatchCodeTreeNode(node,
-                out IEnumerable<CodeTreeNode>? leaves,
-                out GenerateInstructions? generateInstructions
+            if (patternRule.TryMatchCodeTreeNode(node,
+                out var leaves,
+                out var generateInstructions
                 ))
             {
-                int? cost = 1 + LeavesCost(leaves);
-                if(cost != null && (best == null || cost < best.cost))
-                { 
+                var cost = 1 + LeavesCost(leaves);
+                if (cost != null && (best == null || cost < best.Cost))
+                {
                     best = new TreeCoverResult(cost.GetValueOrDefault(), leaves, generateInstructions);
                 }
             }
@@ -55,37 +50,70 @@ public sealed class InstructionCovering
 
     public IEnumerable<IInstruction> Cover(SingleExitNode node, Label next)
     {
-        var result = CoverTree(node);
-        if(result is null)
+        SingleExitCoverResult? best = null;
+        foreach (var patternRule in _rules)
+        {
+            if (patternRule.TryMatchSingleExitNode(node,
+                out var leaves,
+                out var generateInstructions
+                ))
+            {
+                var cost = 1 + LeavesCost(leaves);
+                if (cost != null && (best == null || cost < best.Cost))
+                {
+                    best = new SingleExitCoverResult(cost.GetValueOrDefault(), leaves, generateInstructions);
+                }
+            }
+        }
+
+        if (best is null)
         {
             throw new Exception("Unable to cover with given covering rules set.");
         }
-        return GenerateSingleExitCovering(result, next);
+
+        return GenerateSingleExitCovering(best, next);
     }
 
     public IEnumerable<IInstruction> Cover(ConditionalJumpNode node, Label trueCase, Label falseCase)
     {
-        var result = CoverTree(node);
-        if(result is null)
+        ConditionalJumpCoverResult? best = null;
+        foreach (var patternRule in _rules)
+        {
+            if (patternRule.TryMatchConditionalJumpNode(node,
+                out var leaves,
+                out var generateInstructions
+                ))
+            {
+                var cost = 1 + LeavesCost(leaves);
+                if (cost != null && (best == null || cost < best.Cost))
+                {
+                    best = new ConditionalJumpCoverResult(cost.GetValueOrDefault(), leaves, generateInstructions);
+                }
+            }
+        }
+
+        if (best is null)
         {
             throw new Exception("Unable to cover with given covering rules set.");
         }
-        return GenerateConditionalJumpCovering(result, trueCase, falseCase);
+
+        return GenerateConditionalJumpCovering(best, trueCase, falseCase);
     }
 
     private int? LeavesCost(IEnumerable<CodeTreeNode>? leaves)
     {
-        int cost = 0;
+        var cost = 0;
         if (leaves is not null)
         {
-            foreach (CodeTreeNode leaf in leaves)
+            foreach (var leaf in leaves)
             {
                 var leafCover = CoverTree(leaf);
-                if(leafCover is null)
+                if (leafCover is null)
                 {
                     return null;
                 }
-                cost += leafCover.cost;
+
+                cost += leafCover.Cost;
             }
         }
 
@@ -96,18 +124,19 @@ public sealed class InstructionCovering
     {
         var instructions = new List<IInstruction>();
         var leafOutputs = new List<Register>();
-        if(result.leaves is not null)
+        if (result.Leaves is not null)
         {
-            foreach(CodeTreeNode leaf in result.leaves)
+            foreach (var leaf in result.Leaves)
             {
                 var leafCover = CoverTree(leaf);
-                if(leafCover is null)
+                if (leafCover is null)
                 {
                     continue;
                 }
-                instructions.AddRange(GenerateCovering(leafCover, out Register? leafOutput));
-                
-                if(leafOutput is not null)
+
+                instructions.AddRange(GenerateCovering(leafCover, out var leafOutput));
+
+                if (leafOutput is not null)
                 {
                     leafOutputs.Add(leafOutput);
                 }
@@ -115,22 +144,69 @@ public sealed class InstructionCovering
         }
 
         output = null;
-        if(result.generator is not null)
+        if (result.Generator is not null)
         {
-            instructions.AddRange(result.generator(leafOutputs, out Register? genOutput));
+            instructions.AddRange(result.Generator(leafOutputs, out var genOutput));
             output = genOutput;
         }
 
         return instructions;
     }
 
-    private IEnumerable<IInstruction> GenerateSingleExitCovering(TreeCoverResult result, Label next)
+    private IEnumerable<IInstruction> GenerateSingleExitCovering(SingleExitCoverResult result, Label next)
     {
-        throw new NotImplementedException();
+        var instructions = new List<IInstruction>();
+        if (result.Leaves is not null)
+        {
+            foreach (var leaf in result.Leaves)
+            {
+                var leafCover = CoverTree(leaf);
+                if (leafCover is null)
+                {
+                    continue;
+                }
+
+                Register? leafOutput;
+                instructions.AddRange(GenerateCovering(leafCover, out _));
+            }
+        }
+
+        if (result.Generator is not null)
+        {
+            instructions.AddRange(result.Generator(next));
+        }
+
+        return instructions;
     }
 
-    private IEnumerable<IInstruction> GenerateConditionalJumpCovering(TreeCoverResult result, Label trueCase, Label falseCase)
+    private IEnumerable<IInstruction> GenerateConditionalJumpCovering(ConditionalJumpCoverResult result, Label trueCase, Label falseCase)
     {
-        throw new NotImplementedException();
+        var instructions = new List<IInstruction>();
+        if (result.Leaves is null || result.Leaves.Count() != 1)
+        {
+            throw new Exception("Conditional jump should have exactly one leaf.");
+        }
+
+        var condition = result.Leaves.ElementAt(0);
+        var conditionCover = CoverTree(condition);
+
+        if (conditionCover is null)
+        {
+            throw new Exception("Condition should be coverable.");
+        }
+
+        instructions.AddRange(GenerateCovering(conditionCover, out var conditionOutput));
+
+        if (conditionOutput is null)
+        {
+            throw new Exception("Condition should have output.");
+        }
+
+        if (result.Generator is not null)
+        {
+            instructions.AddRange(result.Generator(conditionOutput, trueCase, falseCase));
+        }
+
+        return instructions;
     }
 }
