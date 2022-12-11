@@ -21,7 +21,7 @@ public class InstructionCoveringTest
         var node = new SingleExitNode(null, new List<CodeTreeNode> { raxRead, rbxWrite, memWrite });
 
         var covering = new InstructionCovering(SernickInstructionSet.Rules);
-        _ = covering.Cover(node, new Label(""));
+        covering.Cover(node, new Label(""));
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class InstructionCoveringTest
         var node = new SingleExitNode(null, new List<CodeTreeNode> { /*neg,*/ addition });
 
         var covering = new InstructionCovering(SernickInstructionSet.Rules);
-        _ = covering.Cover(node, new Label(""));
+        covering.Cover(node, new Label(""));
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class InstructionCoveringTest
         var node = new ConditionalJumpNode(exitNode, exitNode, condition);
 
         var covering = new InstructionCovering(SernickInstructionSet.Rules);
-        _ = covering.Cover(node, new Label("true"), new Label("false"));
+        covering.Cover(node, new Label("true"), new Label("false"));
     }
 
     [Fact]
@@ -66,6 +66,40 @@ public class InstructionCoveringTest
         var node = new SingleExitNode(null, new List<CodeTreeNode> { call });
 
         var covering = new InstructionCovering(SernickInstructionSet.Rules);
-        var instructions = covering.Cover(node, new Label(""));
+        covering.Cover(node, new Label(""));
+    }
+
+    [Fact]
+    public void CoversGenerateCall()
+    {
+        var funFactory = new FunctionFactory((_, _) => "");
+        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
+        var callWithContext = mainContext.GenerateCall(new List<CodeTreeValueNode>());
+
+        var covering = new InstructionCovering(SernickInstructionSet.Rules);
+        foreach(var node in callWithContext.CodeGraph)
+        {
+            covering.Cover(node, new Label(""));
+        }
+    }
+
+    [Fact]
+    public void CoversPrologueAndEpilogue()
+    {
+        var funFactory = new FunctionFactory((_, _) => "");
+        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
+        var prologue = mainContext.GeneratePrologue();
+        var epilogue = mainContext.GenerateEpilogue(null);
+
+        var covering = new InstructionCovering(SernickInstructionSet.Rules);
+        foreach(var node in prologue)
+        {
+            covering.Cover(node, new Label(""));
+        }
+
+        foreach(var node in epilogue)
+        {
+            covering.Cover(node, new Label(""));
+        }
     }
 }
