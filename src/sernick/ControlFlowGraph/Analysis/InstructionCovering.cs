@@ -186,7 +186,7 @@ public sealed class InstructionCovering
             throw new Exception("Conditional jump should have exactly one leaf.");
         }
 
-        var condition = result.Leaves.ElementAt(0);
+        var condition = result.Leaves.First();
         var conditionCover = CoverTree(condition);
 
         if (conditionCover is null)
