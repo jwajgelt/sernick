@@ -27,15 +27,15 @@ public class InstructionCoveringTest
     [Fact]
     public void CoversOperators()
     {
-        _ = Reg(HardwareRegister.RAX).Read();
+        var raxRead = Reg(HardwareRegister.RAX).Read();
         var rbxRead = Reg(HardwareRegister.RBX).Read();
         var regA = Reg(new Register());
         var memRead = Mem(regA.Read()).Read();
 
-        // var neg = new UnaryOperationNode(UnaryOperation.Not, raxRead);
+        var neg = new UnaryOperationNode(UnaryOperation.Not, raxRead);
         var addition = rbxRead + memRead;
 
-        var node = new SingleExitNode(null, new List<CodeTreeNode> { /*neg,*/ addition });
+        var node = new SingleExitNode(null, new List<CodeTreeNode> { neg, addition });
 
         var covering = new InstructionCovering(SernickInstructionSet.Rules);
         covering.Cover(node, new Label(""));
@@ -77,7 +77,7 @@ public class InstructionCoveringTest
         var callWithContext = mainContext.GenerateCall(new List<CodeTreeValueNode>());
 
         var covering = new InstructionCovering(SernickInstructionSet.Rules);
-        foreach(var node in callWithContext.CodeGraph)
+        foreach (var node in callWithContext.CodeGraph)
         {
             covering.Cover(node, new Label(""));
         }
@@ -92,12 +92,12 @@ public class InstructionCoveringTest
         var epilogue = mainContext.GenerateEpilogue(null);
 
         var covering = new InstructionCovering(SernickInstructionSet.Rules);
-        foreach(var node in prologue)
+        foreach (var node in prologue)
         {
             covering.Cover(node, new Label(""));
         }
 
-        foreach(var node in epilogue)
+        foreach (var node in epilogue)
         {
             covering.Cover(node, new Label(""));
         }
