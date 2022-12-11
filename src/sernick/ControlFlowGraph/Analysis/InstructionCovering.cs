@@ -13,7 +13,7 @@ public sealed class InstructionCovering
 
     private record ConditionalJumpCoverResult(uint Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateConditionalJumpInstructions Generator);
 
-    private const uint Inf = (int)(1e9);
+    private const uint Inf = 1e9u;
 
     private readonly IEnumerable<CodeTreePatternRule> _rules;
     private readonly Dictionary<CodeTreeNode, TreeCoverResult?> _resMemoizer;
