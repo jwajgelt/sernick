@@ -36,10 +36,11 @@ public sealed class InstructionCovering
                 out var generateInstructions
                 ))
             {
-                var cost = 1 + LeavesCost(leaves);
+                var leavesList = leaves.ToList();
+                var cost = 1 + LeavesCost(leavesList);
                 if (cost != null && (best == null || cost < best.Cost))
                 {
-                    best = new TreeCoverResult(cost.GetValueOrDefault(), leaves.ToList(), generateInstructions);
+                    best = new TreeCoverResult(cost.GetValueOrDefault(), leavesList, generateInstructions);
                 }
             }
         }
@@ -58,10 +59,11 @@ public sealed class InstructionCovering
                 out var generateInstructions
                 ))
             {
-                var cost = 1 + LeavesCost(leaves);
+                var leavesList = leaves.ToList();
+                var cost = 1 + LeavesCost(leavesList);
                 if (cost != null && (best == null || cost < best.Cost))
                 {
-                    best = new SingleExitCoverResult(cost.GetValueOrDefault(), leaves.ToList(), generateInstructions);
+                    best = new SingleExitCoverResult(cost.GetValueOrDefault(), leavesList, generateInstructions);
                 }
             }
         }
@@ -84,10 +86,11 @@ public sealed class InstructionCovering
                 out var generateInstructions
                 ))
             {
-                var cost = 1 + LeavesCost(leaves);
+                var leavesList = leaves.ToList();
+                var cost = 1 + LeavesCost(leavesList);
                 if (cost != null && (best == null || cost < best.Cost))
                 {
-                    best = new ConditionalJumpCoverResult(cost.GetValueOrDefault(), leaves.ToList(), generateInstructions);
+                    best = new ConditionalJumpCoverResult(cost.GetValueOrDefault(), leavesList, generateInstructions);
                 }
             }
         }
