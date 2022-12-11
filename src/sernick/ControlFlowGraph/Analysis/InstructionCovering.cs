@@ -61,6 +61,7 @@ public sealed class InstructionCovering
             {
                 var leavesList = leaves.ToList();
                 var cost = 1 + LeavesCost(leavesList);
+                
                 if (cost != null && (best == null || cost < best.Cost))
                 {
                     best = new SingleExitCoverResult(cost.GetValueOrDefault(), leavesList, generateInstructions);
