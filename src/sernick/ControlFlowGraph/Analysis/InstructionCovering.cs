@@ -13,7 +13,7 @@ public sealed class InstructionCovering
 
     private record ConditionalJumpCoverResult(uint Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateConditionalJumpInstructions Generator);
 
-    private const uint Inf = 1e9u;
+    private const uint Inf = (uint)1e9;
 
     private readonly IEnumerable<CodeTreePatternRule> _rules;
     private readonly Dictionary<CodeTreeNode, TreeCoverResult?> _resMemoizer;
@@ -110,7 +110,7 @@ public sealed class InstructionCovering
     {
         return leaves
             .Select(CoverTree)
-            .Aggregate(0u, (current, leafCover) => current + (leafCover?.Cost ?? Inf));
+            .Aggregate(0u, (current, leafCover) => (current + leafCover?.Cost) ?? Inf);
     }
 
     private IEnumerable<IInstruction> GenerateCovering(TreeCoverResult result, out Register? output)
