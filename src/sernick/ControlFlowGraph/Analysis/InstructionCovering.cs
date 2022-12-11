@@ -7,11 +7,11 @@ using static sernick.CodeGeneration.InstructionSelection.CodeTreePatternRuleMatc
 
 public sealed class InstructionCovering
 {
-    private record TreeCoverResult(int Cost, IEnumerable<CodeTreeNode> Leaves, GenerateInstructions Generator);
+    private record TreeCoverResult(int Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateInstructions Generator);
 
-    private record SingleExitCoverResult(int Cost, IEnumerable<CodeTreeNode> Leaves, GenerateSingleExitInstructions Generator);
+    private record SingleExitCoverResult(int Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateSingleExitInstructions Generator);
 
-    private record ConditionalJumpCoverResult(int Cost, IEnumerable<CodeTreeNode> Leaves, GenerateConditionalJumpInstructions Generator);
+    private record ConditionalJumpCoverResult(int Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateConditionalJumpInstructions Generator);
 
     private readonly IEnumerable<CodeTreePatternRule> _rules;
     private readonly Dictionary<CodeTreeNode, TreeCoverResult?> _resMemoizer;
@@ -39,7 +39,7 @@ public sealed class InstructionCovering
                 var cost = 1 + LeavesCost(leaves);
                 if (cost != null && (best == null || cost < best.Cost))
                 {
-                    best = new TreeCoverResult(cost.GetValueOrDefault(), leaves, generateInstructions);
+                    best = new TreeCoverResult(cost.GetValueOrDefault(), leaves.ToList(), generateInstructions);
                 }
             }
         }
@@ -61,7 +61,7 @@ public sealed class InstructionCovering
                 var cost = 1 + LeavesCost(leaves);
                 if (cost != null && (best == null || cost < best.Cost))
                 {
-                    best = new SingleExitCoverResult(cost.GetValueOrDefault(), leaves, generateInstructions);
+                    best = new SingleExitCoverResult(cost.GetValueOrDefault(), leaves.ToList(), generateInstructions);
                 }
             }
         }
@@ -87,7 +87,7 @@ public sealed class InstructionCovering
                 var cost = 1 + LeavesCost(leaves);
                 if (cost != null && (best == null || cost < best.Cost))
                 {
-                    best = new ConditionalJumpCoverResult(cost.GetValueOrDefault(), leaves, generateInstructions);
+                    best = new ConditionalJumpCoverResult(cost.GetValueOrDefault(), leaves.ToList(), generateInstructions);
                 }
             }
         }
