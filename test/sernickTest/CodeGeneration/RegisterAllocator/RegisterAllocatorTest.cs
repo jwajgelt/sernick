@@ -7,6 +7,7 @@ using sernick.ControlFlowGraph.CodeTree;
 using Utility;
 using static Helpers.GraphBuilder;
 using Graph = IReadOnlyDictionary<sernick.ControlFlowGraph.CodeTree.Register, IReadOnlyCollection<sernick.ControlFlowGraph.CodeTree.Register>>;
+using Allocation = IReadOnlyDictionary<sernick.ControlFlowGraph.CodeTree.Register, sernick.ControlFlowGraph.CodeTree.HardwareRegister?>;
 
 public class RegisterAllocatorTest
 {
@@ -26,6 +27,7 @@ public class RegisterAllocatorTest
 
         AssertValidAllocation(allocated, interferenceGraph);
         AssertAllocatedAtLeast(allocated, 3);
+        AssertUsesOnlySpecifiedHardwareRegisters(allocated, hardwareRegisters);
     }
 
     [Fact]
@@ -44,6 +46,7 @@ public class RegisterAllocatorTest
 
         AssertValidAllocation(allocated, interferenceGraph);
         AssertAllocatedAtLeast(allocated, 1);
+        AssertUsesOnlySpecifiedHardwareRegisters(allocated, hardwareRegisters);
     }
 
     [Fact]
@@ -64,6 +67,8 @@ public class RegisterAllocatorTest
 
         AssertValidAllocation(allocated, interferenceGraph);
         AssertAllocatedAtLeast(allocated, 3);
+        AssertUsesOnlySpecifiedHardwareRegisters(allocated, hardwareRegisters);
+
         Assert.Equal(allocated[(FakeRegister)3], allocated[(FakeRegister)4]);
     }
 
@@ -84,6 +89,7 @@ public class RegisterAllocatorTest
         AssertValidAllocation(allocated, interferenceGraph);
         AssertAllocatedAtLeast(allocated, 3);
         AssertPreservesHardwareRegisters(allocated);
+        AssertUsesOnlySpecifiedHardwareRegisters(allocated, hardwareRegisters);
     }
 
     [Theory]
@@ -97,6 +103,7 @@ public class RegisterAllocatorTest
         AssertValidAllocation(allocated, interferenceGraph);
         AssertAllocatedAtLeast(allocated, minAllocated);
         AssertPreservesHardwareRegisters(allocated);
+        AssertUsesOnlySpecifiedHardwareRegisters(allocated, hardwareRegisters);
     }
 
     public static readonly (FakeHardwareRegister[] hardwareRegisters, Graph interferenceGraph, Graph copyGraph, int
@@ -214,7 +221,7 @@ public class RegisterAllocatorTest
     /// <summary>
     /// Checks if every register pair connected by an edge has different allocated hardware register.
     /// </summary>
-    private static void AssertValidAllocation(IReadOnlyDictionary<Register, HardwareRegister?> allocation, Graph interferenceGraph)
+    private static void AssertValidAllocation(Allocation allocation, Graph interferenceGraph)
     {
         Assert.All(interferenceGraph.Edges(), edge =>
         {
@@ -225,12 +232,12 @@ public class RegisterAllocatorTest
         });
     }
 
-    private static void AssertAllocatedAtLeast(IReadOnlyDictionary<Register, HardwareRegister?> allocation, int min)
+    private static void AssertAllocatedAtLeast(Allocation allocation, int min)
     {
         Assert.InRange(allocation.Count(kv => kv.Value != null), min, allocation.Count);
     }
 
-    private static void AssertPreservesHardwareRegisters(IReadOnlyDictionary<Register, HardwareRegister?> allocation)
+    private static void AssertPreservesHardwareRegisters(Allocation allocation)
     {
         Assert.All(allocation, (kv) =>
         {
@@ -238,6 +245,16 @@ public class RegisterAllocatorTest
             {
                 Assert.Equal(kv.Key, kv.Value);
             }
+        });
+    }
+
+    private static void AssertUsesOnlySpecifiedHardwareRegisters(Allocation allocation,
+        ICollection<HardwareRegister> hardwareRegisters)
+    {
+        var nonNullAllocation = allocation.Where((kv) => kv.Value != null);
+        Assert.All(nonNullAllocation, (kv) => 
+        {
+            Assert.Contains(kv.Value, hardwareRegisters);
         });
     }
 }
