@@ -5,10 +5,10 @@ using CodeTree;
 
 public sealed class Linearizator
 {
-    private readonly InstructionCovering _instructionCovering;
+    private readonly IInstructionCovering _instructionCovering;
     private readonly Dictionary<CodeTreeRoot, Label> _visitedRootsLabels;
 
-    public Linearizator(InstructionCovering instructionCovering)
+    public Linearizator(IInstructionCovering instructionCovering)
     {
         _instructionCovering = instructionCovering;
         _visitedRootsLabels = new Dictionary<CodeTreeRoot, Label>(ReferenceEqualityComparer.Instance);
@@ -53,18 +53,10 @@ public sealed class Linearizator
     {
         var nextDepth = depth + 1;
         var trueCaseNode = conditionalNode.TrueCase;
-        if (trueCaseNode == null)
-        {
-            throw new Exception($"<Linearizator> Node {conditionalNode} has TrueCase equal to null, but it should be non-nullable");
-        }
 
         var (trueCaseLabel, trueCaseCoverWithLabel) = GetTreeLabelAndCover(trueCaseNode, nextDepth);
 
         var falseCaseNode = conditionalNode.FalseCase;
-        if (falseCaseNode == null)
-        {
-            throw new Exception("<Linearizator> Node " + conditionalNode + " has TrueCase equal to null, but it should be non-nullable");
-        }
 
         var (falseCaseLabel, falseCaseCoverWithLabel) = GetTreeLabelAndCover(falseCaseNode, nextDepth);
 
