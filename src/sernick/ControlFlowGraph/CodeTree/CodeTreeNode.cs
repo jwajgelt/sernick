@@ -66,7 +66,7 @@ public class Register
 /// </summary>
 public class HardwareRegister : Register
 {
-    private readonly string _label;
+    protected readonly string _label;
     protected HardwareRegister(string label)
     {
         _label = label;
