@@ -123,27 +123,27 @@ public class AstToCfgConversionTest
         var fContext = funFactory.CreateFunction(mainContext, Ident("f"), new IFunctionParam[] { paramN }, true);
 
         fContext.AddLocal(paramN, false);
+        var fResult = Reg(new Register());
 
         var fCall = fContext.GenerateCall(new[] { new Constant(new RegisterValue(5)) });
         var fCallInner1 = fContext.GenerateCall(new[] { varN.Value - 1 });
         var fCallInner2 = fContext.GenerateCall(new[] { varN.Value - 2 });
 
         var mainEpilogue = mainContext.GenerateEpilogue(null)[0];
-        var fEpilogue = fContext.GenerateEpilogue(fCall.ResultLocation)[0];
+        var fEpilogue = fContext.GenerateEpilogue(fResult.Value)[0];
 
-        var fCallTree = new SingleExitNode(mainEpilogue, fCall.CodeGraph[0]);
-        var retF = new SingleExitNode(fEpilogue, fCallInner1.ResultLocation! + fCallInner2.ResultLocation!);
-        var fCallInner2Tree = new SingleExitNode(retF, fCallInner2.CodeGraph[0]);
-        var fCallInner1Tree = new SingleExitNode(fCallInner2Tree, fCallInner1.CodeGraph[0]);
-        var ret1 = new SingleExitNode(fEpilogue, new Constant(new RegisterValue(1)));
+        fCall.CodeGraph[^1].NextTree = mainEpilogue;
+
+        var retF = new SingleExitNode(fEpilogue, fResult.Write(fCallInner1.ResultLocation! + fCallInner2.ResultLocation!));
+        fCallInner2.CodeGraph[^1].NextTree = retF;
+        fCallInner1.CodeGraph[^1].NextTree = fCallInner2.CodeGraph[0];
+        var ret1 = new SingleExitNode(fEpilogue, fResult.Write(1));
 
         var tmpReg = Reg(new Register());
-        var ifBlock = new ConditionalJumpNode(ret1, fCallInner1Tree, tmpReg.Value);
-        var condEval = new SingleExitNode(ifBlock, new[] {
-            tmpReg.Write(varN.Value <= 1)
-        });
+        var ifBlock = new ConditionalJumpNode(ret1, fCallInner1.CodeGraph[0], tmpReg.Value);
+        var condEval = new SingleExitNode(ifBlock, tmpReg.Write(varN.Value <= 1));
 
-        var mainRoot = AddPrologue(mainContext, fCallTree);
+        var mainRoot = AddPrologue(mainContext, fCall.CodeGraph[0]);
         var fRoot = AddPrologue(fContext, condEval);
 
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance){

@@ -125,6 +125,9 @@ public sealed record Constant(RegisterValue Value) : CodeTreeValueNode
 public sealed record FunctionCall(IFunctionCaller FunctionCaller) : CodeTreeNode
 {
     public override string ToString() => $"Call {FunctionCaller.Label.Value}";
+
+    public override int GetHashCode() => FunctionCaller.Label.GetHashCode();
+    public bool Equals(FunctionCall? other) => FunctionCaller.Label.Equals(other?.FunctionCaller.Label);
 }
 
 public sealed record FunctionReturn() : CodeTreeNode
