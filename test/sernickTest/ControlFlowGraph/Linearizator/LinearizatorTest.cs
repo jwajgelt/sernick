@@ -1,24 +1,8 @@
 namespace sernickTest.ControlFlowGraph.Linearizator;
-
-using System;
-using Diagnostics;
 using Moq;
-using sernick.Ast;
-using sernick.Ast.Analysis.CallGraph;
-using sernick.Ast.Analysis.ControlFlowGraph;
-using sernick.Ast.Analysis.FunctionContextMap;
-using sernick.Ast.Analysis.NameResolution;
-using sernick.Ast.Analysis.TypeChecking;
-using sernick.Ast.Analysis.VariableAccess;
-using sernick.Ast.Nodes;
 using sernick.CodeGeneration;
-using sernick.Compiler.Function;
-using sernick.ControlFlowGraph.CodeTree;
 using sernick.ControlFlowGraph.Analysis;
-using static Ast.Helpers.AstNodesExtensions;
-using static sernick.Compiler.PlatformConstants;
-using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
-
+using sernick.ControlFlowGraph.CodeTree;
 
 public class LinearizatorTest
 {
@@ -35,7 +19,6 @@ public class LinearizatorTest
         var p3 = new SingleExitNode(null, emptyOperationsList);
         var p2 = new SingleExitNode(p3, emptyOperationsList);
         var p1 = new SingleExitNode(p2, emptyOperationsList);
-
 
         var actual = linearizator.Linearize(p1);
         Assert.Equal(2, actual.Count()); // empty lists for inside node covers, so only two jumps should be
@@ -56,8 +39,7 @@ public class LinearizatorTest
         var trueCaseNode = new SingleExitNode(null, emptyOperationsList);
         var falseCaseNode = new SingleExitNode(null, emptyOperationsList);
         var mockedValueNode = new Mock<CodeTreeValueNode>();
-        var conditionalNode = new ConditionalJumpNode(trueCaseNode,falseCaseNode, mockedValueNode.Object);
-
+        var conditionalNode = new ConditionalJumpNode(trueCaseNode, falseCaseNode, mockedValueNode.Object);
 
         var actual = linearizator.Linearize(conditionalNode);
         Assert.Equal(2, actual.Count()); // we only expect labels for true and false case to be added

@@ -1,5 +1,4 @@
 namespace sernick.ControlFlowGraph.Analysis;
-using System;
 using sernick.CodeGeneration;
 using sernick.ControlFlowGraph.CodeTree;
 
