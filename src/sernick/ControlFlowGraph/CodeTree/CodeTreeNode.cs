@@ -66,7 +66,7 @@ public class Register
 /// </summary>
 public class HardwareRegister : Register
 {
-    private HardwareRegister() { }
+    protected HardwareRegister() { }
     public static readonly HardwareRegister RAX = new();
     public static readonly HardwareRegister RBX = new();
     public static readonly HardwareRegister RCX = new();
