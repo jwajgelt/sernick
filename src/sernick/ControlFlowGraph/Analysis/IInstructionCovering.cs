@@ -1,8 +1,7 @@
+namespace sernick.ControlFlowGraph.Analysis;
 using System;
 using sernick.CodeGeneration;
 using sernick.ControlFlowGraph.CodeTree;
-
-namespace sernick.ControlFlowGraph.Analysis;
 
 public interface IInstructionCovering
 {
