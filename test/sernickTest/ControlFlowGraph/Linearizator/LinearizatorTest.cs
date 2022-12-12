@@ -23,7 +23,7 @@ using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
 public class LinearizatorTest
 {
     [Fact]
-    public void testPath()
+    public void TestPath()
     {
         var mockedInstructionCovering = new Mock<IInstructionCovering>();
         // it is not important what's inside the list of instruction
@@ -43,7 +43,7 @@ public class LinearizatorTest
     }
 
     [Fact]
-    public void testOneConditionalNode()
+    public void TestOneConditionalNode()
     {
         var mockedInstructionCovering = new Mock<IInstructionCovering>();
         // it is not important what's inside the list of instruction
@@ -65,7 +65,7 @@ public class LinearizatorTest
     }
 
     [Fact]
-    public void testTwoConditionalNodesPointingToSameSingleExitNode()
+    public void TestTwoConditionalNodesAndTwoSingleExitNodes()
     {
         var mockedInstructionCovering = new Mock<IInstructionCovering>();
         // it is not important what's inside the list of instruction
@@ -100,6 +100,50 @@ public class LinearizatorTest
 
         var actual = linearizator.Linearize(CN1);
         Assert.Equal(3, actual.Count()); // 3 labels, not 4, since S1 is already visited as false case of CN1
+        Assert.All(actual, instruction => Assert.IsType<Label>(instruction));
+    }
+
+    [Fact]
+    public void TestMultipleConditionalNodes()
+    {
+        var mockedInstructionCovering = new Mock<IInstructionCovering>();
+        // it is not important what's inside the list of instruction
+        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns(new List<IInstruction>());
+        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns(new List<IInstruction>());
+        var linearizator = new Linearizator(mockedInstructionCovering.Object);
+
+        var emptyOperationsList = new List<CodeTreeNode>();
+        var mockedValueNode = new Mock<CodeTreeValueNode>();
+
+        //       CN1        
+        //       /\           
+        //      T  F
+        //     /    \
+        //    CN2    S1
+        //
+        //       CN2    
+        //       /\
+        //      T  F
+        //     /    \
+        //    CN3    S2
+        //
+        //       CN3    
+        //       /\
+        //      T  F
+        //     /    \
+        //    S1    S2
+        //
+        //   S1 and S2 below are independent in the graph
+        //   SingleExitNode S1 -> finish
+        //   SingleExitNode S2 -> finish
+        var S1 = new SingleExitNode(null, emptyOperationsList);
+        var S2 = new SingleExitNode(null, emptyOperationsList);
+        var CN3 = new ConditionalJumpNode(S1, S2, mockedValueNode.Object);
+        var CN2 = new ConditionalJumpNode(CN3, S2, mockedValueNode.Object);
+        var CN1 = new ConditionalJumpNode(CN2, S1, mockedValueNode.Object);
+
+        var actual = linearizator.Linearize(CN1);
+        Assert.Equal(4, actual.Count()); // 4 labels, not 6
         Assert.All(actual, instruction => Assert.IsType<Label>(instruction));
     }
 }
