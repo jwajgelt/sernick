@@ -8,6 +8,7 @@ using static CodeGeneration.InstructionSelection.CodeTreePatternPredicates;
 using Bin = BinaryOpInstruction;
 using Mov = MovInstruction;
 using Pat = CodeGeneration.InstructionSelection.CodeTreePattern;
+using Un = UnaryOpInstruction;
 
 public static class SernickInstructionSet
 {
@@ -15,40 +16,41 @@ public static class SernickInstructionSet
     {
         get
         {
-            // mov $reg, *
+            // $const
             {
                 yield return new CodeTreeNodePatternRule(
-                    Pat.RegisterWrite(Any<Register>(), out var reg, Pat.WildcardNode),
-                    (inputs, values) => (
-                        instructions: new List<IInstruction>
+                    Pat.Constant(Any<RegisterValue>(), out var imm),
+                    (_, values) =>
+                    {
+                        var output = new Register();
+                        return new List<IInstruction>
                         {
-                            Mov.ToReg(values.Get<Register>(reg)).FromReg(inputs[0])
-                        },
-                        output: null));
+                            Mov.ToReg(output).FromImm(values.Get<RegisterValue>(imm))
+                        }.WithOutput(output);
+                    });
             }
 
-            // mov $reg, [*]
+            // $reg
             {
                 yield return new CodeTreeNodePatternRule(
-                    Pat.RegisterWrite(Any<Register>(), out var reg, Pat.MemoryRead(Pat.WildcardNode)),
-                    (inputs, values) => (
-                        instructions: new List<IInstruction>
-                        {
-                            Mov.ToReg(values.Get<Register>(reg)).FromMem(inputs[0])
-                        },
-                        output: null));
+                    Pat.RegisterRead(Any<Register>(), out var reg),
+                    (_, values) =>
+                        Enumerable.Empty<IInstruction>()
+                            .WithOutput(values.Get<Register>(reg)));
             }
 
-            // mov [*], *
+            // [*]
             {
                 yield return new CodeTreeNodePatternRule(
-                    Pat.MemoryWrite(Pat.WildcardNode, Pat.WildcardNode),
-                    (inputs, _) => (
-                        instructions: new List<IInstruction>
+                    Pat.MemoryRead(Pat.WildcardNode),
+                    (inputs, _) =>
+                    {
+                        var output = new Register();
+                        return new List<IInstruction>
                         {
-                            Mov.ToMem(inputs[0]).FromReg(inputs[1])
-                        },
-                        output: null));
+                            Mov.ToReg(output).FromMem(inputs[0])
+                        }.WithOutput(output);
+                    });
             }
 
             // mov $reg, $const
@@ -56,36 +58,101 @@ public static class SernickInstructionSet
                 yield return new CodeTreeNodePatternRule(
                     Pat.RegisterWrite(Any<Register>(), out var reg,
                         Pat.Constant(Any<RegisterValue>(), out var imm)),
-                    (_, values) => (
-                        instructions: new List<IInstruction>
+                    (_, values) =>
+                        new List<IInstruction>
                         {
                             Mov.ToReg(values.Get<Register>(reg)).FromImm(values.Get<RegisterValue>(imm))
-                        },
-                        output: null));
+                        }.WithOutput(null));
+            }
+
+            // mov $reg, $addr[$displacement]
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.RegisterWrite(Any<Register>(), out var reg,
+                        Pat.MemoryRead(Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _,
+                            Pat.GlobalAddress(out var addr), CodeTreePattern.Constant(Any<RegisterValue>(), out var imm)))),
+                    (_, values) =>
+                        new List<IInstruction>
+                        {
+                            Mov.ToReg(values.Get<Register>(reg)).FromMem(values.Get<Label>(addr), values.Get<RegisterValue>(imm))
+                        }.WithOutput(null));
+            }
+
+            // mov $reg, [*]
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.RegisterWrite(Any<Register>(), out var reg, Pat.MemoryRead(Pat.WildcardNode)),
+                    (inputs, values) =>
+                        new List<IInstruction>
+                        {
+                            Mov.ToReg(values.Get<Register>(reg)).FromMem(inputs[0])
+                        }.WithOutput(null));
+            }
+
+            // mov $reg, *
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.RegisterWrite(Any<Register>(), out var reg, Pat.WildcardNode),
+                    (inputs, values) =>
+                        new List<IInstruction>
+                        {
+                            Mov.ToReg(values.Get<Register>(reg)).FromReg(inputs[0])
+                        }.WithOutput(null));
+            }
+
+            // mov $addr[$displacement], *
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.MemoryWrite(Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _,
+                        Pat.GlobalAddress(out var addr), CodeTreePattern.Constant(Any<RegisterValue>(), out var imm)),
+                        Pat.WildcardNode),
+                    (inputs, values) =>
+                        new List<IInstruction>
+                        {
+                            Mov.ToMem(values.Get<Label>(addr), values.Get<RegisterValue>(imm)).FromReg(inputs[0])
+                        }.WithOutput(null));
             }
 
             // mov [*], $const
             {
                 yield return new CodeTreeNodePatternRule(
                     Pat.MemoryWrite(Pat.WildcardNode, Pat.Constant(Any<RegisterValue>(), out var imm)),
-                    (inputs, values) => (
-                        instructions: new List<IInstruction>
+                    (inputs, values) =>
+                        new List<IInstruction>
                         {
                             Mov.ToMem(inputs[0]).FromImm(values.Get<RegisterValue>(imm))
-                        },
-                        output: null));
+                        }.WithOutput(null));
+            }
+
+            // mov [*], *
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.MemoryWrite(Pat.WildcardNode, Pat.WildcardNode),
+                    (inputs, _) =>
+                        new List<IInstruction>
+                        {
+                            Mov.ToMem(inputs[0]).FromReg(inputs[1])
+                        }.WithOutput(null));
             }
 
             // call $label
             {
                 yield return new CodeTreeNodePatternRule(
                     Pat.FunctionCall(out var call),
-                    (_, values) => (
-                        instructions: new List<IInstruction>
+                    (_, values) =>
+                        new List<IInstruction>
                         {
                             new CallInstruction(values.Get<IFunctionCaller>(call).Label)
-                        },
-                        output: null));
+                        }.WithOutput(null));
+            }
+
+            // ret
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.FunctionReturn, (_, _) => new List<IInstruction>
+                    {
+                        new RetInstruction()
+                    }.WithOutput(null));
             }
 
             // <op> *, *
@@ -96,8 +163,8 @@ public static class SernickInstructionSet
                             BinaryOperation.Add, BinaryOperation.Sub,
                             BinaryOperation.BitwiseAnd, BinaryOperation.BitwiseOr), out var op,
                         Pat.WildcardNode, Pat.WildcardNode),
-                    (inputs, values) => (
-                        instructions: new List<IInstruction>
+                    (inputs, values) =>
+                        new List<IInstruction>
                         {
                             values.Get<BinaryOperation>(op) switch
                             {
@@ -107,8 +174,23 @@ public static class SernickInstructionSet
                                 BinaryOperation.BitwiseOr => Bin.Or.ToReg(inputs[0]).FromReg(inputs[1]),
                                 _ => throw new ArgumentOutOfRangeException()
                             }
-                        },
-                        output: inputs[0]));
+                        }.WithOutput(inputs[0]));
+            }
+
+            // <op> *
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.UnaryOperationNode(Any<UnaryOperation>(), out var op,
+                        Pat.WildcardNode),
+                    (inputs, values) => new List<IInstruction>
+                    {
+                        values.Get<UnaryOperation>(op) switch
+                        {
+                            UnaryOperation.Not => Un.Not.Reg(inputs[0]),
+                            UnaryOperation.Negate => Un.Neg.Reg(inputs[0]),
+                            _ => throw new ArgumentOutOfRangeException()
+                        }
+                    }.WithOutput(inputs[0]));
             }
 
             /* CONDITIONALS */
@@ -126,23 +208,21 @@ public static class SernickInstructionSet
                     (inputs, values) =>
                     {
                         var output = new Register();
-                        return (
-                            instructions: new List<IInstruction>
+                        return new List<IInstruction>
+                        {
+                            Bin.Cmp.ToReg(inputs[0]).FromReg(inputs[1]), // cmp in0, in1
+                            Bin.Xor.ToReg(output).FromReg(output), // mov out, 0
+                            values.Get<BinaryOperation>(op) switch // setcc out
                             {
-                                Bin.Cmp.ToReg(inputs[0]).FromReg(inputs[1]), // cmp in0, in1
-                                Bin.Xor.ToReg(output).FromReg(output), // mov out, 0
-                                values.Get<BinaryOperation>(op) switch // setcc out
-                                {
-                                    BinaryOperation.Equal => new SetCcInstruction(ConditionCode.E, output),
-                                    BinaryOperation.NotEqual => new SetCcInstruction(ConditionCode.Ne, output),
-                                    BinaryOperation.LessThan => new SetCcInstruction(ConditionCode.L, output),
-                                    BinaryOperation.GreaterThan => new SetCcInstruction(ConditionCode.G, output),
-                                    BinaryOperation.LessThanEqual => new SetCcInstruction(ConditionCode.Ng, output),
-                                    BinaryOperation.GreaterThanEqual => new SetCcInstruction(ConditionCode.Nl, output),
-                                    _ => throw new ArgumentOutOfRangeException()
-                                }
-                            },
-                            output);
+                                BinaryOperation.Equal => new SetCcInstruction(ConditionCode.E, output),
+                                BinaryOperation.NotEqual => new SetCcInstruction(ConditionCode.Ne, output),
+                                BinaryOperation.LessThan => new SetCcInstruction(ConditionCode.L, output),
+                                BinaryOperation.GreaterThan => new SetCcInstruction(ConditionCode.G, output),
+                                BinaryOperation.LessThanEqual => new SetCcInstruction(ConditionCode.Ng, output),
+                                BinaryOperation.GreaterThanEqual => new SetCcInstruction(ConditionCode.Nl, output),
+                                _ => throw new ArgumentOutOfRangeException()
+                            }
+                        }.WithOutput(output);
                     });
             }
 
@@ -171,4 +251,10 @@ public static class SernickInstructionSet
             }
         }
     }
+}
+
+public static class GenerateInstructionsHelper
+{
+    public static (IEnumerable<IInstruction> instructions, Register? output) WithOutput(
+        this IEnumerable<IInstruction> instructions, Register? output) => (instructions, output);
 }

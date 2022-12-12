@@ -67,7 +67,7 @@ public partial class Regex<TAtom> where TAtom : IEquatable<TAtom>
                     return concatRegex.Children;
                 }
 
-                return Enumerable.Repeat(regex, count: 1);
+                return regex.Enumerate();
             })
             .ToList();
 
