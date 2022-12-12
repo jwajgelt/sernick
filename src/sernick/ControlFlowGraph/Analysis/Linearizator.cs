@@ -27,19 +27,12 @@ public sealed class Linearizator
 
     private IEnumerable<IAsmable> Dfs(CodeTreeRoot v, int depth)
     {
-        switch (v)
+        return v switch
         {
-            case SingleExitNode node:
-                {
-                    return HandleSingleExitNode(node, depth);
-                }
-            case ConditionalJumpNode conditionalNode:
-                {
-                    return HandleConditionalJumpNode(conditionalNode, depth);
-                }
-            default:
-                throw new Exception($"<Linearizator> called on a node which is neither a SingleExitNode nor ConditionalJumpNode : {v}");
-        }
+            SingleExitNode node => HandleSingleExitNode(node, depth),
+            ConditionalJumpNode conditionalNode => HandleConditionalJumpNode(conditionalNode, depth),
+            _ => throw new Exception($"<Linearizator> called on a node which is neither a SingleExitNode nor ConditionalJumpNode : {v}")
+        };
     }
 
     private IEnumerable<IAsmable> HandleSingleExitNode(SingleExitNode node, int depth)
@@ -85,7 +78,6 @@ public sealed class Linearizator
     {
         if (_visitedRootsLabels.TryGetValue(tree, out var label))
         {
-            // TODO should it be more like a conditional jump, not just a label? IDK how to do it with our API :|
             var emptyCover = new List<IAsmable>();
             return (label, emptyCover);
         }
