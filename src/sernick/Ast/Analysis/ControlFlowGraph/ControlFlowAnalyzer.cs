@@ -103,6 +103,7 @@ public static class ControlFlowAnalyzer
                 null,
                 null,
                 epilogue[0],
+                resultVariable,
                 resultVariable
             ));
 
@@ -115,7 +116,8 @@ public static class ControlFlowAnalyzer
         CodeTreeRoot? Break, // CFG node that will be visited after a break statement
         CodeTreeRoot? Continue, // CFG node that will be visited after a continue statement
         CodeTreeRoot Return, // CFG node that will be visited after a return statement
-        IFunctionVariable? ResultVariable // variable in which the result should be stored
+        IFunctionVariable? ResultVariable, // variable in which the result of the given tree should be stored
+        IFunctionVariable? ReturnResultVariable // variable in which the return result should be stored
     );
 
     private class TemporaryLocalVariable : IFunctionVariable { }
@@ -227,7 +229,7 @@ public static class ControlFlowAnalyzer
 
         public override CodeTreeRoot VisitReturnStatement(ReturnStatement node, ControlFlowVisitorParam param)
         {
-            return node.ReturnValue?.Accept(this, param with { Next = param.Return }) ?? param.Return;
+            return node.ReturnValue?.Accept(this, param with { Next = param.Return, ResultVariable = param.ReturnResultVariable }) ?? param.Return;
         }
 
         public override CodeTreeRoot VisitInfix(Infix node, ControlFlowVisitorParam param)
