@@ -8,6 +8,7 @@ using static CodeGeneration.InstructionSelection.CodeTreePatternPredicates;
 using Bin = BinaryOpInstruction;
 using Mov = MovInstruction;
 using Pat = CodeGeneration.InstructionSelection.CodeTreePattern;
+using Un = UnaryOpInstruction;
 
 public static class SernickInstructionSet
 {
@@ -36,6 +37,20 @@ public static class SernickInstructionSet
                     (_, values) =>
                         Enumerable.Empty<IInstruction>()
                             .WithOutput(values.Get<Register>(reg)));
+            }
+
+            // [*]
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.MemoryRead(Pat.WildcardNode),
+                    (inputs, _) =>
+                    {
+                        var output = new Register();
+                        return new List<IInstruction>
+                        {
+                            Mov.ToReg(output).FromMem(inputs[0])
+                        }.WithOutput(output);
+                    });
             }
 
             // mov $reg, $const
@@ -160,6 +175,22 @@ public static class SernickInstructionSet
                                 _ => throw new ArgumentOutOfRangeException()
                             }
                         }.WithOutput(inputs[0]));
+            }
+
+            // <op> *
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.UnaryOperationNode(Any<UnaryOperation>(), out var op,
+                        Pat.WildcardNode),
+                    (inputs, values) => new List<IInstruction>
+                    {
+                        values.Get<UnaryOperation>(op) switch
+                        {
+                            UnaryOperation.Not => Un.Not.Reg(inputs[0]),
+                            UnaryOperation.Negate => Un.Neg.Reg(inputs[0]),
+                            _ => throw new ArgumentOutOfRangeException()
+                        }
+                    }.WithOutput(inputs[0]));
             }
 
             /* CONDITIONALS */
