@@ -32,7 +32,7 @@ public class InstructionCoveringTest
         var regA = Reg(new Register());
         var memRead = Mem(regA.Read()).Read();
 
-        var neg = new UnaryOperationNode(UnaryOperation.Not, raxRead);
+        var neg = !raxRead;
         var addition = rbxRead + memRead;
 
         var node = new SingleExitNode(null, new List<CodeTreeNode> { neg, addition });
