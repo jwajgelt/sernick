@@ -53,7 +53,7 @@ public class InstructionCoveringTest
         var node = new ConditionalJumpNode(exitNode, exitNode, condition);
 
         var covering = new InstructionCovering(SernickInstructionSet.Rules);
-        covering.Cover(node, new Label("true"), new Label("false"));
+        covering.Cover(node, "true", "false");
     }
 
     [Fact]
