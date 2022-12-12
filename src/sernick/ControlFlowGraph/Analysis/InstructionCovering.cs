@@ -5,7 +5,7 @@ using CodeGeneration.InstructionSelection;
 using CodeTree;
 using static sernick.CodeGeneration.InstructionSelection.CodeTreePatternRuleMatchExtensions;
 
-public sealed class InstructionCovering
+public sealed class InstructionCovering: IInstructionCovering
 {
     private record TreeCoverResult(uint Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateInstructions Generator);
 
