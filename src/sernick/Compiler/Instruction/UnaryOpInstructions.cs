@@ -39,7 +39,7 @@ public sealed record UnaryOpInstruction(UnaryOp Op, IInstructionOperand Operand)
     public Label? PossibleJump => null;
 
     public bool IsCopy => false;
-    public string ToAsm()
+    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister?> registerMapping)
     {
         throw new NotImplementedException();
     }

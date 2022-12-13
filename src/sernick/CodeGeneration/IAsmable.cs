@@ -4,7 +4,7 @@ using ControlFlowGraph.CodeTree;
 
 public interface IAsmable
 {
-    string ToAsm();
+    string ToAsm(IReadOnlyDictionary<Register, HardwareRegister?> registerMapping);
 }
 
 public interface IInstruction : IAsmable
@@ -19,7 +19,7 @@ public interface IInstruction : IAsmable
 public sealed record Label(string Value) : IAsmable
 {
     public static implicit operator Label(string name) => new(name);
-    public string ToAsm()
+    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister?> registerMapping)
     {
         throw new NotImplementedException();
     }
