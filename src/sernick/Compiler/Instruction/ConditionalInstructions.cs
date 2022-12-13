@@ -26,7 +26,7 @@ public abstract record ConditionalInstruction(ConditionCode Code) : IInstruction
     public abstract bool PossibleFollow { get; }
     public abstract Label? PossibleJump { get; }
     public abstract bool IsCopy { get; }
-    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister?> registerMapping)
+    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
         throw new NotImplementedException();
     }
