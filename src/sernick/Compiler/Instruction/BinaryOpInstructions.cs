@@ -42,7 +42,7 @@ public enum BinaryAssignInstructionOp
 }
 
 public record BinaryAssignInstruction(BinaryAssignInstructionOp Op, IInstructionOperand Left, IInstructionOperand Right) : BinaryOpInstruction(Left, Right)
-{    
+{
     public sealed record Builder(BinaryAssignInstructionOp Op)
     {
         private IInstructionOperand? _target;
