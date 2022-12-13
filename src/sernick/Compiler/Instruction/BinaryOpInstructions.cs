@@ -4,13 +4,6 @@ using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 using Utility;
 
-public enum BinaryOp
-{
-    Add, Sub,
-    And, Or, Xor,
-    Cmp
-}
-
 /// <summary>
 /// Create binary-op instructions using static factory methods and the builder.
 /// <example>
@@ -20,41 +13,19 @@ public enum BinaryOp
 /// </code>
 /// </example>
 /// </summary>
-public sealed record BinaryOpInstruction(BinaryOp Op, IInstructionOperand Left, IInstructionOperand Right) : IInstruction
+public abstract record BinaryOpInstruction(IInstructionOperand Left, IInstructionOperand Right) : IInstruction
 {
-    public static BinaryOpInstructionBuilder Add => new(BinaryOp.Add);
-    public static BinaryOpInstructionBuilder Sub => new(BinaryOp.Sub);
-    public static BinaryOpInstructionBuilder And => new(BinaryOp.And);
-    public static BinaryOpInstructionBuilder Or => new(BinaryOp.Or);
-    public static BinaryOpInstructionBuilder Xor => new(BinaryOp.Xor);
-    public static BinaryOpInstructionBuilder Cmp => new(BinaryOp.Cmp);
+    public static BinaryAssignInstruction.Builder Add => new(BinaryAssignInstructionOp.Add);
+    public static BinaryAssignInstruction.Builder Sub => new(BinaryAssignInstructionOp.Sub);
+    public static BinaryAssignInstruction.Builder And => new(BinaryAssignInstructionOp.And);
+    public static BinaryAssignInstruction.Builder Or => new(BinaryAssignInstructionOp.Or);
+    public static BinaryAssignInstruction.Builder Xor => new(BinaryAssignInstructionOp.Xor);
+    public static BinaryComputeInstruction.Builder Cmp => new(BinaryComputeInstructionOp.Cmp);
 
-    public sealed record BinaryOpInstructionBuilder(BinaryOp Op)
-    {
-        private IInstructionOperand? _target;
-
-        public BinaryOpInstructionBuilder ToReg(Register target)
-        {
-            _target = target.AsRegOperand();
-            return this;
-        }
-
-        public BinaryOpInstructionBuilder ToMem(Register location)
-        {
-            _target = location.AsMemOperand();
-            return this;
-        }
-
-        public BinaryOpInstruction FromReg(Register source) => new(Op, _target!, source.AsRegOperand());
-        public BinaryOpInstruction FromMem(Register location) => new(Op, _target!, location.AsMemOperand());
-        public BinaryOpInstruction FromImm(RegisterValue value) => new(Op, _target!, value.AsOperand());
-    }
-
-    public IEnumerable<Register> RegistersDefined =>
-        Left.Enumerate().OfType<RegInstructionOperand>().Select(operand => operand.Register);
+    public abstract IEnumerable<Register> RegistersDefined { get; }
 
     public IEnumerable<Register> RegistersUsed =>
-        Left.Enumerate().OfType<MemInstructionOperand>().Append(Right)
+        Left.Enumerate().Append(Right)
             .SelectMany(operand => operand.RegistersUsed);
 
     public bool PossibleFollow => true;
@@ -62,4 +33,68 @@ public sealed record BinaryOpInstruction(BinaryOp Op, IInstructionOperand Left, 
     public Label? PossibleJump => null;
 
     public bool IsCopy => false;
+}
+
+public enum BinaryAssignInstructionOp
+{
+    Add, Sub,
+    And, Or, Xor,
+}
+
+public record BinaryAssignInstruction(BinaryAssignInstructionOp Op, IInstructionOperand Left, IInstructionOperand Right) : BinaryOpInstruction(Left, Right)
+{    
+    public sealed record Builder(BinaryAssignInstructionOp Op)
+    {
+        private IInstructionOperand? _target;
+
+        public Builder ToReg(Register target)
+        {
+            _target = target.AsRegOperand();
+            return this;
+        }
+
+        public Builder ToMem(Register location)
+        {
+            _target = location.AsMemOperand();
+            return this;
+        }
+
+        public BinaryAssignInstruction FromReg(Register source) => new(Op, _target!, source.AsRegOperand());
+        public BinaryAssignInstruction FromMem(Register location) => new(Op, _target!, location.AsMemOperand());
+        public BinaryAssignInstruction FromImm(RegisterValue value) => new(Op, _target!, value.AsOperand());
+    }
+
+    public override IEnumerable<Register> RegistersDefined =>
+        Left.Enumerate().OfType<RegInstructionOperand>().Select(operand => operand.Register);
+}
+
+public enum BinaryComputeInstructionOp
+{
+    Cmp
+}
+
+public sealed record BinaryComputeInstruction(BinaryComputeInstructionOp Op, IInstructionOperand Left, IInstructionOperand Right) : BinaryOpInstruction(Left, Right)
+{
+    public sealed record Builder(BinaryComputeInstructionOp Op)
+    {
+        private IInstructionOperand? _target;
+
+        public Builder ToReg(Register target)
+        {
+            _target = target.AsRegOperand();
+            return this;
+        }
+
+        public Builder ToMem(Register location)
+        {
+            _target = location.AsMemOperand();
+            return this;
+        }
+
+        public BinaryComputeInstruction FromReg(Register source) => new(Op, _target!, source.AsRegOperand());
+        public BinaryComputeInstruction FromMem(Register location) => new(Op, _target!, location.AsMemOperand());
+        public BinaryComputeInstruction FromImm(RegisterValue value) => new(Op, _target!, value.AsOperand());
+    }
+
+    public override IEnumerable<Register> RegistersDefined => Enumerable.Empty<Register>();
 }

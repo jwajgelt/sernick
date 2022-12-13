@@ -32,7 +32,7 @@ public sealed record UnaryOpInstruction(UnaryOp Op, IInstructionOperand Operand)
     public IEnumerable<Register> RegistersDefined =>
         Operand.Enumerate().OfType<RegInstructionOperand>().Select(operand => operand.Register);
 
-    public IEnumerable<Register> RegistersUsed => Enumerable.Empty<Register>();
+    public IEnumerable<Register> RegistersUsed => Operand.RegistersUsed;
 
     public bool PossibleFollow => true;
 
