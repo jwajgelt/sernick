@@ -26,7 +26,7 @@ public sealed record ConditionalJumpNode
     public CodeTreeRoot TrueCase { get; } = new SingleExitNode(Array.Empty<CodeTreeNode>());
     public CodeTreeRoot FalseCase { get; } = new SingleExitNode(Array.Empty<CodeTreeNode>());
 
-    public override string ToString() => 
+    public override string ToString() =>
         $"If({ConditionEvaluation})\n" +
         "THEN\n" +
         TrueCase +

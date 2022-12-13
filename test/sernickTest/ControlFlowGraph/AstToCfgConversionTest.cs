@@ -135,7 +135,7 @@ public class AstToCfgConversionTest
 
         var retF = new SingleExitNode(fEpilogue, fResult.Write(fCallInner1.ResultLocation! + fCallInner2.ResultLocation!));
         // fCallInner2.CodeGraph[^2].NextTree = new SingleExitNode(fEpilogue, fCallInner2.CodeGraph[^1].Operations.Append(fResult.Write(fCallInner1.ResultLocation! + fCallInner2.ResultLocation!)).ToList());
-        fCallInner2.CodeGraph[^1].NextTree = fEpilogue;
+        fCallInner2.CodeGraph[^1].NextTree = retF;
         fCallInner1.CodeGraph[^1].NextTree = fCallInner2.CodeGraph[0];
         var ret1 = new SingleExitNode(fEpilogue, fResult.Write(1));
 
@@ -237,7 +237,7 @@ public class AstToCfgConversionTest
 
         var mainEpilogue = mainContext.GenerateEpilogue(null)[0];
         var fEpilogue = fContext.GenerateEpilogue(fResult.Value)[0];
-        var gEpilogue = fContext.GenerateEpilogue(gResult.Value)[0];
+        var gEpilogue = gContext.GenerateEpilogue(gResult.Value)[0];
 
         var gRet = new SingleExitNode(gEpilogue, gResult.Write(gContext.GenerateVariableRead(paramY) + gContext.GenerateVariableRead(paramY)));
         var fRet = new SingleExitNode(fEpilogue, fResult.Write(gCall1.ResultLocation! + gCall2.ResultLocation!));
