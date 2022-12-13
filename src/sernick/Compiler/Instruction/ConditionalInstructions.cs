@@ -26,6 +26,10 @@ public abstract record ConditionalInstruction(ConditionCode Code) : IInstruction
     public abstract bool PossibleFollow { get; }
     public abstract Label? PossibleJump { get; }
     public abstract bool IsCopy { get; }
+    public string ToAsm()
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public sealed record SetCcInstruction(ConditionCode Code, Register Register) : ConditionalInstruction(Code)

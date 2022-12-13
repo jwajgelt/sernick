@@ -62,4 +62,8 @@ public sealed record BinaryOpInstruction(BinaryOp Op, IInstructionOperand Left, 
     public Label? PossibleJump => null;
 
     public bool IsCopy => false;
+    public string ToAsm()
+    {
+        throw new NotImplementedException();
+    }
 }

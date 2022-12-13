@@ -39,4 +39,8 @@ public sealed record UnaryOpInstruction(UnaryOp Op, IInstructionOperand Operand)
     public Label? PossibleJump => null;
 
     public bool IsCopy => false;
+    public string ToAsm()
+    {
+        throw new NotImplementedException();
+    }
 }
