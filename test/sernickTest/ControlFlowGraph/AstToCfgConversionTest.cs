@@ -322,9 +322,9 @@ public class AstToCfgConversionTest
             "f1".Call().Argument(Literal(1))
         );
 
-        var varV1 = Mem(Mem(_displayAddress + 0 * POINTER_SIZE).Value - 8);
-        var varV2 = Mem(Mem(_displayAddress + 1 * POINTER_SIZE).Value - 8);
-        var varV3 = Mem(Mem(_displayAddress + 2 * POINTER_SIZE).Value - 8);
+        var varV1 = Mem(Mem(_displayAddress + 1 * POINTER_SIZE).Value - 8);
+        var varV2 = Mem(Mem(_displayAddress + 2 * POINTER_SIZE).Value - 8);
+        var varV3 = Mem(Mem(_displayAddress + 3 * POINTER_SIZE).Value - 8);
         var varV4 = Reg(new Register());
         var varVLocal = Mem(Reg(HardwareRegister.RBP).Value - 8);
 

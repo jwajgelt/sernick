@@ -66,12 +66,16 @@ public class Register
 /// </summary>
 public class HardwareRegister : Register
 {
-    protected readonly string _label;
+    private readonly string _label;
     protected HardwareRegister(string label)
     {
         _label = label;
     }
     public override string ToString() => _label;
+
+    public bool Equals(HardwareRegister? other) => _label.Equals(other?._label);
+    public override bool Equals(object? obj) => obj is HardwareRegister other && Equals(other);
+    public override int GetHashCode() => _label.GetHashCode();
 
     public static readonly HardwareRegister RAX = new("RAX");
     public static readonly HardwareRegister RBX = new("RBX");

@@ -57,6 +57,10 @@ public sealed class FunctionContext : IFunctionContext
         Label label
         )
     {
+        Label = label;
+        Depth = (parent?.Depth + 1) ?? 0;
+        ValueIsReturned = returnsValue;
+
         _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
         _parentContext = parent;
         _functionParameters = parameters;
@@ -64,10 +68,6 @@ public sealed class FunctionContext : IFunctionContext
         _displayEntry = new GlobalAddress("display") + POINTER_SIZE * Depth;
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _oldDisplayValReg = new Register();
-
-        Label = label;
-        Depth = (parent?.Depth + 1) ?? 0;
-        ValueIsReturned = returnsValue;
 
         var fistArgOffset = POINTER_SIZE * (1 + _functionParameters.Count - 6);
         var argNum = 0;
