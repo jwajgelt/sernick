@@ -23,7 +23,7 @@ public class LinearizatorTest
         }
     }
 
-    private Mock<IInstructionCovering> InstructionCoveringMock()
+    private static Mock<IInstructionCovering> InstructionCoveringMock()
     {
         var mockedInstructionCovering = new Mock<IInstructionCovering>();
         mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns
