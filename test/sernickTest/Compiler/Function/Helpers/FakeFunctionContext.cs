@@ -36,6 +36,11 @@ public sealed class FakeFunctionContext : IFunctionContext
         return new FakeVariableWrite(variable, value);
     }
 
+    public VariableLocation AllocateStackFrameSlot()
+    {
+        throw new NotImplementedException();
+    }
+
     CodeTreeValueNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
     {
         throw new NotImplementedException();
