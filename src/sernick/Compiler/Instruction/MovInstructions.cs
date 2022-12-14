@@ -43,4 +43,8 @@ public sealed record MovInstruction(IInstructionOperand Target, IInstructionOper
     public Label? PossibleJump => null;
 
     public bool IsCopy => Target is RegInstructionOperand && Source is RegInstructionOperand;
+    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    {
+        throw new NotImplementedException();
+    }
 }

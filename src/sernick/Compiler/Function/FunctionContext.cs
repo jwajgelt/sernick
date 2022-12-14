@@ -289,6 +289,11 @@ public sealed class FunctionContext : IFunctionContext
         return Mem(_displayEntry).Read() - localMemory.Offset;
     }
 
+    public VariableLocation AllocateStackFrameSlot()
+    {
+        throw new NotImplementedException();
+    }
+
     private CodeTreeValueNode GetParentsIndirectVariableLocation(IFunctionVariable variable)
     {
         if (_parentContext == null)
@@ -299,12 +304,6 @@ public sealed class FunctionContext : IFunctionContext
 
         return _parentContext.GetIndirectVariableLocation(variable);
     }
-}
-
-internal abstract record VariableLocation
-{
-    public abstract CodeTreeValueNode GenerateRead();
-    public abstract CodeTreeNode GenerateWrite(CodeTreeValueNode value);
 }
 
 internal record MemoryLocation(CodeTreeValueNode Offset) : VariableLocation
