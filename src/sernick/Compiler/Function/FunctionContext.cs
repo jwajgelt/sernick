@@ -305,12 +305,6 @@ public sealed class FunctionContext : IFunctionContext
     }
 }
 
-public abstract record VariableLocation
-{
-    public abstract CodeTreeValueNode GenerateRead();
-    public abstract CodeTreeNode GenerateWrite(CodeTreeValueNode value);
-}
-
 internal record MemoryLocation(CodeTreeValueNode Offset) : VariableLocation
 {
     private readonly CodeTreeValueNode _directLocation = Reg(HardwareRegister.RBP).Read() - Offset;

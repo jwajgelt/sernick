@@ -33,3 +33,9 @@ public interface IFunctionContext : IFunctionCaller
 
     protected internal CodeTreeValueNode GetIndirectVariableLocation(IFunctionVariable variable);
 }
+
+public abstract record VariableLocation
+{
+    public abstract CodeTreeValueNode GenerateRead();
+    public abstract CodeTreeNode GenerateWrite(CodeTreeValueNode value);
+}
