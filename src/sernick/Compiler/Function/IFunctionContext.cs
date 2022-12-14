@@ -29,5 +29,7 @@ public interface IFunctionContext : IFunctionCaller
     /// </summary>
     public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value);
 
+    public VariableLocation AllocateStackFrameSlot();
+
     protected internal CodeTreeValueNode GetIndirectVariableLocation(IFunctionVariable variable);
 }
