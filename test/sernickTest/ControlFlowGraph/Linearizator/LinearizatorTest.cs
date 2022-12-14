@@ -23,14 +23,24 @@ public class LinearizatorTest
         }
     }
 
-    [Fact]
-    public void TestPath()
+    private Mock<IInstructionCovering> InstructionCoveringMock()
     {
         var mockedInstructionCovering = new Mock<IInstructionCovering>();
         mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns
             ((SingleExitNode node, Label label) => {
                 return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
             });
+        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns
+            ((ConditionalJumpNode node, Label _, Label _) => {
+                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
+            });
+        return mockedInstructionCovering;
+    }
+
+    [Fact]
+    public void TestPath()
+    {
+        var mockedInstructionCovering = InstructionCoveringMock();
         var linearizator = new Linearizator(mockedInstructionCovering.Object);
 
         var emptyOperationsList = new List<CodeTreeNode>();
@@ -55,15 +65,7 @@ public class LinearizatorTest
     [Fact]
     public void TestOneConditionalNode()
     {
-        var mockedInstructionCovering = new Mock<IInstructionCovering>();
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns
-            ((SingleExitNode node, Label label) => {
-                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
-            });
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns
-            ((ConditionalJumpNode node, Label _, Label _) => {
-                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
-            });
+        var mockedInstructionCovering = InstructionCoveringMock();
         var linearizator = new Linearizator(mockedInstructionCovering.Object);
 
         var emptyOperationsList = new List<CodeTreeNode>();
@@ -89,15 +91,7 @@ public class LinearizatorTest
     [Fact]
     public void TestTwoConditionalNodesAndTwoSingleExitNodes()
     {
-        var mockedInstructionCovering = new Mock<IInstructionCovering>();
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns
-            ((SingleExitNode node, Label label) => {
-                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
-            });
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns
-            ((ConditionalJumpNode node, Label _, Label _) => {
-                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
-            });
+        var mockedInstructionCovering = InstructionCoveringMock();
         var linearizator = new Linearizator(mockedInstructionCovering.Object);
 
         var emptyOperationsList = new List<CodeTreeNode>();
@@ -150,15 +144,7 @@ public class LinearizatorTest
     [Fact]
     public void TestMultipleConditionalNodes()
     {
-        var mockedInstructionCovering = new Mock<IInstructionCovering>();
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns
-            ((SingleExitNode node, Label label) => {
-                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
-            });
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns
-            ((ConditionalJumpNode node, Label _, Label _) => {
-                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
-            });
+        var mockedInstructionCovering = InstructionCoveringMock();
         var linearizator = new Linearizator(mockedInstructionCovering.Object);
 
         var emptyOperationsList = new List<CodeTreeNode>();
