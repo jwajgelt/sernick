@@ -25,6 +25,13 @@ public sealed record ConditionalJumpNode
 
     public CodeTreeRoot TrueCase { get; } = new SingleExitNode(Array.Empty<CodeTreeNode>());
     public CodeTreeRoot FalseCase { get; } = new SingleExitNode(Array.Empty<CodeTreeNode>());
+
+    public override string ToString() =>
+        $"If({ConditionEvaluation})\n" +
+        "THEN\n" +
+        TrueCase +
+        "ELSE\n" +
+        FalseCase;
 }
 
 /// <summary>
@@ -38,6 +45,8 @@ public sealed record ConditionalJumpNode
 /// <param name="Operations"> The operation to be performed in this code tree </param>
 public sealed record SingleExitNode(IReadOnlyList<CodeTreeNode> Operations) : CodeTreeRoot
 {
+    public SingleExitNode(CodeTreeRoot? nextTree, CodeTreeNode operation) : this(nextTree, new[] { operation }) { }
+
     public SingleExitNode(CodeTreeRoot? nextTree, IReadOnlyList<CodeTreeNode> operations) : this(operations)
     {
         NextTree = nextTree;
@@ -45,8 +54,7 @@ public sealed record SingleExitNode(IReadOnlyList<CodeTreeNode> Operations) : Co
 
     public CodeTreeRoot? NextTree { get; set; } = null;
 
-    public override string ToString()
-    {
-        return string.Join(',', Operations) + '\n' + NextTree?.ToString();
-    }
+    private readonly Lazy<string> _toString = new(() => string.Join(',', Operations) + '\n');
+    public override string ToString() =>
+        _toString.IsValueCreated ? $"Visited -> {_toString.Value}" : $"{_toString.Value}{NextTree}";
 }

@@ -10,6 +10,7 @@ public interface IFunctionContext : IFunctionCaller
     public IReadOnlyList<SingleExitNode> GenerateEpilogue(CodeTreeValueNode? valToReturn);
 
     public int Depth { get; }
+    public bool ValueIsReturned { get; }
 
     /// <summary>
     ///     If variable is local then generates either memory read or register read

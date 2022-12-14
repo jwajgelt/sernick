@@ -54,9 +54,19 @@ public static class SideEffectsAnalyzer
             operations.Add(tree.CodeTree);
             readVariables.UnionWith(tree.ReadVariables);
             writtenVariables.UnionWith(tree.WrittenVariables);
+            if (!tree.CanMerge)
+            {
+                result.Add(new SingleExitNode(null, operations));
+                readVariables = new HashSet<Variable>();
+                writtenVariables = new HashSet<Variable>();
+                operations = new List<CodeTreeNode>();
+            }
         }
 
-        result.Add(new SingleExitNode(null, operations));
+        if (operations.Count > 0)
+        {
+            result.Add(new SingleExitNode(null, operations));
+        }
 
         return result;
     }
@@ -159,7 +169,7 @@ public static class SideEffectsAnalyzer
                 return argValue;
             }).ToList();
 
-            for (var i = 0; i < argsEvals.Count - 1; i++)
+            for (var i = 0; i < argsEvals.Count; i++)
             {
                 var currentArgValue = argsEvals[i].Last();
                 for (var j = i + 1; j < argsEvals.Count; j++)

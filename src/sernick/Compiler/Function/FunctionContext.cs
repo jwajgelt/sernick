@@ -38,7 +38,6 @@ public sealed class FunctionContext : IFunctionContext
 
     private readonly IFunctionContext? _parentContext;
     private readonly IReadOnlyList<IFunctionParam> _functionParameters;
-    private readonly bool _valueIsReturned;
 
     // Maps accesses to registers/memory
     private readonly Dictionary<IFunctionVariable, VariableLocation> _localVariableLocation;
@@ -46,7 +45,11 @@ public sealed class FunctionContext : IFunctionContext
     private readonly CodeTreeValueNode _displayEntry;
     private readonly Register _oldDisplayValReg;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
+
+    public Label Label { get; }
     public int Depth { get; }
+    public bool ValueIsReturned { get; }
+
     public FunctionContext(
         IFunctionContext? parent,
         IReadOnlyList<IFunctionParam> parameters,
@@ -54,17 +57,17 @@ public sealed class FunctionContext : IFunctionContext
         Label label
         )
     {
+        Label = label;
+        Depth = (parent?.Depth + 1) ?? 0;
+        ValueIsReturned = returnsValue;
+
         _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
         _parentContext = parent;
         _functionParameters = parameters;
-        _valueIsReturned = returnsValue;
-        Label = label;
         _localsOffset = 0;
         _displayEntry = new GlobalAddress("display") + POINTER_SIZE * Depth;
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _oldDisplayValReg = new Register();
-
-        Depth = (parent?.Depth + 1) ?? 0;
 
         var fistArgOffset = POINTER_SIZE * (1 + _functionParameters.Count - 6);
         var argNum = 0;
@@ -74,8 +77,6 @@ public sealed class FunctionContext : IFunctionContext
             argNum += 1;
         }
     }
-
-    public Label Label { get; }
 
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
     {
@@ -115,7 +116,7 @@ public sealed class FunctionContext : IFunctionContext
         var allArgs = new List<CodeTreeValueNode>(arguments);
         while (allArgs.Count < _functionParameters.Count)
         {
-            allArgs.Add(_functionParameters[allArgs.Count - 1].GetDefaultValue());
+            allArgs.Add(_functionParameters[allArgs.Count].GetDefaultValue());
         }
 
         // Divide args into register and stack
@@ -145,7 +146,7 @@ public sealed class FunctionContext : IFunctionContext
 
         // If value is returned, then put it from RAX to virtual register
         CodeTreeValueNode? returnValueLocation = null;
-        if (_valueIsReturned)
+        if (ValueIsReturned)
         {
             var returnValueRegister = new Register();
             var raxRead = Reg(rax).Read();

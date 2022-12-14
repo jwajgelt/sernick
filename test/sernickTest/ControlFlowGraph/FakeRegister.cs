@@ -22,18 +22,11 @@ public class FakeRegister : Register, IEquatable<FakeRegister>
 
 public class FakeHardwareRegister : HardwareRegister, IEquatable<FakeHardwareRegister>
 {
-    private readonly string _id;
+    private FakeHardwareRegister(string label) : base(label) { }
+    public static implicit operator FakeHardwareRegister(string label) => new(label);
 
-    private FakeHardwareRegister(string id)
-    {
-        _id = id;
-    }
-    public bool Equals(FakeHardwareRegister? other) => other != null && _id == other._id;
-
+    public bool Equals(FakeHardwareRegister? other) => base.Equals(other as HardwareRegister);
     public override bool Equals(object? obj) => obj is FakeHardwareRegister other && Equals(other);
-
-    public override int GetHashCode() => _id.GetHashCode();
-
-    public static implicit operator FakeHardwareRegister(string id) => new(id);
+    public override int GetHashCode() => base.GetHashCode();
 }
 
