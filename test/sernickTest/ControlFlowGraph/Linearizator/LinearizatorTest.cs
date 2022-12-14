@@ -6,12 +6,31 @@ using sernick.ControlFlowGraph.CodeTree;
 
 public class LinearizatorTest
 {
+
+    private class IdentityInstructionNode: IInstruction
+    {
+        public IEnumerable<Register> RegistersDefined { get; }
+        public IEnumerable<Register> RegistersUsed { get; }
+        public bool PossibleFollow { get; }
+        public Label? PossibleJump { get; }
+        public bool IsCopy { get; }
+        public CodeTreeRoot Node { get; }
+        public IdentityInstructionNode(CodeTreeRoot node)
+        {
+            Node = node;
+            RegistersDefined = new List<Register>();
+            RegistersUsed = new List<Register>();
+        }
+    }
+
     [Fact]
     public void TestPath()
     {
         var mockedInstructionCovering = new Mock<IInstructionCovering>();
-        // it is not important what's inside the list of instruction
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns(new List<IInstruction>());
+        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns
+            ((SingleExitNode node, Label label) => {
+                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
+            });
         var linearizator = new Linearizator(mockedInstructionCovering.Object);
 
         var emptyOperationsList = new List<CodeTreeNode>();
@@ -21,17 +40,30 @@ public class LinearizatorTest
         var p1 = new SingleExitNode(p2, emptyOperationsList);
 
         var actual = linearizator.Linearize(p1);
-        Assert.Equal(2, actual.Count()); // empty lists for inside node covers, so only two jumps should be
-        Assert.All(actual, instruction => Assert.IsType<Label>(instruction));
+        var numUniqueNodes = 3;
+        var numExpectedLabels = 2;
+
+        Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
+
+        Assert.Same(p1, (actual.ElementAt(0) as IdentityInstructionNode).Node);
+        Assert.IsType<Label>(actual.ElementAt(1));
+        Assert.Same(p2, (actual.ElementAt(2) as IdentityInstructionNode).Node);
+        Assert.IsType<Label>(actual.ElementAt(3));
+        Assert.Same(p3, (actual.ElementAt(4) as IdentityInstructionNode).Node);
     }
 
     [Fact]
     public void TestOneConditionalNode()
     {
         var mockedInstructionCovering = new Mock<IInstructionCovering>();
-        // it is not important what's inside the list of instruction
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns(new List<IInstruction>());
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns(new List<IInstruction>());
+        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns
+            ((SingleExitNode node, Label label) => {
+                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
+            });
+        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns
+            ((ConditionalJumpNode node, Label _, Label _) => {
+                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
+            });
         var linearizator = new Linearizator(mockedInstructionCovering.Object);
 
         var emptyOperationsList = new List<CodeTreeNode>();
@@ -42,17 +74,30 @@ public class LinearizatorTest
         var conditionalNode = new ConditionalJumpNode(trueCaseNode, falseCaseNode, mockedValueNode.Object);
 
         var actual = linearizator.Linearize(conditionalNode);
-        Assert.Equal(2, actual.Count()); // we only expect labels for true and false case to be added
-        Assert.All(actual, instruction => Assert.IsType<Label>(instruction));
+
+        var numUniqueNodes = 3;
+        var numExpectedLabels = 2;
+
+        Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
+        Assert.Same(conditionalNode, (actual.ElementAt(0) as IdentityInstructionNode).Node);
+        Assert.IsType<Label>(actual.ElementAt(1));
+        Assert.Same(trueCaseNode, (actual.ElementAt(2) as IdentityInstructionNode).Node);
+        Assert.IsType<Label>(actual.ElementAt(3));
+        Assert.Same(falseCaseNode, (actual.ElementAt(4) as IdentityInstructionNode).Node);
     }
 
     [Fact]
     public void TestTwoConditionalNodesAndTwoSingleExitNodes()
     {
         var mockedInstructionCovering = new Mock<IInstructionCovering>();
-        // it is not important what's inside the list of instruction
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns(new List<IInstruction>());
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns(new List<IInstruction>());
+        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns
+            ((SingleExitNode node, Label label) => {
+                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
+            });
+        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns
+            ((ConditionalJumpNode node, Label _, Label _) => {
+                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
+            });
         var linearizator = new Linearizator(mockedInstructionCovering.Object);
 
         var emptyOperationsList = new List<CodeTreeNode>();
@@ -81,17 +126,39 @@ public class LinearizatorTest
         var CN1 = new ConditionalJumpNode(CN2, S1, mockedValueNode.Object);
 
         var actual = linearizator.Linearize(CN1);
-        Assert.Equal(3, actual.Count()); // 3 labels, not 4, since S1 is already visited as false case of CN1
-        Assert.All(actual, instruction => Assert.IsType<Label>(instruction));
+
+        var numUniqueNodes = 4;
+        var numExpectedLabels = 3;
+        Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
+
+        // CN1 -- only "instruction set" without a label
+        Assert.Same(CN1, (actual.ElementAt(0) as IdentityInstructionNode).Node);
+
+        // next in DFS order is CN2, with a label
+        Assert.IsType<Label>(actual.ElementAt(1));
+        Assert.Same(CN2, (actual.ElementAt(2) as IdentityInstructionNode).Node);
+
+        // next in DFS order is S1 (as child of CN2), with a label
+        Assert.IsType<Label>(actual.ElementAt(3));
+        Assert.Same(S1, (actual.ElementAt(4) as IdentityInstructionNode).Node);
+
+        // next in DFS order is S2 (as child of CN2), with a label
+        Assert.IsType<Label>(actual.ElementAt(5));
+        Assert.Same(S2, (actual.ElementAt(6) as IdentityInstructionNode).Node);
     }
 
     [Fact]
     public void TestMultipleConditionalNodes()
     {
         var mockedInstructionCovering = new Mock<IInstructionCovering>();
-        // it is not important what's inside the list of instruction
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns(new List<IInstruction>());
-        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns(new List<IInstruction>());
+        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns
+            ((SingleExitNode node, Label label) => {
+                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
+            });
+        mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns
+            ((ConditionalJumpNode node, Label _, Label _) => {
+                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
+            });
         var linearizator = new Linearizator(mockedInstructionCovering.Object);
 
         var emptyOperationsList = new List<CodeTreeNode>();
@@ -125,8 +192,30 @@ public class LinearizatorTest
         var CN1 = new ConditionalJumpNode(CN2, S1, mockedValueNode.Object);
 
         var actual = linearizator.Linearize(CN1);
-        Assert.Equal(4, actual.Count()); // 4 labels, not 6
-        Assert.All(actual, instruction => Assert.IsType<Label>(instruction));
+
+        var numUniqueNodes = 5;
+        var numExpectedLabels = 4;
+
+        Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
+
+        // CN1 -- only "instruction set" without a label
+        Assert.Same(CN1, (actual.ElementAt(0) as IdentityInstructionNode).Node);
+
+        // next in DFS order is CN2, with a label (child of CN1)
+        Assert.IsType<Label>(actual.ElementAt(1));
+        Assert.Same(CN2, (actual.ElementAt(2) as IdentityInstructionNode).Node);
+
+        // next in DFS order is CN3, with a label (child of CN2)
+        Assert.IsType<Label>(actual.ElementAt(3));
+        Assert.Same(CN3, (actual.ElementAt(4) as IdentityInstructionNode).Node);
+
+        // next in DFS order is S1 (as child of CN3), with a label
+        Assert.IsType<Label>(actual.ElementAt(5));
+        Assert.Same(S1, (actual.ElementAt(6) as IdentityInstructionNode).Node);
+
+        // next in DFS order is S2 (as child of CN3), with a label
+        Assert.IsType<Label>(actual.ElementAt(7));
+        Assert.Same(S2, (actual.ElementAt(8) as IdentityInstructionNode).Node);
     }
 }
 
