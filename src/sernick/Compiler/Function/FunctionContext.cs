@@ -2,7 +2,7 @@ namespace sernick.Compiler.Function;
 
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
-using static Compiler.PlatformConstants;
+using static PlatformConstants;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 
 public sealed class FunctionContext : IFunctionContext
@@ -41,7 +41,7 @@ public sealed class FunctionContext : IFunctionContext
 
     // Maps accesses to registers/memory
     private readonly Dictionary<IFunctionVariable, VariableLocation> _localVariableLocation;
-    private int _localsOffset;
+    private readonly RegisterValue _localsOffset;
     private readonly CodeTreeValueNode _displayEntry;
     private readonly Register _oldDisplayValReg;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
@@ -64,10 +64,12 @@ public sealed class FunctionContext : IFunctionContext
         _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
         _parentContext = parent;
         _functionParameters = parameters;
-        _localsOffset = 0;
+        _localsOffset = new RegisterValue(0, false);
         _displayEntry = new GlobalAddress("display") + POINTER_SIZE * Depth;
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _oldDisplayValReg = new Register();
+
+        Depth = (parent?.Depth + 1) ?? 0;
 
         var fistArgOffset = POINTER_SIZE * (1 + _functionParameters.Count - 6);
         var argNum = 0;
@@ -82,9 +84,9 @@ public sealed class FunctionContext : IFunctionContext
     {
         if (usedElsewhere)
         {
-            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset + POINTER_SIZE)))
+            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset.Value + POINTER_SIZE)))
             {
-                _localsOffset += POINTER_SIZE;
+                _localsOffset.Value += POINTER_SIZE;
             }
         }
         else
@@ -138,7 +140,7 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(Mem(rspRead).Write(arg));
         }
 
-        // Performing actual call (puts return addess on stack and jumps)
+        // Performing actual call (puts return address on stack and jumps)
         operations.Add(new FunctionCall(this));
 
         // Remove arguments from stack (we already returned from call)
