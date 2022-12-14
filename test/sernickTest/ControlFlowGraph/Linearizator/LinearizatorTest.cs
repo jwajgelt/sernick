@@ -7,7 +7,7 @@ using sernick.ControlFlowGraph.CodeTree;
 public class LinearizatorTest
 {
 
-    private class IdentityInstructionNode: IInstruction
+    private class IdentityInstructionNode : IInstruction
     {
         public IEnumerable<Register> RegistersDefined { get; }
         public IEnumerable<Register> RegistersUsed { get; }
@@ -27,11 +27,13 @@ public class LinearizatorTest
     {
         var mockedInstructionCovering = new Mock<IInstructionCovering>();
         mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns
-            ((SingleExitNode node, Label label) => {
+            ((SingleExitNode node, Label label) =>
+            {
                 return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
             });
         mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns
-            ((ConditionalJumpNode node, Label _, Label _) => {
+            ((ConditionalJumpNode node, Label _, Label _) =>
+            {
                 return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
             });
         return mockedInstructionCovering;
@@ -114,31 +116,31 @@ public class LinearizatorTest
         //   S1 and S2 below are independent in the graph
         //   SingleExitNode S1 -> finish
         //   SingleExitNode S2 -> finish
-        var S1 = new SingleExitNode(null, emptyOperationsList);
-        var S2 = new SingleExitNode(null, emptyOperationsList);
-        var CN2 = new ConditionalJumpNode(S1, S2, mockedValueNode.Object);
-        var CN1 = new ConditionalJumpNode(CN2, S1, mockedValueNode.Object);
+        var s1 = new SingleExitNode(null, emptyOperationsList);
+        var s2 = new SingleExitNode(null, emptyOperationsList);
+        var cn2 = new ConditionalJumpNode(s1, s2, mockedValueNode.Object);
+        var cn1 = new ConditionalJumpNode(cn2, s1, mockedValueNode.Object);
 
-        var actual = linearizator.Linearize(CN1);
+        var actual = linearizator.Linearize(cn1);
 
         var numUniqueNodes = 4;
         var numExpectedLabels = 3;
         Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
 
         // CN1 -- only "instruction set" without a label
-        Assert.Same(CN1, (actual.ElementAt(0) as IdentityInstructionNode).Node);
+        Assert.Same(cn1, (actual.ElementAt(0) as IdentityInstructionNode).Node);
 
         // next in DFS order is CN2, with a label
         Assert.IsType<Label>(actual.ElementAt(1));
-        Assert.Same(CN2, (actual.ElementAt(2) as IdentityInstructionNode).Node);
+        Assert.Same(cn2, (actual.ElementAt(2) as IdentityInstructionNode).Node);
 
         // next in DFS order is S1 (as child of CN2), with a label
         Assert.IsType<Label>(actual.ElementAt(3));
-        Assert.Same(S1, (actual.ElementAt(4) as IdentityInstructionNode).Node);
+        Assert.Same(s1, (actual.ElementAt(4) as IdentityInstructionNode).Node);
 
         // next in DFS order is S2 (as child of CN2), with a label
         Assert.IsType<Label>(actual.ElementAt(5));
-        Assert.Same(S2, (actual.ElementAt(6) as IdentityInstructionNode).Node);
+        Assert.Same(s2, (actual.ElementAt(6) as IdentityInstructionNode).Node);
     }
 
     [Fact]
@@ -171,13 +173,13 @@ public class LinearizatorTest
         //   S1 and S2 below are independent in the graph
         //   SingleExitNode S1 -> finish
         //   SingleExitNode S2 -> finish
-        var S1 = new SingleExitNode(null, emptyOperationsList);
-        var S2 = new SingleExitNode(null, emptyOperationsList);
-        var CN3 = new ConditionalJumpNode(S1, S2, mockedValueNode.Object);
-        var CN2 = new ConditionalJumpNode(CN3, S2, mockedValueNode.Object);
-        var CN1 = new ConditionalJumpNode(CN2, S1, mockedValueNode.Object);
+        var s1 = new SingleExitNode(null, emptyOperationsList);
+        var s2 = new SingleExitNode(null, emptyOperationsList);
+        var cn3 = new ConditionalJumpNode(s1, s2, mockedValueNode.Object);
+        var cn2 = new ConditionalJumpNode(cn3, s2, mockedValueNode.Object);
+        var cn1 = new ConditionalJumpNode(cn2, s1, mockedValueNode.Object);
 
-        var actual = linearizator.Linearize(CN1);
+        var actual = linearizator.Linearize(cn1);
 
         var numUniqueNodes = 5;
         var numExpectedLabels = 4;
@@ -185,23 +187,23 @@ public class LinearizatorTest
         Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
 
         // CN1 -- only "instruction set" without a label
-        Assert.Same(CN1, (actual.ElementAt(0) as IdentityInstructionNode).Node);
+        Assert.Same(cn1, (actual.ElementAt(0) as IdentityInstructionNode).Node);
 
         // next in DFS order is CN2, with a label (child of CN1)
         Assert.IsType<Label>(actual.ElementAt(1));
-        Assert.Same(CN2, (actual.ElementAt(2) as IdentityInstructionNode).Node);
+        Assert.Same(cn2, (actual.ElementAt(2) as IdentityInstructionNode).Node);
 
         // next in DFS order is CN3, with a label (child of CN2)
         Assert.IsType<Label>(actual.ElementAt(3));
-        Assert.Same(CN3, (actual.ElementAt(4) as IdentityInstructionNode).Node);
+        Assert.Same(cn3, (actual.ElementAt(4) as IdentityInstructionNode).Node);
 
         // next in DFS order is S1 (as child of CN3), with a label
         Assert.IsType<Label>(actual.ElementAt(5));
-        Assert.Same(S1, (actual.ElementAt(6) as IdentityInstructionNode).Node);
+        Assert.Same(s1, (actual.ElementAt(6) as IdentityInstructionNode).Node);
 
         // next in DFS order is S2 (as child of CN3), with a label
         Assert.IsType<Label>(actual.ElementAt(7));
-        Assert.Same(S2, (actual.ElementAt(8) as IdentityInstructionNode).Node);
+        Assert.Same(s2, (actual.ElementAt(8) as IdentityInstructionNode).Node);
     }
 }
 
