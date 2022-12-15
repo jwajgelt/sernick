@@ -21,7 +21,9 @@ var success = true;
 IDiagnostics diagnostics = new Diagnostics();
 try
 {
-    CompilerFrontend.Process(file, diagnostics);
+    var frontendResult = CompilerFrontend.Process(file, diagnostics);
+    var outputFilename = CompilerBackend.Process(filename.Split('.')[0], frontendResult);
+    Console.WriteLine(outputFilename);
 }
 catch (CompilationException)
 {
