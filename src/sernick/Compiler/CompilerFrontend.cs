@@ -1,8 +1,6 @@
 namespace sernick.Compiler;
 
 using Ast.Analysis.CallGraph;
-using Ast.Analysis.ControlFlowGraph;
-using Ast.Analysis.FunctionContextMap;
 using Ast.Analysis.NameResolution;
 using Ast.Analysis.TypeChecking;
 using Ast.Analysis.VariableAccess;
@@ -11,7 +9,6 @@ using Ast.Nodes.Conversion;
 using Common.Dfa;
 using Common.Regex;
 using Diagnostics;
-using Function;
 using Grammar.Lexicon;
 using Grammar.Syntax;
 using Input;
@@ -29,7 +26,7 @@ public static class CompilerFrontend
     /// </summary>
     /// <param name="input"></param>
     /// <param name="diagnostics"></param>
-    public static void Process(IInput input, IDiagnostics diagnostics)
+    public static CompilerFrontendResult Process(IInput input, IDiagnostics diagnostics)
     {
         var lexer = lazyLexer.Value;
         var tokens = lexer.Process(input, diagnostics);
@@ -54,12 +51,10 @@ public static class CompilerFrontend
         ThrowIfErrorsOccurred(diagnostics);
         var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory(LabelGenerator.Generate));
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
 
-        var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
-            root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, SideEffectsAnalyzer.PullOutSideEffects));
+        return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, variableAccessMap);
     }
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
