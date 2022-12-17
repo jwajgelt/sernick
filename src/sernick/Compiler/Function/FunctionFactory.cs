@@ -15,6 +15,6 @@ public sealed class FunctionFactory : IFunctionFactory
     public IFunctionContext CreateFunction(IFunctionContext? parent, Identifier name, int? distinctionNumber,
         IReadOnlyList<IFunctionParam> parameters, bool returnsValue)
     {
-        return new FunctionContext(parent, parameters, returnsValue, _generateLabel(parent, name));
+        return new FunctionContext(parent, parameters, returnsValue, _generateLabel(parent, name, distinctionNumber));
     }
 }

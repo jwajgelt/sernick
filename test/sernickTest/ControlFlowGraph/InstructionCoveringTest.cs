@@ -59,7 +59,7 @@ public class InstructionCoveringTest
     [Fact]
     public void CoversFunctionCall()
     {
-        var funFactory = new FunctionFactory((_, _) => "");
+        var funFactory = new FunctionFactory((_, _, _) => "");
         var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
         var call = new FunctionCall(mainContext);
 
@@ -72,7 +72,7 @@ public class InstructionCoveringTest
     [Fact]
     public void CoversGenerateCall()
     {
-        var funFactory = new FunctionFactory((_, _) => "");
+        var funFactory = new FunctionFactory((_, _, _) => "");
         var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
         var callWithContext = mainContext.GenerateCall(new List<CodeTreeValueNode>());
 
@@ -86,7 +86,7 @@ public class InstructionCoveringTest
     [Fact]
     public void CoversPrologueAndEpilogue()
     {
-        var funFactory = new FunctionFactory((_, _) => "");
+        var funFactory = new FunctionFactory((_, _, _) => "");
         var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
         var prologue = mainContext.GeneratePrologue();
         var epilogue = mainContext.GenerateEpilogue(null);

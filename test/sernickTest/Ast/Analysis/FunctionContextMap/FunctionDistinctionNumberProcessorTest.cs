@@ -61,5 +61,4 @@ public class FunctionDistinctionNumberProcessorTest
         Assert.Equal(1, numberProvider(g1));
         Assert.Equal(2, numberProvider(g2));
     }
-    
 }
