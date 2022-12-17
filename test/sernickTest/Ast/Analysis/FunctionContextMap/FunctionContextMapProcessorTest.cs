@@ -35,6 +35,28 @@ public class FunctionContextMapProcessorTest
         Assert.Same(fContext, contextMap.Implementations[declaration]);
         Assert.Same(fContext, contextMap.Callers[call]);
     }
+    
+    [Fact]
+    public void WhenFunctionDeclared_UsesProvidedDistinctionNumber()
+    {
+        // fun f() {};
+        var tree = Program(
+            Fun<UnitType>("f")
+                .Body(Close)
+                .Get(out var declaration)
+        );
+
+        var contextFactory = SetupFunctionFactory(out var mainContext);
+        var fContext = new Mock<IFunctionContext>().Object;
+        contextFactory
+            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), 3, Array.Empty<IFunctionParam>(), false))
+            .Returns(fContext);
+
+        var nameResolution = NameResolution();
+        var contextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => 3, contextFactory.Object);
+
+        Assert.Same(fContext, contextMap.Implementations[declaration]);
+    }
 
     [Fact]
     public void WhenFunctionDeclared_ThenCorrectLocalsAreAdded()
