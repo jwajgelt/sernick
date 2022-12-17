@@ -6,7 +6,7 @@ using ControlFlowGraph.CodeTree;
 
 public class SpillsAllocator
 {
-    private IReadOnlyList<HardwareRegister> _registersReserve;
+    private readonly IReadOnlyList<HardwareRegister> _registersReserve;
 
     public SpillsAllocator(IReadOnlyList<HardwareRegister> registersReserve)
     {
@@ -28,18 +28,18 @@ public class SpillsAllocator
             {
                 return new[] { asmable };
             }
-        
+
             var spillsBefore = instruction.RegistersUsed.Where(spillsLocation.ContainsKey);
             var spillsAfter = instruction.RegistersDefined.Where(spillsLocation.ContainsKey);
-        
+
             var readSpills = AssignReservedRegisters(spillsBefore).Select(tuple =>
             {
                 var (spilledRegister, reservedRegister) = tuple;
                 var location = spillsLocation[spilledRegister];
                 var readNode = new RegisterWrite(reservedRegister, location.GenerateRead());
-                return instructionCovering.Cover(new SingleExitNode(null, new[] { readNode }));
+                return instructionCovering.Cover(readNode, out var outputRegister);
             });
-        
+
             return new IAsmable[] { instruction };
         }
     }
@@ -52,6 +52,7 @@ public class SpillsAllocator
             throw new Exception(
                 $"Not enough reserved registers, required {registerList.Count}, but got {_registersReserve.Count}");
         }
+
         return registerList.Zip(_registersReserve);
     }
 }
