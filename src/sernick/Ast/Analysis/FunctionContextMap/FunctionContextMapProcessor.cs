@@ -5,6 +5,7 @@ using Compiler.Function;
 using NameResolution;
 using Nodes;
 using Utility;
+using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.DistinctionNumberProvider;
 
 /// <summary>
 ///     Static class with <see cref="Process"/> method, which constructs <see cref="IFunctionContext"/> for each
@@ -12,7 +13,7 @@ using Utility;
 /// </summary>
 public static class FunctionContextMapProcessor
 {
-    public static FunctionContextMap Process(AstNode ast, NameResolutionResult nameResolution, IFunctionFactory contextFactory)
+    public static FunctionContextMap Process(AstNode ast, NameResolutionResult nameResolution, DistinctionNumberProvider provider, IFunctionFactory contextFactory)
     {
         var visitor = new FunctionContextProcessVisitor(nameResolution, contextFactory);
         visitor.VisitAstTree(ast, new AstNodeContext());

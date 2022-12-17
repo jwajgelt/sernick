@@ -30,7 +30,7 @@ public class FunctionContextMapProcessorTest
             .Returns(fContext);
 
         var nameResolution = NameResolution().WithCalls((call, declaration));
-        var contextMap = FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
+        var contextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         Assert.Same(fContext, contextMap.Implementations[declaration]);
         Assert.Same(fContext, contextMap.Callers[call]);
@@ -57,7 +57,7 @@ public class FunctionContextMapProcessorTest
             .Returns(functionContext);
 
         var nameResolution = NameResolution();
-        FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         Assert.False(functionContext.Locals[paramA]);
         Assert.False(functionContext.Locals[declX]);
@@ -105,7 +105,7 @@ public class FunctionContextMapProcessorTest
                 (valueY, declY))
             .WithAssigns(
                 (assignment, declW));
-        FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         Assert.True(fContext.Locals[paramA]);
         Assert.True(fContext.Locals[declY]);
@@ -150,7 +150,7 @@ public class FunctionContextMapProcessorTest
                 (valueX, declX))
             .WithCalls(
                 (call, funDeclaration));
-        FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         Assert.False(functionContext.Locals[paramA]);
         Assert.False(functionContext.Locals[declX]);
@@ -199,7 +199,7 @@ public class FunctionContextMapProcessorTest
 
         var nameResolution = NameResolution()
             .WithVars((valueX, declX));
-        FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         Assert.False(gContext.Locals[declXinG]);
         Assert.Single(gContext.Locals);
@@ -243,7 +243,7 @@ public class FunctionContextMapProcessorTest
 
         var nameResolution = NameResolution()
             .WithVars((valueX, declX));
-        FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         Assert.True(fContext.Locals[declX]);
         Assert.Single(fContext.Locals);

@@ -1276,7 +1276,7 @@ public class AstToCfgConversionTest
     {
         var diagnostics = new FakeDiagnostics();
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
-        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, new FunctionFactory(LabelGenerator.Generate));
+        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, _ => null, new FunctionFactory(LabelGenerator.Generate));
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
         var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
