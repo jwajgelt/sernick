@@ -23,6 +23,7 @@ public static class LabelGenerator
         {
             return $"{parent.Label.Value}{FUN_DELIMITER}{name.Name}{NUM_DELIMITER}{num.Value}";
         }
+
         return $"{parent.Label.Value}{FUN_DELIMITER}{name.Name}";
     };
 

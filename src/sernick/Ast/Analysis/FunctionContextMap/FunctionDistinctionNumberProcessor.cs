@@ -1,4 +1,4 @@
-﻿namespace sernick.Ast.Analysis.FunctionContextMap;
+namespace sernick.Ast.Analysis.FunctionContextMap;
 
 using Nodes;
 using Utility;
@@ -17,7 +17,7 @@ public static class FunctionDistinctionNumberProcessor
         root.Accept(distinctionNumberVisitor, new DistinctionNumberVisitorParam(distinctionNumbers));
         return f => distinctionNumbers[f];
     }
-    
+
     /// <param name="NameOccurrences">
     /// For every function, holds a set of function names defined in this function.
     /// This is a result, but is passed in param to avoid redundant dictionary merging.
@@ -28,7 +28,7 @@ public static class FunctionDistinctionNumberProcessor
     private record NameCountingVisitorParam(
         IDictionary<FunctionDefinition, Multiset<string>> NameOccurrences,
         FunctionDefinition? EnclosingFunction = null);
-    
+
     /// <summary>
     /// Lets us count occurrences of names in function body
     /// eg:
@@ -51,6 +51,7 @@ public static class FunctionDistinctionNumberProcessor
             {
                 child.Accept(this, param);
             }
+
             return Unit.I;
         }
 
@@ -62,17 +63,20 @@ public static class FunctionDistinctionNumberProcessor
                 {
                     param.NameOccurrences[param.EnclosingFunction] = new Multiset<string>();
                 }
+
                 param.NameOccurrences[param.EnclosingFunction].Add(node.Name.Name);
             }
+
             foreach (var parameter in node.Parameters)
             {
                 parameter.Accept(this, param);
             }
+
             node.Body.Accept(this, param with { EnclosingFunction = node });
             return Unit.I;
         }
     }
-    
+
     /// <param name="DistinctionNumbers">
     /// For every function, holds a distinction number of this function.
     /// This is a result, but is passed in param to avoid redundant dictionary merging.</param>
@@ -100,13 +104,14 @@ public static class FunctionDistinctionNumberProcessor
         {
             _childrenNames = childrenNames;
         }
-        
+
         protected override Unit VisitAstNode(AstNode node, DistinctionNumberVisitorParam param)
         {
             foreach (var child in node.Children)
             {
                 child.Accept(this, param);
             }
+
             return Unit.I;
         }
 
@@ -129,10 +134,12 @@ public static class FunctionDistinctionNumberProcessor
                     param.DistinctionNumbers[node] = null;
                 }
             }
+
             foreach (var parameter in node.Parameters)
             {
                 parameter.Accept(this, param);
             }
+
             node.Body.Accept(this, param with { EnclosingFunction = node });
             return Unit.I;
         }

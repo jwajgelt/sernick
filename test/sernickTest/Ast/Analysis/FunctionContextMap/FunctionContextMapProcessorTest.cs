@@ -35,7 +35,7 @@ public class FunctionContextMapProcessorTest
         Assert.Same(fContext, contextMap.Implementations[declaration]);
         Assert.Same(fContext, contextMap.Callers[call]);
     }
-    
+
     [Fact]
     public void WhenFunctionDeclared_UsesProvidedDistinctionNumber()
     {

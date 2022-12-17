@@ -54,8 +54,8 @@ public static class CompilerFrontend
         ThrowIfErrorsOccurred(diagnostics);
         var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, 
-            FunctionDistinctionNumberProcessor.Process(ast),  new FunctionFactory(LabelGenerator.Generate));
+        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution,
+            FunctionDistinctionNumberProcessor.Process(ast), new FunctionFactory(LabelGenerator.Generate));
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
 

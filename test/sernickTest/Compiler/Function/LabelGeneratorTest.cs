@@ -24,8 +24,7 @@ public class LabelGeneratorTest
 
         Assert.Equal("Outer.Inner", result.Value);
     }
-    
-    
+
     [Fact]
     public void Generate_WithDistinctionNumber()
     {

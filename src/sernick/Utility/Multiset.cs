@@ -1,4 +1,4 @@
-﻿namespace sernick.Utility;
+namespace sernick.Utility;
 
 public class Multiset<K> where K : notnull
 {

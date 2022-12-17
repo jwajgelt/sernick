@@ -13,7 +13,7 @@ using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.Distinction
 /// </summary>
 public static class FunctionContextMapProcessor
 {
-    public static FunctionContextMap Process(AstNode ast, NameResolutionResult nameResolution, 
+    public static FunctionContextMap Process(AstNode ast, NameResolutionResult nameResolution,
         DistinctionNumberProvider provider, IFunctionFactory contextFactory)
     {
         var visitor = new FunctionContextProcessVisitor(nameResolution, provider, contextFactory);

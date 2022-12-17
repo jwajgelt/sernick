@@ -1,4 +1,4 @@
-﻿namespace sernickTest.Ast.Analysis.FunctionContextMap;
+namespace sernickTest.Ast.Analysis.FunctionContextMap;
 
 using sernick.Ast;
 using sernick.Ast.Analysis.FunctionContextMap;
@@ -14,7 +14,7 @@ public class FunctionDistinctionNumberProcessorTest
 
         Assert.Null(numberProvider(tree));
     }
-    
+
     [Fact]
     public void Process_Nested()
     {
@@ -24,12 +24,12 @@ public class FunctionDistinctionNumberProcessorTest
                 ).Get(out var f)
         );
         var numberProvider = FunctionDistinctionNumberProcessor.Process(tree);
-        
+
         Assert.Null(numberProvider(tree));
         Assert.Null(numberProvider(f));
         Assert.Null(numberProvider(g));
     }
-    
+
     [Fact]
     public void Process_NameCollision()
     {
@@ -44,7 +44,7 @@ public class FunctionDistinctionNumberProcessorTest
         Assert.Equal(1, numberProvider(f1));
         Assert.Equal(2, numberProvider(f2));
     }
-    
+
     [Fact]
     public void Process_DefinitionsInArguments()
     {
