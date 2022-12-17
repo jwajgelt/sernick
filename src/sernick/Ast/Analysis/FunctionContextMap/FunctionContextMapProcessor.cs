@@ -91,9 +91,9 @@ public static class FunctionContextMapProcessor
                 argument.Accept(this, astContext);
             }
 
-            foreach(var external in ExternalFunctions)
+            foreach (var external in ExternalFunctions)
             {
-                if(external.Name == node.FunctionName.Name)
+                if (external.Name == node.FunctionName.Name)
                 {
                     ContextMap[node] = external.Caller;
                     return Unit.I;

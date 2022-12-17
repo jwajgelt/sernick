@@ -82,9 +82,9 @@ public static class NameResolutionAlgorithm
             {
                 // If it is one of known external functions, then we skip 
                 // name resolution step for it
-                foreach(var external in ExternalFunctions)
+                foreach (var external in ExternalFunctions)
                 {
-                    if(identifier.Name == external.Name)
+                    if (identifier.Name == external.Name)
                     {
                         return VisitAstNode(node, identifiersNamespace);
                     }
