@@ -106,6 +106,11 @@ public sealed class InstructionCovering
         return GenerateConditionalJumpCovering(best, trueCase, falseCase);
     }
 
+    public IEnumerable<IInstruction> Cover(CodeTreeNode node)
+    {
+        throw new NotImplementedException();
+    }
+
     private uint LeavesCost(IEnumerable<CodeTreeNode> leaves)
     {
         return leaves
