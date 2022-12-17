@@ -2,8 +2,8 @@ namespace sernick.Compiler.Function;
 
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
-using static PlatformConstants;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
+using static PlatformConstants;
 
 public sealed class FunctionContext : IFunctionContext
 {
@@ -293,7 +293,8 @@ public sealed class FunctionContext : IFunctionContext
 
     public VariableLocation AllocateStackFrameSlot()
     {
-        throw new NotImplementedException();
+        _localsOffset.Value += POINTER_SIZE;
+        return new MemoryLocation(_localsOffset.Value);
     }
 
     private CodeTreeValueNode GetParentsIndirectVariableLocation(IFunctionVariable variable)

@@ -36,7 +36,7 @@ public abstract partial record CodeTreeValueNode
         new(UnaryOperation.Negate, operand);
 
     public static implicit operator CodeTreeValueNode(long constant) => new Constant(new RegisterValue(constant));
-    
+
     public static implicit operator CodeTreeValueNode(RegisterValue constant) => new Constant(constant);
 }
 
