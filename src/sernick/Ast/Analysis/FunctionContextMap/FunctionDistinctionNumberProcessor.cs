@@ -9,21 +9,43 @@ public static class FunctionDistinctionNumberProcessor
 
     public static DistinctionNumberProvider Process(AstNode root)
     {
-        var functionChildrenNames = new Dictionary<FunctionDefinition, Multiset<string>>();
-        var preprocessVisitor = new FunctionLabelPreprocessVisitor();
-        root.Accept(preprocessVisitor, new PreprocessVisitorParam(functionChildrenNames));
-        var result = new Dictionary<FunctionDefinition, int?>();
-        var visitor = new FunctionLabelVisitor(functionChildrenNames);
-        root.Accept(visitor, new VisitorParam(result));
-        return f => result[f];
+        var nameOccurrences = new Dictionary<FunctionDefinition, Multiset<string>>();
+        var nameCountingVisitor = new NameOccurrencesVisitor();
+        root.Accept(nameCountingVisitor, new NameCountingVisitorParam(nameOccurrences));
+        var distinctionNumbers = new Dictionary<FunctionDefinition, int?>();
+        var distinctionNumberVisitor = new DistinctionNumberVisitor(nameOccurrences);
+        root.Accept(distinctionNumberVisitor, new DistinctionNumberVisitorParam(distinctionNumbers));
+        return f => distinctionNumbers[f];
     }
     
-    
-    private record PreprocessVisitorParam(IDictionary<FunctionDefinition, Multiset<string>> FunctionChildrenNames,
+    /// <param name="NameOccurrences">
+    /// For every function, holds a set of function names defined in this function.
+    /// This is a result, but is passed in param to avoid redundant dictionary merging.
+    /// </param>
+    /// <param name="EnclosingFunction">
+    /// The function that is the closest ancestor of the current node.
+    /// </param>
+    private record NameCountingVisitorParam(
+        IDictionary<FunctionDefinition, Multiset<string>> NameOccurrences,
         FunctionDefinition? EnclosingFunction = null);
-    private sealed class FunctionLabelPreprocessVisitor : AstVisitor<Unit, PreprocessVisitorParam>
+    
+    /// <summary>
+    /// Lets us count occurrences of names in function body
+    /// eg:
+    /// <code>
+    /// fun f() {
+    ///   if (1>2) {
+    ///     fun g() {}
+    ///   } else {
+    ///     fun g() {}
+    ///   }
+    /// }
+    /// </code>
+    /// in this code f would have two occurrences of "g"
+    /// </summary>
+    private sealed class NameOccurrencesVisitor : AstVisitor<Unit, NameCountingVisitorParam>
     {
-        protected override Unit VisitAstNode(AstNode node, PreprocessVisitorParam param)
+        protected override Unit VisitAstNode(AstNode node, NameCountingVisitorParam param)
         {
             foreach (var child in node.Children)
             {
@@ -32,15 +54,15 @@ public static class FunctionDistinctionNumberProcessor
             return Unit.I;
         }
 
-        public override Unit VisitFunctionDefinition(FunctionDefinition node, PreprocessVisitorParam param)
+        public override Unit VisitFunctionDefinition(FunctionDefinition node, NameCountingVisitorParam param)
         {
             if (param.EnclosingFunction is not null)
             {
-                if (!param.FunctionChildrenNames.ContainsKey(param.EnclosingFunction))
+                if (!param.NameOccurrences.ContainsKey(param.EnclosingFunction))
                 {
-                    param.FunctionChildrenNames[param.EnclosingFunction] = new Multiset<string>();
+                    param.NameOccurrences[param.EnclosingFunction] = new Multiset<string>();
                 }
-                param.FunctionChildrenNames[param.EnclosingFunction].Add(node.Name.Name);
+                param.NameOccurrences[param.EnclosingFunction].Add(node.Name.Name);
             }
             foreach (var parameter in node.Parameters)
             {
@@ -50,27 +72,36 @@ public static class FunctionDistinctionNumberProcessor
             return Unit.I;
         }
     }
-
-
-    private record VisitorParam(
+    
+    /// <param name="DistinctionNumbers">
+    /// For every function, holds a distinction number of this function.
+    /// This is a result, but is passed in param to avoid redundant dictionary merging.</param>
+    /// <param name="NameOccurrencesEncountered">
+    /// Holds information about function names already encountered so as to know
+    /// what number should be given to next function with the same name.
+    /// </param>
+    /// <param name="EnclosingFunction">
+    /// The function that is the closest ancestor of the current node.
+    /// </param>
+    private record DistinctionNumberVisitorParam(
         IDictionary<FunctionDefinition, int?> DistinctionNumbers,
-        Multiset<(FunctionDefinition, string)> ReoccurringFunctions,
+        Multiset<(FunctionDefinition, string)> NameOccurrencesEncountered,
         FunctionDefinition? EnclosingFunction = null)
     {
-        public VisitorParam(Dictionary<FunctionDefinition, int?> distinctionNumbers) : this(distinctionNumbers, new Multiset<(FunctionDefinition, string)>())
+        public DistinctionNumberVisitorParam(Dictionary<FunctionDefinition, int?> distinctionNumbers) : this(distinctionNumbers, new Multiset<(FunctionDefinition, string)>())
         {
         }
     }
 
-    private sealed class FunctionLabelVisitor : AstVisitor<Unit, VisitorParam>
+    private sealed class DistinctionNumberVisitor : AstVisitor<Unit, DistinctionNumberVisitorParam>
     {
-        private IDictionary<FunctionDefinition, Multiset<string>> _childrenNames;
-        public FunctionLabelVisitor(IDictionary<FunctionDefinition, Multiset<string>> childrenNames)
+        private readonly IDictionary<FunctionDefinition, Multiset<string>> _childrenNames;
+        public DistinctionNumberVisitor(IDictionary<FunctionDefinition, Multiset<string>> childrenNames)
         {
             _childrenNames = childrenNames;
         }
         
-        protected override Unit VisitAstNode(AstNode node, VisitorParam param)
+        protected override Unit VisitAstNode(AstNode node, DistinctionNumberVisitorParam param)
         {
             foreach (var child in node.Children)
             {
@@ -79,7 +110,7 @@ public static class FunctionDistinctionNumberProcessor
             return Unit.I;
         }
 
-        public override Unit VisitFunctionDefinition(FunctionDefinition node, VisitorParam param)
+        public override Unit VisitFunctionDefinition(FunctionDefinition node, DistinctionNumberVisitorParam param)
         {
             if (param.EnclosingFunction is null)
             {
@@ -89,9 +120,9 @@ public static class FunctionDistinctionNumberProcessor
             {
                 if (_childrenNames[param.EnclosingFunction].Get(node.Name.Name) > 1)
                 {
-                    var amount = param.ReoccurringFunctions.Get((param.EnclosingFunction, node.Name.Name));
+                    var amount = param.NameOccurrencesEncountered.Get((param.EnclosingFunction, node.Name.Name));
                     param.DistinctionNumbers[node] = amount + 1;
-                    param.ReoccurringFunctions.Add((param.EnclosingFunction, node.Name.Name));
+                    param.NameOccurrencesEncountered.Add((param.EnclosingFunction, node.Name.Name));
                 }
                 else
                 {
