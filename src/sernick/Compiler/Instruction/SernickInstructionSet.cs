@@ -65,7 +65,7 @@ public static class SernickInstructionSet
                         }.WithOutput(null));
             }
 
-            // mov $reg, $addr[$displacement]
+            // mov $reg, [$addr + $displacement]
             {
                 yield return new CodeTreeNodePatternRule(
                     Pat.RegisterWrite(Any<Register>(), out var reg,
@@ -100,7 +100,7 @@ public static class SernickInstructionSet
                         }.WithOutput(null));
             }
 
-            // mov $addr[$displacement], *
+            // mov [$addr + $displacement], *
             {
                 yield return new CodeTreeNodePatternRule(
                     Pat.MemoryWrite(Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _,
