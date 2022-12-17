@@ -80,17 +80,16 @@ public static class NameResolutionAlgorithm
             var identifier = node.FunctionName;
             try
             {
-                // If it is one of known external functions, then we skip 
-                // name resolution step for it
+                Declaration? declaration = null;
                 foreach (var external in ExternalFunctions)
                 {
-                    if (identifier.Name == external.Name)
+                    if (identifier.Name == external.Definition.Name.Name)
                     {
-                        return VisitAstNode(node, identifiersNamespace);
+                        declaration = external.Definition;
                     }
                 }
 
-                var declaration = identifiersNamespace.GetResolution(identifier);
+                declaration = declaration ?? identifiersNamespace.GetResolution(identifier);
                 if (declaration is FunctionDefinition functionDefinition)
                 {
                     var visitorResult = VisitAstNode(node, identifiersNamespace);

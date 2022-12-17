@@ -91,16 +91,16 @@ public static class FunctionContextMapProcessor
                 argument.Accept(this, astContext);
             }
 
+            var functionDeclaration = _nameResolution.CalledFunctionDeclarations[node];
             foreach (var external in ExternalFunctions)
             {
-                if (external.Name == node.FunctionName.Name)
+                if (ReferenceEquals(functionDeclaration, external.Definition))
                 {
                     ContextMap[node] = external.Caller;
                     return Unit.I;
                 }
             }
 
-            var functionDeclaration = _nameResolution.CalledFunctionDeclarations[node];
             ContextMap[node] = ContextMap[functionDeclaration];
 
             return Unit.I;
