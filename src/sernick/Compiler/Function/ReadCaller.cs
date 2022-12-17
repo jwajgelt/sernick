@@ -9,12 +9,17 @@ using static Helpers;
 
 public sealed class ReadCaller : IFunctionCaller
 {
-    // Not 100 % sure about it
+    // Not 100 % sure about it, but it should map to "%d\0"
     private const int FORMAT_STRING = 0x256400;
     public Label Label { get; } = "scanf";
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
     {
+        if (arguments.Count != 0)
+        {
+            throw new Exception("Read should not take any arguments.");
+        }
+
         var operations = new List<CodeTreeNode>();
 
         // Caller-saved registers
