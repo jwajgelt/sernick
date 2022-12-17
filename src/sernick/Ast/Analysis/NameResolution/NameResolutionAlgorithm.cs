@@ -2,6 +2,7 @@ namespace sernick.Ast.Analysis.NameResolution;
 
 using Diagnostics;
 using Nodes;
+using static ExternalFunctionsInfo;
 
 public static class NameResolutionAlgorithm
 {
@@ -79,6 +80,16 @@ public static class NameResolutionAlgorithm
             var identifier = node.FunctionName;
             try
             {
+                // If it is one of known external functions, then we skip 
+                // name resolution step for it
+                foreach(var external in ExternalFunctions)
+                {
+                    if(identifier.Name == external.Name)
+                    {
+                        return VisitAstNode(node, identifiersNamespace);
+                    }
+                }
+
                 var declaration = identifiersNamespace.GetResolution(identifier);
                 if (declaration is FunctionDefinition functionDefinition)
                 {

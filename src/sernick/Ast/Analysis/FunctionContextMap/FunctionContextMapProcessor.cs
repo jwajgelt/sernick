@@ -5,6 +5,7 @@ using Compiler.Function;
 using NameResolution;
 using Nodes;
 using Utility;
+using static ExternalFunctionsInfo;
 
 /// <summary>
 ///     Static class with <see cref="Process"/> method, which constructs <see cref="IFunctionContext"/> for each
@@ -88,6 +89,15 @@ public static class FunctionContextMapProcessor
             foreach (var argument in node.Arguments)
             {
                 argument.Accept(this, astContext);
+            }
+
+            foreach(var external in ExternalFunctions)
+            {
+                if(external.Name == node.FunctionName.Name)
+                {
+                    ContextMap[node] = external.Caller;
+                    return Unit.I;
+                }
             }
 
             var functionDeclaration = _nameResolution.CalledFunctionDeclarations[node];
