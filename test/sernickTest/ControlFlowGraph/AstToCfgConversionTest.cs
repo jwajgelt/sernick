@@ -38,7 +38,7 @@ public class AstToCfgConversionTest
         var varC = Reg(new Register());
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
 
         var mainEpilogue = mainContext.GenerateEpilogue(null)[0];
 
@@ -75,7 +75,7 @@ public class AstToCfgConversionTest
         var varB = Reg(new Register());
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
 
         var mainEpilogue = mainContext.GenerateEpilogue(null)[0];
 
@@ -118,8 +118,8 @@ public class AstToCfgConversionTest
         );
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), new IFunctionParam[] { paramN }, true);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramN }, true);
 
         fContext.AddLocal(paramN, false);
         var fResult = Reg(new Register());
@@ -175,7 +175,7 @@ public class AstToCfgConversionTest
         var varX = Reg(new Register());
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
 
         var mainEpilogue = mainContext.GenerateEpilogue(null)[0];
 
@@ -223,9 +223,9 @@ public class AstToCfgConversionTest
         );
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), new IFunctionParam[] { paramX }, true);
-        var gContext = funFactory.CreateFunction(fContext, Ident("g"), new IFunctionParam[] { paramY }, true);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramX }, true);
+        var gContext = funFactory.CreateFunction(fContext, Ident("g"), null, new IFunctionParam[] { paramY }, true);
 
         fContext.AddLocal(paramX, false);
         gContext.AddLocal(paramY, false);
@@ -329,11 +329,11 @@ public class AstToCfgConversionTest
         var varVLocal = Mem(Reg(HardwareRegister.RBP).Value - 8);
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
-        var f1Context = funFactory.CreateFunction(mainContext, Ident("f1"), new IFunctionParam[] { paramP1 }, true);
-        var f2Context = funFactory.CreateFunction(f1Context, Ident("f2"), new IFunctionParam[] { paramP2 }, true);
-        var f3Context = funFactory.CreateFunction(f2Context, Ident("f3"), new IFunctionParam[] { paramP3 }, true);
-        var f4Context = funFactory.CreateFunction(f3Context, Ident("f4"), new IFunctionParam[] { paramP4 }, true);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
+        var f1Context = funFactory.CreateFunction(mainContext, Ident("f1"), null, new IFunctionParam[] { paramP1 }, true);
+        var f2Context = funFactory.CreateFunction(f1Context, Ident("f2"), null, new IFunctionParam[] { paramP2 }, true);
+        var f3Context = funFactory.CreateFunction(f2Context, Ident("f3"), null, new IFunctionParam[] { paramP3 }, true);
+        var f4Context = funFactory.CreateFunction(f3Context, Ident("f4"), null, new IFunctionParam[] { paramP4 }, true);
 
         f1Context.AddLocal(paramP1, false);
         f2Context.AddLocal(paramP2, false);
@@ -429,9 +429,9 @@ public class AstToCfgConversionTest
         var varZ = Reg(HardwareRegister.RDI);
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), new IFunctionParam[] { paramX, paramY }, true);
-        var gContext = funFactory.CreateFunction(fContext, Ident("g"), new IFunctionParam[] { paramZ }, true);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramX, paramY }, true);
+        var gContext = funFactory.CreateFunction(fContext, Ident("g"), null, new IFunctionParam[] { paramZ }, true);
 
         var fCall = fContext.GenerateCall(Array.Empty<CodeTreeValueNode>());
         var gCall = gContext.GenerateCall(Array.Empty<CodeTreeValueNode>());
@@ -490,9 +490,9 @@ public class AstToCfgConversionTest
         var varXg = Reg(new Register());
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), new IFunctionParam[] { }, true);
-        var gContext = funFactory.CreateFunction(fContext, Ident("g"), new IFunctionParam[] { }, true);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { }, true);
+        var gContext = funFactory.CreateFunction(fContext, Ident("g"), null, new IFunctionParam[] { }, true);
 
         var gCall = gContext.GenerateCall(Array.Empty<CodeTreeValueNode>());
 
@@ -565,11 +565,11 @@ public class AstToCfgConversionTest
         );
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), new IFunctionParam[] { }, false);
-        var gContext = funFactory.CreateFunction(fContext, Ident("g"), new IFunctionParam[] { }, false);
-        var hContext = funFactory.CreateFunction(fContext, Ident("h"), new IFunctionParam[] { }, false);
-        var zContext = funFactory.CreateFunction(hContext, Ident("z"), new IFunctionParam[] { }, false);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { }, false);
+        var gContext = funFactory.CreateFunction(fContext, Ident("g"), null, new IFunctionParam[] { }, false);
+        var hContext = funFactory.CreateFunction(fContext, Ident("h"), null, new IFunctionParam[] { }, false);
+        var zContext = funFactory.CreateFunction(hContext, Ident("z"), null, new IFunctionParam[] { }, false);
 
         var fCall = fContext.GenerateCall(Array.Empty<CodeTreeValueNode>());
         var gCall = gContext.GenerateCall(Array.Empty<CodeTreeValueNode>());
@@ -655,10 +655,10 @@ public class AstToCfgConversionTest
         var varV = Reg(HardwareRegister.RDI);
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), new IFunctionParam[] { paramV }, false);
-        var gContext = funFactory.CreateFunction(fContext, Ident("g"), new IFunctionParam[] { }, false);
-        var hContext = funFactory.CreateFunction(fContext, Ident("h"), new IFunctionParam[] { }, false);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramV }, false);
+        var gContext = funFactory.CreateFunction(fContext, Ident("g"), null, new IFunctionParam[] { }, false);
+        var hContext = funFactory.CreateFunction(fContext, Ident("h"), null, new IFunctionParam[] { }, false);
 
         var fCallInMain = fContext.GenerateCall(new[] { new Constant(new RegisterValue(1)) });
         var gCall = gContext.GenerateCall(Array.Empty<CodeTreeValueNode>());
@@ -749,9 +749,9 @@ public class AstToCfgConversionTest
         var varY = Reg(new Register());
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), new IFunctionParam[] { paramF }, true);
-        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), new IFunctionParam[] { paramG }, true);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramF }, true);
+        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramG }, true);
 
         var fCall = fContext.GenerateCall(new[] { varY.Value });
         var gCall = gContext.GenerateCall(new[] { varY.Value });
@@ -836,9 +836,9 @@ public class AstToCfgConversionTest
         var varY = Reg(new Register());
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), new IFunctionParam[] { paramF }, true);
-        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), new IFunctionParam[] { paramG }, true);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramF }, true);
+        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramG }, true);
 
         var fCall = fContext.GenerateCall(new[] { varY.Value });
         var gCall = gContext.GenerateCall(new[] { varY.Value });
@@ -930,10 +930,10 @@ public class AstToCfgConversionTest
         var varY = Reg(new Register());
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), new IFunctionParam[] { paramF }, true);
-        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), new IFunctionParam[] { paramG }, true);
-        var hContext = funFactory.CreateFunction(mainContext, Ident("h"), new IFunctionParam[] { paramH }, true);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramF }, true);
+        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramG }, true);
+        var hContext = funFactory.CreateFunction(mainContext, Ident("h"), null, new IFunctionParam[] { paramH }, true);
 
         var fCall = fContext.GenerateCall(new[] { varY.Value });
         var gCall = gContext.GenerateCall(new[] { varY.Value });
@@ -1009,9 +1009,9 @@ public class AstToCfgConversionTest
         var varY = Reg(new Register());
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), Array.Empty<IFunctionParam>(), false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), Array.Empty<IFunctionParam>(), true);
-        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), Array.Empty<IFunctionParam>(), true);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, Array.Empty<IFunctionParam>(), false);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, Array.Empty<IFunctionParam>(), true);
+        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, Array.Empty<IFunctionParam>(), true);
 
         var fCall = fContext.GenerateCall(Array.Empty<CodeTreeValueNode>());
         var gCall = gContext.GenerateCall(Array.Empty<CodeTreeValueNode>());
@@ -1109,11 +1109,11 @@ public class AstToCfgConversionTest
         var varY = Reg(new Register());
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), Array.Empty<IFunctionParam>(), false);
-        var f1Context = funFactory.CreateFunction(mainContext, Ident("f1"), Array.Empty<IFunctionParam>(), true);
-        var f2Context = funFactory.CreateFunction(mainContext, Ident("f2"), Array.Empty<IFunctionParam>(), true);
-        var f3Context = funFactory.CreateFunction(mainContext, Ident("f3"), Array.Empty<IFunctionParam>(), true);
-        var f4Context = funFactory.CreateFunction(mainContext, Ident("f4"), Array.Empty<IFunctionParam>(), true);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, Array.Empty<IFunctionParam>(), false);
+        var f1Context = funFactory.CreateFunction(mainContext, Ident("f1"), null, Array.Empty<IFunctionParam>(), true);
+        var f2Context = funFactory.CreateFunction(mainContext, Ident("f2"), null, Array.Empty<IFunctionParam>(), true);
+        var f3Context = funFactory.CreateFunction(mainContext, Ident("f3"), null, Array.Empty<IFunctionParam>(), true);
+        var f4Context = funFactory.CreateFunction(mainContext, Ident("f4"), null, Array.Empty<IFunctionParam>(), true);
 
         var f1Call = f1Context.GenerateCall(Array.Empty<CodeTreeValueNode>());
         var f2Call = f2Context.GenerateCall(Array.Empty<CodeTreeValueNode>());
@@ -1224,10 +1224,10 @@ public class AstToCfgConversionTest
         var varB = Reg(HardwareRegister.RSI);
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
-        var mainContext = funFactory.CreateFunction(null, Ident(""), Array.Empty<IFunctionParam>(), false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), new IFunctionParam[] { paramA, paramB }, true);
-        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), Array.Empty<IFunctionParam>(), true);
-        var hContext = funFactory.CreateFunction(mainContext, Ident("h"), Array.Empty<IFunctionParam>(), true);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, Array.Empty<IFunctionParam>(), false);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramA, paramB }, true);
+        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, Array.Empty<IFunctionParam>(), true);
+        var hContext = funFactory.CreateFunction(mainContext, Ident("h"), null, Array.Empty<IFunctionParam>(), true);
 
         var gCall = gContext.GenerateCall(Array.Empty<CodeTreeValueNode>());
         var hCall = hContext.GenerateCall(Array.Empty<CodeTreeValueNode>());

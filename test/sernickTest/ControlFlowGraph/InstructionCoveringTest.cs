@@ -60,7 +60,7 @@ public class InstructionCoveringTest
     public void CoversFunctionCall()
     {
         var funFactory = new FunctionFactory((_, _) => "");
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
         var call = new FunctionCall(mainContext);
 
         var node = new SingleExitNode(null, new List<CodeTreeNode> { call });
@@ -73,7 +73,7 @@ public class InstructionCoveringTest
     public void CoversGenerateCall()
     {
         var funFactory = new FunctionFactory((_, _) => "");
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
         var callWithContext = mainContext.GenerateCall(new List<CodeTreeValueNode>());
 
         var covering = new InstructionCovering(SernickInstructionSet.Rules);
@@ -87,7 +87,7 @@ public class InstructionCoveringTest
     public void CoversPrologueAndEpilogue()
     {
         var funFactory = new FunctionFactory((_, _) => "");
-        var mainContext = funFactory.CreateFunction(null, Ident(""), new IFunctionParam[] { }, false);
+        var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
         var prologue = mainContext.GeneratePrologue();
         var epilogue = mainContext.GenerateEpilogue(null);
 

@@ -11,7 +11,7 @@ public class FunctionFactoryTest
     {
         var factory = new FunctionFactory((_, name) => new Label($"fun_{name.Name}"));
 
-        var result = factory.CreateFunction(null, Ident("f"), Array.Empty<IFunctionParam>(), true);
+        var result = factory.CreateFunction(null, Ident("f"), null, Array.Empty<IFunctionParam>(), true);
 
         Assert.Equal("fun_f", result.Label.Value);
     }

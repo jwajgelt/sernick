@@ -55,7 +55,7 @@ public sealed class FunctionContext : IFunctionContext
         IReadOnlyList<IFunctionParam> parameters,
         bool returnsValue,
         Label label
-        )
+    )
     {
         Label = label;
         Depth = (parent?.Depth + 1) ?? 0;
