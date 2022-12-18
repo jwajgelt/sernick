@@ -32,12 +32,12 @@ public static class ExternalFunctionsInfo
                 new List<FunctionParameterDeclaration> {
                     new FunctionParameterDeclaration(
                         new Identifier("placeholder", placeholderRange),
-                        new UnitType(),
+                        new IntType(),
                         null,
                         placeholderRange
                         )
                     },
-                new IntType(),
+                new UnitType(),
                 new CodeBlock(
                     new ReturnStatement(null, placeholderRange),
                     placeholderRange
