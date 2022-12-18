@@ -11,7 +11,7 @@ public class LabelGeneratorTest
     {
         var result = LabelGenerator.Generate(null, Ident("Shouldn't matter"), null);
 
-        Assert.Equal("Main", result.Value);
+        Assert.Equal("main", result.Value);
     }
 
     [Fact]

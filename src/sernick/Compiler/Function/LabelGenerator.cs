@@ -16,7 +16,7 @@ public static class LabelGenerator
     {
         if (parent is null)
         {
-            return "Main";
+            return "main";
         }
 
         if (num.HasValue)
