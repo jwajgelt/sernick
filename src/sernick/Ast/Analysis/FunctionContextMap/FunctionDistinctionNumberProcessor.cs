@@ -97,12 +97,15 @@ public static class FunctionDistinctionNumberProcessor
         }
     }
 
+    /// <summary>
+    /// Uses nameOccurrences to give distinction numbers to functions in necessary (otherwise the number is null)
+    /// </summary>
     private sealed class DistinctionNumberVisitor : AstVisitor<Unit, DistinctionNumberVisitorParam>
     {
-        private readonly IDictionary<FunctionDefinition, Multiset<string>> _childrenNames;
-        public DistinctionNumberVisitor(IDictionary<FunctionDefinition, Multiset<string>> childrenNames)
+        private readonly IDictionary<FunctionDefinition, Multiset<string>> _nameOccurrences;
+        public DistinctionNumberVisitor(IDictionary<FunctionDefinition, Multiset<string>> nameOccurrences)
         {
-            _childrenNames = childrenNames;
+            _nameOccurrences = nameOccurrences;
         }
 
         protected override Unit VisitAstNode(AstNode node, DistinctionNumberVisitorParam param)
@@ -123,7 +126,7 @@ public static class FunctionDistinctionNumberProcessor
             }
             else
             {
-                if (_childrenNames[param.EnclosingFunction].Get(node.Name.Name) > 1)
+                if (_nameOccurrences[param.EnclosingFunction].Get(node.Name.Name) > 1)
                 {
                     var amount = param.NamesEncountered.Get(node.Name.Name);
                     param.DistinctionNumbers[node] = amount + 1;
