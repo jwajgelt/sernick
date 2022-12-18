@@ -1,5 +1,6 @@
 namespace sernick.Compiler.Instruction;
 
+using Ast.Nodes;
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 using Utility;
@@ -33,10 +34,7 @@ public abstract record BinaryOpInstruction(IInstructionOperand Left, IInstructio
     public Label? PossibleJump => null;
 
     public bool IsCopy => false;
-    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
-    {
-        throw new NotImplementedException();
-    }
+    public abstract string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping);
 }
 
 public enum BinaryAssignInstructionOp
@@ -70,6 +68,13 @@ public record BinaryAssignInstruction(BinaryAssignInstructionOp Op, IInstruction
 
     public override IEnumerable<Register> RegistersDefined =>
         Left.Enumerate().OfType<RegInstructionOperand>().Select(operand => operand.Register);
+
+    public override string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    {
+        var leftSegment = Left.ToAsm(registerMapping);
+        var rightSegment = Right.ToAsm(registerMapping);
+        return $"\t{Op.ToString().ToLower()}\t{leftSegment}, {rightSegment}";
+    }
 }
 
 public enum BinaryComputeInstructionOp
@@ -101,4 +106,10 @@ public sealed record BinaryComputeInstruction(BinaryComputeInstructionOp Op, IIn
     }
 
     public override IEnumerable<Register> RegistersDefined => Enumerable.Empty<Register>();
+    public override string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    {
+        var leftSegment = Left.ToAsm(registerMapping);
+        var rightSegment = Right.ToAsm(registerMapping);
+        return $"\t{Op.ToString().ToLower()}\t{leftSegment}, {rightSegment}";
+    }
 }

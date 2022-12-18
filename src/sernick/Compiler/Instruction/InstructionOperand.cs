@@ -4,7 +4,7 @@ using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 using Utility;
 
-public interface IInstructionOperand
+public interface IInstructionOperand : IAsmable
 {
     IEnumerable<Register> RegistersUsed { get; }
 }
@@ -12,6 +12,11 @@ public interface IInstructionOperand
 public sealed record RegInstructionOperand(Register Register) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => Register.Enumerate();
+    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    {
+        var reg = registerMapping[Register];
+        return $"{reg.ToString().ToLower()}";
+    }
 }
 
 /// <summary>
@@ -23,11 +28,24 @@ public sealed record MemInstructionOperand(
     RegisterValue? Displacement) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => BaseReg.Enumerate().OfType<Register>();
+    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    {
+        var baseSegment = BaseAddress is not null ? $"{BaseAddress.Value}" : "";
+        var regSegment = BaseReg is not null ? $"{registerMapping[BaseReg].ToString().ToLower()}" : "";
+        var displacementSegment = Displacement is not null ? $"+ {Displacement.Value}" : "";
+        return $"{baseSegment}[{regSegment}{displacementSegment}]";
+    }
 }
 
 public sealed record ImmInstructionOperand(RegisterValue Value) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => Enumerable.Empty<Register>();
+
+    public override string ToString() => Value.ToString();
+    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    {
+        return $"{Value.Value}";
+    }
 }
 
 public static class InstructionOperandExtensions
