@@ -80,16 +80,10 @@ public static class NameResolutionAlgorithm
             var identifier = node.FunctionName;
             try
             {
-                Declaration? declaration = null;
-                foreach (var external in ExternalFunctions)
-                {
-                    if (identifier.Name == external.Definition.Name.Name)
-                    {
-                        declaration = external.Definition;
-                    }
-                }
-
-                declaration = declaration ?? identifiersNamespace.GetResolution(identifier);
+                declaration = ExternalFunctions
+                    .Select(external => external.Definition)
+                    .Where(definition => identifier.Equals(definition.Name))
+                    .FirstOrDefault(identifiersNamespace.GetResolution(identifier));
                 if (declaration is FunctionDefinition functionDefinition)
                 {
                     var visitorResult = VisitAstNode(node, identifiersNamespace);
