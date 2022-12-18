@@ -15,7 +15,8 @@ public abstract record TransferControlInstruction(Label Location) : IInstruction
 
     public bool IsCopy => false;
 
-    public IInstruction ReplaceRegisters(Dictionary<Register, Register> defines, Dictionary<Register, Register> uses) =>
+    public IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines,
+        IReadOnlyDictionary<Register, Register> uses) =>
         this;
 
     public abstract string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping);
@@ -49,7 +50,8 @@ public sealed record RetInstruction : IInstruction
 
     public bool IsCopy => false;
 
-    public IInstruction ReplaceRegisters(Dictionary<Register, Register> defines, Dictionary<Register, Register> uses) =>
+    public IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines,
+        IReadOnlyDictionary<Register, Register> uses) =>
         this;
 
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)

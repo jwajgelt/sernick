@@ -3,6 +3,7 @@ namespace sernick.CodeGeneration.RegisterAllocation;
 using Compiler.Function;
 using ControlFlowGraph.Analysis;
 using ControlFlowGraph.CodeTree;
+using Utility;
 
 public sealed class SpillsAllocator
 {
@@ -48,7 +49,7 @@ public sealed class SpillsAllocator
         {
             if (asmable is not IInstruction instruction)
             {
-                return new[] { asmable };
+                return asmable.Enumerate();
             }
 
             var usedRegisters = AssignReservedRegisters(instruction.RegistersUsed.Where(spillsLocation.ContainsKey));
@@ -92,7 +93,7 @@ public sealed class SpillsAllocator
         return (asm.SelectMany(HandleSpill).ToList(), newAllocation);
     }
 
-    private Dictionary<Register, Register> AssignReservedRegisters(IEnumerable<Register> registers)
+    private IReadOnlyDictionary<Register, Register> AssignReservedRegisters(IEnumerable<Register> registers)
     {
         var registerList = registers.ToList();
         if (registerList.Count > _registersReserve.Count)

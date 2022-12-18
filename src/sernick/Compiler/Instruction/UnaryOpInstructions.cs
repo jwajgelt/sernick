@@ -40,7 +40,7 @@ public sealed record UnaryOpInstruction(UnaryOp Op, IInstructionOperand Operand)
 
     public bool IsCopy => false;
 
-    public IInstruction ReplaceRegisters(Dictionary<Register, Register> defines, Dictionary<Register, Register> uses) =>
+    public IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines, IReadOnlyDictionary<Register, Register> uses) =>
         Operand switch
         {
             RegInstructionOperand => new UnaryOpInstruction(Op, Operand.ReplaceRegisters(defines)),

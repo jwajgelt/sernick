@@ -21,7 +21,7 @@ public static class DictionaryExtensions
     }
 
     [return: NotNullIfNotNull("key")]
-    public static TType? GetOrKey<TType>(this IDictionary<TType, TType> dictionary, TType? key)
+    public static TType? GetOrKey<TType>(this IReadOnlyDictionary<TType, TType> dictionary, TType? key)
     {
         return key != null && dictionary.TryGetValue(key, out var value) ? value : key;
     }
