@@ -4,7 +4,6 @@ using Compiler.Function;
 using ControlFlowGraph.Analysis;
 using ControlFlowGraph.CodeTree;
 
-
 public sealed class SpillsAllocator
 {
     private readonly IReadOnlyList<HardwareRegister> _registersReserve;
@@ -54,7 +53,7 @@ public sealed class SpillsAllocator
 
             var usedRegisters = AssignReservedRegisters(instruction.RegistersUsed.Where(spillsLocation.ContainsKey));
             var definedRegisters = AssignReservedRegisters(instruction.RegistersDefined.Where(spillsLocation.ContainsKey));
-            
+
             // Add read instructions from variable locations to a reserved registers
             var spilledInstructions = usedRegisters.SelectMany(tuple =>
             {
@@ -63,7 +62,7 @@ public sealed class SpillsAllocator
                 var readCodeTree = new RegisterWrite(reservedRegister, location.GenerateRead());
                 return _instructionCovering.Cover(readCodeTree);
             });
-            
+
             // Modify instruction to use reserved registers and add it to the assembly
             var newInstruction = instruction.ReplaceRegisters(defines: definedRegisters, uses: usedRegisters);
             spilledInstructions = spilledInstructions.Append(newInstruction);
@@ -77,7 +76,6 @@ public sealed class SpillsAllocator
                 return _instructionCovering.Cover(writeCodeTree);
             }));
 
-            
             return spilledInstructions;
         }
 
