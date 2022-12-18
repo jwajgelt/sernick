@@ -80,19 +80,19 @@ public static class FunctionDistinctionNumberProcessor
     /// <param name="DistinctionNumbers">
     /// For every function, holds a distinction number of this function.
     /// This is a result, but is passed in param to avoid redundant dictionary merging.</param>
-    /// <param name="NameOccurrencesEncountered">
-    /// Holds information about function names already encountered so as to know
-    /// what number should be given to next function with the same name.
+    /// <param name="NamesEncountered">
+    /// Holds information about function names already encountered in current body
+    /// so as to know what number should be given to next function with the same name.
     /// </param>
     /// <param name="EnclosingFunction">
     /// The function that is the closest ancestor of the current node.
     /// </param>
     private record DistinctionNumberVisitorParam(
         IDictionary<FunctionDefinition, int?> DistinctionNumbers,
-        Multiset<(FunctionDefinition, string)> NameOccurrencesEncountered,
+        Multiset<string> NamesEncountered,
         FunctionDefinition? EnclosingFunction = null)
     {
-        public DistinctionNumberVisitorParam(Dictionary<FunctionDefinition, int?> distinctionNumbers) : this(distinctionNumbers, new Multiset<(FunctionDefinition, string)>())
+        public DistinctionNumberVisitorParam(Dictionary<FunctionDefinition, int?> distinctionNumbers) : this(distinctionNumbers, new Multiset<string>())
         {
         }
     }
@@ -125,9 +125,9 @@ public static class FunctionDistinctionNumberProcessor
             {
                 if (_childrenNames[param.EnclosingFunction].Get(node.Name.Name) > 1)
                 {
-                    var amount = param.NameOccurrencesEncountered.Get((param.EnclosingFunction, node.Name.Name));
+                    var amount = param.NamesEncountered.Get(node.Name.Name);
                     param.DistinctionNumbers[node] = amount + 1;
-                    param.NameOccurrencesEncountered.Add((param.EnclosingFunction, node.Name.Name));
+                    param.NamesEncountered.Add(node.Name.Name);
                 }
                 else
                 {
@@ -140,7 +140,7 @@ public static class FunctionDistinctionNumberProcessor
                 parameter.Accept(this, param);
             }
 
-            node.Body.Accept(this, param with { EnclosingFunction = node });
+            node.Body.Accept(this, param with { EnclosingFunction = node, NamesEncountered = new Multiset<string>() });
             return Unit.I;
         }
     }
