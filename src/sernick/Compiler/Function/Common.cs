@@ -33,7 +33,7 @@ public static class Convention
         HardwareRegister.R9,
     };
 
-    public static readonly int REG_ARGS_COUNT = ArgumentRegisters.Count();
+    public static readonly int REG_ARGS_COUNT = ArgumentRegisters.Length;
 }
 
 public static class Helpers
