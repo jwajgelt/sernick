@@ -40,7 +40,7 @@ public sealed record SetCcInstruction(ConditionCode Code, Register Register) : C
     public override Label? PossibleJump => null;
 
     public override bool IsCopy => false;
-    
+
     public override string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
         var reg = registerMapping[Register];
@@ -59,7 +59,7 @@ public sealed record JmpCcInstruction(ConditionCode Code, Label Location) : Cond
     public override Label PossibleJump => Location;
 
     public override bool IsCopy => false;
-    
+
     public override string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
         return $"\tjmp{Code.ToString().ToLower()}\t{Location.Value}";

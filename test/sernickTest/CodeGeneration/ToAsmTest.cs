@@ -1,7 +1,6 @@
-﻿namespace sernickTest.CodeGeneration;
+namespace sernickTest.CodeGeneration;
 
 using Moq;
-using sernick.Ast.Nodes;
 using sernick.CodeGeneration;
 using sernick.Compiler.Instruction;
 using sernick.ControlFlowGraph.CodeTree;
@@ -15,7 +14,7 @@ public class ToAsmTest
         var label = new Label("labelString");
 
         var asm = label.ToAsm(dict);
-        
+
         Assert.Equal("labelString:", asm);
     }
 
@@ -29,10 +28,10 @@ public class ToAsmTest
         var regOp = new RegInstructionOperand(virtualReg.Object);
 
         var asm = regOp.ToAsm(dict);
-        
+
         Assert.Equal("rax", asm);
     }
-    
+
     [Fact]
     public void MemInstructionOperandFromRegToAsm()
     {
@@ -43,10 +42,10 @@ public class ToAsmTest
         var memOp = virtualReg.Object.AsMemOperand();
 
         var asm = memOp.ToAsm(dict);
-        
+
         Assert.Equal("[rax]", asm);
     }
-    
+
     [Fact]
     public void MemInstructionOperandFromLabelAndDisplacementToAsm()
     {
@@ -56,10 +55,10 @@ public class ToAsmTest
         var memOp = (label, displacement).AsMemOperand();
 
         var asm = memOp.ToAsm(dict);
-        
+
         Assert.Equal("[base + 96]", asm);
     }
-    
+
     [Fact]
     public void ImmInstructionOperandToAsm()
     {
@@ -67,11 +66,10 @@ public class ToAsmTest
         var immOp = new ImmInstructionOperand(new RegisterValue(7321));
 
         var asm = immOp.ToAsm(dict);
-        
+
         Assert.Equal("7321", asm);
     }
 
-    
     [Fact]
     public void BinaryAssignInstructionToAsm()
     {
@@ -79,10 +77,10 @@ public class ToAsmTest
         var binAssign = new BinaryAssignInstruction(BinaryAssignInstructionOp.Add, PrepareOperand("left"), PrepareOperand("right"));
 
         var asm = binAssign.ToAsm(dict);
-        
+
         Assert.Equal("\tadd\tleft, right", asm);
     }
-    
+
     [Fact]
     public void BinaryComputeInstructionToAsm()
     {
@@ -90,7 +88,7 @@ public class ToAsmTest
         var binComp = new BinaryComputeInstruction(BinaryComputeInstructionOp.Cmp, PrepareOperand("left"), PrepareOperand("right"));
 
         var asm = binComp.ToAsm(dict);
-        
+
         Assert.Equal("\tcmp\tleft, right", asm);
     }
 
@@ -99,13 +97,12 @@ public class ToAsmTest
     {
         var dict = new Dictionary<Register, HardwareRegister>();
         var mov = new MovInstruction(PrepareOperand("left"), PrepareOperand("right"));
-        
+
         var asm = mov.ToAsm(dict);
-        
+
         Assert.Equal("\tmov\tleft, right", asm);
-        
+
     }
-    
 
     [Fact]
     public void UnaryToAsm()
@@ -114,11 +111,10 @@ public class ToAsmTest
         var un = new UnaryOpInstruction(UnaryOp.Neg, PrepareOperand("operand"));
 
         var asm = un.ToAsm(dict);
-        
+
         Assert.Equal("\tneg\toperand", asm);
     }
-    
-    
+
     [Fact]
     public void CallCcToAsm()
     {
@@ -126,10 +122,10 @@ public class ToAsmTest
         var call = new CallInstruction("target");
 
         var asm = call.ToAsm(dict);
-        
+
         Assert.Equal("\tcall\ttarget", asm);
     }
-    
+
     [Fact]
     public void JmpCcToAsm()
     {
@@ -137,10 +133,10 @@ public class ToAsmTest
         var jmpNo = new JmpCcInstruction(ConditionCode.No, "target");
 
         var asm = jmpNo.ToAsm(dict);
-        
+
         Assert.Equal("\tjmpno\ttarget", asm);
     }
-    
+
     [Fact]
     public void CallToAsm()
     {
@@ -148,7 +144,7 @@ public class ToAsmTest
         var call = new CallInstruction("target");
 
         var asm = call.ToAsm(dict);
-        
+
         Assert.Equal("\tcall\ttarget", asm);
     }
 
@@ -159,10 +155,10 @@ public class ToAsmTest
         var jmp = new JmpInstruction("target");
 
         var asm = jmp.ToAsm(dict);
-        
+
         Assert.Equal("\tjmp\ttarget", asm);
     }
-    
+
     [Fact]
     public void RetToAsm()
     {
@@ -170,11 +166,10 @@ public class ToAsmTest
         var ret = new RetInstruction();
 
         var asm = ret.ToAsm(dict);
-        
+
         Assert.Equal("\tret", asm);
     }
-    
-    
+
     [Fact]
     public void SetCcToAsm()
     {
@@ -185,7 +180,7 @@ public class ToAsmTest
         var setNo = new SetCcInstruction(ConditionCode.No, virtualReg.Object);
 
         var asm = setNo.ToAsm(dict);
-        
+
         Assert.Equal("\tsetno\trax", asm);
     }
 
