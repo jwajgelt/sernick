@@ -92,16 +92,10 @@ public static class FunctionContextMapProcessor
             }
 
             var functionDeclaration = _nameResolution.CalledFunctionDeclarations[node];
-            foreach (var external in ExternalFunctions)
-            {
-                if (ReferenceEquals(functionDeclaration, external.Definition))
-                {
-                    ContextMap[node] = external.Caller;
-                    return Unit.I;
-                }
-            }
-
-            ContextMap[node] = ContextMap[functionDeclaration];
+            ContextMap[node] = ExternalFunctions
+                .Where(external => ReferenceEquals(functionDeclaration, external.Definition))
+                .Select(external => external.Caller)
+                .FirstOrDefault(ContextMap[functionDeclaration]);
 
             return Unit.I;
         }
