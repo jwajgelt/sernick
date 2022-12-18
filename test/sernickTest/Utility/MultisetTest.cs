@@ -9,7 +9,7 @@ public class MultisetTest
     {
         var set = new Multiset<string>();
 
-        var amount = set.Get("a");
+        var amount = set["a"];
 
         Assert.Equal(0, amount);
     }
@@ -25,7 +25,7 @@ public class MultisetTest
         set.Add("b");
         set.Add("a");
 
-        Assert.Equal(3, set.Get("a"));
-        Assert.Equal(2, set.Get("b"));
+        Assert.Equal(3, set["a"]);
+        Assert.Equal(2, set["b"]);
     }
 }

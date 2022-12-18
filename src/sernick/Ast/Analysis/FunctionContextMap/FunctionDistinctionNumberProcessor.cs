@@ -126,9 +126,9 @@ public static class FunctionDistinctionNumberProcessor
             }
             else
             {
-                if (_nameOccurrences[param.EnclosingFunction].Get(node.Name.Name) > 1)
+                if (_nameOccurrences[param.EnclosingFunction][node.Name.Name] > 1)
                 {
-                    var amount = param.NamesEncountered.Get(node.Name.Name);
+                    var amount = param.NamesEncountered[node.Name.Name];
                     param.DistinctionNumbers[node] = amount + 1;
                     param.NamesEncountered.Add(node.Name.Name);
                 }

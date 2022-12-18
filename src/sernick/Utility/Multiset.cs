@@ -14,8 +14,5 @@ public class Multiset<K> where K : notnull
         _dict[elem] = value + 1;
     }
 
-    public int Get(K elem)
-    {
-        return _dict.TryGetValue(elem, out var value) ? value : 0;
-    }
+    public int this[K elem] => _dict.TryGetValue(elem, out var value) ? value : 0;
 }
