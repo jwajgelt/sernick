@@ -7,11 +7,16 @@ using Utility;
 public interface IInstructionOperand
 {
     IEnumerable<Register> RegistersUsed { get; }
+    IInstructionOperand ReplaceRegisters(Dictionary<Register, Register> uses);
 }
 
 public sealed record RegInstructionOperand(Register Register) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => Register.Enumerate();
+    public IInstructionOperand ReplaceRegisters(Dictionary<Register, Register> uses)
+    {
+        return new RegInstructionOperand(uses.GetOrKey(Register));
+    }
 }
 
 /// <summary>
@@ -23,11 +28,16 @@ public sealed record MemInstructionOperand(
     RegisterValue? Displacement) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => BaseReg.Enumerate().OfType<Register>();
+    public IInstructionOperand ReplaceRegisters(Dictionary<Register, Register> uses)
+    {
+        return this with { BaseReg = uses.GetOrKey(BaseReg) };
+    }
 }
 
 public sealed record ImmInstructionOperand(RegisterValue Value) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => Enumerable.Empty<Register>();
+    public IInstructionOperand ReplaceRegisters(Dictionary<Register, Register> uses) => this;
 }
 
 public static class InstructionOperandExtensions

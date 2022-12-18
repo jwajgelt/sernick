@@ -39,6 +39,14 @@ public sealed record UnaryOpInstruction(UnaryOp Op, IInstructionOperand Operand)
     public Label? PossibleJump => null;
 
     public bool IsCopy => false;
+
+    public IInstruction ReplaceRegisters(Dictionary<Register, Register> defines, Dictionary<Register, Register> uses) =>
+        Operand switch
+        {
+            RegInstructionOperand => new UnaryOpInstruction(Op, Operand.ReplaceRegisters(defines)),
+            _ => new UnaryOpInstruction(Op, Operand.ReplaceRegisters(uses)),
+        };
+
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
         throw new NotImplementedException();

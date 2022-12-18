@@ -43,6 +43,18 @@ public sealed record MovInstruction(IInstructionOperand Target, IInstructionOper
     public Label? PossibleJump => null;
 
     public bool IsCopy => Target is RegInstructionOperand && Source is RegInstructionOperand;
+    public IInstruction ReplaceRegisters(Dictionary<Register, Register> defines, Dictionary<Register, Register> uses)
+    {
+        return new MovInstruction(
+            Target: Target switch
+            {
+                RegInstructionOperand => Target.ReplaceRegisters(defines),
+                MemInstructionOperand => Target.ReplaceRegisters(uses),
+                _ => Target
+            },
+            Source: Source.ReplaceRegisters(uses));
+    }
+
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
         throw new NotImplementedException();

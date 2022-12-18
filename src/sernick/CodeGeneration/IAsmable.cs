@@ -14,6 +14,7 @@ public interface IInstruction : IAsmable
     bool PossibleFollow { get; }
     Label? PossibleJump { get; }
     bool IsCopy { get; }
+    IInstruction ReplaceRegisters(Dictionary<Register, Register> defines, Dictionary<Register, Register> uses);
 }
 
 public sealed record Label(string Value) : IAsmable
