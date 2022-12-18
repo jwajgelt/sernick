@@ -8,7 +8,7 @@ using sernick.Utility;
 
 public static class ExternalFunctionsInfo
 {
-    public record FunctionInfo(FunctionDefinition Definition, IFunctionCaller Caller);
+    public sealed record FunctionInfo(FunctionDefinition Definition, IFunctionCaller Caller);
 
     private static readonly Range<ILocation> placeholderRange = new Range<ILocation>(new StringLocation(0), new StringLocation(0));
 
