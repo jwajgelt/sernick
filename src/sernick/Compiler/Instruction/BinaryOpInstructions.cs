@@ -1,6 +1,5 @@
 namespace sernick.Compiler.Instruction;
 
-using Ast.Nodes;
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 using Utility;
