@@ -65,7 +65,7 @@ public sealed class FunctionContext : IFunctionContext
         _parentContext = parent;
         _functionParameters = parameters;
         _localsOffset = new RegisterValue(0, false);
-        _displayEntry = new GlobalAddress("display") + POINTER_SIZE * Depth;
+        _displayEntry = new GlobalAddress(DisplayTable.DISPLAY_TABLE_SYMBOL) + POINTER_SIZE * Depth;
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _oldDisplayValReg = new Register();
 

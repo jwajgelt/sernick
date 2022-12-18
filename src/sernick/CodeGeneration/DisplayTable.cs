@@ -2,8 +2,10 @@ namespace sernick.CodeGeneration;
 
 using ControlFlowGraph.CodeTree;
 
-public class DisplayTable : IAsmable
+public sealed class DisplayTable : IAsmable
 {
+    public const string DISPLAY_TABLE_SYMBOL = "__display_table";
+
     private long Size { get; }
 
     public DisplayTable(long size)
@@ -15,7 +17,7 @@ public class DisplayTable : IAsmable
     {
         return @$"
 section .bss
-__display_table resq {Size}
+{DISPLAY_TABLE_SYMBOL} resq {Size}
 ";
     }
 }
