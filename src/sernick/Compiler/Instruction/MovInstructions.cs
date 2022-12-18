@@ -45,6 +45,8 @@ public sealed record MovInstruction(IInstructionOperand Target, IInstructionOper
     public bool IsCopy => Target is RegInstructionOperand && Source is RegInstructionOperand;
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
-        throw new NotImplementedException();
+        var sourceSegment = Source.ToAsm(registerMapping);
+        var targetSegment = Target.ToAsm(registerMapping);
+        return $"\tmov\t{targetSegment}, {sourceSegment}";
     }
 }

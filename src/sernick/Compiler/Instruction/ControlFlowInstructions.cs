@@ -21,7 +21,7 @@ public sealed record CallInstruction(Label Location) : TransferControlInstructio
 {
     public override string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
-        throw new NotImplementedException();
+        return $"\tcall\t{Location.Value}";
     }
 }
 
@@ -29,7 +29,7 @@ public sealed record JmpInstruction(Label Location) : TransferControlInstruction
 {
     public override string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
-        throw new NotImplementedException();
+        return $"\tjmp\t{Location.Value}";
     }
 }
 
@@ -46,6 +46,6 @@ public sealed record RetInstruction : IInstruction
     public bool IsCopy => false;
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
-        throw new NotImplementedException();
+        return "\tret";
     }
 }
