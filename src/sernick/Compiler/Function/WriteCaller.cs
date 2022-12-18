@@ -9,8 +9,7 @@ using static Helpers;
 
 public sealed class WriteCaller : IFunctionCaller
 {
-    // Not 100 % sure about it, but it should map to "%d\0"
-    private const int FORMAT_STRING = 0x256400;
+    private const int FORMAT_STRING = 0xa6425;
     public Label Label { get; } = "printf";
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
@@ -30,20 +29,29 @@ public sealed class WriteCaller : IFunctionCaller
         var rspRead = Reg(rsp).Read();
         var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
 
-        // Arguments:
-        // value to print
-        operations.Add(pushRsp);
-        operations.Add(Mem(rspRead).Write(arguments.Single()));
-
-        // format string
+        // Put format string onto stack
         operations.Add(pushRsp);
         operations.Add(Mem(rspRead).Write(FORMAT_STRING));
+
+        // Arguments:
+        // format string
+        operations.Add(Reg(HardwareRegister.RDI).Write(rspRead));
+        // value to print
+        operations.Add(Reg(HardwareRegister.RSI).Write(arguments.Single()));
+
+        // Align the stack
+        var tmpRsp = Reg(new Register());
+        operations.Add(tmpRsp.Write(rspRead));
+        operations.Add(Reg(rsp).Write(rspRead & -2 * POINTER_SIZE));
 
         // Performing actual call (puts return addess on stack and jumps)
         operations.Add(new FunctionCall(this));
 
-        // Remove arguments from stack (we already returned from call)
-        operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE * 2));
+        // Restore stack pointer
+        operations.Add(Reg(rsp).Write(tmpRsp.Read()));
+
+        // Free format string slot
+        operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE));
 
         // Retrieve values of caller-saved registers
         foreach (var reg in CallerToSave)

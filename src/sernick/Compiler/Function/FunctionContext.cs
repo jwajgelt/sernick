@@ -111,8 +111,16 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(Mem(rspRead).Write(arg));
         }
 
+        // Align the stack
+        var tmpRsp = Reg(new Register());
+        operations.Add(tmpRsp.Write(rspRead));
+        operations.Add(Reg(rsp).Write(rspRead & -2 * POINTER_SIZE));
+
         // Performing actual call (puts return addess on stack and jumps)
         operations.Add(new FunctionCall(this));
+
+        // Restore stack pointer
+        operations.Add(Reg(rsp).Write(tmpRsp.Read()));
 
         // Remove arguments from stack (we already returned from call)
         operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE * arguments.Count));

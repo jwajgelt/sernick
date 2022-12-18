@@ -9,8 +9,7 @@ using static Helpers;
 
 public sealed class ReadCaller : IFunctionCaller
 {
-    // Not 100 % sure about it, but it should map to "%d\0"
-    private const int FORMAT_STRING = 0x256400;
+    private const int FORMAT_STRING = 0x6425;
     public Label Label { get; } = "scanf";
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
@@ -35,31 +34,37 @@ public sealed class ReadCaller : IFunctionCaller
         var rspRead = Reg(rsp).Read();
         var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
 
+        // Put format string onto stack
+        operations.Add(pushRsp);
+        operations.Add(Mem(rspRead).Write(FORMAT_STRING));
+
         // Allocate slot for input value
         operations.Add(pushRsp);
 
         // Arguments:
+        // format string's address
+        operations.Add(Reg(HardwareRegister.RDI).Write(rspRead + POINTER_SIZE));
         // address
-        operations.Add(pushRsp);
-        operations.Add(Mem(rspRead).Write(rspRead + POINTER_SIZE));
+        operations.Add(Reg(HardwareRegister.RSI).Write(rspRead));
 
-        // format string
-        operations.Add(pushRsp);
-        operations.Add(Mem(rspRead).Write(FORMAT_STRING));
+        // Align the stack
+        var tmpRsp = Reg(new Register());
+        operations.Add(tmpRsp.Write(rspRead));
+        operations.Add(Reg(rsp).Write(rspRead & -2 * POINTER_SIZE));
 
         // Performing actual call (puts return addess on stack and jumps)
         operations.Add(new FunctionCall(this));
 
-        // Remove arguments from stack (we already returned from call)
-        operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE * 2));
+        // Restore stack pointer
+        operations.Add(Reg(rsp).Write(tmpRsp.Read()));
 
         // Put value from stack to virtual register
         var returnValueRegister = new Register();
         operations.Add(Reg(returnValueRegister).Write(Mem(rspRead).Read()));
         CodeTreeValueNode returnValueLocation = Reg(returnValueRegister).Read();
 
-        // Free stack output slot
-        operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE));
+        // Free stack output slot + format string slot
+        operations.Add(Reg(rsp).Write(rspRead + 2 * POINTER_SIZE));
 
         // Retrieve values of caller-saved registers
         foreach (var reg in CallerToSave)
