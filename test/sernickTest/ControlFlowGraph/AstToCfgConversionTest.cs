@@ -9,6 +9,7 @@ using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Analysis.TypeChecking;
 using sernick.Ast.Analysis.VariableAccess;
 using sernick.Ast.Nodes;
+using sernick.CodeGeneration;
 using sernick.Compiler.Function;
 using sernick.ControlFlowGraph.CodeTree;
 using static Ast.Helpers.AstNodesExtensions;
@@ -17,7 +18,7 @@ using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
 
 public class AstToCfgConversionTest
 {
-    private readonly CodeTreeValueNode _displayAddress = new GlobalAddress("display");
+    private readonly CodeTreeValueNode _displayAddress = new GlobalAddress(DisplayTable.DISPLAY_TABLE_SYMBOL);
 
     [Fact]
     public void SimpleAddition()
