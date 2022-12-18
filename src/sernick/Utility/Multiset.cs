@@ -10,14 +10,8 @@ public class Multiset<K> where K : notnull
 
     public void Add(K elem)
     {
-        if (_dict.TryGetValue(elem, out var value))
-        {
-            _dict[elem] = value + 1;
-        }
-        else
-        {
-            _dict[elem] = 1;
-        }
+        _dict.TryGetValue(elem, out var value);
+        _dict[elem] = value + 1;
     }
 
     public int Get(K elem)
