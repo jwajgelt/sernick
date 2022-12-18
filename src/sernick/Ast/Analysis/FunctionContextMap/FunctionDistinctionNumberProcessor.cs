@@ -59,12 +59,7 @@ public static class FunctionDistinctionNumberProcessor
         {
             if (param.EnclosingFunction is not null)
             {
-                if (!param.NameOccurrences.ContainsKey(param.EnclosingFunction))
-                {
-                    param.NameOccurrences[param.EnclosingFunction] = new Multiset<string>();
-                }
-
-                param.NameOccurrences[param.EnclosingFunction].Add(node.Name.Name);
+                param.NameOccurrences.GetOrAddEmpty(param.EnclosingFunction).Add(node.Name.Name);
             }
 
             foreach (var parameter in node.Parameters)
