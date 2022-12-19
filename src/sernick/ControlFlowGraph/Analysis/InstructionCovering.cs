@@ -147,13 +147,13 @@ public sealed class InstructionCovering : IInstructionCovering
         return instructions.Concat(result.Generator(leafOutputs, out output));
     }
 
-    private IEnumerable<IInstruction> GenerateSingleExitCovering(SingleExitCoverResult result, Label next)
+    private IEnumerable<IInstruction> GenerateSingleExitCovering(SingleExitCoverResult result, Label? next)
     {
         return result.Leaves
             .Select(CoverTree)
             .OfType<TreeCoverResult>()
             .SelectMany(leafCover => GenerateCovering(leafCover, out _))
-            .Concat(result.Generator(next));
+            .Concat(next is not null ? result.Generator(next) : Enumerable.Empty<IInstruction>());
     }
 
     private IEnumerable<IInstruction> GenerateConditionalJumpCovering(ConditionalJumpCoverResult result, Label trueCase, Label falseCase)
