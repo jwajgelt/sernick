@@ -3,9 +3,9 @@ namespace sernick.Compiler.Function;
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
-using static PlatformConstants;
 using static Convention;
 using static Helpers;
+using static PlatformConstants;
 
 public sealed class FunctionContext : IFunctionContext
 {
