@@ -6,6 +6,7 @@ using NameResolution;
 using Nodes;
 using Utility;
 using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.DistinctionNumberProvider;
+using static ExternalFunctionsInfo;
 
 /// <summary>
 ///     Static class with <see cref="Process"/> method, which constructs <see cref="IFunctionContext"/> for each
@@ -95,7 +96,10 @@ public static class FunctionContextMapProcessor
             }
 
             var functionDeclaration = _nameResolution.CalledFunctionDeclarations[node];
-            ContextMap[node] = ContextMap[functionDeclaration];
+            ContextMap[node] = ExternalFunctions
+                .Where(external => ReferenceEquals(functionDeclaration, external.Definition))
+                .Select(external => external.Caller)
+                .FirstOrDefault(ContextMap[functionDeclaration]);
 
             return Unit.I;
         }
