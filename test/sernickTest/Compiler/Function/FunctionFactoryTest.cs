@@ -9,10 +9,10 @@ public class FunctionFactoryTest
     [Fact]
     public void GivesLabelsUsingGivenMethod()
     {
-        var factory = new FunctionFactory((_, name) => new Label($"fun_{name.Name}"));
+        var factory = new FunctionFactory((_, name, num) => new Label($"fun_{name.Name}_{num}"));
 
-        var result = factory.CreateFunction(null, Ident("f"), Array.Empty<IFunctionParam>(), true);
+        var result = factory.CreateFunction(null, Ident("f"), 3, Array.Empty<IFunctionParam>(), true);
 
-        Assert.Equal("fun_f", result.Label.Value);
+        Assert.Equal("fun_f_3", result.Label.Value);
     }
 }

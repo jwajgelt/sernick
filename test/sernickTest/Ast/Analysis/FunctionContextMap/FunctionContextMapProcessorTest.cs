@@ -26,14 +26,36 @@ public class FunctionContextMapProcessorTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var fContext = new Mock<IFunctionContext>().Object;
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), new[] { declA }, false))
+            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), It.IsAny<int?>(), new[] { declA }, false))
             .Returns(fContext);
 
         var nameResolution = NameResolution().WithCalls((call, declaration));
-        var contextMap = FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
+        var contextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         Assert.Same(fContext, contextMap.Implementations[declaration]);
         Assert.Same(fContext, contextMap.Callers[call]);
+    }
+
+    [Fact]
+    public void WhenFunctionDeclared_UsesProvidedDistinctionNumber()
+    {
+        // fun f() {};
+        var tree = Program(
+            Fun<UnitType>("f")
+                .Body(Close)
+                .Get(out var declaration)
+        );
+
+        var contextFactory = SetupFunctionFactory(out var mainContext);
+        var fContext = new Mock<IFunctionContext>().Object;
+        contextFactory
+            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), 3, Array.Empty<IFunctionParam>(), false))
+            .Returns(fContext);
+
+        var nameResolution = NameResolution();
+        var contextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => 3, contextFactory.Object);
+
+        Assert.Same(fContext, contextMap.Implementations[declaration]);
     }
 
     [Fact]
@@ -53,11 +75,11 @@ public class FunctionContextMapProcessorTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), new[] { paramA }, false))
+            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), It.IsAny<int?>(), new[] { paramA }, false))
             .Returns(functionContext);
 
         var nameResolution = NameResolution();
-        FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         Assert.False(functionContext.Locals[paramA]);
         Assert.False(functionContext.Locals[declX]);
@@ -93,10 +115,10 @@ public class FunctionContextMapProcessorTest
         var fContext = new FakeFunctionContext();
         var gContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), new[] { paramA }, false))
+            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), It.IsAny<int?>(), new[] { paramA }, false))
             .Returns(fContext);
         contextFactory
-            .Setup(f => f.CreateFunction(fContext, It.IsAny<Identifier>(), Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(fContext, It.IsAny<Identifier>(), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
             .Returns(gContext);
 
         var nameResolution = NameResolution()
@@ -105,7 +127,7 @@ public class FunctionContextMapProcessorTest
                 (valueY, declY))
             .WithAssigns(
                 (assignment, declW));
-        FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         Assert.True(fContext.Locals[paramA]);
         Assert.True(fContext.Locals[declY]);
@@ -141,7 +163,7 @@ public class FunctionContextMapProcessorTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), new[] { paramA }, false))
+            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), It.IsAny<int?>(), new[] { paramA }, false))
             .Returns(functionContext);
 
         var nameResolution = NameResolution()
@@ -150,7 +172,7 @@ public class FunctionContextMapProcessorTest
                 (valueX, declX))
             .WithCalls(
                 (call, funDeclaration));
-        FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         Assert.False(functionContext.Locals[paramA]);
         Assert.False(functionContext.Locals[declX]);
@@ -188,18 +210,18 @@ public class FunctionContextMapProcessorTest
         var gContext = new FakeFunctionContext();
         var hContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
             .Returns(fContext);
         contextFactory
-            .Setup(f => f.CreateFunction(fContext, It.IsAny<Identifier>(), Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(fContext, It.IsAny<Identifier>(), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
             .Returns(gContext);
         contextFactory
-            .Setup(f => f.CreateFunction(fContext, It.IsAny<Identifier>(), Array.Empty<IFunctionParam>(), true))
+            .Setup(f => f.CreateFunction(fContext, It.IsAny<Identifier>(), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), true))
             .Returns(hContext);
 
         var nameResolution = NameResolution()
             .WithVars((valueX, declX));
-        FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         Assert.False(gContext.Locals[declXinG]);
         Assert.Single(gContext.Locals);
@@ -232,18 +254,18 @@ public class FunctionContextMapProcessorTest
         var gContext = new FakeFunctionContext();
         var hContext = new FakeFunctionContext();
         contextFactory
-            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(mainContext, It.IsAny<Identifier>(), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
             .Returns(fContext);
         contextFactory
-            .Setup(f => f.CreateFunction(fContext, It.IsAny<Identifier>(), Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(fContext, It.IsAny<Identifier>(), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
             .Returns(gContext);
         contextFactory
-            .Setup(f => f.CreateFunction(gContext, It.IsAny<Identifier>(), Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(gContext, It.IsAny<Identifier>(), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
             .Returns(hContext);
 
         var nameResolution = NameResolution()
             .WithVars((valueX, declX));
-        FunctionContextMapProcessor.Process(tree, nameResolution, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         Assert.True(fContext.Locals[declX]);
         Assert.Single(fContext.Locals);
@@ -254,7 +276,7 @@ public class FunctionContextMapProcessorTest
         var contextFactory = new Mock<IFunctionFactory>();
         mainContext = new Mock<IFunctionContext>().Object;
         contextFactory
-            .Setup(f => f.CreateFunction(null, It.IsAny<Identifier>(), Array.Empty<IFunctionParam>(), false))
+            .Setup(f => f.CreateFunction(null, It.IsAny<Identifier>(), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
             .Returns(mainContext);
         return contextFactory;
     }
