@@ -752,8 +752,8 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
         var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramF }, true);
-        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramG }, true);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramVf }, true);
+        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramVg }, true);
 
         mainContext.AddLocal(x, true);
         fContext.AddLocal(paramVf, false);
@@ -851,8 +851,8 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
         var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramF }, true);
-        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramG }, true);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramVf }, true);
+        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramVg }, true);
 
         mainContext.AddLocal(x, true);
         fContext.AddLocal(paramVf, false);
@@ -957,9 +957,9 @@ public class AstToCfgConversionTest
 
         var funFactory = new FunctionFactory(LabelGenerator.Generate);
         var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
-        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramF }, true);
-        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramG }, true);
-        var hContext = funFactory.CreateFunction(mainContext, Ident("h"), null, new IFunctionParam[] { paramH }, true);
+        var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramVf }, true);
+        var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramVg }, true);
+        var hContext = funFactory.CreateFunction(mainContext, Ident("h"), null, new IFunctionParam[] { paramVh }, true);
 
         mainContext.AddLocal(x, true);
         fContext.AddLocal(paramVf, false);
