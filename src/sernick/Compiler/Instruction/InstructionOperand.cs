@@ -34,7 +34,7 @@ public sealed record MemInstructionOperand(
         var regSegment = BaseReg is not null ? registerMapping[BaseReg].ToString().ToLower() : null;
         var baseSegment = BaseAddress?.Value.ToString();
         var displacementSegment = Displacement?.Value.ToString();
-        return $"[{string.Join(" + ", new[] { regSegment, baseSegment, displacementSegment }.Where(seg => seg is not null))}]";
+        return $"[{string.Join(" + ", new[] { regSegment, baseSegment, displacementSegment }.OfType<string>())}]";
     }
 }
 
