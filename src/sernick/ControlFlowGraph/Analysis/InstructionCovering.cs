@@ -5,7 +5,7 @@ using CodeGeneration.InstructionSelection;
 using CodeTree;
 using static sernick.CodeGeneration.InstructionSelection.CodeTreePatternRuleMatchExtensions;
 
-public sealed class InstructionCovering
+public sealed class InstructionCovering : IInstructionCovering
 {
     private record TreeCoverResult(uint Cost, IReadOnlyCollection<CodeTreeNode> Leaves, GenerateInstructions Generator);
 
@@ -51,7 +51,7 @@ public sealed class InstructionCovering
         return best;
     }
 
-    public IEnumerable<IInstruction> Cover(SingleExitNode node, Label next)
+    public IEnumerable<IInstruction> Cover(SingleExitNode node, Label? next)
     {
         SingleExitCoverResult? best = null;
         foreach (var patternRule in _rules)
@@ -147,13 +147,13 @@ public sealed class InstructionCovering
         return instructions.Concat(result.Generator(leafOutputs, out output));
     }
 
-    private IEnumerable<IInstruction> GenerateSingleExitCovering(SingleExitCoverResult result, Label next)
+    private IEnumerable<IInstruction> GenerateSingleExitCovering(SingleExitCoverResult result, Label? next)
     {
         return result.Leaves
             .Select(CoverTree)
             .OfType<TreeCoverResult>()
             .SelectMany(leafCover => GenerateCovering(leafCover, out _))
-            .Concat(result.Generator(next));
+            .Concat(next is not null ? result.Generator(next) : Enumerable.Empty<IInstruction>());
     }
 
     private IEnumerable<IInstruction> GenerateConditionalJumpCovering(ConditionalJumpCoverResult result, Label trueCase, Label falseCase)
