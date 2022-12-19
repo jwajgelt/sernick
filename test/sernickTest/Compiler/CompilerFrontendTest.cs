@@ -40,7 +40,7 @@ public class CompilerFrontendTest
         CompilerFrontend.Process(input, diagnostics.Object);
     }
 
-    [Theory(Skip = "To be debugged")]
+    [Theory]
     [MemberTupleData(nameof(CorrectExamplesData))]
     public void TestCorrectExamples(string group, string fileName)
     {
@@ -49,7 +49,7 @@ public class CompilerFrontendTest
         Assert.False(diagnostics.DidErrorOccur);
     }
 
-    [Theory(Skip = "To be debugged")]
+    [Theory]
     [MemberTupleData(nameof(IncorrectExamplesData))]
     public void TestIncorrectExamples(string group, string fileName, IEnumerable<IDiagnosticItem> expectedErrors)
     {
@@ -63,7 +63,7 @@ public class CompilerFrontendTest
         Assert.Equal(expectedErrors, diagnostics.DiagnosticItems);
     }
 
-    [Theory(Skip = "Wrong from type checking POV")]
+    [Theory]
     [InlineData("a")]
     [InlineData("5")]
     [InlineData("{x}")]

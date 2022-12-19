@@ -10,6 +10,7 @@ public interface IFunctionContext : IFunctionCaller
     public IReadOnlyList<SingleExitNode> GenerateEpilogue(CodeTreeValueNode? valToReturn);
 
     public int Depth { get; }
+    public bool ValueIsReturned { get; }
 
     /// <summary>
     ///     If variable is local then generates either memory read or register read
@@ -29,5 +30,13 @@ public interface IFunctionContext : IFunctionCaller
     /// </summary>
     public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value);
 
+    public VariableLocation AllocateStackFrameSlot();
+
     protected internal CodeTreeValueNode GetIndirectVariableLocation(IFunctionVariable variable);
+}
+
+public abstract record VariableLocation
+{
+    public abstract CodeTreeValueNode GenerateRead();
+    public abstract CodeTreeNode GenerateWrite(CodeTreeValueNode value);
 }

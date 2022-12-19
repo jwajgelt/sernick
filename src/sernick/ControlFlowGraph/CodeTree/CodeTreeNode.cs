@@ -5,8 +5,16 @@ using Compiler.Function;
 /// <summary>
 /// Struct for values which can fit in a register
 /// </summary>
-public record struct RegisterValue(long Value)
+public sealed record RegisterValue
 {
+    public RegisterValue(long value, bool isFinal = true)
+    {
+        Value = value;
+        IsFinal = isFinal;
+    }
+
+    public long Value { get; set; }
+    public bool IsFinal { get; }
     public override string ToString() => $"{Value}";
 }
 
@@ -66,26 +74,36 @@ public class Register
 /// </summary>
 public class HardwareRegister : Register
 {
-    protected HardwareRegister() { }
-    public static readonly HardwareRegister RAX = new();
-    public static readonly HardwareRegister RBX = new();
-    public static readonly HardwareRegister RCX = new();
-    public static readonly HardwareRegister RDX = new();
+    private readonly string _label;
+    protected HardwareRegister(string label)
+    {
+        _label = label;
+    }
+    public override string ToString() => _label;
 
-    public static readonly HardwareRegister RSP = new();
-    public static readonly HardwareRegister RBP = new();
+    public bool Equals(HardwareRegister? other) => _label.Equals(other?._label);
+    public override bool Equals(object? obj) => obj is HardwareRegister other && Equals(other);
+    public override int GetHashCode() => _label.GetHashCode();
 
-    public static readonly HardwareRegister RDI = new();
-    public static readonly HardwareRegister RSI = new();
+    public static readonly HardwareRegister RAX = new("RAX");
+    public static readonly HardwareRegister RBX = new("RBX");
+    public static readonly HardwareRegister RCX = new("RCX");
+    public static readonly HardwareRegister RDX = new("RDX");
 
-    public static readonly HardwareRegister R8 = new();
-    public static readonly HardwareRegister R9 = new();
-    public static readonly HardwareRegister R10 = new();
-    public static readonly HardwareRegister R11 = new();
-    public static readonly HardwareRegister R12 = new();
-    public static readonly HardwareRegister R13 = new();
-    public static readonly HardwareRegister R14 = new();
-    public static readonly HardwareRegister R15 = new();
+    public static readonly HardwareRegister RSP = new("RSP");
+    public static readonly HardwareRegister RBP = new("RBP");
+
+    public static readonly HardwareRegister RDI = new("RDI");
+    public static readonly HardwareRegister RSI = new("RSI");
+
+    public static readonly HardwareRegister R8 = new("R8");
+    public static readonly HardwareRegister R9 = new("R9");
+    public static readonly HardwareRegister R10 = new("R10");
+    public static readonly HardwareRegister R11 = new("R11");
+    public static readonly HardwareRegister R12 = new("R12");
+    public static readonly HardwareRegister R13 = new("R13");
+    public static readonly HardwareRegister R14 = new("R14");
+    public static readonly HardwareRegister R15 = new("R15");
 }
 
 public sealed record RegisterRead(Register Register) : CodeTreeValueNode
@@ -118,7 +136,10 @@ public sealed record Constant(RegisterValue Value) : CodeTreeValueNode
 
 public sealed record FunctionCall(IFunctionCaller FunctionCaller) : CodeTreeNode
 {
-    public override string ToString() => $"{FunctionCaller.Label}";
+    public override string ToString() => $"Call {FunctionCaller.Label.Value}";
+
+    public override int GetHashCode() => FunctionCaller.Label.GetHashCode();
+    public bool Equals(FunctionCall? other) => FunctionCaller.Label.Equals(other?.FunctionCaller.Label);
 }
 
 public sealed record FunctionReturn() : CodeTreeNode

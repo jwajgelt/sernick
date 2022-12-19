@@ -2,7 +2,10 @@ namespace sernick.CodeGeneration;
 
 using ControlFlowGraph.CodeTree;
 
-public interface IAsmable { }
+public interface IAsmable
+{
+    string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping);
+}
 
 public interface IInstruction : IAsmable
 {
@@ -11,9 +14,15 @@ public interface IInstruction : IAsmable
     bool PossibleFollow { get; }
     Label? PossibleJump { get; }
     bool IsCopy { get; }
+
+    IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map);
 }
 
 public sealed record Label(string Value) : IAsmable
 {
     public static implicit operator Label(string name) => new(name);
+    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    {
+        return $"{Value}:";
+    }
 }
