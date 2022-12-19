@@ -1,83 +1,12 @@
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using sernick.Compiler;
 using sernick.Diagnostics;
 using sernick.Utility;
 
+// Usage: ./sernick.exe program.ser [--execute]
+// --execute flag compiles and runs the compiled program immediately
+
 [assembly: InternalsVisibleTo("sernickTest")]
-
-const string ASM = @"section .text
-extern printf
-global main
-
-main:
-    push rbp
-    mov rdi, message
-    xor rax, rax
-    call printf
-    pop rbp
-    mov rax, 0
-    ret
-
-section .data
-    message: db 'Hello World', 10, 0";
-
-Console.WriteLine("Assembling:");
-Console.WriteLine(ASM);
-
-await File.WriteAllTextAsync("main.asm", ASM);
-
-(string stderr, string stdout) RunProcess(string cmd, string arguments = "")
-{
-    var process = new Process
-    {
-        StartInfo = new ProcessStartInfo
-        {
-            FileName = cmd,
-            Arguments = arguments,
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-            UseShellExecute = false
-        }
-    };
-
-    process.Start();
-
-    var stdout = process.StandardOutput.ReadToEnd();
-    var stderr = process.StandardError.ReadToEnd();
-    process.WaitForExit();
-
-    return (stderr, stdout);
-}
-
-var (errors, _) = RunProcess("nasm", "-f elf64 -o main.o main.asm");
-
-if (errors.Length > 0)
-{
-    // handle errors
-    Environment.Exit(1);
-}
-
-(errors, _) = RunProcess("gcc", "-no-pie -o main.out main.o");
-
-if (errors.Length > 0)
-{
-    // handle errors
-    Environment.Exit(1);
-}
-
-(errors, var output) = RunProcess("main.out");
-
-if (errors.Length > 0)
-{
-    // handle errors
-    Environment.Exit(1);
-}
-
-Console.WriteLine("Success:");
-Console.WriteLine(output);
 
 // check if filename was provided
 if (args.Length == 0)
@@ -98,10 +27,18 @@ try
     var frontendResult = CompilerFrontend.Process(file, diagnostics);
     var outputFilename = CompilerBackend.Process(filename.Split('.')[0], frontendResult);
     Console.WriteLine(outputFilename);
+
+    if (args.Length > 1 && args[1] == "--execute")
+    {
+        var (errors, output) = outputFilename.RunProcess();
+        Console.Error.WriteLine(errors);
+        Console.WriteLine(output);
+    }
 }
-catch (CompilationException)
+catch (CompilationException e)
 {
     Console.Error.WriteLine("Compilation failed.");
+    Console.Error.WriteLine(e.Message);
     success = false;
 }
 
