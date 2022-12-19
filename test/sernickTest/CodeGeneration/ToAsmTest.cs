@@ -47,6 +47,21 @@ public class ToAsmTest
     }
 
     [Fact]
+    public void MemInstructionOperandFromRegAndDisplacementToAsm()
+    {
+        var virtualReg = new Mock<Register>();
+        var hardwareReg = new Mock<HardwareRegister>(null);
+        hardwareReg.Setup(reg => reg.ToString()).Returns("RAX");
+        var dict = new Dictionary<Register, HardwareRegister> { [virtualReg.Object] = hardwareReg.Object };
+        var displacement = new RegisterValue(126);
+        var memOp = new MemInstructionOperand(virtualReg.Object, null, displacement);
+
+        var asm = memOp.ToAsm(dict);
+
+        Assert.Equal("[rax + 126]", asm);
+    }
+
+    [Fact]
     public void MemInstructionOperandFromLabelAndDisplacementToAsm()
     {
         var label = new Label("base");

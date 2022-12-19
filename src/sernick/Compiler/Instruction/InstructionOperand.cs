@@ -31,10 +31,10 @@ public sealed record MemInstructionOperand(
     public IEnumerable<Register> RegistersUsed => BaseReg.Enumerate().OfType<Register>();
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
-        var baseSegment = BaseAddress is not null ? $"{BaseAddress.Value}" : "";
-        var regSegment = BaseReg is not null ? $"{registerMapping[BaseReg].ToString().ToLower()}" : "";
-        var displacementSegment = Displacement is not null ? $" + {Displacement.Value}" : "";
-        return $"[{baseSegment}{regSegment}{displacementSegment}]";
+        var regSegment = BaseReg is not null ? $"{registerMapping[BaseReg].ToString().ToLower()}" : null;
+        var baseSegment = BaseAddress is not null ? $"{BaseAddress.Value}" : null;
+        var displacementSegment = Displacement is not null ? $"{Displacement.Value}" : null;
+        return $"[{string.Join(" + ", new[] { regSegment, baseSegment, displacementSegment }.Where(seg => seg is not null))}]";
     }
 }
 
