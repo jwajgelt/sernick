@@ -2,6 +2,7 @@ namespace sernick.ControlFlowGraph.Analysis;
 
 using CodeGeneration;
 using CodeTree;
+using Utility;
 
 public sealed class Linearizator
 {
@@ -70,12 +71,12 @@ public sealed class Linearizator
     {
         if (_visitedRootsLabels.TryGetValue(tree, out var label))
         {
-            var emptyCover = new List<IAsmable>();
+            var emptyCover = Enumerable.Empty<IAsmable>();
             return (label, emptyCover);
         }
 
         var treeLabel = GenerateLabel(depth);
-        var treeCoverWithLabel = new List<IAsmable>() { treeLabel }.Concat(Dfs(tree, depth + 1));
+        var treeCoverWithLabel = treeLabel.Enumerate().Concat(Dfs(tree, depth + 1));
         _visitedRootsLabels.Add(tree, treeLabel);
         return (treeLabel, treeCoverWithLabel);
     }

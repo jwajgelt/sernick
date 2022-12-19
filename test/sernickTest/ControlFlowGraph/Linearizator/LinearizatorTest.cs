@@ -51,7 +51,7 @@ public class LinearizatorTest
         var p2 = new SingleExitNode(p3, emptyOperationsList);
         var p1 = new SingleExitNode(p2, emptyOperationsList);
 
-        var actual = linearizator.Linearize(p1);
+        var actual = linearizator.Linearize(p1).ToList();
         var numUniqueNodes = 3;
         var numExpectedLabels = 2;
 
@@ -77,7 +77,7 @@ public class LinearizatorTest
         var mockedValueNode = new Mock<CodeTreeValueNode>();
         var conditionalNode = new ConditionalJumpNode(trueCaseNode, falseCaseNode, mockedValueNode.Object);
 
-        var actual = linearizator.Linearize(conditionalNode);
+        var actual = linearizator.Linearize(conditionalNode).ToList();
 
         var numUniqueNodes = 3;
         var numExpectedLabels = 2;
@@ -121,7 +121,7 @@ public class LinearizatorTest
         var cn2 = new ConditionalJumpNode(s1, s2, mockedValueNode.Object);
         var cn1 = new ConditionalJumpNode(cn2, s1, mockedValueNode.Object);
 
-        var actual = linearizator.Linearize(cn1);
+        var actual = linearizator.Linearize(cn1).ToList();
 
         var numUniqueNodes = 4;
         var numExpectedLabels = 3;
@@ -179,7 +179,7 @@ public class LinearizatorTest
         var cn2 = new ConditionalJumpNode(cn3, s2, mockedValueNode.Object);
         var cn1 = new ConditionalJumpNode(cn2, s1, mockedValueNode.Object);
 
-        var actual = linearizator.Linearize(cn1);
+        var actual = linearizator.Linearize(cn1).ToList();
 
         var numUniqueNodes = 5;
         var numExpectedLabels = 4;
