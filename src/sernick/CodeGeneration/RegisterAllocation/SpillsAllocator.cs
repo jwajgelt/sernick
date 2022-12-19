@@ -110,7 +110,7 @@ public sealed class SpillsAllocator
     ///     Assigns to each register in <paramref name="registers"/>
     ///     an unique hardware register from <c>_registersReserve</c>.
     /// </summary>
-    /// <exception cref="Exception">Thrown if <c>_registersReserve</c> is to small.</exception>
+    /// <exception cref="Exception">Thrown if <c>_registersReserve</c> is too small.</exception>
     private IReadOnlyDictionary<Register, Register> AssignReservedRegisters(IEnumerable<Register> registers)
     {
         return AssignReservedRegisters(registers, ImmutableDictionary<Register, Register>.Empty);
