@@ -33,6 +33,8 @@ public abstract record BinaryOpInstruction(IInstructionOperand Left, IInstructio
     public Label? PossibleJump => null;
 
     public bool IsCopy => false;
+    public abstract IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map);
+
     public abstract string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping);
 }
 
@@ -74,6 +76,9 @@ public record BinaryAssignInstruction(BinaryAssignInstructionOp Op, IInstruction
         var rightSegment = Right.ToAsm(registerMapping);
         return $"\t{Op.ToString().ToLower()}\t{leftSegment}, {rightSegment}";
     }
+
+    public override IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new BinaryAssignInstruction(Op, Left.MapRegisters(map), Right.MapRegisters(map));
 }
 
 public enum BinaryComputeInstructionOp
@@ -111,4 +116,7 @@ public sealed record BinaryComputeInstruction(BinaryComputeInstructionOp Op, IIn
         var rightSegment = Right.ToAsm(registerMapping);
         return $"\t{Op.ToString().ToLower()}\t{leftSegment}, {rightSegment}";
     }
+
+    public override IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new BinaryComputeInstruction(Op, Left.MapRegisters(map), Right.MapRegisters(map));
 }

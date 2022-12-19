@@ -7,6 +7,7 @@ using Utility;
 public interface IInstructionOperand : IAsmable
 {
     IEnumerable<Register> RegistersUsed { get; }
+    IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map);
 }
 
 public sealed record RegInstructionOperand(Register Register) : IInstructionOperand
@@ -17,6 +18,9 @@ public sealed record RegInstructionOperand(Register Register) : IInstructionOper
         var reg = registerMapping[Register];
         return $"{reg.ToString().ToLower()}";
     }
+
+    public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new RegInstructionOperand(map.GetOrKey(Register));
 }
 
 /// <summary>
@@ -36,6 +40,9 @@ public sealed record MemInstructionOperand(
         var displacementSegment = Displacement?.Value.ToString();
         return $"[{string.Join(" + ", new[] { regSegment, baseSegment, displacementSegment }.OfType<string>())}]";
     }
+
+    public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        this with { BaseReg = map.GetOrKey(BaseReg) };
 }
 
 public sealed record ImmInstructionOperand(RegisterValue Value) : IInstructionOperand
@@ -47,6 +54,7 @@ public sealed record ImmInstructionOperand(RegisterValue Value) : IInstructionOp
     {
         return $"{Value.Value}";
     }
+    public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) => this;
 }
 
 public static class InstructionOperandExtensions
