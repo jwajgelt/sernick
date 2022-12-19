@@ -69,8 +69,6 @@ public sealed class FunctionContext : IFunctionContext
         _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _oldDisplayValReg = new Register();
 
-        Depth = (parent?.Depth + 1) ?? 0;
-
         var fistArgOffset = POINTER_SIZE * (1 + _functionParameters.Count - 6);
         var argNum = 0;
         for (var i = 6; i < _functionParameters.Count; i++)
