@@ -780,15 +780,14 @@ public class AstToCfgConversionTest
         fCall.CodeGraph[^1].NextTree = fCondition;
 
         loopBlock.NextTree = fCall.CodeGraph[0];
-        var yDef = new SingleExitNode(loopBlock, varY.Write(0));
-        var xDef = new SingleExitNode(yDef, varXLocal.Write(1));
+        var xy = new SingleExitNode(loopBlock, new CodeTreeNode[] { varXLocal.Write(1), varY.Write(0) });
 
         var gRet = new SingleExitNode(gEpilogue, gResult.Write(gContext.GenerateVariableRead(paramVg) <= varX.Value));
         var xPlus1InG = new SingleExitNode(gRet, varX.Write(varX.Value + 1));
         var fRet = new SingleExitNode(fEpilogue, fResult.Write(fContext.GenerateVariableRead(paramVf) <= 5));
         var xPlus1InF = new SingleExitNode(fRet, varX.Write(varX.Value + 1));
 
-        var mainRoot = AddPrologue(mainContext, xDef);
+        var mainRoot = AddPrologue(mainContext, xy);
         var fRoot = AddPrologue(fContext, xPlus1InF);
         var gRoot = AddPrologue(gContext, xPlus1InG);
 
@@ -879,15 +878,14 @@ public class AstToCfgConversionTest
         fCall.CodeGraph[^1].NextTree = fCondition;
 
         loopBlock.NextTree = fCall.CodeGraph[0];
-        var yDef = new SingleExitNode(loopBlock, varY.Write(0));
-        var xDef = new SingleExitNode(yDef, varXLocal.Write(1));
+        var xy = new SingleExitNode(loopBlock, new CodeTreeNode[] { varXLocal.Write(1), varY.Write(0) });
 
         var gRet = new SingleExitNode(gEpilogue, gResult.Write(gContext.GenerateVariableRead(paramVg) <= varX.Value));
         var xPlus1InG = new SingleExitNode(gRet, varX.Write(varX.Value + 1));
         var fRet = new SingleExitNode(fEpilogue, fResult.Write(fContext.GenerateVariableRead(paramVf) <= 5));
         var xPlus1InF = new SingleExitNode(fRet, varX.Write(varX.Value + 1));
 
-        var mainRoot = AddPrologue(mainContext, xDef);
+        var mainRoot = AddPrologue(mainContext, xy);
         var fRoot = AddPrologue(fContext, xPlus1InF);
         var gRoot = AddPrologue(gContext, xPlus1InG);
 
@@ -993,14 +991,13 @@ public class AstToCfgConversionTest
         fCall.CodeGraph[^1].NextTree = fCondition;
 
         loopBlock.NextTree = fCall.CodeGraph[0];
-        var yDef = new SingleExitNode(loopBlock, varY.Write(0));
-        var xDef = new SingleExitNode(yDef, varXLocal.Write(10));
+        var xy = new SingleExitNode(loopBlock, new CodeTreeNode[] { varXLocal.Write(10), varY.Write(0) });
 
         var hRet = new SingleExitNode(hEpilogue, hResult.Write(varX.Value <= hContext.GenerateVariableRead(paramVh)));
         var gRet = new SingleExitNode(gEpilogue, gResult.Write(gContext.GenerateVariableRead(paramVg) <= varX.Value));
         var fRet = new SingleExitNode(fEpilogue, fResult.Write(fContext.GenerateVariableRead(paramVf) <= 5));
 
-        var mainRoot = AddPrologue(mainContext, xDef);
+        var mainRoot = AddPrologue(mainContext, xy);
         var fRoot = AddPrologue(fContext, fRet);
         var gRoot = AddPrologue(gContext, gRet);
         var hRoot = AddPrologue(hContext, hRet);

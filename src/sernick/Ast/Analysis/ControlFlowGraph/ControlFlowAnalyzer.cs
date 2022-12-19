@@ -368,6 +368,11 @@ public static class ControlFlowAnalyzer
     {
         protected override bool VisitAstNode(AstNode node, ISet<AstNode> set)
         {
+            if (node is FunctionDefinition)
+            {
+                return false;
+            }
+
             var children = node.Children.Select(childNode => childNode.Accept(this, set)).ToList();
 
             if (node is not (FlowControlStatement or Infix { Operator: Infix.Op.ScAnd or Infix.Op.ScOr }) &&
