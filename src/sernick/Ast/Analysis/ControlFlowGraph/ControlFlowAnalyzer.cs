@@ -104,7 +104,8 @@ public static class ControlFlowAnalyzer
                 null,
                 epilogue[0],
                 resultVariable,
-                resultVariable
+                resultVariable,
+                false
             ));
 
         return prologue[0];
@@ -117,7 +118,8 @@ public static class ControlFlowAnalyzer
         CodeTreeRoot? Continue, // CFG node that will be visited after a continue statement
         CodeTreeRoot Return, // CFG node that will be visited after a return statement
         IFunctionVariable? ResultVariable, // variable in which the result of the given tree should be stored
-        IFunctionVariable? ReturnResultVariable // variable in which the return result should be stored
+        IFunctionVariable? ReturnResultVariable, // variable in which the return result should be stored
+        bool IsCondition
     );
 
     private class TemporaryLocalVariable : IFunctionVariable { }
@@ -175,7 +177,7 @@ public static class ControlFlowAnalyzer
             }
 
             var result = param.Next;
-            var nextParam = param;
+            var nextParam = param with { IsCondition = false };
             foreach (var currentNode in node.Children.Reverse())
             {
                 result = currentNode.Accept(this, nextParam);
@@ -188,7 +190,7 @@ public static class ControlFlowAnalyzer
         public override CodeTreeRoot VisitLoopStatement(LoopStatement node, ControlFlowVisitorParam param)
         {
             var result = new SingleExitNode(null, Array.Empty<CodeTreeNode>());
-            result.NextTree = node.Inner.Accept(this, param with { Next = result, Break = param.Next, Continue = result });
+            result.NextTree = node.Inner.Accept(this, param with { Next = result, Break = param.Next, Continue = result, IsCondition = false });
             return result;
         }
 
@@ -203,7 +205,8 @@ public static class ControlFlowAnalyzer
                     node.ElseBlock?.Accept(this, param) ?? param.Next,
                     _currentFunctionContext.GenerateVariableRead(tempVariable)
                 ),
-                ResultVariable = tempVariable
+                ResultVariable = tempVariable,
+                IsCondition = true
             });
         }
 
@@ -243,11 +246,7 @@ public static class ControlFlowAnalyzer
             {
                 var (leftVariable, leftVariableValueNode) = GenerateTemporaryAst(node.Left);
                 var (rightVariable, rightVariableValueNode) = GenerateTemporaryAst(node.Right);
-                var infix = node with
-                {
-                    Left = leftVariableValueNode,
-                    Right = rightVariableValueNode
-                };
+                var infix = node with { Left = leftVariableValueNode, Right = rightVariableValueNode };
                 return node.Left.Accept(this,
                     param with
                     {
@@ -262,36 +261,29 @@ public static class ControlFlowAnalyzer
                 );
             }
 
-            var leftTempVariable = _variableFactory.NewVariable();
-            var rightTempVariable = _variableFactory.NewVariable();
-            var evaluateRight = node.Right.Accept(this,
-                param with
-                {
-                    Next = param.ResultVariable is not null
-                        ? new SingleExitNode(param.Next, new[]
-                        {
-                            _currentFunctionContext.GenerateVariableWrite(param.ResultVariable,
-                                _currentFunctionContext.GenerateVariableRead(rightTempVariable))
-                        })
-                        : param.Next,
-                    ResultVariable = rightTempVariable
-                });
-            var returnLeft = param.ResultVariable is not null
-                ? new SingleExitNode(param.Next, new[]
-                {
-                    _currentFunctionContext.GenerateVariableWrite(param.ResultVariable,
-                        _currentFunctionContext.GenerateVariableRead(leftTempVariable))
-                })
-                : param.Next;
+            // if this expression is a part of a if statement condition, then skip checking the condition for a second time
+            CodeTreeRoot next;
+            if (param.IsCondition && param.Next is ConditionalJumpNode conditionalJumpNode)
+            {
+                next = node.Operator is Infix.Op.ScAnd ? conditionalJumpNode.FalseCase : conditionalJumpNode.TrueCase;
+            }
+            else
+            {
+                next = param.Next;
+            }
+
+            var variable = param.ResultVariable ?? _variableFactory.NewVariable();
+            var evaluateRight = node.Right.Accept(this, param with { ResultVariable = variable });
+            var returnLeft = next;
 
             return node.Left.Accept(this, param with
             {
                 Next = new ConditionalJumpNode(
                     node.Operator is Infix.Op.ScAnd ? evaluateRight : returnLeft,
                     node.Operator is Infix.Op.ScAnd ? returnLeft : evaluateRight,
-                    _currentFunctionContext.GenerateVariableRead(leftTempVariable)
+                    _currentFunctionContext.GenerateVariableRead(variable)
                 ),
-                ResultVariable = leftTempVariable
+                ResultVariable = variable
             });
 
         }
@@ -308,7 +300,7 @@ public static class ControlFlowAnalyzer
             var arguments = node.Arguments.Reverse().Select(argumentNode =>
             {
                 var (tempVariable, variableValueNode) = GenerateTemporaryAst(argumentNode);
-                result = argumentNode.Accept(this, param with { Next = result, ResultVariable = tempVariable });
+                result = argumentNode.Accept(this, param with { Next = result, ResultVariable = tempVariable, IsCondition = false });
                 return variableValueNode;
             }).Reverse();
 
