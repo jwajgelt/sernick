@@ -1,8 +1,9 @@
 namespace sernick.Compiler;
 
-using System.Diagnostics;
+using System.Reflection;
 using Ast.Analysis.ControlFlowGraph;
 using Ast.Analysis.FunctionContextMap;
+using CodeGeneration;
 using CodeGeneration.LivenessAnalysis;
 using CodeGeneration.RegisterAllocation;
 using ControlFlowGraph.Analysis;
@@ -13,6 +14,14 @@ using Utility;
 
 public static class CompilerBackend
 {
+    /// <summary>
+    /// Backend phase.
+    /// </summary>
+    /// <param name="programName">Filename that is being compiled, without ".ser" extension</param>
+    /// <param name="programInfo">Result of frontend phase</param>
+    /// <returns>Filename of output binary</returns>
+    /// <exception cref="AssemblingException"></exception>
+    /// <exception cref="CompilationException"></exception>
     public static string Process(string programName, CompilerFrontendResult programInfo)
     {
         var (astRoot, nameResolution, typeCheckingResult, callGraph, variableAccessMap) = programInfo;
@@ -23,61 +32,60 @@ public static class CompilerBackend
             root =>
                 ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, SideEffectsAnalyzer.PullOutSideEffects));
 
-        var linearizator = new Linearizator(new InstructionCovering(SernickInstructionSet.Rules));
-        var regAllocator = new RegisterAllocator(HardwareRegister.RAX.Enumerate()); // TODO: hardware regs
+        var instructionCovering = new InstructionCovering(SernickInstructionSet.Rules);
+        var linearizator = new Linearizator(instructionCovering);
+        var regAllocator = new RegisterAllocator(allRegisters);
+        var spilledRegAllocator = new RegisterAllocator(reducedRegisters);
+        var spillsRegAllocator = new SpillsAllocator(spillsRegisters, instructionCovering);
 
         var asm = functionCodeTreeMap
             .SelectMany((funcDef, codeTree) =>
             {
-                var asm = linearizator.Linearize(codeTree).ToList();
+                IReadOnlyList<IAsmable> asm = linearizator.Linearize(codeTree).ToList();
                 var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(asm);
                 var regAllocation = regAllocator.Process(interferenceGraph, copyGraph);
-                // TODO: integrate spills
+                IReadOnlyDictionary<Register, HardwareRegister> completeRegAllocation;
+
+                if (regAllocation.Values.Any(reg => reg is null))
+                {
+                    regAllocation = spilledRegAllocator.Process(interferenceGraph, copyGraph);
+                    (asm, completeRegAllocation) = spillsRegAllocator.Process(asm, functionContextMap[funcDef], regAllocation);
+                }
+                else
+                {
+                    completeRegAllocation = regAllocation!;
+                }
+
                 return functionContextMap[funcDef].Label.Enumerate().Concat(asm)
-                    .Select(asmable => asmable.ToAsm(regAllocation));
+                    .Select(asmable => asmable.ToAsm(completeRegAllocation));
             });
 
         File.WriteAllText($"{programName}.asm", string.Join(Environment.NewLine, asm));
 
-        var (errors, _) = RunProcess("nasm", $"-f elf64 -o {programName}.o {programName}.asm");
+        var (errors, _) = "nasm".RunProcess($"-f elf64 -o {programName}.o {programName}.asm");
 
         if (errors.Length > 0)
         {
-            throw new CompilationException();
+            throw new AssemblingException(errors);
         }
 
-        (errors, _) = RunProcess("gcc", $"-no-pie -o {programName}.out {programName}.o");
+        (errors, _) = "gcc".RunProcess($"-no-pie -o {programName}.out {programName}.o");
 
         if (errors.Length > 0)
         {
-            throw new CompilationException();
+            throw new CompilationException(errors);
         }
 
         return $"{programName}.out";
     }
 
-    private static (string stderr, string stdout) RunProcess(string cmd, string arguments = "")
-    {
-        var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = cmd,
-                Arguments = arguments,
-                RedirectStandardInput = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                UseShellExecute = false
-            }
-        };
+    private static readonly IReadOnlyList<HardwareRegister> allRegisters = typeof(HardwareRegister)
+        .GetFields(BindingFlags.Public | BindingFlags.Static)
+        .Where(f => f.FieldType == typeof(HardwareRegister))
+        .Select(f => (HardwareRegister)f.GetValue(null)!)
+        .ToList();
 
-        process.Start();
+    private static readonly HardwareRegister[] spillsRegisters = { HardwareRegister.R10, HardwareRegister.R11 };
 
-        var stdout = process.StandardOutput.ReadToEnd();
-        var stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit();
-
-        return (stderr, stdout);
-    }
+    private static readonly IReadOnlyList<HardwareRegister> reducedRegisters = allRegisters.Except(spillsRegisters).ToList();
 }
