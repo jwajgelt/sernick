@@ -23,6 +23,6 @@ public sealed record Label(string Value) : IAsmable
     public static implicit operator Label(string name) => new(name);
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
-        throw new NotImplementedException();
+        return $"{Value}:";
     }
 }

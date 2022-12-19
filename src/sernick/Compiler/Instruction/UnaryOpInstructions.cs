@@ -45,6 +45,7 @@ public sealed record UnaryOpInstruction(UnaryOp Op, IInstructionOperand Operand)
 
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
-        throw new NotImplementedException();
+        var operandSegment = Operand.ToAsm(registerMapping);
+        return $"\t{Op.ToString().ToLower()}\t{operandSegment}";
     }
 }

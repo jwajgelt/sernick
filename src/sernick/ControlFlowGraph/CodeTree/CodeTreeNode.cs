@@ -5,8 +5,16 @@ using Compiler.Function;
 /// <summary>
 /// Struct for values which can fit in a register
 /// </summary>
-public record struct RegisterValue(long Value)
+public sealed record RegisterValue
 {
+    public RegisterValue(long value, bool isFinal = true)
+    {
+        Value = value;
+        IsFinal = isFinal;
+    }
+
+    public long Value { get; set; }
+    public bool IsFinal { get; }
     public override string ToString() => $"{Value}";
 }
 

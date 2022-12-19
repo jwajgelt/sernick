@@ -4,7 +4,7 @@ using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 using Utility;
 
-public interface IInstructionOperand
+public interface IInstructionOperand : IAsmable
 {
     IEnumerable<Register> RegistersUsed { get; }
     IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map);
@@ -13,6 +13,11 @@ public interface IInstructionOperand
 public sealed record RegInstructionOperand(Register Register) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => Register.Enumerate();
+    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    {
+        var reg = registerMapping[Register];
+        return $"{reg.ToString().ToLower()}";
+    }
 
     public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
         new RegInstructionOperand(map.GetOrKey(Register));
@@ -28,6 +33,13 @@ public sealed record MemInstructionOperand(
     RegisterValue? Displacement) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => BaseReg.Enumerate().OfType<Register>();
+    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    {
+        var regSegment = BaseReg is not null ? registerMapping[BaseReg].ToString().ToLower() : null;
+        var baseSegment = BaseAddress?.Value.ToString();
+        var displacementSegment = Displacement?.Value.ToString();
+        return $"[{string.Join(" + ", new[] { regSegment, baseSegment, displacementSegment }.OfType<string>())}]";
+    }
 
     public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
         this with { BaseReg = map.GetOrKey(BaseReg) };
@@ -36,6 +48,12 @@ public sealed record MemInstructionOperand(
 public sealed record ImmInstructionOperand(RegisterValue Value) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => Enumerable.Empty<Register>();
+
+    public override string ToString() => Value.ToString();
+    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    {
+        return $"{Value.Value}";
+    }
     public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) => this;
 }
 
