@@ -15,6 +15,16 @@ public class LinearizatorTest
         public Label? PossibleJump { get; }
         public bool IsCopy { get; }
         public CodeTreeRoot Node { get; }
+        public IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map)
+        {
+            return new Mock<IInstruction>().Object;
+        }
+
+        public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+        {
+            return "";
+        }
+
         public IdentityInstructionNode(CodeTreeRoot node)
         {
             Node = node;
