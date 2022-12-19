@@ -1,5 +1,7 @@
 namespace sernick.Utility;
 
+using System.Diagnostics.CodeAnalysis;
+
 public static class DictionaryExtensions
 {
     public static TValue GetOrAddEmpty<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
@@ -12,9 +14,15 @@ public static class DictionaryExtensions
     public static IReadOnlyDictionary<K, V> JoinWith<K, V>(
         this IReadOnlyDictionary<K, V> dict,
         IReadOnlyDictionary<K, V> other,
-        IEqualityComparer<K> comparer) where K : notnull
+        IEqualityComparer<K>? comparer = null) where K : notnull
     {
         return new[] { dict, other }.SelectMany(d => d)
             .ToDictionary(pair => pair.Key, pair => pair.Value, comparer);
+    }
+
+    [return: NotNullIfNotNull("key")]
+    public static TType? GetOrKey<TType>(this IReadOnlyDictionary<TType, TType> dictionary, TType? key)
+    {
+        return key != null && dictionary.TryGetValue(key, out var value) ? value : key;
     }
 }

@@ -26,6 +26,9 @@ public abstract record ConditionalInstruction(ConditionCode Code) : IInstruction
     public abstract bool PossibleFollow { get; }
     public abstract Label? PossibleJump { get; }
     public abstract bool IsCopy { get; }
+
+    public abstract IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map);
+
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
         throw new NotImplementedException();
@@ -43,6 +46,9 @@ public sealed record SetCcInstruction(ConditionCode Code, Register Register) : C
     public override Label? PossibleJump => null;
 
     public override bool IsCopy => false;
+
+    public override IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new SetCcInstruction(Code, map.GetOrKey(Register));
 }
 
 public sealed record JmpCcInstruction(ConditionCode Code, Label Location) : ConditionalInstruction(Code)
@@ -56,4 +62,6 @@ public sealed record JmpCcInstruction(ConditionCode Code, Label Location) : Cond
     public override Label PossibleJump => Location;
 
     public override bool IsCopy => false;
+
+    public override IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) => this;
 }

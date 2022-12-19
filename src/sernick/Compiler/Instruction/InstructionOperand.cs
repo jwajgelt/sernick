@@ -7,11 +7,15 @@ using Utility;
 public interface IInstructionOperand
 {
     IEnumerable<Register> RegistersUsed { get; }
+    IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map);
 }
 
 public sealed record RegInstructionOperand(Register Register) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => Register.Enumerate();
+
+    public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new RegInstructionOperand(map.GetOrKey(Register));
 }
 
 /// <summary>
@@ -24,11 +28,15 @@ public sealed record MemInstructionOperand(
     RegisterValue? Displacement) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => BaseReg.Enumerate().OfType<Register>();
+
+    public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        this with { BaseReg = map.GetOrKey(BaseReg) };
 }
 
 public sealed record ImmInstructionOperand(RegisterValue Value) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => Enumerable.Empty<Register>();
+    public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) => this;
 }
 
 public static class InstructionOperandExtensions
