@@ -54,7 +54,8 @@ public sealed record SingleExitNode(IReadOnlyList<CodeTreeNode> Operations) : Co
 
     public CodeTreeRoot? NextTree { get; set; } = null;
 
-    private readonly Lazy<string> _toString = new(() => string.Join(',', Operations) + '\n');
+    private readonly Lazy<string> _toString =
+        new(() => (Operations.Count > 0 ? string.Join(',', Operations) : "[empty]") + '\n');
     public override string ToString() =>
         _toString.IsValueCreated ? $"Visited -> {_toString.Value}" : $"{_toString.Value}{NextTree}";
 }
