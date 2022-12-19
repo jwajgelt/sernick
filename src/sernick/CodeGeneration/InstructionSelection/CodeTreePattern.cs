@@ -9,7 +9,7 @@ public static class CodeTreePatternPredicates
 {
     public static Predicate<T> Any<T>() => _ => true;
     public static Predicate<T> Is<T>(T expected) => given => Equals(given, expected);
-    public static Predicate<RegisterValue> IsZero => node => node.Value == 0;
+    public static Predicate<RegisterValue> IsZero => node => node.Value == 0 && node.IsFinal;
 
     public static Predicate<T> IsAnyOf<T>(params T[] expected) => expected.Contains;
 }

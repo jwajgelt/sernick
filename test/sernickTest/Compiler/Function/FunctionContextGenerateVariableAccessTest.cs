@@ -1,6 +1,7 @@
 namespace sernickTest.Compiler.Function;
 
 using sernick.Ast;
+using sernick.CodeGeneration;
 using sernick.Compiler.Function;
 using sernick.ControlFlowGraph.CodeTree;
 using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
@@ -102,7 +103,7 @@ public class FunctionContextGenerateVariableAccessTest
     public void Generates_Indirect_MemoryRead_outer_Variable()
     {
         var variable = Var("x");
-        var displayAddress = new GlobalAddress("display");
+        var displayAddress = new GlobalAddress(DisplayTable.DISPLAY_TABLE_SYMBOL);
 
         var parentContext = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         parentContext.AddLocal(variable, true);
@@ -120,7 +121,7 @@ public class FunctionContextGenerateVariableAccessTest
     {
         var variable = Var("x");
         var value = new Constant(new RegisterValue(1));
-        var displayAddress = new GlobalAddress("display");
+        var displayAddress = new GlobalAddress(DisplayTable.DISPLAY_TABLE_SYMBOL);
 
         var parentContext = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         parentContext.AddLocal(variable, true);

@@ -5,6 +5,8 @@ using Compiler.Function;
 using NameResolution;
 using Nodes;
 using Utility;
+using static ExternalFunctionsInfo;
+using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.DistinctionNumberProvider;
 
 /// <summary>
 ///     Static class with <see cref="Process"/> method, which constructs <see cref="IFunctionContext"/> for each
@@ -12,9 +14,10 @@ using Utility;
 /// </summary>
 public static class FunctionContextMapProcessor
 {
-    public static FunctionContextMap Process(AstNode ast, NameResolutionResult nameResolution, IFunctionFactory contextFactory)
+    public static FunctionContextMap Process(AstNode ast, NameResolutionResult nameResolution,
+        DistinctionNumberProvider provider, IFunctionFactory contextFactory)
     {
-        var visitor = new FunctionContextProcessVisitor(nameResolution, contextFactory);
+        var visitor = new FunctionContextProcessVisitor(nameResolution, provider, contextFactory);
         visitor.VisitAstTree(ast, new AstNodeContext());
         return visitor.ContextMap;
     }
@@ -32,12 +35,13 @@ public static class FunctionContextMapProcessor
         public readonly FunctionContextMap ContextMap = new();
 
         private readonly NameResolutionResult _nameResolution;
+        private readonly DistinctionNumberProvider _provider;
         private readonly IFunctionFactory _contextFactory;
 
         private readonly FunctionLocalVariables _locals = new();
 
-        public FunctionContextProcessVisitor(NameResolutionResult nameResolution, IFunctionFactory contextFactory) =>
-            (_nameResolution, _contextFactory) = (nameResolution, contextFactory);
+        public FunctionContextProcessVisitor(NameResolutionResult nameResolution, DistinctionNumberProvider provider, IFunctionFactory contextFactory) =>
+            (_nameResolution, _provider, _contextFactory) = (nameResolution, provider, contextFactory);
 
         protected override Unit VisitAstNode(AstNode node, AstNodeContext param)
         {
@@ -54,6 +58,7 @@ public static class FunctionContextMapProcessor
             var functionContext = _contextFactory.CreateFunction(
                 parent: astContext.EnclosingFunction is not null ? ContextMap[astContext.EnclosingFunction] : null,
                 name: node.Name,
+                _provider(node),
                 parameters: node.Parameters.ToList(),
                 returnsValue: !node.ReturnType.Equals(new UnitType()));
 
@@ -91,7 +96,10 @@ public static class FunctionContextMapProcessor
             }
 
             var functionDeclaration = _nameResolution.CalledFunctionDeclarations[node];
-            ContextMap[node] = ContextMap[functionDeclaration];
+            ContextMap[node] = ExternalFunctions
+                .Where(external => ReferenceEquals(functionDeclaration, external.Definition))
+                .Select(external => external.Caller)
+                .FirstOrDefault(ContextMap[functionDeclaration]);
 
             return Unit.I;
         }

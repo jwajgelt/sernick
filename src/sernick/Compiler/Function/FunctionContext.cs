@@ -2,46 +2,19 @@ namespace sernick.Compiler.Function;
 
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
-using static Compiler.PlatformConstants;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
+using static Convention;
+using static Helpers;
+using static PlatformConstants;
 
 public sealed class FunctionContext : IFunctionContext
 {
-    private static readonly HardwareRegister[] calleeToSave = {
-        HardwareRegister.R12,
-        HardwareRegister.R13,
-        HardwareRegister.R14,
-        HardwareRegister.R15,
-        HardwareRegister.RBX,
-        HardwareRegister.RDI,
-        HardwareRegister.RSI,
-    };
-
-    private static readonly HardwareRegister[] callerToSave = {
-        HardwareRegister.R8,
-        HardwareRegister.R9,
-        HardwareRegister.R10,
-        HardwareRegister.R11,
-        HardwareRegister.RAX,
-        HardwareRegister.RCX,
-        HardwareRegister.RDX,
-    };
-
-    private static readonly HardwareRegister[] argumentRegisters = {
-        HardwareRegister.RDI,
-        HardwareRegister.RSI,
-        HardwareRegister.RDX,
-        HardwareRegister.RCX,
-        HardwareRegister.R8,
-        HardwareRegister.R9,
-    };
-
     private readonly IFunctionContext? _parentContext;
     private readonly IReadOnlyList<IFunctionParam> _functionParameters;
 
     // Maps accesses to registers/memory
     private readonly Dictionary<IFunctionVariable, VariableLocation> _localVariableLocation;
-    private int _localsOffset;
+    private readonly RegisterValue _localsOffset;
     private readonly CodeTreeValueNode _displayEntry;
     private readonly Register _oldDisplayValReg;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
@@ -55,7 +28,7 @@ public sealed class FunctionContext : IFunctionContext
         IReadOnlyList<IFunctionParam> parameters,
         bool returnsValue,
         Label label
-        )
+    )
     {
         Label = label;
         Depth = (parent?.Depth + 1) ?? 0;
@@ -64,14 +37,14 @@ public sealed class FunctionContext : IFunctionContext
         _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
         _parentContext = parent;
         _functionParameters = parameters;
-        _localsOffset = 0;
-        _displayEntry = new GlobalAddress("display") + POINTER_SIZE * Depth;
-        _registerToTemporaryMap = calleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
+        _registerToTemporaryMap = CalleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
+        _localsOffset = new RegisterValue(0, false);
+        _displayEntry = new GlobalAddress(DisplayTable.DISPLAY_TABLE_SYMBOL) + POINTER_SIZE * Depth;
         _oldDisplayValReg = new Register();
 
-        var fistArgOffset = POINTER_SIZE * (1 + _functionParameters.Count - 6);
+        var fistArgOffset = POINTER_SIZE * (1 + _functionParameters.Count - REG_ARGS_COUNT);
         var argNum = 0;
-        for (var i = 6; i < _functionParameters.Count; i++)
+        for (var i = REG_ARGS_COUNT; i < _functionParameters.Count; i++)
         {
             _localVariableLocation.Add(_functionParameters[i], new MemoryLocation(-(fistArgOffset - POINTER_SIZE * argNum)));
             argNum += 1;
@@ -82,9 +55,9 @@ public sealed class FunctionContext : IFunctionContext
     {
         if (usedElsewhere)
         {
-            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset + POINTER_SIZE)))
+            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset.Value + POINTER_SIZE)))
             {
-                _localsOffset += POINTER_SIZE;
+                _localsOffset.Value += POINTER_SIZE;
             }
         }
         else
@@ -99,7 +72,7 @@ public sealed class FunctionContext : IFunctionContext
 
         // Caller-saved registers
         var callerSavedMap = new Dictionary<HardwareRegister, Register>(ReferenceEqualityComparer.Instance);
-        foreach (var reg in callerToSave)
+        foreach (var reg in CallerToSave)
         {
             var tempReg = new Register();
             callerSavedMap[reg] = tempReg;
@@ -125,11 +98,11 @@ public sealed class FunctionContext : IFunctionContext
 
         for (var i = 0; i < allArgs.Count; i++)
         {
-            (i < 6 ? regArgs : stackArgs).Add(allArgs[i]);
+            (i < REG_ARGS_COUNT ? regArgs : stackArgs).Add(allArgs[i]);
         }
 
         // Put args into registers
-        operations.AddRange(argumentRegisters.Zip(regArgs).Select(p => Reg(p.First).Write(p.Second)));
+        operations.AddRange(ArgumentRegisters.Zip(regArgs).Select(p => Reg(p.First).Write(p.Second)));
 
         // Put args onto stack
         foreach (var arg in stackArgs)
@@ -138,8 +111,16 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(Mem(rspRead).Write(arg));
         }
 
-        // Performing actual call (puts return addess on stack and jumps)
+        // Align the stack
+        var tmpRsp = Reg(new Register());
+        operations.Add(tmpRsp.Write(rspRead));
+        operations.Add(Reg(rsp).Write(rspRead & -2 * POINTER_SIZE));
+
+        // Performing actual call (puts return address on stack and jumps)
         operations.Add(new FunctionCall(this));
+
+        // Restore stack pointer
+        operations.Add(Reg(rsp).Write(tmpRsp.Read()));
 
         // Remove arguments from stack (we already returned from call)
         operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE * arguments.Count));
@@ -155,7 +136,7 @@ public sealed class FunctionContext : IFunctionContext
         }
 
         // Retrieve values of caller-saved registers
-        foreach (var reg in callerToSave)
+        foreach (var reg in CallerToSave)
         {
             var tempReg = callerSavedMap[reg];
             var tempVal = Reg(tempReg).Read();
@@ -194,12 +175,12 @@ public sealed class FunctionContext : IFunctionContext
 
         // Write arguments to known locations
         var paramNum = _functionParameters.Count;
-        var regParamsNum = Math.Min(paramNum, 6);
-        operations.AddRange(_functionParameters.Zip(argumentRegisters).Take(regParamsNum)
+        var regParamsNum = Math.Min(paramNum, REG_ARGS_COUNT);
+        operations.AddRange(_functionParameters.Zip(ArgumentRegisters).Take(regParamsNum)
             .Select(p => GenerateVariableWrite(p.First, Reg(p.Second).Read())));
 
         // Callee-saved registers
-        foreach (var reg in calleeToSave)
+        foreach (var reg in CalleeToSave)
         {
             var tempReg = _registerToTemporaryMap[reg];
             var regVal = Reg(reg).Read();
@@ -211,7 +192,7 @@ public sealed class FunctionContext : IFunctionContext
 
     public IReadOnlyList<SingleExitNode> GenerateEpilogue(CodeTreeValueNode? valToReturn)
     {
-        var operations = calleeToSave.Select(reg =>
+        var operations = CalleeToSave.Select(reg =>
             Reg(reg).Write(Reg(_registerToTemporaryMap[reg]).Read())).ToList<CodeTreeNode>();
 
         var rsp = HardwareRegister.RSP;
@@ -242,22 +223,6 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(new FunctionReturn());
 
         return CodeTreeListToSingleExitList(operations);
-    }
-
-    private static List<SingleExitNode> CodeTreeListToSingleExitList(List<CodeTreeNode> trees)
-    {
-        var result = new List<SingleExitNode>();
-        trees.Reverse();
-        SingleExitNode? nextRoot = null;
-        foreach (var tree in trees)
-        {
-            var treeRoot = new SingleExitNode(nextRoot, new List<CodeTreeNode> { tree });
-            result.Add(treeRoot);
-            nextRoot = treeRoot;
-        }
-
-        result.Reverse();
-        return result;
     }
 
     public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable) =>
@@ -291,7 +256,8 @@ public sealed class FunctionContext : IFunctionContext
 
     public VariableLocation AllocateStackFrameSlot()
     {
-        throw new NotImplementedException();
+        _localsOffset.Value += POINTER_SIZE;
+        return new MemoryLocation(_localsOffset.Value);
     }
 
     private CodeTreeValueNode GetParentsIndirectVariableLocation(IFunctionVariable variable)

@@ -33,10 +33,9 @@ public abstract record BinaryOpInstruction(IInstructionOperand Left, IInstructio
     public Label? PossibleJump => null;
 
     public bool IsCopy => false;
-    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
-    {
-        throw new NotImplementedException();
-    }
+    public abstract IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map);
+
+    public abstract string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping);
 }
 
 public enum BinaryAssignInstructionOp
@@ -70,6 +69,16 @@ public record BinaryAssignInstruction(BinaryAssignInstructionOp Op, IInstruction
 
     public override IEnumerable<Register> RegistersDefined =>
         Left.Enumerate().OfType<RegInstructionOperand>().Select(operand => operand.Register);
+
+    public override string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    {
+        var leftSegment = Left.ToAsm(registerMapping);
+        var rightSegment = Right.ToAsm(registerMapping);
+        return $"\t{Op.ToString().ToLower()}\t{leftSegment}, {rightSegment}";
+    }
+
+    public override IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new BinaryAssignInstruction(Op, Left.MapRegisters(map), Right.MapRegisters(map));
 }
 
 public enum BinaryComputeInstructionOp
@@ -101,4 +110,13 @@ public sealed record BinaryComputeInstruction(BinaryComputeInstructionOp Op, IIn
     }
 
     public override IEnumerable<Register> RegistersDefined => Enumerable.Empty<Register>();
+    public override string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    {
+        var leftSegment = Left.ToAsm(registerMapping);
+        var rightSegment = Right.ToAsm(registerMapping);
+        return $"\t{Op.ToString().ToLower()}\t{leftSegment}, {rightSegment}";
+    }
+
+    public override IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new BinaryComputeInstruction(Op, Left.MapRegisters(map), Right.MapRegisters(map));
 }

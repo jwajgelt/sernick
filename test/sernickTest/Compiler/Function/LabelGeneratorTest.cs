@@ -7,21 +7,32 @@ using static Ast.Helpers.AstNodesExtensions;
 public class LabelGeneratorTest
 {
     [Fact]
-    public void Generate_Case1()
+    public void Generate_Main()
     {
-        var result = LabelGenerator.Generate(null, Ident("Shouldn't matter"));
+        var result = LabelGenerator.Generate(null, Ident("Shouldn't matter"), null);
 
-        Assert.Equal("Main", result.Value);
+        Assert.Equal("main", result.Value);
     }
 
     [Fact]
-    public void Generate_Case2()
+    public void Generate_NoDistinctionNumber()
     {
         var fMock = new Mock<IFunctionContext>();
         fMock.SetupGet(f => f.Label).Returns("Outer");
 
-        var result = LabelGenerator.Generate(fMock.Object, Ident("Inner"));
+        var result = LabelGenerator.Generate(fMock.Object, Ident("Inner"), null);
 
-        Assert.Equal("Outer_Inner", result.Value);
+        Assert.Equal("Outer.Inner", result.Value);
+    }
+
+    [Fact]
+    public void Generate_WithDistinctionNumber()
+    {
+        var fMock = new Mock<IFunctionContext>();
+        fMock.SetupGet(f => f.Label).Returns("Outer");
+
+        var result = LabelGenerator.Generate(fMock.Object, Ident("Inner"), 3);
+
+        Assert.Equal("Outer.Inner#3", result.Value);
     }
 }
