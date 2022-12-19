@@ -121,7 +121,7 @@ public sealed class SpillsAllocator
     ///     an unique hardware register from <c>_registersReserve</c>.
     ///     If register has an assigned hardware register from reserve pool then it uses the same assigment.
     /// </summary>
-    /// <exception cref="Exception">Thrown if <c>_registersReserve</c> is to small.</exception>
+    /// <exception cref="Exception">Thrown if <c>_registersReserve</c> is too small.</exception>
     private IReadOnlyDictionary<Register, Register> AssignReservedRegisters(IEnumerable<Register> registers, IReadOnlyDictionary<Register, Register> partial)
     {
         var registerSet = registers.ToHashSet();
