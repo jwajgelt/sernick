@@ -27,8 +27,7 @@ public abstract record ConditionalInstruction(ConditionCode Code) : IInstruction
     public abstract Label? PossibleJump { get; }
     public abstract bool IsCopy { get; }
 
-    public abstract IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines,
-        IReadOnlyDictionary<Register, Register> uses);
+    public abstract IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map);
 
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
@@ -48,9 +47,8 @@ public sealed record SetCcInstruction(ConditionCode Code, Register Register) : C
 
     public override bool IsCopy => false;
 
-    public override IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines,
-        IReadOnlyDictionary<Register, Register> uses)
-        => new SetCcInstruction(Code, defines.GetOrKey(Register));
+    public override IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new SetCcInstruction(Code, map.GetOrKey(Register));
 }
 
 public sealed record JmpCcInstruction(ConditionCode Code, Label Location) : ConditionalInstruction(Code)
@@ -65,7 +63,5 @@ public sealed record JmpCcInstruction(ConditionCode Code, Label Location) : Cond
 
     public override bool IsCopy => false;
 
-    public override IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines,
-        IReadOnlyDictionary<Register, Register> uses)
-        => this;
+    public override IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) => this;
 }

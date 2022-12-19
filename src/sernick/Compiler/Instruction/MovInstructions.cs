@@ -43,17 +43,9 @@ public sealed record MovInstruction(IInstructionOperand Target, IInstructionOper
     public Label? PossibleJump => null;
 
     public bool IsCopy => Target is RegInstructionOperand && Source is RegInstructionOperand;
-    public IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines, IReadOnlyDictionary<Register, Register> uses)
-    {
-        return new MovInstruction(
-            Target: Target switch
-            {
-                RegInstructionOperand => Target.ReplaceRegisters(defines),
-                MemInstructionOperand => Target.ReplaceRegisters(uses),
-                _ => Target
-            },
-            Source: Source.ReplaceRegisters(uses));
-    }
+
+    public IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new MovInstruction(Target.MapRegisters(map), Source.MapRegisters(map));
 
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {

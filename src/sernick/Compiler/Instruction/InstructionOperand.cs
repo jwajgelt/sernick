@@ -7,16 +7,15 @@ using Utility;
 public interface IInstructionOperand
 {
     IEnumerable<Register> RegistersUsed { get; }
-    IInstructionOperand ReplaceRegisters(IReadOnlyDictionary<Register, Register> uses);
+    IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map);
 }
 
 public sealed record RegInstructionOperand(Register Register) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => Register.Enumerate();
-    public IInstructionOperand ReplaceRegisters(IReadOnlyDictionary<Register, Register> uses)
-    {
-        return new RegInstructionOperand(uses.GetOrKey(Register));
-    }
+
+    public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new RegInstructionOperand(map.GetOrKey(Register));
 }
 
 /// <summary>
@@ -28,16 +27,15 @@ public sealed record MemInstructionOperand(
     RegisterValue? Displacement) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => BaseReg.Enumerate().OfType<Register>();
-    public IInstructionOperand ReplaceRegisters(IReadOnlyDictionary<Register, Register> uses)
-    {
-        return this with { BaseReg = uses.GetOrKey(BaseReg) };
-    }
+
+    public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        this with { BaseReg = map.GetOrKey(BaseReg) };
 }
 
 public sealed record ImmInstructionOperand(RegisterValue Value) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => Enumerable.Empty<Register>();
-    public IInstructionOperand ReplaceRegisters(IReadOnlyDictionary<Register, Register> uses) => this;
+    public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) => this;
 }
 
 public static class InstructionOperandExtensions

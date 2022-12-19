@@ -33,9 +33,7 @@ public abstract record BinaryOpInstruction(IInstructionOperand Left, IInstructio
     public Label? PossibleJump => null;
 
     public bool IsCopy => false;
-
-    public abstract IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines,
-        IReadOnlyDictionary<Register, Register> uses);
+    public abstract IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map);
 
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
@@ -75,14 +73,8 @@ public record BinaryAssignInstruction(BinaryAssignInstructionOp Op, IInstruction
     public override IEnumerable<Register> RegistersDefined =>
         Left.Enumerate().OfType<RegInstructionOperand>().Select(operand => operand.Register);
 
-    public override IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines,
-        IReadOnlyDictionary<Register, Register> uses) =>
-        Left switch
-        {
-            RegInstructionOperand => new BinaryAssignInstruction(Op, Left.ReplaceRegisters(defines),
-                Right.ReplaceRegisters(uses)),
-            _ => new BinaryAssignInstruction(Op, Left.ReplaceRegisters(uses), Right.ReplaceRegisters(uses))
-        };
+    public override IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new BinaryAssignInstruction(Op, Left.MapRegisters(map), Right.MapRegisters(map));
 }
 
 public enum BinaryComputeInstructionOp
@@ -115,7 +107,6 @@ public sealed record BinaryComputeInstruction(BinaryComputeInstructionOp Op, IIn
 
     public override IEnumerable<Register> RegistersDefined => Enumerable.Empty<Register>();
 
-    public override IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines,
-        IReadOnlyDictionary<Register, Register> uses) =>
-        new BinaryComputeInstruction(Op, Left.ReplaceRegisters(uses), Right.ReplaceRegisters(uses));
+    public override IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new BinaryComputeInstruction(Op, Left.MapRegisters(map), Right.MapRegisters(map));
 }

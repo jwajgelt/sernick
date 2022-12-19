@@ -40,12 +40,8 @@ public sealed record UnaryOpInstruction(UnaryOp Op, IInstructionOperand Operand)
 
     public bool IsCopy => false;
 
-    public IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines, IReadOnlyDictionary<Register, Register> uses) =>
-        Operand switch
-        {
-            RegInstructionOperand => new UnaryOpInstruction(Op, Operand.ReplaceRegisters(defines)),
-            _ => new UnaryOpInstruction(Op, Operand.ReplaceRegisters(uses)),
-        };
+    public IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new UnaryOpInstruction(Op, Operand.MapRegisters(map));
 
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {

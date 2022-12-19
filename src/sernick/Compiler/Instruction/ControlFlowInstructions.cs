@@ -14,10 +14,7 @@ public abstract record TransferControlInstruction(Label Location) : IInstruction
     public Label PossibleJump => Location;
 
     public bool IsCopy => false;
-
-    public IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines,
-        IReadOnlyDictionary<Register, Register> uses) =>
-        this;
+    public IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) => this;
 
     public abstract string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping);
 }
@@ -49,10 +46,7 @@ public sealed record RetInstruction : IInstruction
     public Label? PossibleJump => null;
 
     public bool IsCopy => false;
-
-    public IInstruction ReplaceRegisters(IReadOnlyDictionary<Register, Register> defines,
-        IReadOnlyDictionary<Register, Register> uses) =>
-        this;
+    public IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) => this;
 
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {

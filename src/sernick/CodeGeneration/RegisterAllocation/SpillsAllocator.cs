@@ -1,5 +1,6 @@
 namespace sernick.CodeGeneration.RegisterAllocation;
 
+using System.Collections.Immutable;
 using Compiler.Function;
 using ControlFlowGraph.Analysis;
 using ControlFlowGraph.CodeTree;
@@ -52,27 +53,39 @@ public sealed class SpillsAllocator
                 return asmable.Enumerate();
             }
 
-            var usedRegisters = AssignReservedRegisters(instruction.RegistersUsed.Where(spillsLocation.ContainsKey));
-            var definedRegisters = AssignReservedRegisters(instruction.RegistersDefined.Where(spillsLocation.ContainsKey));
+            var usedRegisters = instruction.RegistersUsed.Where(spillsLocation.ContainsKey).ToList();
+            var definedRegisters = instruction.RegistersDefined.Where(spillsLocation.ContainsKey).ToList();
 
-            // Add read instructions from variable locations to a reserved registers
-            var spilledInstructions = usedRegisters.SelectMany(tuple =>
+            // Assign to each used register an unique hardware register from reserve pool.
+            var usesAssigment = AssignReservedRegisters(usedRegisters);
+
+            // Assign to each defined register an unique hardware register from reserve pool.
+            // If register has an assigned hardware register in `usesAssigment` use the same hardware register.
+            var definesAssigment = AssignReservedRegisters(definedRegisters, usesAssigment);
+
+            // Combine two assignments.
+            // Note that if `usesAssigment`, `definesAssigment` contain the same key
+            // then it should get the same hardware register.
+            var reserveAssigment = usesAssigment.JoinWith(definesAssigment);
+
+            // Add read instructions from variable locations to a reserved registers.
+            var spilledInstructions = usedRegisters.SelectMany(usedRegister =>
             {
-                var (spilledRegister, reservedRegister) = tuple;
-                var location = spillsLocation[spilledRegister];
+                var reservedRegister = reserveAssigment[usedRegister];
+                var location = spillsLocation[usedRegister];
                 var readCodeTree = new RegisterWrite(reservedRegister, location.GenerateRead());
                 return _instructionCovering.Cover(readCodeTree);
             });
 
             // Modify instruction to use reserved registers and add it to the assembly
-            var newInstruction = instruction.ReplaceRegisters(defines: definedRegisters, uses: usedRegisters);
+            var newInstruction = instruction.MapRegisters(reserveAssigment);
             spilledInstructions = spilledInstructions.Append(newInstruction);
 
             // Add write instructions from reserved registers to variable locations
-            spilledInstructions = spilledInstructions.Concat(definedRegisters.SelectMany(tuple =>
+            spilledInstructions = spilledInstructions.Concat(definedRegisters.SelectMany(definedRegister =>
             {
-                var (spilledRegister, reservedRegister) = tuple;
-                var location = spillsLocation[spilledRegister];
+                var reservedRegister = reserveAssigment[definedRegister];
+                var location = spillsLocation[definedRegister];
                 var writeCodeTree = location.GenerateWrite(new RegisterRead(reservedRegister));
                 return _instructionCovering.Cover(writeCodeTree);
             }));
@@ -93,16 +106,48 @@ public sealed class SpillsAllocator
         return (asm.SelectMany(HandleSpill).ToList(), newAllocation);
     }
 
+    /// <summary>
+    ///     Assigns to each register in <paramref name="registers"/>
+    ///     an unique hardware register from <c>_registersReserve</c>.
+    /// </summary>
+    /// <exception cref="Exception">Thrown if <c>_registersReserve</c> is to small.</exception>
     private IReadOnlyDictionary<Register, Register> AssignReservedRegisters(IEnumerable<Register> registers)
     {
-        var registerList = registers.ToList();
-        if (registerList.Count > _registersReserve.Count)
+        return AssignReservedRegisters(registers, ImmutableDictionary<Register, Register>.Empty);
+    }
+
+    /// <summary>
+    ///     Assigns to each register in <paramref name="registers"/>
+    ///     an unique hardware register from <c>_registersReserve</c>.
+    ///     If register has an assigned hardware register from reserve pool then it uses the same assigment.
+    /// </summary>
+    /// <exception cref="Exception">Thrown if <c>_registersReserve</c> is to small.</exception>
+    private IReadOnlyDictionary<Register, Register> AssignReservedRegisters(IEnumerable<Register> registers, IReadOnlyDictionary<Register, Register> partial)
+    {
+        var registerSet = registers.ToHashSet();
+
+        // narrow partial dictionary to only the keys from `registers`
+        var reserveAssigment = partial
+            .Where(entry => registerSet.Contains(entry.Key))
+            .ToDictionary(entry => entry.Key, entry => entry.Value);
+
+        var unassignedRegisters = registerSet.Where(register => !reserveAssigment.ContainsKey(register)).ToList();
+
+        // skip registers in reserve which are already used in partial assigment
+        var availableReserve = _registersReserve.Where(reserved => !reserveAssigment.ContainsValue(reserved)).ToList();
+
+        if (unassignedRegisters.Count > availableReserve.Count)
         {
             throw new Exception(
-                $"Not enough reserved registers, required {registerList.Count}, but got {_registersReserve.Count}");
+                $"Not enough reserved registers, required {unassignedRegisters.Count}, but got {availableReserve.Count}");
         }
 
-        return registerList.Zip(_registersReserve.ToList<Register>())
-            .ToDictionary(pair => pair.First, pair => pair.Second);
+        // add missing assignments 
+        foreach (var (register, reserve) in unassignedRegisters.Zip(availableReserve.ToList<Register>()))
+        {
+            reserveAssigment.Add(register, reserve);
+        }
+
+        return reserveAssigment;
     }
 }
