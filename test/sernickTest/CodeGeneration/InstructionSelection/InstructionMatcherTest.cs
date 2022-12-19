@@ -78,7 +78,7 @@ public class CodeTreePatternMatcherTest
             Enumerable.Empty<CodeTreeValueNode>()
         ),
         
-        // mov $reg, $addr[$displacement]
+        // mov $reg, [$addr + $displacement]
         (
             Pat.RegisterWrite(Any<Register>(), out _,
                 Pat.MemoryRead(Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _,
@@ -88,7 +88,7 @@ public class CodeTreePatternMatcherTest
             Enumerable.Empty<CodeTreeValueNode>()
         ),
         
-        // mov $addr[$displacement], *
+        // mov [$addr + $displacement], *
         (
             Pat.MemoryWrite(Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _,
                     Pat.GlobalAddress(out _), CodeTreePattern.Constant(Any<RegisterValue>(), out _)),

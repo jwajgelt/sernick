@@ -17,7 +17,8 @@ public static class CompilerBackend
     {
         var (astRoot, nameResolution, typeCheckingResult, callGraph, variableAccessMap) = programInfo;
 
-        var functionContextMap = FunctionContextMapProcessor.Process(astRoot, nameResolution, new FunctionFactory(LabelGenerator.Generate));
+        var functionContextMap = FunctionContextMapProcessor.Process(astRoot, nameResolution,
+            FunctionDistinctionNumberProcessor.Process(astRoot), new FunctionFactory(LabelGenerator.Generate));
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(astRoot,
             root =>
                 ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, SideEffectsAnalyzer.PullOutSideEffects));
