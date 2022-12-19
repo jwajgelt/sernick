@@ -39,8 +39,13 @@ public sealed record UnaryOpInstruction(UnaryOp Op, IInstructionOperand Operand)
     public Label? PossibleJump => null;
 
     public bool IsCopy => false;
+
+    public IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
+        new UnaryOpInstruction(Op, Operand.MapRegisters(map));
+
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
-        throw new NotImplementedException();
+        var operandSegment = Operand.ToAsm(registerMapping);
+        return $"\t{Op.ToString().ToLower()}\t{operandSegment}";
     }
 }
