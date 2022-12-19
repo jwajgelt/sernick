@@ -2,10 +2,10 @@ namespace sernick.Compiler.Function;
 
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
-using static Compiler.PlatformConstants;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static Convention;
 using static Helpers;
+using static PlatformConstants;
 
 public sealed class FunctionContext : IFunctionContext
 {
@@ -14,7 +14,7 @@ public sealed class FunctionContext : IFunctionContext
 
     // Maps accesses to registers/memory
     private readonly Dictionary<IFunctionVariable, VariableLocation> _localVariableLocation;
-    private int _localsOffset;
+    private readonly RegisterValue _localsOffset;
     private readonly CodeTreeValueNode _displayEntry;
     private readonly Register _oldDisplayValReg;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
@@ -37,9 +37,9 @@ public sealed class FunctionContext : IFunctionContext
         _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
         _parentContext = parent;
         _functionParameters = parameters;
-        _localsOffset = 0;
-        _displayEntry = new GlobalAddress("display") + POINTER_SIZE * Depth;
         _registerToTemporaryMap = CalleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
+        _localsOffset = new RegisterValue(0, false);
+        _displayEntry = new GlobalAddress(DisplayTable.DISPLAY_TABLE_SYMBOL) + POINTER_SIZE * Depth;
         _oldDisplayValReg = new Register();
 
         var fistArgOffset = POINTER_SIZE * (1 + _functionParameters.Count - REG_ARGS_COUNT);
@@ -55,9 +55,9 @@ public sealed class FunctionContext : IFunctionContext
     {
         if (usedElsewhere)
         {
-            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset + POINTER_SIZE)))
+            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset.Value + POINTER_SIZE)))
             {
-                _localsOffset += POINTER_SIZE;
+                _localsOffset.Value += POINTER_SIZE;
             }
         }
         else
@@ -116,7 +116,7 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(tmpRsp.Write(rspRead));
         operations.Add(Reg(rsp).Write(rspRead & -2 * POINTER_SIZE));
 
-        // Performing actual call (puts return addess on stack and jumps)
+        // Performing actual call (puts return address on stack and jumps)
         operations.Add(new FunctionCall(this));
 
         // Restore stack pointer
@@ -256,7 +256,8 @@ public sealed class FunctionContext : IFunctionContext
 
     public VariableLocation AllocateStackFrameSlot()
     {
-        throw new NotImplementedException();
+        _localsOffset.Value += POINTER_SIZE;
+        return new MemoryLocation(_localsOffset.Value);
     }
 
     private CodeTreeValueNode GetParentsIndirectVariableLocation(IFunctionVariable variable)
