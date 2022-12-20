@@ -4,6 +4,7 @@ using CodeGeneration;
 using CodeGeneration.InstructionSelection;
 using ControlFlowGraph.CodeTree;
 using Function;
+using Utility;
 using static CodeGeneration.InstructionSelection.CodeTreePatternPredicates;
 using Bin = BinaryOpInstruction;
 using Mov = MovInstruction;
@@ -78,6 +79,28 @@ public static class SernickInstructionSet
                         }.WithOutput(null));
             }
 
+            // mov $reg, [$reg + $displacement]
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.RegisterWrite(Any<Register>(), out var reg,
+                        Pat.MemoryRead(Pat.BinaryOperationNode(IsAnyOf(BinaryOperation.Add, BinaryOperation.Sub),
+                            out var op,
+                            Pat.RegisterRead(Any<Register>(), out var reg2),
+                            Pat.Constant(Any<RegisterValue>(), out var imm)))),
+                    (_, values) =>
+                    {
+                        var displacement = values.Get<RegisterValue>(imm);
+                        if (values.Get<BinaryOperation>(op) == BinaryOperation.Sub)
+                        {
+                            displacement.Value = -displacement.Value;
+                        }
+
+                        return Mov.ToReg(values.Get<Register>(reg)).FromMem(values.Get<Register>(reg2), displacement)
+                            .Enumerate()
+                            .WithOutput(null);
+                    });
+            }
+
             // mov $reg, [*]
             {
                 yield return new CodeTreeNodePatternRule(
@@ -111,6 +134,28 @@ public static class SernickInstructionSet
                         {
                             Mov.ToMem(values.Get<Label>(addr), values.Get<RegisterValue>(imm)).FromReg(inputs[0])
                         }.WithOutput(null));
+            }
+
+            // mov [$reg + $displacement], $reg
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.MemoryWrite(Pat.BinaryOperationNode(IsAnyOf(BinaryOperation.Add, BinaryOperation.Sub),
+                            out var op,
+                            Pat.RegisterRead(Any<Register>(), out var reg),
+                            Pat.Constant(Any<RegisterValue>(), out var imm)),
+                        Pat.RegisterRead(Any<Register>(), out var reg2)),
+                    (_, values) =>
+                    {
+                        var displacement = values.Get<RegisterValue>(imm);
+                        if (values.Get<BinaryOperation>(op) == BinaryOperation.Sub)
+                        {
+                            displacement.Value = -displacement.Value;
+                        }
+
+                        return Mov.ToMem(values.Get<Register>(reg), displacement).FromReg(values.Get<Register>(reg2))
+                            .Enumerate()
+                            .WithOutput(null);
+                    });
             }
 
             // mov [*], $const

@@ -66,5 +66,8 @@ public static class InstructionOperandExtensions
     public static MemInstructionOperand AsMemOperand(this (Label baseAddress, RegisterValue displacement) location) =>
         new(null, location.baseAddress, location.displacement);
 
+    public static MemInstructionOperand AsMemOperand(this (Register baseReg, RegisterValue displacement) location) =>
+        new(location.baseReg, null, location.displacement);
+
     public static ImmInstructionOperand AsOperand(this RegisterValue value) => new(value);
 }
