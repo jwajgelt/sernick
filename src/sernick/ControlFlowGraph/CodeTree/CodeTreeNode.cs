@@ -1,5 +1,6 @@
 namespace sernick.ControlFlowGraph.CodeTree;
 
+using CodeGeneration;
 using Compiler.Function;
 
 /// <summary>
@@ -115,9 +116,9 @@ public sealed record RegisterWrite(Register Register, CodeTreeValueNode Value) :
     public override string ToString() => $"{Register} = {Value}";
 }
 
-public sealed record GlobalAddress(string Label) : CodeTreeValueNode
+public sealed record GlobalAddress(Label Label) : CodeTreeValueNode
 {
-    public override string ToString() => $"{Label}";
+    public override string ToString() => $"{Label.Value}";
 }
 
 public sealed record MemoryRead(CodeTreeValueNode MemoryLocation) : CodeTreeValueNode
@@ -142,7 +143,7 @@ public sealed record FunctionCall(IFunctionCaller FunctionCaller) : CodeTreeNode
     public bool Equals(FunctionCall? other) => FunctionCaller.Label.Equals(other?.FunctionCaller.Label);
 }
 
-public sealed record FunctionReturn() : CodeTreeNode
+public sealed record FunctionReturn : CodeTreeNode
 {
     public override string ToString() => "Ret";
 }
