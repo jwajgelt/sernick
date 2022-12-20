@@ -13,11 +13,11 @@ public sealed class DisplayTable : IAsmable
         Size = size;
     }
 
-    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
+    public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> _)
     {
         return @$"
 section .bss
-{DISPLAY_TABLE_SYMBOL} resq {Size}
+    {DISPLAY_TABLE_SYMBOL} resq {Size}
 ";
     }
 }
