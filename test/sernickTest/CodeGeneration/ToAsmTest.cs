@@ -60,6 +60,21 @@ public class ToAsmTest
 
         Assert.Equal("[rax + 126]", asm);
     }
+    
+    [Fact]
+    public void MemInstructionOperandFromRegAndNegativeDisplacementToAsm()
+    {
+        var virtualReg = new Mock<Register>();
+        var hardwareReg = new Mock<HardwareRegister>(null);
+        hardwareReg.Setup(reg => reg.ToString()).Returns("RAX");
+        var dict = new Dictionary<Register, HardwareRegister> { [virtualReg.Object] = hardwareReg.Object };
+        var displacement = new RegisterValue(-979);
+        var memOp = new MemInstructionOperand(virtualReg.Object, null, displacement);
+
+        var asm = memOp.ToAsm(dict);
+
+        Assert.Equal("[rax - 979]", asm);
+    }
 
     [Fact]
     public void MemInstructionOperandFromLabelAndDisplacementToAsm()

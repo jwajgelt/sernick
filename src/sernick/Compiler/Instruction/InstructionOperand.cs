@@ -36,9 +36,10 @@ public sealed record MemInstructionOperand(
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
         var regSegment = BaseReg is not null ? registerMapping[BaseReg].ToString().ToLower() : null;
-        var baseSegment = BaseAddress?.Value.ToString();
+        var baseSegment = BaseAddress?.Value;
         var displacementSegment = Displacement?.Value.ToString();
-        return $"[{string.Join(" + ", new[] { regSegment, baseSegment, displacementSegment }.OfType<string>())}]";
+        var intermediateResult = $"[{string.Join(" + ", new[] { regSegment, baseSegment, displacementSegment }.OfType<string>())}]";
+        return intermediateResult.Replace("+ -", "- ");
     }
 
     public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
