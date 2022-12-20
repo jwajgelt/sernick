@@ -56,9 +56,10 @@ public static class LivenessAnalyzer
                                 result.Add(i + 1);
                             }
 
-                            if (instruction.PossibleJump != null)
+                            if (instruction.PossibleJump != null &&
+                                labelLocations.TryGetValue(instruction.PossibleJump, out var possibleJump))
                             {
-                                result.Add(labelLocations[instruction.PossibleJump]);
+                                result.Add(possibleJump);
                             }
 
                             return result;
