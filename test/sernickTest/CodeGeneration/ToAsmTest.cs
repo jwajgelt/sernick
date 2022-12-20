@@ -60,7 +60,7 @@ public class ToAsmTest
 
         Assert.Equal("[rax + 126]", asm);
     }
-    
+
     [Fact]
     public void MemInstructionOperandFromRegAndNegativeDisplacementToAsm()
     {
