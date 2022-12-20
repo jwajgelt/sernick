@@ -1,5 +1,6 @@
 namespace sernick.Compiler;
 
+using System.Collections.Immutable;
 using System.Reflection;
 using Ast.Analysis.ControlFlowGraph;
 using Ast.Analysis.FunctionContextMap;
@@ -17,12 +18,12 @@ public static class CompilerBackend
     /// <summary>
     /// Backend phase.
     /// </summary>
-    /// <param name="programName">Filename that is being compiled, without ".ser" extension</param>
+    /// <param name="filename">Filename with ".ser" that is being compiled</param>
     /// <param name="programInfo">Result of frontend phase</param>
     /// <returns>Filename of output binary</returns>
     /// <exception cref="AssemblingException"></exception>
     /// <exception cref="CompilationException"></exception>
-    public static string Process(string programName, CompilerFrontendResult programInfo)
+    public static string Process(string filename, CompilerFrontendResult programInfo)
     {
         var (astRoot, nameResolution, typeCheckingResult, callGraph, variableAccessMap) = programInfo;
 
@@ -38,45 +39,70 @@ public static class CompilerBackend
         var spilledRegAllocator = new RegisterAllocator(reducedRegisters);
         var spillsRegAllocator = new SpillsAllocator(spillsRegisters, instructionCovering);
 
-        var asm = functionCodeTreeMap
-            .SelectMany((funcDef, codeTree) =>
-            {
-                IReadOnlyList<IAsmable> asm = linearizator.Linearize(codeTree).ToList();
-                var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(asm);
-                var regAllocation = regAllocator.Process(interferenceGraph, copyGraph);
-                IReadOnlyDictionary<Register, HardwareRegister> completeRegAllocation;
+        var maxDepth = functionContextMap.Implementations.Values.Max(context => context.Depth);
+        var displayTable = new DisplayTable(maxDepth);
 
-                if (regAllocation.Values.Any(reg => reg is null))
+        var asm = "section .text".Enumerate()
+            .Append("extern scanf")
+            .Append("extern printf")
+            .Append("global main")
+            .Concat(functionCodeTreeMap
+                .SelectMany((funcDef, codeTree) =>
                 {
-                    regAllocation = spilledRegAllocator.Process(interferenceGraph, copyGraph);
-                    (asm, completeRegAllocation) = spillsRegAllocator.Process(asm, functionContextMap[funcDef], regAllocation);
-                }
-                else
-                {
-                    completeRegAllocation = regAllocation!;
-                }
+                    IReadOnlyList<IAsmable> asm = functionContextMap[funcDef].Label.Enumerate()
+                        .Concat(linearizator.Linearize(codeTree))
+                        .ToList();
+                    var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(asm);
+                    var regAllocation = regAllocator.Process(interferenceGraph, copyGraph);
+                    IReadOnlyDictionary<Register, HardwareRegister> completeRegAllocation;
 
-                return functionContextMap[funcDef].Label.Enumerate().Concat(asm)
-                    .Select(asmable => asmable.ToAsm(completeRegAllocation));
-            });
+                    if (regAllocation.Values.Any(reg => reg is null))
+                    {
+                        regAllocation = spilledRegAllocator.Process(interferenceGraph, copyGraph);
+                        (asm, completeRegAllocation) = spillsRegAllocator.Process(asm, functionContextMap[funcDef], regAllocation);
+                        foreach (var asmable in asm)
+                        {
+                            try
+                            {
+                                asmable.ToAsm(completeRegAllocation);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(asmable);
+                                Console.WriteLine(e);
+                                throw;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        completeRegAllocation = regAllocation!;
+                    }
 
-        File.WriteAllText($"{programName}.asm", string.Join(Environment.NewLine, asm));
+                    return asm.Select(asmable => asmable.ToAsm(completeRegAllocation));
+                }))
+            .Append(displayTable.ToAsm(ImmutableDictionary<Register, HardwareRegister>.Empty));
 
-        var (errors, _) = "nasm".RunProcess($"-f elf64 -o {programName}.o {programName}.asm");
+        var asmFilename = Path.ChangeExtension(filename, ".asm");
+        File.WriteAllText(asmFilename, string.Join(Environment.NewLine, asm));
+
+        var oFilename = Path.ChangeExtension(filename, ".o");
+        var (errors, _) = "nasm".RunProcess($"-f elf64 -o {oFilename} {asmFilename}");
 
         if (errors.Length > 0)
         {
             throw new AssemblingException(errors);
         }
 
-        (errors, _) = "gcc".RunProcess($"-no-pie -o {programName}.out {programName}.o");
+        var outFilename = Path.ChangeExtension(filename, ".out");
+        (errors, _) = "gcc".RunProcess($"-no-pie -o {outFilename} {oFilename}");
 
         if (errors.Length > 0)
         {
-            throw new CompilationException(errors);
+            throw new LinkingException(errors);
         }
 
-        return $"{programName}.out";
+        return outFilename;
     }
 
     private static readonly IReadOnlyList<HardwareRegister> allRegisters = typeof(HardwareRegister)

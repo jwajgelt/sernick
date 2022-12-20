@@ -25,11 +25,12 @@ IDiagnostics diagnostics = new Diagnostics();
 try
 {
     var frontendResult = CompilerFrontend.Process(file, diagnostics);
-    var outputFilename = CompilerBackend.Process(filename.Split('.')[0], frontendResult);
+    var outputFilename = CompilerBackend.Process(filename, frontendResult);
     Console.WriteLine(outputFilename);
 
     if (args.Length > 1 && args[1] == "--execute")
     {
+        Console.WriteLine("Executing...");
         var (errors, output) = outputFilename.RunProcess();
         Console.Error.WriteLine(errors);
         Console.WriteLine(output);

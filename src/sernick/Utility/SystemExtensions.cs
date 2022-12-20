@@ -23,7 +23,7 @@ public static class SystemExtensions
         process.Start();
 
         var stdout = process.StandardOutput.ReadToEnd();
-        var stderr = process.StandardError.ReadToEnd();
+        var stderr = process.StandardError.ReadLine() ?? "";
         process.WaitForExit();
 
         return (stderr, stdout);
