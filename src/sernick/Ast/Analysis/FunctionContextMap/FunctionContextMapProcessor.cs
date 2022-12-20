@@ -99,7 +99,8 @@ public static class FunctionContextMapProcessor
             ContextMap[node] = ExternalFunctions
                 .Where(external => ReferenceEquals(functionDeclaration, external.Definition))
                 .Select(external => external.Caller)
-                .FirstOrDefault(ContextMap[functionDeclaration]);
+                .FirstOrDefault()
+                               ?? ContextMap[functionDeclaration];
 
             return Unit.I;
         }
