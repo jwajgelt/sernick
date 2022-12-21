@@ -40,7 +40,7 @@ public static class CompilerBackend
         var spillsRegAllocator = new SpillsAllocator(spillsRegisters, instructionCovering);
 
         var maxDepth = functionContextMap.Implementations.Values.Max(context => context.Depth);
-        var displayTable = new DisplayTable(maxDepth);
+        var displayTable = new DisplayTable(maxDepth + 1);
 
         var asm = "section .text".Enumerate()
             .Append("extern scanf")
