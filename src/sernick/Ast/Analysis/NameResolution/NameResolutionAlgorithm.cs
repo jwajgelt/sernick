@@ -82,7 +82,7 @@ public static class NameResolutionAlgorithm
             {
                 var declaration = ExternalFunctions
                     .Select(external => external.Definition)
-                    .FirstOrDefault(definition => identifier.Equals(definition.Name))
+                    .FirstOrDefault(definition => identifier.Name.Equals(definition.Name.Name))
                                   ?? identifiersNamespace.GetResolution(identifier);
                 if (declaration is FunctionDefinition functionDefinition)
                 {
