@@ -77,10 +77,7 @@ public class InstructionCoveringTest
         var callWithContext = mainContext.GenerateCall(new List<CodeTreeValueNode>());
 
         var covering = new InstructionCovering(SernickInstructionSet.Rules);
-        foreach (var node in callWithContext.CodeGraph)
-        {
-            covering.Cover(node, new Label(""));
-        }
+        covering.Cover(new SingleExitNode(null, callWithContext.CodeGraph), new Label(""));
     }
 
     [Fact]
@@ -92,14 +89,7 @@ public class InstructionCoveringTest
         var epilogue = mainContext.GenerateEpilogue(null);
 
         var covering = new InstructionCovering(SernickInstructionSet.Rules);
-        foreach (var node in prologue)
-        {
-            covering.Cover(node, new Label(""));
-        }
-
-        foreach (var node in epilogue)
-        {
-            covering.Cover(node, new Label(""));
-        }
+        covering.Cover(new SingleExitNode(null, prologue), new Label(""));
+        covering.Cover(new SingleExitNode(null, epilogue), new Label(""));
     }
 }

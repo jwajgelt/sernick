@@ -94,21 +94,21 @@ public static class ControlFlowAnalyzer
             valToReturn = currentFunctionContext.GenerateVariableRead(resultVariable);
         }
 
-        var prologue = currentFunctionContext.GeneratePrologue();
-        var epilogue = currentFunctionContext.GenerateEpilogue(valToReturn);
+        var prologue = new SingleExitNode(null, currentFunctionContext.GeneratePrologue());
+        var epilogue = new SingleExitNode(null, currentFunctionContext.GenerateEpilogue(valToReturn));
 
-        prologue[^1].NextTree = functionDefinition.Body.Accept(visitor,
+        prologue.NextTree = functionDefinition.Body.Accept(visitor,
             new ControlFlowVisitorParam(
-                epilogue[0],
+                epilogue,
                 null,
                 null,
-                epilogue[0],
+                epilogue,
                 resultVariable,
                 resultVariable,
                 false
             ));
 
-        return prologue[0];
+        return prologue;
     }
 
     private sealed record ControlFlowVisitorParam

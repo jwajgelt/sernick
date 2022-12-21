@@ -4,7 +4,6 @@ using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static Convention;
-using static Helpers;
 using static PlatformConstants;
 
 public sealed class FunctionContext : IFunctionContext
@@ -143,10 +142,10 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(Reg(reg).Write(tempVal));
         }
 
-        return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations), returnValueLocation);
+        return new IFunctionCaller.GenerateCallResult(operations, returnValueLocation);
     }
 
-    public IReadOnlyList<SingleExitNode> GeneratePrologue()
+    public IReadOnlyList<CodeTreeNode> GeneratePrologue()
     {
         var operations = new List<CodeTreeNode>();
 
@@ -187,10 +186,10 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(Reg(tempReg).Write(regVal));
         }
 
-        return CodeTreeListToSingleExitList(operations);
+        return operations;
     }
 
-    public IReadOnlyList<SingleExitNode> GenerateEpilogue(CodeTreeValueNode? valToReturn)
+    public IReadOnlyList<CodeTreeNode> GenerateEpilogue(CodeTreeValueNode? valToReturn)
     {
         var operations = CalleeToSave.Select(reg =>
             Reg(reg).Write(Reg(_registerToTemporaryMap[reg]).Read())).ToList<CodeTreeNode>();
@@ -222,7 +221,7 @@ public sealed class FunctionContext : IFunctionContext
         // Add ret instruction
         operations.Add(new FunctionReturn());
 
-        return CodeTreeListToSingleExitList(operations);
+        return operations;
     }
 
     public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable) =>

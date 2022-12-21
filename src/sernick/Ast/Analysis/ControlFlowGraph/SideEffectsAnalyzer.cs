@@ -54,13 +54,6 @@ public static class SideEffectsAnalyzer
             operations.Add(tree.CodeTree);
             readVariables.UnionWith(tree.ReadVariables);
             writtenVariables.UnionWith(tree.WrittenVariables);
-            if (!tree.CanMerge)
-            {
-                result.Add(new SingleExitNode(null, operations));
-                readVariables = new HashSet<Variable>();
-                writtenVariables = new HashSet<Variable>();
-                operations = new List<CodeTreeNode>();
-            }
         }
 
         if (operations.Count > 0)
@@ -194,10 +187,9 @@ public static class SideEffectsAnalyzer
 
             var (functionCall, resultLocation) = _functionContextMap.Callers[node].GenerateCall(argsValues);
 
-            var functionCallTrees = functionCall.SelectMany(
-                callTree => callTree.Operations
-                    .Select((tree, index) => new TreeWithEffects(tree, index != 0)))
-                    .ToList();
+            var functionCallTrees = functionCall
+                .Select((tree, index) => new TreeWithEffects(tree, index != 0))
+                .ToList();
 
             functionCallTrees = functionCallTrees
                 .Select(tree => AddFunctionCallSideEffects(tree, node))

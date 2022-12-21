@@ -5,7 +5,6 @@ using ControlFlowGraph.CodeTree;
 using static Compiler.PlatformConstants;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static Convention;
-using static Helpers;
 
 public sealed class WriteCaller : IFunctionCaller
 {
@@ -61,6 +60,6 @@ public sealed class WriteCaller : IFunctionCaller
             operations.Add(Reg(reg).Write(tempVal));
         }
 
-        return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations), null);
+        return new IFunctionCaller.GenerateCallResult(operations, null);
     }
 }

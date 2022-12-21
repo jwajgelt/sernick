@@ -35,22 +35,3 @@ public static class Convention
 
     public static readonly int REG_ARGS_COUNT = ArgumentRegisters.Length;
 }
-
-public static class Helpers
-{
-    public static List<SingleExitNode> CodeTreeListToSingleExitList(List<CodeTreeNode> trees)
-    {
-        var result = new List<SingleExitNode>();
-        trees.Reverse();
-        SingleExitNode? nextRoot = null;
-        foreach (var tree in trees)
-        {
-            var treeRoot = new SingleExitNode(nextRoot, new List<CodeTreeNode> { tree });
-            result.Add(treeRoot);
-            nextRoot = treeRoot;
-        }
-
-        result.Reverse();
-        return result;
-    }
-}

@@ -5,9 +5,9 @@ public interface IFunctionContext : IFunctionCaller
 {
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere);
 
-    public IReadOnlyList<SingleExitNode> GeneratePrologue();
+    public IReadOnlyList<CodeTreeNode> GeneratePrologue();
 
-    public IReadOnlyList<SingleExitNode> GenerateEpilogue(CodeTreeValueNode? valToReturn);
+    public IReadOnlyList<CodeTreeNode> GenerateEpilogue(CodeTreeValueNode? valToReturn);
 
     public int Depth { get; }
     public bool ValueIsReturned { get; }

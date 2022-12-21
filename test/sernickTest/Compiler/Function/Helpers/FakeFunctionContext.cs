@@ -17,12 +17,12 @@ public sealed class FakeFunctionContext : IFunctionContext
     public bool ValueIsReturned => false;
 
     public void AddLocal(IFunctionVariable variable, bool usedElsewhere) => _locals[variable] = usedElsewhere;
-    public IReadOnlyList<SingleExitNode> GeneratePrologue()
+    public IReadOnlyList<CodeTreeNode> GeneratePrologue()
     {
         throw new NotImplementedException();
     }
 
-    public IReadOnlyList<SingleExitNode> GenerateEpilogue(CodeTreeValueNode? valToReturn)
+    public IReadOnlyList<CodeTreeNode> GenerateEpilogue(CodeTreeValueNode? valToReturn)
     {
         throw new NotImplementedException();
     }
