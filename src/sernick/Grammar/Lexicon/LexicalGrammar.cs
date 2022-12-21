@@ -112,7 +112,7 @@ public class LexicalGrammar
 
     private readonly LexicalGrammarEntry comments = new(LexicalGrammarCategory.Comments, new CategoryItems
     {
-        ["singleLineComment"] = "//.*",
+        ["singleLineComment"] = "//.*[[:space:]]*",
         ["multiLineComment"] = @"/\*(.|[[:space:]])*\*/"
     });
 
