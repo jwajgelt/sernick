@@ -1,5 +1,6 @@
 namespace sernick.Compiler.Instruction;
 
+using System.Diagnostics;
 using CodeGeneration;
 using CodeGeneration.InstructionSelection;
 using ControlFlowGraph.CodeTree;
@@ -153,6 +154,35 @@ public static class SernickInstructionSet
                     {
                         new RetInstruction()
                     }.WithOutput(null));
+            }
+
+            // <op> $reg, $const
+            {
+                CodeTreePattern? reg = null;
+                yield return new CodeTreeNodePatternRule(
+                    Pat.RegisterWrite(Any<Register>(), out reg,
+                        Pat.BinaryOperationNode(
+                            IsAnyOf(
+                                BinaryOperation.Add, BinaryOperation.Sub,
+                                BinaryOperation.BitwiseAnd, BinaryOperation.BitwiseOr), out var op,
+                            Pat.RegisterRead(SameAsIn<Register>(() => reg!), out var reg2),
+                            Pat.Constant(Any<RegisterValue>(), out var imm))),
+                    (_, values) =>
+                    {
+                        var output = values.Get<Register>(reg);
+                        Debug.Assert(output == values.Get<Register>(reg2));
+                        return new List<IInstruction>
+                        {
+                            values.Get<BinaryOperation>(op) switch
+                            {
+                                BinaryOperation.Add => Bin.Add.ToReg(output).FromImm(values.Get<RegisterValue>(imm)),
+                                BinaryOperation.Sub => Bin.Sub.ToReg(output).FromImm(values.Get<RegisterValue>(imm)),
+                                BinaryOperation.BitwiseAnd => Bin.And.ToReg(output).FromImm(values.Get<RegisterValue>(imm)),
+                                BinaryOperation.BitwiseOr => Bin.Or.ToReg(output).FromImm(values.Get<RegisterValue>(imm)),
+                                _ => throw new ArgumentOutOfRangeException()
+                            }
+                        }.WithOutput(output);
+                    });
             }
 
             // <op> *, *

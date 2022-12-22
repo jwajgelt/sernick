@@ -21,6 +21,24 @@ public class CodeTreePatternMatcherTest
         Assert.Equal(expectedLeaves, leaves);
     }
 
+    [Fact]
+    public void TestMatchOpRegConst()
+    {
+        // <op> $reg, $const
+        CodeTreePattern? reg = null;
+        var rule = Pat.RegisterWrite(Any<Register>(), out reg,
+            Pat.BinaryOperationNode(
+                IsAnyOf(
+                    BinaryOperation.Add, BinaryOperation.Sub,
+                    BinaryOperation.BitwiseAnd, BinaryOperation.BitwiseOr), out _,
+                Pat.RegisterRead(SameAsIn<Register>(() => reg!), out _),
+                Pat.Constant(Any<RegisterValue>(), out _))).AsRule();
+
+        var codeTree = Reg(register).Write(Reg(register).Read() - POINTER_SIZE);
+
+        TestMatchPattern(rule, codeTree, Enumerable.Empty<CodeTreeValueNode>());
+    }
+
     private static readonly Register register = new();
     private static readonly GlobalAddress address = new("addr");
 
