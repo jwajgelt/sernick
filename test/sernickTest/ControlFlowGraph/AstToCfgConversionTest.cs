@@ -20,6 +20,15 @@ public class AstToCfgConversionTest
 {
     private readonly CodeTreeValueNode _displayAddress = new GlobalAddress(DisplayTable.DISPLAY_TABLE_SYMBOL);
 
+    private static CodeTreeRoot WrapInContext(IFunctionContext context, CodeTreeValueNode? valToReturn,
+        Func<CodeTreeRoot, CodeTreeRoot> generateBody)
+    {
+        var epilogue = new SingleExitNode(null, context.GenerateEpilogue(valToReturn));
+        var body = generateBody.Invoke(epilogue);
+        var prologue = new SingleExitNode(body, context.GeneratePrologue());
+        return prologue;
+    }
+
     [Fact]
     public void SimpleAddition()
     {
@@ -51,14 +60,6 @@ public class AstToCfgConversionTest
         Verify(main, new Dictionary<FunctionDefinition, CodeTreeRoot>(ReferenceEqualityComparer.Instance) {
             {main, mainRoot}
         });
-    }
-
-    private static CodeTreeRoot WrapInContext(IFunctionContext context, CodeTreeValueNode? valToReturn, Func<CodeTreeRoot, CodeTreeRoot> generateBody)
-    {
-        var epilogue = new SingleExitNode(null, context.GenerateEpilogue(valToReturn));
-        var body = generateBody.Invoke(epilogue);
-        var prologue = new SingleExitNode(body, context.GeneratePrologue());
-        return prologue;
     }
 
     [Fact]
@@ -1439,7 +1440,7 @@ public class AstToCfgConversionTest
     }
 }
 
-internal static class Helper
+internal static class AstToCfgHelper
 {
     internal static (SingleExitNode root, CodeTreeValueNode? resultLocation) AsSingleExit(
         this IFunctionCaller.GenerateCallResult callResult, CodeTreeRoot? next = null)
