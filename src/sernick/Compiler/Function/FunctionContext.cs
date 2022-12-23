@@ -166,12 +166,12 @@ public sealed class FunctionContext : IFunctionContext
         // Set new RBP value
         operations.Add(Reg(rbp).Write(rspRead));
 
+        // Allocate memory for variables
+        operations.Add(Reg(rsp).Write(rspRead - _localsOffset));
+
         // Save and update display entry
         operations.Add(Reg(_oldDisplayValReg).Write(Mem(_displayEntry).Read()));
         operations.Add(Mem(_displayEntry).Write(rbpRead));
-
-        // Allocate memory for variables
-        operations.Add(Reg(rsp).Write(rspRead - _localsOffset));
 
         // Write arguments to known locations
         var paramNum = _functionParameters.Count;
@@ -201,6 +201,15 @@ public sealed class FunctionContext : IFunctionContext
 
         var rspRead = Reg(rsp).Read();
 
+        // Save return value to rax
+        if (valToReturn != null)
+        {
+            operations.Add(Reg(rax).Write(valToReturn));
+        }
+
+        // Restore old display value
+        operations.Add(Mem(_displayEntry).Write(Reg(_oldDisplayValReg).Read()));
+
         // Free local variables stack space
         operations.Add(Reg(rsp).Write(rspRead + _localsOffset));
 
@@ -209,15 +218,6 @@ public sealed class FunctionContext : IFunctionContext
 
         // Free RBP slot
         operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE));
-
-        // Restore old display value
-        operations.Add(Mem(_displayEntry).Write(Reg(_oldDisplayValReg).Read()));
-
-        // Save return value to rax
-        if (valToReturn != null)
-        {
-            operations.Add(Reg(rax).Write(valToReturn));
-        }
 
         // Add ret instruction
         operations.Add(new FunctionReturn());
