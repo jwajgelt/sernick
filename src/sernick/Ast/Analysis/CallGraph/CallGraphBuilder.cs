@@ -2,6 +2,7 @@ namespace sernick.Ast.Analysis.CallGraph;
 
 using NameResolution;
 using Nodes;
+using static ExternalFunctionsInfo;
 
 /// <summary>
 ///     Class used to represent the call graph.
@@ -30,7 +31,7 @@ public record struct CallGraph(
             kv => kv.Value.ToList() as IEnumerable<FunctionDefinition>,
             ReferenceEqualityComparer.Instance as IEqualityComparer<FunctionDefinition>);
 
-        var functions = Graph.Keys;
+        var functions = Graph.Keys.ToList();
         foreach (var f in functions)
         {
             foreach (var g in functions)
@@ -58,7 +59,16 @@ public static class CallGraphBuilder
     public static CallGraph Process(AstNode ast, NameResolutionResult nameResolution)
     {
         var visitor = new CallGraphVisitor(nameResolution.CalledFunctionDeclarations);
-        return visitor.VisitAstTree(ast, (FunctionDefinition)ast);
+        var callGraph = visitor.VisitAstTree(ast, (FunctionDefinition)ast);
+        return ExternalFunctions
+            .Select(funcInfo => funcInfo.Definition)
+            .Intersect(nameResolution.CalledFunctionDeclarations.Values)
+            .Select(funcDef =>
+                new CallGraph(new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>>
+                {
+                    [funcDef] = new List<FunctionDefinition>()
+                }))
+            .Aggregate(callGraph, (result, next) => result.JoinWith(next));
     }
 
     /// <summary>
@@ -90,7 +100,7 @@ public static class CallGraphBuilder
             var graph = VisitAstNode(node, node);
 
             var newDefDict = new Dictionary<FunctionDefinition, IEnumerable<FunctionDefinition>> {
-                { node, new List<FunctionDefinition> { } }
+                { node, new List<FunctionDefinition>() }
             };
 
             return graph.JoinWith(new CallGraph(newDefDict));

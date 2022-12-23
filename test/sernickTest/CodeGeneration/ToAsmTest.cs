@@ -54,7 +54,7 @@ public class ToAsmTest
         hardwareReg.Setup(reg => reg.ToString()).Returns("RAX");
         var dict = new Dictionary<Register, HardwareRegister> { [virtualReg.Object] = hardwareReg.Object };
         var displacement = new RegisterValue(126);
-        var memOp = new MemInstructionOperand(virtualReg.Object, null, displacement);
+        var memOp = new MemInstructionOperand(virtualReg.Object, null, (isNegative: false, displacement));
 
         var asm = memOp.ToAsm(dict);
 
@@ -69,7 +69,22 @@ public class ToAsmTest
         hardwareReg.Setup(reg => reg.ToString()).Returns("RAX");
         var dict = new Dictionary<Register, HardwareRegister> { [virtualReg.Object] = hardwareReg.Object };
         var displacement = new RegisterValue(-979);
-        var memOp = new MemInstructionOperand(virtualReg.Object, null, displacement);
+        var memOp = new MemInstructionOperand(virtualReg.Object, null, (isNegative: false, displacement));
+
+        var asm = memOp.ToAsm(dict);
+
+        Assert.Equal("[rax - 979]", asm);
+    }
+
+    [Fact]
+    public void MemInstructionOperandFromRegAndNegatedDisplacementToAsm()
+    {
+        var virtualReg = new Mock<Register>();
+        var hardwareReg = new Mock<HardwareRegister>(null);
+        hardwareReg.Setup(reg => reg.ToString()).Returns("RAX");
+        var dict = new Dictionary<Register, HardwareRegister> { [virtualReg.Object] = hardwareReg.Object };
+        var displacement = new RegisterValue(979);
+        var memOp = new MemInstructionOperand(virtualReg.Object, null, (isNegative: true, displacement));
 
         var asm = memOp.ToAsm(dict);
 
@@ -82,7 +97,7 @@ public class ToAsmTest
         var label = new Label("base");
         var displacement = new RegisterValue(96);
         var dict = new Dictionary<Register, HardwareRegister>();
-        var memOp = (label, displacement).AsMemOperand();
+        var memOp = (label, (isNegative: false, displacement)).AsMemOperand();
 
         var asm = memOp.ToAsm(dict);
 

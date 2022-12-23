@@ -22,7 +22,7 @@ public sealed class Linearizator
 
     private static Label GenerateLabel(int depth)
     {
-        var enhancedGuid = $"{Guid.NewGuid()}{depth}";
+        var enhancedGuid = $"l{Guid.NewGuid().ToString().Replace('-', '_')}{depth}";
         return new Label(enhancedGuid);
     }
 

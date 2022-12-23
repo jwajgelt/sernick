@@ -3,6 +3,9 @@ using sernick.Compiler;
 using sernick.Diagnostics;
 using sernick.Utility;
 
+// Usage: ./sernick.exe program.ser [--execute]
+// --execute flag compiles and runs the compiled program immediately
+
 [assembly: InternalsVisibleTo("sernickTest")]
 
 // check if filename was provided
@@ -21,11 +24,22 @@ var success = true;
 IDiagnostics diagnostics = new Diagnostics();
 try
 {
-    CompilerFrontend.Process(file, diagnostics);
+    var frontendResult = CompilerFrontend.Process(file, diagnostics);
+    var outputFilename = CompilerBackend.Process(filename, frontendResult);
+    Console.WriteLine(outputFilename);
+
+    if (args.Length > 1 && args[1] == "--execute")
+    {
+        Console.WriteLine("Executing...");
+        var (errors, output) = outputFilename.RunProcess();
+        Console.Error.WriteLine(errors);
+        Console.WriteLine(output);
+    }
 }
-catch (CompilationException)
+catch (CompilationException e)
 {
     Console.Error.WriteLine("Compilation failed.");
+    Console.Error.WriteLine(e.Message);
     success = false;
 }
 

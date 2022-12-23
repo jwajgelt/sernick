@@ -82,8 +82,8 @@ public static class NameResolutionAlgorithm
             {
                 var declaration = ExternalFunctions
                     .Select(external => external.Definition)
-                    .Where(definition => identifier.Equals(definition.Name))
-                    .FirstOrDefault(identifiersNamespace.GetResolution(identifier));
+                    .FirstOrDefault(definition => identifier.Name.Equals(definition.Name.Name))
+                                  ?? identifiersNamespace.GetResolution(identifier);
                 if (declaration is FunctionDefinition functionDefinition)
                 {
                     var visitorResult = VisitAstNode(node, identifiersNamespace);

@@ -19,15 +19,20 @@ public sealed record MovInstruction(IInstructionOperand Target, IInstructionOper
 
     public static MovInstructionBuilder ToMem(Register location) => new(location.AsMemOperand());
 
-    public static MovInstructionBuilder ToMem(Label baseAddress, RegisterValue displacement) =>
+    public static MovInstructionBuilder ToMem(Label baseAddress, (bool isNegative, RegisterValue value) displacement) =>
         new((baseAddress, displacement).AsMemOperand());
+
+    public static MovInstructionBuilder ToMem(Register baseReg, (bool isNegative, RegisterValue value) displacement) =>
+        new((baseReg, displacement).AsMemOperand());
 
     public sealed record MovInstructionBuilder(IInstructionOperand Target)
     {
         public MovInstruction FromReg(Register source) => new(Target, source.AsRegOperand());
         public MovInstruction FromMem(Register location) => new(Target, location.AsMemOperand());
-        public MovInstruction FromMem(Label baseAddress, RegisterValue displacement) =>
+        public MovInstruction FromMem(Label baseAddress, (bool isNegative, RegisterValue value) displacement) =>
             new(Target, (baseAddress, displacement).AsMemOperand());
+        public MovInstruction FromMem(Register baseReg, (bool isNegative, RegisterValue value) displacement) =>
+            new(Target, (baseReg, displacement).AsMemOperand());
         public MovInstruction FromImm(RegisterValue value) => new(Target, value.AsOperand());
     }
 
@@ -51,6 +56,11 @@ public sealed record MovInstruction(IInstructionOperand Target, IInstructionOper
     {
         var sourceSegment = Source.ToAsm(registerMapping);
         var targetSegment = Target.ToAsm(registerMapping);
+        if (Target is MemInstructionOperand && Source is ImmInstructionOperand)
+        {
+            targetSegment = $"qword {targetSegment}";
+        }
+
         return $"\tmov\t{targetSegment}, {sourceSegment}";
     }
 }

@@ -11,9 +11,9 @@ public sealed class SpillsAllocator
     private readonly IReadOnlyList<HardwareRegister> _registersReserve;
     private readonly InstructionCovering _instructionCovering;
 
-    public SpillsAllocator(IReadOnlyList<HardwareRegister> registersReserve, InstructionCovering instructionCovering)
+    public SpillsAllocator(IEnumerable<HardwareRegister> registersReserve, InstructionCovering instructionCovering)
     {
-        _registersReserve = registersReserve;
+        _registersReserve = registersReserve.ToList();
         _instructionCovering = instructionCovering;
     }
 
@@ -100,7 +100,7 @@ public sealed class SpillsAllocator
             .ToDictionary(entry => entry.Key, entry => entry.Value!);
         foreach (var hardwareRegister in _registersReserve)
         {
-            newAllocation.Add(hardwareRegister, hardwareRegister);
+            newAllocation[hardwareRegister] = hardwareRegister;
         }
 
         return (asm.SelectMany(HandleSpill).ToList(), newAllocation);
