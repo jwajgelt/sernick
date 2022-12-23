@@ -75,7 +75,8 @@ public static class SernickInstructionSet
                     (_, values) =>
                         new List<IInstruction>
                         {
-                            Mov.ToReg(values.Get<Register>(reg)).FromMem(values.Get<Label>(addr), values.Get<RegisterValue>(imm))
+                            Mov.ToReg(values.Get<Register>(reg))
+                                .FromMem(values.Get<Label>(addr), (isNegative: false, values.Get<RegisterValue>(imm)))
                         }.WithOutput(null));
             }
 
@@ -88,17 +89,12 @@ public static class SernickInstructionSet
                             Pat.RegisterRead(Any<Register>(), out var reg2),
                             Pat.Constant(Any<RegisterValue>(), out var imm)))),
                     (_, values) =>
-                    {
-                        var displacement = values.Get<RegisterValue>(imm);
-                        if (values.Get<BinaryOperation>(op) == BinaryOperation.Sub)
-                        {
-                            displacement.Value = -displacement.Value;
-                        }
-
-                        return Mov.ToReg(values.Get<Register>(reg)).FromMem(values.Get<Register>(reg2), displacement)
+                        Mov
+                            .ToReg(values.Get<Register>(reg))
+                            .FromMem(values.Get<Register>(reg2),
+                                (isNegative: values.Get<BinaryOperation>(op) == BinaryOperation.Sub, values.Get<RegisterValue>(imm)))
                             .Enumerate()
-                            .WithOutput(null);
-                    });
+                            .WithOutput(null));
             }
 
             // mov $reg, [*]
@@ -132,7 +128,9 @@ public static class SernickInstructionSet
                     (inputs, values) =>
                         new List<IInstruction>
                         {
-                            Mov.ToMem(values.Get<Label>(addr), values.Get<RegisterValue>(imm)).FromReg(inputs[0])
+                            Mov
+                                .ToMem(values.Get<Label>(addr), (isNegative: false, values.Get<RegisterValue>(imm)))
+                                .FromReg(inputs[0])
                         }.WithOutput(null));
             }
 
@@ -145,17 +143,12 @@ public static class SernickInstructionSet
                             Pat.Constant(Any<RegisterValue>(), out var imm)),
                         Pat.RegisterRead(Any<Register>(), out var reg2)),
                     (_, values) =>
-                    {
-                        var displacement = values.Get<RegisterValue>(imm);
-                        if (values.Get<BinaryOperation>(op) == BinaryOperation.Sub)
-                        {
-                            displacement.Value = -displacement.Value;
-                        }
-
-                        return Mov.ToMem(values.Get<Register>(reg), displacement).FromReg(values.Get<Register>(reg2))
+                        Mov
+                            .ToMem(values.Get<Register>(reg),
+                                (isNegative: values.Get<BinaryOperation>(op) == BinaryOperation.Sub, values.Get<RegisterValue>(imm)))
+                            .FromReg(values.Get<Register>(reg2))
                             .Enumerate()
-                            .WithOutput(null);
-                    });
+                            .WithOutput(null));
             }
 
             // mov [*], $const

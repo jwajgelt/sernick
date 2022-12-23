@@ -30,15 +30,27 @@ public sealed record RegInstructionOperand(Register Register) : IInstructionOper
 public sealed record MemInstructionOperand(
     Register? BaseReg,
     Label? BaseAddress,
-    RegisterValue? Displacement) : IInstructionOperand
+    (bool isNegative, RegisterValue value)? Displacement) : IInstructionOperand
 {
     public IEnumerable<Register> RegistersUsed => BaseReg.Enumerate().OfType<Register>();
     public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
         var regSegment = BaseReg is not null ? registerMapping[BaseReg].ToString().ToLower() : null;
-        var baseSegment = BaseAddress?.Value.ToString();
-        var displacementSegment = Displacement?.Value.ToString();
-        return $"[{string.Join(" + ", new[] { regSegment, baseSegment, displacementSegment }.OfType<string>())}]";
+        var baseSegment = BaseAddress?.Value;
+
+        RegisterValue? displacement = null;
+        if (Displacement is not null)
+        {
+            displacement = Displacement.Value.value with { };
+            if (Displacement.Value.isNegative)
+            {
+                displacement.Value *= -1;
+            }
+        }
+
+        var displacementSegment = displacement?.Value.ToString();
+        var intermediateResult = $"[{string.Join(" + ", new[] { regSegment, baseSegment, displacementSegment }.OfType<string>())}]";
+        return intermediateResult.Replace("+ -", "- ");
     }
 
     public IInstructionOperand MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
@@ -63,10 +75,10 @@ public static class InstructionOperandExtensions
 
     public static MemInstructionOperand AsMemOperand(this Register location) => new(location, null, null);
 
-    public static MemInstructionOperand AsMemOperand(this (Label baseAddress, RegisterValue displacement) location) =>
+    public static MemInstructionOperand AsMemOperand(this (Label baseAddress, (bool isNegative, RegisterValue value) displacement) location) =>
         new(null, location.baseAddress, location.displacement);
 
-    public static MemInstructionOperand AsMemOperand(this (Register baseReg, RegisterValue displacement) location) =>
+    public static MemInstructionOperand AsMemOperand(this (Register baseReg, (bool isNegative, RegisterValue value) displacement) location) =>
         new(location.baseReg, null, location.displacement);
 
     public static ImmInstructionOperand AsOperand(this RegisterValue value) => new(value);
