@@ -164,7 +164,7 @@ public class ToAsmTest
 
         var asm = jmpNo.ToAsm(dict);
 
-        Assert.Equal("\tjmpno\ttarget", asm);
+        Assert.Equal("\tjno\ttarget", asm);
     }
 
     [Fact]

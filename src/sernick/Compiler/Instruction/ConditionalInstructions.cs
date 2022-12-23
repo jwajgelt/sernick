@@ -68,7 +68,7 @@ public sealed record JmpCcInstruction(ConditionCode Code, Label Location) : Cond
 
     public override string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
-        return $"\tjmp{Code.ToString().ToLower()}\t{Location.Value}";
+        return $"\tj{Code.ToString().ToLower()}\t{Location.Value}";
     }
 
     public override IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) => this;
