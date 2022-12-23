@@ -1,4 +1,5 @@
 namespace sernickTest.ControlFlowGraph.Linearizator;
+
 using Moq;
 using sernick.CodeGeneration;
 using sernick.ControlFlowGraph.Analysis;
@@ -6,46 +7,26 @@ using sernick.ControlFlowGraph.CodeTree;
 
 public class LinearizatorTest
 {
-
-    private class IdentityInstructionNode : IInstruction
+    private sealed record IdentityInstructionNode(CodeTreeRoot Node) : IInstruction
     {
-        public IEnumerable<Register> RegistersDefined { get; }
-        public IEnumerable<Register> RegistersUsed { get; }
-        public bool PossibleFollow { get; }
-        public Label? PossibleJump { get; }
-        public bool IsCopy { get; }
-        public CodeTreeRoot Node { get; }
-        public IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map)
-        {
-            return new Mock<IInstruction>().Object;
-        }
+        public IEnumerable<Register> RegistersDefined => Enumerable.Empty<Register>();
+        public IEnumerable<Register> RegistersUsed => Enumerable.Empty<Register>();
+        public bool PossibleFollow => true;
+        public Label? PossibleJump => null;
+        public bool IsCopy => false;
 
-        public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
-        {
-            return "";
-        }
+        public IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) => new Mock<IInstruction>().Object;
 
-        public IdentityInstructionNode(CodeTreeRoot node)
-        {
-            Node = node;
-            RegistersDefined = new List<Register>();
-            RegistersUsed = new List<Register>();
-        }
+        public string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping) => "";
     }
 
     private static Mock<IInstructionCovering> InstructionCoveringMock()
     {
         var mockedInstructionCovering = new Mock<IInstructionCovering>();
         mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<SingleExitNode>(), It.IsAny<Label>())).Returns
-            ((SingleExitNode node, Label label) =>
-            {
-                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
-            });
+            ((SingleExitNode node, Label _) => new List<IdentityInstructionNode> { new(node) });
         mockedInstructionCovering.Setup(ic => ic.Cover(It.IsAny<ConditionalJumpNode>(), It.IsAny<Label>(), It.IsAny<Label>())).Returns
-            ((ConditionalJumpNode node, Label _, Label _) =>
-            {
-                return new List<IdentityInstructionNode>() { new IdentityInstructionNode(node) };
-            });
+            ((ConditionalJumpNode node, Label _, Label _) => new List<IdentityInstructionNode> { new(node) });
         return mockedInstructionCovering;
     }
 
@@ -65,13 +46,13 @@ public class LinearizatorTest
         var numUniqueNodes = 3;
         var numExpectedLabels = 2;
 
-        Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
+        Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count);
 
-        Assert.Same(p1, (actual.ElementAt(0) as IdentityInstructionNode).Node);
-        Assert.IsType<Label>(actual.ElementAt(1));
-        Assert.Same(p2, (actual.ElementAt(2) as IdentityInstructionNode).Node);
-        Assert.IsType<Label>(actual.ElementAt(3));
-        Assert.Same(p3, (actual.ElementAt(4) as IdentityInstructionNode).Node);
+        Assert.Same(p1, (actual[0] as IdentityInstructionNode)?.Node);
+        Assert.IsType<Label>(actual[1]);
+        Assert.Same(p2, (actual[2] as IdentityInstructionNode)?.Node);
+        Assert.IsType<Label>(actual[3]);
+        Assert.Same(p3, (actual[4] as IdentityInstructionNode)?.Node);
     }
 
     [Fact]
@@ -93,11 +74,11 @@ public class LinearizatorTest
         var numExpectedLabels = 2;
 
         Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
-        Assert.Same(conditionalNode, (actual.ElementAt(0) as IdentityInstructionNode).Node);
-        Assert.IsType<Label>(actual.ElementAt(1));
-        Assert.Same(trueCaseNode, (actual.ElementAt(2) as IdentityInstructionNode).Node);
-        Assert.IsType<Label>(actual.ElementAt(3));
-        Assert.Same(falseCaseNode, (actual.ElementAt(4) as IdentityInstructionNode).Node);
+        Assert.Same(conditionalNode, (actual[0] as IdentityInstructionNode)?.Node);
+        Assert.IsType<Label>(actual[1]);
+        Assert.Same(trueCaseNode, (actual[2] as IdentityInstructionNode)?.Node);
+        Assert.IsType<Label>(actual[3]);
+        Assert.Same(falseCaseNode, (actual[4] as IdentityInstructionNode)?.Node);
     }
 
     [Fact]
@@ -138,19 +119,19 @@ public class LinearizatorTest
         Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
 
         // CN1 -- only "instruction set" without a label
-        Assert.Same(cn1, (actual.ElementAt(0) as IdentityInstructionNode).Node);
+        Assert.Same(cn1, (actual[0] as IdentityInstructionNode)?.Node);
 
         // next in DFS order is CN2, with a label
-        Assert.IsType<Label>(actual.ElementAt(1));
-        Assert.Same(cn2, (actual.ElementAt(2) as IdentityInstructionNode).Node);
+        Assert.IsType<Label>(actual[1]);
+        Assert.Same(cn2, (actual[2] as IdentityInstructionNode)?.Node);
 
         // next in DFS order is S1 (as child of CN2), with a label
-        Assert.IsType<Label>(actual.ElementAt(3));
-        Assert.Same(s1, (actual.ElementAt(4) as IdentityInstructionNode).Node);
+        Assert.IsType<Label>(actual[3]);
+        Assert.Same(s1, (actual[4] as IdentityInstructionNode)?.Node);
 
         // next in DFS order is S2 (as child of CN2), with a label
-        Assert.IsType<Label>(actual.ElementAt(5));
-        Assert.Same(s2, (actual.ElementAt(6) as IdentityInstructionNode).Node);
+        Assert.IsType<Label>(actual[5]);
+        Assert.Same(s2, (actual[6] as IdentityInstructionNode)?.Node);
     }
 
     [Fact]
@@ -197,23 +178,23 @@ public class LinearizatorTest
         Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
 
         // CN1 -- only "instruction set" without a label
-        Assert.Same(cn1, (actual.ElementAt(0) as IdentityInstructionNode).Node);
+        Assert.Same(cn1, (actual[0] as IdentityInstructionNode)?.Node);
 
         // next in DFS order is CN2, with a label (child of CN1)
-        Assert.IsType<Label>(actual.ElementAt(1));
-        Assert.Same(cn2, (actual.ElementAt(2) as IdentityInstructionNode).Node);
+        Assert.IsType<Label>(actual[1]);
+        Assert.Same(cn2, (actual[2] as IdentityInstructionNode)?.Node);
 
         // next in DFS order is CN3, with a label (child of CN2)
-        Assert.IsType<Label>(actual.ElementAt(3));
-        Assert.Same(cn3, (actual.ElementAt(4) as IdentityInstructionNode).Node);
+        Assert.IsType<Label>(actual[3]);
+        Assert.Same(cn3, (actual[4] as IdentityInstructionNode)?.Node);
 
         // next in DFS order is S1 (as child of CN3), with a label
-        Assert.IsType<Label>(actual.ElementAt(5));
-        Assert.Same(s1, (actual.ElementAt(6) as IdentityInstructionNode).Node);
+        Assert.IsType<Label>(actual[5]);
+        Assert.Same(s1, (actual[6] as IdentityInstructionNode)?.Node);
 
         // next in DFS order is S2 (as child of CN3), with a label
-        Assert.IsType<Label>(actual.ElementAt(7));
-        Assert.Same(s2, (actual.ElementAt(8) as IdentityInstructionNode).Node);
+        Assert.IsType<Label>(actual[7]);
+        Assert.Same(s2, (actual[8] as IdentityInstructionNode)?.Node);
     }
 }
 
