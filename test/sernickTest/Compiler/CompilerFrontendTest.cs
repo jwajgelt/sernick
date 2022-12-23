@@ -51,7 +51,7 @@ public class CompilerFrontendTest
 
     [Theory]
     [MemberTupleData(nameof(IncorrectExamplesData))]
-    public void TestIncorrectExamples(string group, string fileName, IEnumerable<IDiagnosticItem> expectedErrors)
+    public void TestIncorrectExamples(string group, string fileName, IDiagnosticItem[] expectedErrors)
     {
         var diagnostics = $"examples/{group}/incorrect/{fileName}.ser".CompileFile();
 
@@ -64,6 +64,7 @@ public class CompilerFrontendTest
     }
 
     [Theory]
+    [InlineData(@"//    0")]
     [InlineData("a")]
     [InlineData("5")]
     [InlineData("{x}")]
@@ -113,8 +114,7 @@ public class CompilerFrontendTest
 
         Assert.DoesNotContain(
             diagnostics.DiagnosticItems, item =>
-            item.GetType() == typeof(LexicalError) ||
-            item.GetType() == typeof(SyntaxError<Symbol>));
+            item is LexicalError or SyntaxError<Symbol>);
     }
 
     public static IEnumerable<(string group, string fileName)> CorrectExamplesData => Directory
@@ -132,7 +132,7 @@ public class CompilerFrontendTest
     public static readonly (
         string group,
         string fileName,
-        IEnumerable<IDiagnosticItem> expectedErrors
+        IDiagnosticItem[] expectedErrors
     )[] IncorrectExamplesData = { 
             // argument-types
             ("argument-types", "call-type-conflict", new IDiagnosticItem[]

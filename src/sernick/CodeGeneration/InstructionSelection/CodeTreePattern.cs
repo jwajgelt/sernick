@@ -7,11 +7,14 @@ using Utility;
 
 public static class CodeTreePatternPredicates
 {
-    public static Predicate<T> Any<T>() => _ => true;
-    public static Predicate<T> Is<T>(T expected) => given => Equals(given, expected);
-    public static Predicate<RegisterValue> IsZero => node => node.Value == 0 && node.IsFinal;
+    public static CodeTreePattern.CodeTreePredicate<T> Any<T>() => (_, _) => true;
+    public static CodeTreePattern.CodeTreePredicate<T> Is<T>(T expected) => (given, _) => Equals(given, expected);
+    public static CodeTreePattern.CodeTreePredicate<RegisterValue> IsZero => (node, _) => node.Value == 0 && node.IsFinal;
 
-    public static Predicate<T> IsAnyOf<T>(params T[] expected) => expected.Contains;
+    public static CodeTreePattern.CodeTreePredicate<T> IsAnyOf<T>(params T[] expected) => (given, _) => expected.Contains(given);
+
+    public static CodeTreePattern.CodeTreePredicate<T> SameAsIn<T>(Func<CodeTreePattern> other) =>
+        (given, matched) => EqualityComparer<T>.Default.Equals(matched[other()], given);
 }
 
 public abstract record CodeTreePatternBase;
@@ -56,12 +59,20 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         IDictionary<CodeTreePattern, object> values);
 
     /// <summary>
+    /// Predicate applied to code tree nodes contents during matching.
+    /// <paramref name="matchedValues"/> allows for interdependent conditions
+    /// (e.g. match only when registers in nodes A and B are the same)
+    /// </summary>
+    /// <param name="matchedValues">Dictionary of values of type T which have already been matched</param>
+    public delegate bool CodeTreePredicate<T>(T obj, IReadOnlyDictionary<CodeTreePattern, T> matchedValues);
+
+    /// <summary>
     /// <see cref="BinaryOperationNodePattern"/> pattern,
     /// allowing to filter binary-operator of the matching node via <see cref="operation"/> predicate.
     /// </summary>
     /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
     public static CodeTreePattern BinaryOperationNode(
-        Predicate<BinaryOperation> operation,
+        CodeTreePredicate<BinaryOperation> operation,
         out CodeTreePattern id,
         CodeTreePattern left,
         CodeTreePattern right) => id = new BinaryOperationNodePattern(operation, left, right);
@@ -72,7 +83,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
     /// </summary>
     /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
     public static CodeTreePattern UnaryOperationNode(
-        Predicate<UnaryOperation> operation,
+        CodeTreePredicate<UnaryOperation> operation,
         out CodeTreePattern id,
         CodeTreePattern operand) => id = new UnaryOperationNodePattern(operation, operand);
 
@@ -82,7 +93,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
     /// </summary>
     /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
     public static CodeTreePattern Constant(
-        Predicate<RegisterValue> value,
+        CodeTreePredicate<RegisterValue> value,
         out CodeTreePattern id) => id = new ConstantPattern(value);
 
     /// <summary>
@@ -91,7 +102,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
     /// </summary>
     /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
     public static CodeTreePattern RegisterRead(
-        Predicate<Register> register,
+        CodeTreePredicate<Register> register,
         out CodeTreePattern id) => id = new RegisterReadPattern(register);
 
     /// <summary>
@@ -100,7 +111,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
     /// </summary>
     /// <param name="id">Identifier of this node in the "values" map (see <see cref="TryMatch"/>)</param>
     public static CodeTreePattern RegisterWrite(
-        Predicate<Register> register,
+        CodeTreePredicate<Register> register,
         out CodeTreePattern id,
         CodeTreePattern value) => id = new RegisterWritePattern(register, value);
 
@@ -139,7 +150,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
     public static CodeTreePattern WildcardNode => new WildcardNodePattern();
 
     private sealed record BinaryOperationNodePattern(
-        Predicate<BinaryOperation> Operation,
+        CodeTreePredicate<BinaryOperation> Operation,
         CodeTreePattern Left,
         CodeTreePattern Right) : CodeTreePattern
     {
@@ -149,7 +160,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         {
             leaves = null;
             return root is BinaryOperationNode node &&
-                   Operation.Invoke(node.Operation) &&
+                   Operation.Invoke(node.Operation, values.ValuesOfType<BinaryOperation, CodeTreePattern, object>()) &&
                    Run(values[this] = node.Operation) &&
                    Left.TryMatch(node.Left, out var leftLeaves, values) &&
                    Right.TryMatch(node.Right, out var rightLeaves, values) &&
@@ -157,7 +168,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         }
     }
 
-    private sealed record UnaryOperationNodePattern(Predicate<UnaryOperation> Operation, CodeTreePattern Operand) : CodeTreePattern
+    private sealed record UnaryOperationNodePattern(CodeTreePredicate<UnaryOperation> Operation, CodeTreePattern Operand) : CodeTreePattern
     {
         public override bool TryMatch(CodeTreeNode root,
             [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
@@ -165,13 +176,13 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         {
             leaves = null;
             return root is UnaryOperationNode node &&
-                   Operation.Invoke(node.Operation) &&
+                   Operation.Invoke(node.Operation, values.ValuesOfType<UnaryOperation, CodeTreePattern, object>()) &&
                    Run(values[this] = node.Operation) &&
                    Operand.TryMatch(node.Operand, out leaves, values);
         }
     }
 
-    private sealed record ConstantPattern(Predicate<RegisterValue> Value) : CodeTreePattern
+    private sealed record ConstantPattern(CodeTreePredicate<RegisterValue> Value) : CodeTreePattern
     {
         public override bool TryMatch(CodeTreeNode root,
             out IEnumerable<CodeTreeValueNode> leaves,
@@ -179,12 +190,12 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         {
             leaves = Enumerable.Empty<CodeTreeValueNode>();
             return root is Constant node &&
-                   Value.Invoke(node.Value) &&
+                   Value.Invoke(node.Value, values.ValuesOfType<RegisterValue, CodeTreePattern, object>()) &&
                    Run(values[this] = node.Value);
         }
     }
 
-    private sealed record RegisterReadPattern(Predicate<Register> Register) : CodeTreePattern
+    private sealed record RegisterReadPattern(CodeTreePredicate<Register> Register) : CodeTreePattern
     {
         public override bool TryMatch(CodeTreeNode root,
             out IEnumerable<CodeTreeValueNode> leaves,
@@ -192,12 +203,12 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         {
             leaves = Enumerable.Empty<CodeTreeValueNode>();
             return root is RegisterRead node &&
-                   Register.Invoke(node.Register) &&
+                   Register.Invoke(node.Register, values.ValuesOfType<Register, CodeTreePattern, object>()) &&
                    Run(values[this] = node.Register);
         }
     }
 
-    private sealed record RegisterWritePattern(Predicate<Register> Register, CodeTreePattern Value) : CodeTreePattern
+    private sealed record RegisterWritePattern(CodeTreePredicate<Register> Register, CodeTreePattern Value) : CodeTreePattern
     {
         public override bool TryMatch(CodeTreeNode root,
             [NotNullWhen(true)] out IEnumerable<CodeTreeValueNode>? leaves,
@@ -205,7 +216,7 @@ public abstract record CodeTreePattern : CodeTreePatternBase
         {
             leaves = null;
             return root is RegisterWrite node &&
-                   Register.Invoke(node.Register) &&
+                   Register.Invoke(node.Register, values.ValuesOfType<Register, CodeTreePattern, object>()) &&
                    Run(values[this] = node.Register) &&
                    Value.TryMatch(node.Value, out leaves, values);
         }

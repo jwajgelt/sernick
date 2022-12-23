@@ -34,6 +34,19 @@ public static class DictionaryExtensions
         return source.SelectMany(kv => selector(kv.Key, kv.Value));
     }
 
+    /// <summary>
+    /// Filters the dictionary to only entries, whose value has type <typeparamref name="V2"/>
+    /// </summary>
+    public static IReadOnlyDictionary<K, V2> ValuesOfType<V2, K, V1>(this IEnumerable<KeyValuePair<K, V1>> dict)
+        where K : notnull
+        where V1 : notnull
+        where V2 : V1
+    {
+        return dict
+            .Where(kv => kv.Value is V2)
+            .ToDictionary(kv => kv.Key, kv => (V2)kv.Value);
+    }
+
     [return: NotNullIfNotNull("key")]
     public static TType? GetOrKey<TType>(this IReadOnlyDictionary<TType, TType> dictionary, TType? key)
     {
