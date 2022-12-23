@@ -98,6 +98,10 @@ public sealed class SpillsAllocator
         var newAllocation = allocation
             .Where(entry => entry.Value != null)
             .ToDictionary(entry => entry.Key, entry => entry.Value!);
+        foreach (var hardwareRegister in _registersReserve)
+        {
+            newAllocation[hardwareRegister] = hardwareRegister;
+        }
 
         return (asm.SelectMany(HandleSpill).ToList(), newAllocation);
     }
