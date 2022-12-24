@@ -144,6 +144,13 @@ public static class LivenessAnalyzer
 
         foreach (var x in registers)
         {
+            interferenceGraph[x].Add(HardwareRegister.RBP);
+        }
+
+        interferenceGraph[HardwareRegister.RBP].UnionWith(registers.Except(HardwareRegister.RBP.Enumerate()));
+
+        foreach (var x in registers)
+        {
             copyGraph[x].ExceptWith(interferenceGraph[x]);
         }
 
