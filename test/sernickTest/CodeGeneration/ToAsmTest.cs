@@ -161,17 +161,6 @@ public class ToAsmTest
     }
 
     [Fact]
-    public void CallCcToAsm()
-    {
-        var dict = new Dictionary<Register, HardwareRegister>();
-        var call = new CallInstruction("target");
-
-        var asm = call.ToAsm(dict);
-
-        Assert.Equal("\tcall\ttarget", asm);
-    }
-
-    [Fact]
     public void JmpCcToAsm()
     {
         var dict = new Dictionary<Register, HardwareRegister>();

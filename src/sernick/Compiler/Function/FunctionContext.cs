@@ -31,7 +31,7 @@ public sealed class FunctionContext : IFunctionContext
     )
     {
         Label = label;
-        Depth = (parent?.Depth + 1) ?? 0;
+        Depth = parent?.Depth + 1 ?? 0;
         ValueIsReturned = returnsValue;
 
         _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
