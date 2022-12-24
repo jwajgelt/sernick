@@ -123,7 +123,7 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(Reg(rsp).Write(tmpRsp.Read()));
 
         // Remove arguments from stack (we already returned from call)
-        operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE * arguments.Count));
+        operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE * stackArgs.Count));
 
         // If value is returned, then put it from RAX to virtual register
         CodeTreeValueNode? returnValueLocation = null;
