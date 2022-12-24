@@ -73,7 +73,7 @@ public class LinearizatorTest
         var numUniqueNodes = 3;
         var numExpectedLabels = 2;
 
-        Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
+        Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count);
         Assert.Same(conditionalNode, (actual[0] as IdentityInstructionNode)?.Node);
         Assert.IsType<Label>(actual[1]);
         Assert.Same(trueCaseNode, (actual[2] as IdentityInstructionNode)?.Node);
@@ -116,7 +116,7 @@ public class LinearizatorTest
 
         var numUniqueNodes = 4;
         var numExpectedLabels = 3;
-        Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
+        Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count);
 
         // CN1 -- only "instruction set" without a label
         Assert.Same(cn1, (actual[0] as IdentityInstructionNode)?.Node);
@@ -175,7 +175,7 @@ public class LinearizatorTest
         var numUniqueNodes = 5;
         var numExpectedLabels = 4;
 
-        Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count());
+        Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count);
 
         // CN1 -- only "instruction set" without a label
         Assert.Same(cn1, (actual[0] as IdentityInstructionNode)?.Node);

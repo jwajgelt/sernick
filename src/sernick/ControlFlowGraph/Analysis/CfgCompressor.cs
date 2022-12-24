@@ -1,6 +1,5 @@
 namespace sernick.ControlFlowGraph.Analysis;
 
-using System.Diagnostics;
 using CodeTree;
 
 public static class CfgCompressor
@@ -50,11 +49,15 @@ public static class CfgCompressor
         IReadOnlyDictionary<CodeTreeRoot, uint> inDegree,
         IDictionary<CodeTreeRoot, CodeTreeRoot> cache)
     {
+        if (cache.TryGetValue(root, out var cached))
+        {
+            return cached;
+        }
+
         switch (root)
         {
             case ConditionalJumpNode conditionalJumpRoot:
-                // Assumption: all conditional roots have in-degree = 1
-                Debug.Assert(inDegree[root] == 1u);
+                // Assumption: no backward edge ends in a ConditionalJumpNode
                 return cache[root] = new ConditionalJumpNode(
                     trueCase: CompressPath(conditionalJumpRoot.TrueCase, inDegree, cache),
                     falseCase: CompressPath(conditionalJumpRoot.FalseCase, inDegree, cache),
@@ -73,8 +76,7 @@ public static class CfgCompressor
                 cache[root] = compressed;
                 if (next is not null)
                 {
-                    cache.TryGetValue(next, out var compressedNext);
-                    compressed.NextTree = compressedNext ?? CompressPath(next, inDegree, cache);
+                    compressed.NextTree = CompressPath(next, inDegree, cache);
                 }
 
                 return compressed;
