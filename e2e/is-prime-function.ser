@@ -1,0 +1,26 @@
+fun isPrime(int n): Bool {
+    if(n == 1){ return False; }
+    var i = 2;
+    var isPrime = True;
+    Loop {
+        if(i * i > n){ 
+            return isPrime;
+        } 
+        var k = n/i;
+        const nDivisibleByI = k*i == n;
+        if(nDivisibleByI){
+            return False;
+        }else{
+            i = i + 1;
+        }
+    }
+}
+
+var n = read();
+write(n);
+const isPrimeN : Bool = isPrime(n);
+if(isPrimeN){
+    write(1);
+}else{
+    write(0);
+}
