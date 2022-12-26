@@ -10,10 +10,7 @@ public abstract record CodeTreeRoot : CodeTreeNode;
 /// <param name="TrueCase">The code tree to jump to if the condition is true</param>
 /// <param name="FalseCase">The code tree to jump to if the condition is false</param>
 /// <param name="ConditionEvaluation">Code tree for evaluating the condition</param>
-public sealed record ConditionalJumpNode
-(
-    CodeTreeValueNode ConditionEvaluation
-) : CodeTreeRoot
+public sealed record ConditionalJumpNode(CodeTreeValueNode ConditionEvaluation) : CodeTreeRoot
 {
     public ConditionalJumpNode(CodeTreeRoot trueCase,
         CodeTreeRoot falseCase,
@@ -52,7 +49,7 @@ public sealed record SingleExitNode(IReadOnlyList<CodeTreeNode> Operations) : Co
         NextTree = nextTree;
     }
 
-    public CodeTreeRoot? NextTree { get; set; } = null;
+    public CodeTreeRoot? NextTree { get; set; }
 
     private readonly Lazy<string> _toString =
         new(() => (Operations.Count > 0 ? string.Join(',', Operations) : "[empty]") + '\n');
