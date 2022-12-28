@@ -9,7 +9,6 @@ using static PlatformConstants;
 
 public sealed class FunctionContext : IFunctionContext
 {
-    private readonly IFunctionContext? _parentContext;
     private readonly IReadOnlyList<IFunctionParam> _functionParameters;
 
     // Maps accesses to registers/memory
@@ -19,6 +18,7 @@ public sealed class FunctionContext : IFunctionContext
     private readonly Register _oldDisplayValReg;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
 
+    public IFunctionContext? ParentContext { get; }
     public Label Label { get; }
     public int Depth { get; }
     public bool ValueIsReturned { get; }
@@ -31,11 +31,11 @@ public sealed class FunctionContext : IFunctionContext
     )
     {
         Label = label;
+        ParentContext = parent;
         Depth = (parent?.Depth + 1) ?? 0;
         ValueIsReturned = returnsValue;
 
         _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
-        _parentContext = parent;
         _functionParameters = parameters;
         _registerToTemporaryMap = CalleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _localsOffset = new RegisterValue(0, false);
@@ -240,7 +240,7 @@ public sealed class FunctionContext : IFunctionContext
         if (!_localVariableLocation.TryGetValue(variable, out var local))
         {
             // If variable isn't in this context then it should be is the context of some ancestor.
-            return _parentContext?.GetIndirectVariableLocation(variable) ??
+            return ParentContext?.GetIndirectVariableLocation(variable) ??
                    throw new ArgumentException("Variable is undefined");
         }
 
@@ -262,13 +262,13 @@ public sealed class FunctionContext : IFunctionContext
 
     private CodeTreeValueNode GetParentsIndirectVariableLocation(IFunctionVariable variable)
     {
-        if (_parentContext == null)
+        if (ParentContext == null)
         {
             // Get indirect location from ancestors' contexts or throw an error if variable wasn't defined in any context.
             throw new ArgumentException("Variable is undefined");
         }
 
-        return _parentContext.GetIndirectVariableLocation(variable);
+        return ParentContext.GetIndirectVariableLocation(variable);
     }
 }
 
