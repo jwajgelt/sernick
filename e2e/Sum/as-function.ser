@@ -1,0 +1,30 @@
+// Input -- two lines
+// First line N -- natural number
+// Second line -- N numbers a_1, ... a_n
+// Output -- sum of all the numbers a_1, ..., a_n
+
+const n = read();
+write("%d\n",n);
+
+function readAndAdd(currentSum: Int): Int {
+    var x = read();
+    write("%d ", x);
+    return currentSum + x;
+}
+
+function calculateSum(n: Int): Int {
+    var n1 = 0;
+    var sum = 0;
+    Loop {
+        if(n1  n){
+            break;
+        }else{
+            n1 = n1 + 1;
+            sum = readAndAdd(sum);
+        }
+    }
+    return sum;
+}
+
+write("\n");
+write("%d", calculateSum(n));

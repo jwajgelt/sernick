@@ -33,4 +33,10 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="EndToEnd\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="EndToEnd\" />
+  </ItemGroup>
 </Project>
