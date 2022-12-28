@@ -1,5 +1,5 @@
 var n = read();
-write(n);
+write("%d\n", n);
 
 if(n == 1){
     write(1);

@@ -1,0 +1,22 @@
+// Input -- two lines
+// First line N -- natural number
+// Second line -- N numbers a_1, ... a_n
+// Output -- sum of all the numbers a_1, ..., a_n
+
+const n = read();
+write("%d\n",n);
+const i = 0;
+var result = 0;
+
+Loop {
+    var nextNumber = read();
+    write("%d ",nextNumber); // do we have "writeln"?
+    result = result + nextNumber;
+    i = i + 1;
+    if(i == n){
+        break;
+    }
+}
+
+write("\n");
+write("%d", result);
