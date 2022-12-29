@@ -31,4 +31,3 @@ def fibonacci_of(n):
 
 n=int(input())
 print(n)
-print(fibonacci_of(n))
