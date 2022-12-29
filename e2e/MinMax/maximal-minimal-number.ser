@@ -4,7 +4,6 @@
 // Output -- minimal and maximal of a_1, ..., a_n
 
 const n = read();
-write("%d\n", n);
 
 var maxNumber = -2 * 1000 * 1000 * 1000;
 var minNumber =  2 * 1000 * 1000 * 1000;
@@ -13,18 +12,19 @@ var result = 0;
 
 loop {
     var nextNumber = read();
-    write("%d ", nextNumber);
+
     if(maxNumber < nextNumber){
         maxNumber = nextNumber;
     }
     if(minNumber > nextNumber){
         minNumber = nextNumber;
     }
+
     i = i + 1;
     if(i == n){
         break;
     }
 }
 
-write("\n");
-write("%d %d", minNumber, maxNumber);
+write(minNumber);
+write(maxNumber);

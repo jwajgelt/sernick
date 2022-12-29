@@ -6,6 +6,6 @@ fun fib(n: Int): Int {
 }
 
 var n = read();
-write("%d\n", n);
+
 var res = fib(n); 
 write(res);

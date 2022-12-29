@@ -1,5 +1,4 @@
 var n = read();
-write("%d\n", n);
 
 if(n == 1){
     write(1);
@@ -21,4 +20,5 @@ loop {
     twoPrevious = previous;
     previous = res;
 }
+
 write(res);

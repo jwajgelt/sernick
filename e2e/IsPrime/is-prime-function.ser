@@ -47,7 +47,7 @@ fun isPrime(n: Int): Bool {
 }
 
 var n = read();
-write("%d\n", n);
+
 const isPrimeN : Bool = isPrime(n);
 if(isPrimeN){
     write(1);
