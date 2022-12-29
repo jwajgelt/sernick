@@ -127,7 +127,7 @@ public static class VariableAccessMapPreprocess
                 var declaringFunction = _variableDeclaringFunction[declaration];
                 if (declaringFunction != currentFun)
                 {
-                    _diagnostics.Report(new InnerFunctionConstVariableWriteError(declaringFunction, currentFun, assignment));
+                    _diagnostics.Report(new InnerFunctionConstVariableWriteError(declaringFunction, declaration, currentFun, assignment));
                 }
             }
 

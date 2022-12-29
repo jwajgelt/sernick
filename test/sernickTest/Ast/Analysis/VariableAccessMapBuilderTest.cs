@@ -263,7 +263,7 @@ public class VariableAccessMapBuilderTest
         var diagnostics = new FakeDiagnostics();
         VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
 
-        var expected = new InnerFunctionConstVariableWriteError(ast, foo, xAssign1);
+        var expected = new InnerFunctionConstVariableWriteError(ast, xDeclare, foo, xAssign1);
         Assert.Equal(expected, diagnostics.DiagnosticItems.Single());
     }
 
@@ -289,7 +289,7 @@ public class VariableAccessMapBuilderTest
         var diagnostics = new FakeDiagnostics();
         VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
 
-        var expected = new InnerFunctionConstVariableWriteError(foo, bar, xAssign1);
+        var expected = new InnerFunctionConstVariableWriteError(foo, xDeclare, bar, xAssign1);
         Assert.Equal(expected, diagnostics.DiagnosticItems.Single());
     }
 
@@ -320,7 +320,7 @@ public class VariableAccessMapBuilderTest
         var diagnostics = new FakeDiagnostics();
         VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
 
-        var expected = new InnerFunctionConstVariableWriteError(ast, c, xAssign1);
+        var expected = new InnerFunctionConstVariableWriteError(ast, xDeclare, c, xAssign1);
         Assert.Equal(expected, diagnostics.DiagnosticItems.Single());
     }
 
@@ -357,8 +357,8 @@ public class VariableAccessMapBuilderTest
         var diagnostics = new FakeDiagnostics();
         VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
 
-        var xError = new InnerFunctionConstVariableWriteError(ast, c, xAssign1);
-        var yError = new InnerFunctionConstVariableWriteError(a, b, yAssign1);
+        var xError = new InnerFunctionConstVariableWriteError(ast, xDeclare, c, xAssign1);
+        var yError = new InnerFunctionConstVariableWriteError(a, yDeclare, b, yAssign1);
 
         Assert.Equal(2, diagnostics.DiagnosticItems.LongCount());
         Assert.Contains(xError, diagnostics.DiagnosticItems);
