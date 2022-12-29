@@ -2,10 +2,10 @@ import shutil
 import random
 import os
 
-
 input_dir = r'Input2'
 output_dir = r'Output2'
 global_file_counter = 0
+random.seed()
 
 def remove_and_create_folders():
     for directory in [input_dir, output_dir]:
@@ -20,8 +20,6 @@ def create_files(num_files = 5, numbers_count=1000*1000, min_number = 1, max_num
         global_file_counter += 1
         input_file = os.path.join(input_dir, str(file_number)+ '.in')
         output_file = os.path.join(output_dir, str(file_number) + '.out')
-
-        random.seed()
 
         data=[random.randrange(min_number, max_number) for _ in range(numbers_count)]
 
