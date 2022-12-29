@@ -1,4 +1,0 @@
-var a = (
-    fun foo(): Bool { return True;} ;
-    if(1 === 1){ True; } else { False; }
-)
