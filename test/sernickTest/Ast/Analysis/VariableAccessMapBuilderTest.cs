@@ -1,5 +1,6 @@
 namespace sernickTest.Ast.Analysis;
 
+using Diagnostics;
 using sernick.Ast;
 using sernick.Ast.Analysis.VariableAccess;
 using static Helpers.AstNodesExtensions;
@@ -22,7 +23,10 @@ public class VariableAccessMapBuilderTest
                 .Get(out var foo)
         );
         var nameResolution = NameResolution().WithVars((xVal, xDeclare));
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        var diagnostics = new FakeDiagnostics();
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+
+        Assert.Empty(diagnostics.DiagnosticItems);
 
         Assert.Single(variableAccessMap[foo], item => item.Equals((xDeclare, VariableAccessMode.ReadOnly)));
     }
@@ -41,7 +45,10 @@ public class VariableAccessMapBuilderTest
                 .Get(out var foo)
             );
         var nameResolution = NameResolution().WithAssigns((xAssign, xDeclare));
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        var diagnostics = new FakeDiagnostics();
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+
+        Assert.Empty(diagnostics.DiagnosticItems);
 
         Assert.Single(variableAccessMap[foo], item => item.Equals((xDeclare, VariableAccessMode.WriteAndRead)));
     }
@@ -56,7 +63,10 @@ public class VariableAccessMapBuilderTest
                 .Get(out var foo)
         );
         var nameResolution = NameResolution();
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        var diagnostics = new FakeDiagnostics();
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+
+        Assert.Empty(diagnostics.DiagnosticItems);
 
         Assert.Single(variableAccessMap[foo], item => item.Equals((xDeclare, VariableAccessMode.WriteAndRead)));
     }
@@ -82,7 +92,10 @@ public class VariableAccessMapBuilderTest
         var nameResolution = NameResolution()
             .WithVars((xVal, xDeclare))
             .WithAssigns((xAssign, xDeclare));
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        var diagnostics = new FakeDiagnostics();
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+
+        Assert.Empty(diagnostics.DiagnosticItems);
 
         Assert.Single(variableAccessMap[foo], item => item.Equals((xDeclare, VariableAccessMode.WriteAndRead)));
     }
@@ -127,7 +140,10 @@ public class VariableAccessMapBuilderTest
             (xAssign, xDeclare),
             (yAssign, yDeclare),
             (zAssign, zDeclare));
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        var diagnostics = new FakeDiagnostics();
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+
+        Assert.Empty(diagnostics.DiagnosticItems);
 
         Assert.Single(variableAccessMap[f1Def], item => item.Equals((xDeclare, VariableAccessMode.WriteAndRead)));
         Assert.Single(variableAccessMap[f2Def], item => item.Equals((yDeclare, VariableAccessMode.WriteAndRead)));
@@ -159,7 +175,10 @@ public class VariableAccessMapBuilderTest
         var nameResolution = NameResolution()
             .WithAssigns((xAssign, xDeclare), (yAssign, yDeclare))
             .WithVars((xVal, xDeclare));
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        var diagnostics = new FakeDiagnostics();
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+
+        Assert.Empty(diagnostics.DiagnosticItems);
 
         Assert.True(variableAccessMap.HasExclusiveWriteAccess(foo, xDeclare));
         Assert.True(variableAccessMap.HasExclusiveWriteAccess(foo, yDeclare));
@@ -193,7 +212,10 @@ public class VariableAccessMapBuilderTest
         var nameResolution = NameResolution().WithAssigns(
             (xAssign1, xDeclare),
             (xAssign2, xDeclare));
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        var diagnostics = new FakeDiagnostics();
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+
+        Assert.Empty(diagnostics.DiagnosticItems);
 
         Assert.True(variableAccessMap.HasExclusiveWriteAccess(foo, xDeclare));
         Assert.False(variableAccessMap.HasExclusiveWriteAccess(bar, xDeclare));
@@ -217,9 +239,129 @@ public class VariableAccessMapBuilderTest
         var nameResolution = NameResolution().WithAssigns(
             (xAssign1, xDeclare),
             (xAssign2, xDeclare));
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        var diagnostics = new FakeDiagnostics();
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+
+        Assert.Empty(diagnostics.DiagnosticItems);
 
         Assert.False(variableAccessMap.HasExclusiveWriteAccess(foo, xDeclare));
         Assert.False(variableAccessMap.HasExclusiveWriteAccess(bar, xDeclare));
+    }
+
+    [Fact]
+    public void InnerFunctionConstAssignment_Case1()
+    {
+        // const x;
+        // fun foo() { x = 1; }
+        var ast = Program(
+            Const("x", out var xDeclare),
+            Fun<UnitType>("foo")
+                .Body("x".Assign(1, out var xAssign1))
+                .Get(out var foo)
+        );
+        var nameResolution = NameResolution().WithAssigns((xAssign1, xDeclare));
+        var diagnostics = new FakeDiagnostics();
+        VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+
+        var expected = new InnerFunctionConstVariableWriteError(ast, foo, xAssign1);
+        Assert.Equal(expected, diagnostics.DiagnosticItems.Single());
+    }
+
+    [Fact]
+    public void InnerFunctionConstAssignment_Case2()
+    {
+        // fun foo() {
+        //     const x;
+        //     fun bar() {
+        //         x = 1;
+        //     }
+        // }
+        var ast = Program(
+            Fun<UnitType>("foo")
+                .Body(
+                    Const("x", out var xDeclare),
+                    Fun<UnitType>("bar")
+                        .Body("x".Assign(1, out var xAssign1))
+                        .Get(out var bar))
+                .Get(out var foo)
+        );
+        var nameResolution = NameResolution().WithAssigns((xAssign1, xDeclare));
+        var diagnostics = new FakeDiagnostics();
+        VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+
+        var expected = new InnerFunctionConstVariableWriteError(foo, bar, xAssign1);
+        Assert.Equal(expected, diagnostics.DiagnosticItems.Single());
+    }
+
+    [Fact]
+    public void NestedInnerFunctionConstAssignment()
+    {
+        // const x;
+        // fun a() {
+        //     fun b() {
+        //         fun c() {
+        //             x = 1;
+        //         }
+        //     }
+        // }
+        var ast = Program(
+            Const("x", out var xDeclare),
+            Fun<UnitType>("a")
+                .Body(
+                    Fun<UnitType>("b")
+                        .Body(
+                            Fun<UnitType>("c")
+                                .Body("x".Assign(1, out var xAssign1))
+                                .Get(out var c)
+                        )
+                )
+        );
+        var nameResolution = NameResolution().WithAssigns((xAssign1, xDeclare));
+        var diagnostics = new FakeDiagnostics();
+        VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+
+        var expected = new InnerFunctionConstVariableWriteError(ast, c, xAssign1);
+        Assert.Equal(expected, diagnostics.DiagnosticItems.Single());
+    }
+
+    [Fact]
+    public void MultipleInnerFunctionConstAssignments()
+    {
+        // const x;
+        // fun a() {
+        //     const y;
+        //     fun b() {
+        //         y = 1;
+        //         fun c() {
+        //             x = 1;
+        //         }
+        //     }
+        // }
+        var ast = Program(
+            Const("x", out var xDeclare),
+            Fun<UnitType>("a")
+                .Body(
+                    Const("y", out var yDeclare),
+                    Fun<UnitType>("b")
+                        .Body(
+                            "y".Assign(1, out var yAssign1),
+                            Fun<UnitType>("c")
+                                .Body("x".Assign(1, out var xAssign1))
+                                .Get(out var c)
+                        )
+                        .Get(out var b)
+                )
+                .Get(out var a)
+        );
+        var nameResolution = NameResolution().WithAssigns((xAssign1, xDeclare), (yAssign1, yDeclare));
+        var diagnostics = new FakeDiagnostics();
+        VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+
+        var xError = new InnerFunctionConstVariableWriteError(ast, c, xAssign1);
+        var yError = new InnerFunctionConstVariableWriteError(a, b, yAssign1);
+
+        Assert.Equal(2, diagnostics.DiagnosticItems.LongCount());
+        Assert.Contains(xError, diagnostics.DiagnosticItems);
+        Assert.Contains(yError, diagnostics.DiagnosticItems);
     }
 }

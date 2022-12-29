@@ -135,6 +135,14 @@ public static class AstNodesExtensions
     public static VariableValue Value(string name, out VariableValue result) =>
         result = new VariableValue(Ident(name), loc);
 
+    public static VariableDeclaration Const(string name, out VariableDeclaration result) =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: null,
+            InitValue: null,
+            IsConst: true,
+            loc);
+
     #endregion
 
     #region Function Call

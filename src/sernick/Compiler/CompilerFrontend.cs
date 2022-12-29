@@ -54,7 +54,8 @@ public static class CompilerFrontend
         var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
+        ThrowIfErrorsOccurred(diagnostics);
         InstallBuiltinFunctions(variableAccessMap);
 
         if (ast is not FunctionDefinition main)

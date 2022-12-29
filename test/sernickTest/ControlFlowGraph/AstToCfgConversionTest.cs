@@ -1333,7 +1333,7 @@ public class AstToCfgConversionTest
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, _ => null, new FunctionFactory(LabelGenerator.Generate));
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
         var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
             root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, SideEffectsAnalyzer.PullOutSideEffects));
