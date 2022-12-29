@@ -2,8 +2,8 @@ import shutil
 import random
 import os
 
-input_dir = r'Input2'
-output_dir = r'Output2'
+input_dir = r'Input'
+output_dir = r'Output'
 global_file_counter = 0
 random.seed()
 
