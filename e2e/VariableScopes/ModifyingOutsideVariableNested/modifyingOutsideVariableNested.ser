@@ -5,8 +5,14 @@ const oldX = x;
 const oldY = y;
 
 fun setXY(newX: Int, newY: Int): Unit {
-    x = newX;
-    y = newY;
+    fun setXYLevel2(newX2: Int, newY2: Int): Unit {
+        fun setXYLevel3(newX3: Int, newY3: Int): Unit {
+            x = newX3;
+            y = newY3;
+        }
+        setXYLevel3(newX2, newY2);
+    }
+    setXYLevel2(newX, newY);
 }
 
 fun setX(newX: Int): Unit {
@@ -14,7 +20,7 @@ fun setX(newX: Int): Unit {
 }
 
 fun setY(newY: Int): Unit {
-    y = newY;s
+    y = newY;
 }
 
 
