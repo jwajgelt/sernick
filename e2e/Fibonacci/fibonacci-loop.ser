@@ -9,8 +9,8 @@ if(n == 1){
 }
 
 var res = 0;
-twoPrevious = 0;
-previous = 1;
+var twoPrevious = 0;
+var previous = 1;
 
 loop {
     if(n == 0){
