@@ -5,12 +5,12 @@
 
 const n = read();
 
-function readAndAdd(currentSum: Int): Int {
+fun readAndAdd(currentSum: Int): Int {
     var x = read();
     return currentSum + x;
 }
 
-function calculateSum(n: Int): Int {
+fun calculateSum(n: Int): Int {
     var n1 = 0;
     var sum = 0;
     loop {
