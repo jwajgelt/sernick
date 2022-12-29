@@ -1,7 +1,7 @@
 fun isPrime(int n): Bool {
-    if(n == 1){ return False; }
+    if(n == 1){ return false; }
     var i = 2;
-    var isPrime = True;
+    var isPrime = true;
     Loop {
         if(i * i > n){ 
             return isPrime;
@@ -9,7 +9,7 @@ fun isPrime(int n): Bool {
         var k = n/i;
         const nDivisibleByI = k*i == n;
         if(nDivisibleByI){
-            return False;
+            return false;
         }else{
             i = i + 1;
         }
