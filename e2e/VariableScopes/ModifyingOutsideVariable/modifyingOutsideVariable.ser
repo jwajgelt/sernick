@@ -1,0 +1,36 @@
+fun setXY(newX: Int, newY: Int): Unit {
+    x = newX;
+    y = newY;
+}
+
+fun setX(newX: Int): Unit {
+    x = newX;
+}
+
+fun setY(newY: Int): Unit {
+    y = newY;s
+}
+
+var x = read();
+var y = read();
+
+const oldX = x;
+const oldY = y;
+
+
+setX(10);
+write(x); // 10
+write(y); // oldY
+
+x = oldX; y = oldY;
+
+setY(33);
+write(x); // oldX
+write(y); // 33
+
+setXY(100, 200);
+write(X); // 100
+write(Y); // 200
+
+
+
