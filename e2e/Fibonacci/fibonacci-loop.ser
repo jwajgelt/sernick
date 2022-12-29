@@ -12,7 +12,7 @@ var res = 0;
 twoPrevious = 0;
 previous = 1;
 
-Loop {
+loop {
     if(n == 0){
         break;
     }

@@ -15,7 +15,7 @@ function readAndAdd(currentSum: Int): Int {
 function calculateSum(n: Int): Int {
     var n1 = 0;
     var sum = 0;
-    Loop {
+    loop {
         if(n1 == n){
             break;
         }else{

@@ -8,7 +8,7 @@ write("%d\n",n);
 const i = 0;
 var result = 0;
 
-Loop {
+loop {
     var nextNumber = read();
     write("%d ",nextNumber); // do we have "writeln"?
     result = result + nextNumber;

@@ -2,7 +2,7 @@ fun isPrime(n: Int): Bool {
     if(n == 1){ return false; }
     var i = 2;
     var isPrime = true;
-    Loop {
+    loop {
         if(i * i > n){ 
             return isPrime;
         } 
