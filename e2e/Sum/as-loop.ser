@@ -4,13 +4,11 @@
 // Output -- sum of all the numbers a_1, ..., a_n
 
 const n = read();
-write("%d\n",n);
 const i = 0;
 var result = 0;
 
 loop {
     var nextNumber = read();
-    write("%d ",nextNumber); // do we have "writeln"?
     result = result + nextNumber;
     i = i + 1;
     if(i == n){
@@ -18,5 +16,4 @@ loop {
     }
 }
 
-write("\n");
-write("%d", result);
+write(result);

@@ -4,11 +4,9 @@
 // Output -- sum of all the numbers a_1, ..., a_n
 
 const n = read();
-write("%d\n",n);
 
 function readAndAdd(currentSum: Int): Int {
     var x = read();
-    write("%d ", x);
     return currentSum + x;
 }
 
@@ -26,5 +24,4 @@ function calculateSum(n: Int): Int {
     return sum;
 }
 
-write("\n");
-write("%d", calculateSum(n));
+write(calculateSum(n));
