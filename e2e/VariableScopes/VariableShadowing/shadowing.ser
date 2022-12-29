@@ -1,0 +1,34 @@
+var x = read();
+var y = read();
+
+const oldX = x;
+const oldY = y;
+
+fun setXY(newX: Int, newY: Int): Unit{
+    x = newX;
+    y = newY;
+}
+
+write(x); // oldX
+write(y); // oldY
+
+setXY(23, 91);
+
+write(x); // 23
+write(y); // 91
+
+{
+    var x = 32;
+    var y = 33;
+
+    write(x); // 32
+    write(y); // 33
+
+    setXY(10, 20); // this should change the "inner" x/y, not "outer"
+
+    write(x); // 10;
+    write(y); // 20;
+}
+
+write(x); // 23
+write(y); // 91
