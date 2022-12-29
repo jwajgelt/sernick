@@ -16,7 +16,7 @@ function calculateSum(n: Int): Int {
     var n1 = 0;
     var sum = 0;
     Loop {
-        if(n1  n){
+        if(n1 == n){
             break;
         }else{
             n1 = n1 + 1;
