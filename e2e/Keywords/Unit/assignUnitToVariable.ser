@@ -1,0 +1,4 @@
+fun returnsUnit(): Unit {}
+
+// I believe this should compile 🤔
+var unitVariable = returnsUnit();
