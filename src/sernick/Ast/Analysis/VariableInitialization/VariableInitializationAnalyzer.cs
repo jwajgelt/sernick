@@ -11,7 +11,7 @@ using VariableAccess;
 
 public static class VariableInitializationAnalyzer
 {
-    public static void Process(
+    public static void ProcessFunction(
         FunctionDefinition function,
         FunctionContextMap functionContextMap,
         VariableAccessMap variableAccessMap,
@@ -79,31 +79,36 @@ public static class VariableInitializationAnalyzer
 
     private class MultipleConstAssignmentError : VariableInitializationAnalysisError
     {
-        public MultipleConstAssignmentError(Assignment assignment)
+        public MultipleConstAssignmentError(VariableDeclaration declaration, Assignment? assignment = null)
         {
+            _declaration = declaration;
             _assignment = assignment;
         }
 
-        public override string ToString() => $"Multiple assignment of const variable {_assignment.Left} at {_assignment.LocationRange}";
+        public override string ToString() => $"Multiple assignment of const variable {_declaration}" +
+                                             (_assignment != null ? $" at {_assignment.LocationRange}" : "");
 
-        private readonly Assignment _assignment;
+        private readonly Assignment? _assignment;
+        private readonly VariableDeclaration _declaration;
     }
 
     private sealed record VariableInitializationVisitorParam
-        (ImmutableHashSet<VariableDeclaration> initializedVariables, ImmutableHashSet<VariableDeclaration> maybeInitializedVariables)
+        (ImmutableHashSet<VariableDeclaration> InitializedVariables, ImmutableHashSet<VariableDeclaration> MaybeInitializedVariables)
     {
         public VariableInitializationVisitorParam() : this(ImmutableHashSet<VariableDeclaration>.Empty, ImmutableHashSet<VariableDeclaration>.Empty) { }
     }
 
     private sealed record VariableInitializationVisitorResult(
-        ImmutableHashSet<VariableDeclaration> initializedVariables, ImmutableHashSet<VariableDeclaration> maybeInitializedVariables, bool diverges = false)
+        ImmutableHashSet<VariableDeclaration> InitializedVariables, ImmutableHashSet<VariableDeclaration> MaybeInitializedVariables, bool BreaksLoop = false, bool Returns = false)
     {
+        public bool Diverges => BreaksLoop || Returns;
+
         public VariableInitializationVisitorResult() : this(ImmutableHashSet<VariableDeclaration>.Empty, ImmutableHashSet<VariableDeclaration>.Empty) { }
 
         public VariableInitializationVisitorResult(VariableDeclaration declaration) : this(declaration.Enumerate()
             .ToImmutableHashSet(), ImmutableHashSet<VariableDeclaration>.Empty)
         {
-            maybeInitializedVariables = initializedVariables;
+            MaybeInitializedVariables = InitializedVariables;
         }
     }
 
@@ -139,16 +144,16 @@ public static class VariableInitializationAnalyzer
                 var childResult = VisitAstNode(child, new VariableInitializationVisitorParam(initializedVariables, maybeInitializedVariables));
                 if (diverges)
                 {
-                    initializedVariables = initializedVariables.Union(childResult.initializedVariables);
+                    initializedVariables = initializedVariables.Union(childResult.InitializedVariables);
                 }
                 else
                 {
-                    maybeInitializedVariables = maybeInitializedVariables.Union(childResult.initializedVariables);
+                    maybeInitializedVariables = maybeInitializedVariables.Union(childResult.InitializedVariables);
                 }
 
-                maybeInitializedVariables = maybeInitializedVariables.Union(childResult.maybeInitializedVariables);
+                maybeInitializedVariables = maybeInitializedVariables.Union(childResult.MaybeInitializedVariables);
                 maybeInitializedVariables = maybeInitializedVariables.Union(initializedVariables);
-                diverges = diverges || childResult.diverges;
+                diverges = diverges || childResult.Diverges;
             }
 
             return new VariableInitializationVisitorResult(initializedVariables, maybeInitializedVariables, diverges);
@@ -202,8 +207,8 @@ public static class VariableInitializationAnalyzer
             // calling a local function
             foreach (var variable in _localVariableAccessMap[calledFunction])
             {
-                if (!paramVisitResult.initializedVariables.Contains(variable) &&
-                    !param.initializedVariables.Contains(variable))
+                if (!paramVisitResult.InitializedVariables.Contains(variable) &&
+                    !param.InitializedVariables.Contains(variable))
                 {
                     throw new VariableInitializationVisitorException(new UninitializedNonLocalVariableUseError(variable, calledFunction));
                 }
@@ -215,38 +220,75 @@ public static class VariableInitializationAnalyzer
         public override VariableInitializationVisitorResult VisitContinueStatement(ContinueStatement node,
             VariableInitializationVisitorParam param)
         {
-            return new VariableInitializationVisitorResult { diverges = true };
+            return new VariableInitializationVisitorResult { BreaksLoop = true };
         }
 
         public override VariableInitializationVisitorResult
             VisitReturnStatement(ReturnStatement node, VariableInitializationVisitorParam param)
         {
-            return new VariableInitializationVisitorResult { diverges = true };
+            return new VariableInitializationVisitorResult { Returns = true };
         }
 
         public override VariableInitializationVisitorResult VisitBreakStatement(BreakStatement node, VariableInitializationVisitorParam param)
         {
-            return new VariableInitializationVisitorResult { diverges = true };
+            return new VariableInitializationVisitorResult { BreaksLoop = true };
         }
 
         public override VariableInitializationVisitorResult VisitIfStatement(IfStatement node, VariableInitializationVisitorParam param)
         {
-            throw new NotImplementedException("Check both branches, take the intersection of both. If either branch diverges, this statement diverges");
+            var conditionResult = node.Condition.Accept(this, param);
+
+            var innerBlockParam = new VariableInitializationVisitorParam(
+                param.InitializedVariables.Union(conditionResult.InitializedVariables),
+                param.MaybeInitializedVariables.Union(conditionResult.MaybeInitializedVariables));
+
+            var ifBranchResult = node.IfBlock.Accept(this, innerBlockParam);
+            var elseBranchResult = (node.ElseBlock ?? new EmptyExpression(node.LocationRange) as AstNode).Accept(this, innerBlockParam);
+
+            var initializedVariables =
+                ifBranchResult.InitializedVariables.Intersect(elseBranchResult.InitializedVariables);
+            var maybeInitializedVariables =
+                ifBranchResult.MaybeInitializedVariables.Union(elseBranchResult.MaybeInitializedVariables);
+
+            if (!conditionResult.Diverges)
+            {
+                return new VariableInitializationVisitorResult(
+                    conditionResult.InitializedVariables.Union(initializedVariables),
+                    conditionResult.MaybeInitializedVariables.Union(maybeInitializedVariables),
+                    conditionResult.BreaksLoop || ifBranchResult.BreaksLoop || elseBranchResult.BreaksLoop,
+                    conditionResult.Returns || ifBranchResult.Returns || elseBranchResult.Returns
+                );
+            }
+
+            return new VariableInitializationVisitorResult(
+                conditionResult.InitializedVariables,
+                conditionResult.MaybeInitializedVariables.Union(maybeInitializedVariables)
+                    .Union(initializedVariables),
+                conditionResult.BreaksLoop || ifBranchResult.BreaksLoop || elseBranchResult.BreaksLoop,
+                conditionResult.Returns || ifBranchResult.Returns || elseBranchResult.Returns
+            );
         }
 
         public override VariableInitializationVisitorResult VisitLoopStatement(LoopStatement node, VariableInitializationVisitorParam param)
         {
-            throw new NotImplementedException("Check the body, and if the result assigns to a const, reject");
+            var bodyVisitResult = node.Inner.Accept(this, param);
+
+            foreach (var variable in bodyVisitResult.MaybeInitializedVariables.Where(variable => variable.IsConst))
+            {
+                throw new VariableInitializationVisitorException(new MultipleConstAssignmentError(variable));
+            }
+
+            return bodyVisitResult with { BreaksLoop = false };
         }
 
         public override VariableInitializationVisitorResult VisitAssignment(Assignment node, VariableInitializationVisitorParam param)
         {
             var assignedVariable = _nameResolution.AssignedVariableDeclarations[node];
 
-            if (assignedVariable.IsConst && param.maybeInitializedVariables.Contains(assignedVariable))
+            if (assignedVariable.IsConst && param.MaybeInitializedVariables.Contains(assignedVariable))
             {
                 // check if there's multiple assignments to const
-                throw new VariableInitializationVisitorException(new MultipleConstAssignmentError(node));
+                throw new VariableInitializationVisitorException(new MultipleConstAssignmentError(assignedVariable, node));
             }
 
             return new VariableInitializationVisitorResult(assignedVariable);
@@ -255,7 +297,7 @@ public static class VariableInitializationAnalyzer
         public override VariableInitializationVisitorResult VisitVariableValue(VariableValue node, VariableInitializationVisitorParam param)
         {
             if (_nameResolution.UsedVariableDeclarations[node] is VariableDeclaration variableDeclaration
-                && !param.initializedVariables.Contains(variableDeclaration))
+                && !param.InitializedVariables.Contains(variableDeclaration))
             {
                 throw new VariableInitializationVisitorException(new UninitializedVariableUseError(node));
             }

@@ -5,6 +5,6 @@ public class VariableInitializationAnalyzerTest
     [Fact]
     public void ReportsErrorOnMultipleConstDeclaration()
     {
-        
+
     }
 }
