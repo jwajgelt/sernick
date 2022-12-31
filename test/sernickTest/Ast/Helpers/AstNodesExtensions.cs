@@ -75,6 +75,61 @@ public static class AstNodesExtensions
             IsConst: false,
             loc);
 
+    public static VariableDeclaration Const(string name) => Const(name, out _);
+
+    public static VariableDeclaration Const(string name, out VariableDeclaration result) => result = new VariableDeclaration(
+        Ident(name),
+        Type: null,
+        InitValue: null,
+        IsConst: true,
+        loc);
+
+    public static VariableDeclaration Const(string name, int initValue) => Const(name, initValue, out _);
+
+    public static VariableDeclaration Const(string name, int initValue, out VariableDeclaration result) =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: null,
+            InitValue: Literal(initValue),
+            IsConst: true,
+            loc);
+
+    public static VariableDeclaration Const(string name, bool initValue) => Const(name, initValue, out _);
+
+    public static VariableDeclaration Const(string name, bool initValue, out VariableDeclaration result) =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: null,
+            InitValue: Literal(initValue),
+            IsConst: true,
+            loc);
+
+    public static VariableDeclaration Const<T>(string name, bool initValue) where T : Type, new() => Var<T>(name, initValue, out _);
+
+    public static VariableDeclaration Const<T>(string name, bool initValue, out VariableDeclaration result) where T : Type, new() =>
+        Const<T>(name, Literal(initValue), out result);
+
+    public static VariableDeclaration Const<T>(string name, Expression initValue) where T : Type, new() => Var<T>(name, initValue, out _);
+
+    public static VariableDeclaration Const<T>(string name, Expression initValue, out VariableDeclaration result)
+        where T : Type, new() =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: new T(),
+            InitValue: initValue,
+            IsConst: true,
+            loc);
+
+    public static VariableDeclaration Const<T>(string name) where T : Type, new() => Const<T>(name, out _);
+
+    public static VariableDeclaration Const<T>(string name, out VariableDeclaration result) where T : Type, new() =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: new T(),
+            InitValue: null,
+            IsConst: false,
+            loc);
+
     public static VariableValue Value(string name) => Value(name, out _);
 
     public static VariableValue Value(string name, out VariableValue result) =>

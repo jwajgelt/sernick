@@ -45,13 +45,13 @@ public static class VariableInitializationAnalyzer
         }
     }
 
-    private abstract class VariableInitializationAnalysisError : IDiagnosticItem
+    public abstract class VariableInitializationAnalysisError : IDiagnosticItem
     {
         public abstract override string ToString();
         public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
     }
 
-    private class UninitializedVariableUseError : VariableInitializationAnalysisError
+    public class UninitializedVariableUseError : VariableInitializationAnalysisError
     {
         public UninitializedVariableUseError(VariableValue value)
         {
@@ -63,7 +63,7 @@ public static class VariableInitializationAnalyzer
         private readonly VariableValue _value;
     }
 
-    private class UninitializedNonLocalVariableUseError : VariableInitializationAnalysisError
+    public class UninitializedNonLocalVariableUseError : VariableInitializationAnalysisError
     {
         public UninitializedNonLocalVariableUseError(VariableDeclaration variable, FunctionDefinition functionDefinition)
         {
@@ -77,7 +77,7 @@ public static class VariableInitializationAnalyzer
         private readonly FunctionDefinition _functionDefinition;
     }
 
-    private class MultipleConstAssignmentError : VariableInitializationAnalysisError
+    public class MultipleConstAssignmentError : VariableInitializationAnalysisError
     {
         public MultipleConstAssignmentError(VariableDeclaration declaration, Assignment? assignment = null)
         {

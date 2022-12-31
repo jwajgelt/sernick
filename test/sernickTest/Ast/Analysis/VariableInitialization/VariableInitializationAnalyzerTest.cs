@@ -1,9 +1,16 @@
 namespace sernickTest.Ast.Analysis.VariableInitialization;
 
-using sernick.Ast;
+using Moq;
+using sernick.Ast.Nodes;
 using sernick.Ast.Analysis;
+using sernick.Ast.Analysis.CallGraph;
+using sernick.Ast.Analysis.VariableAccess;
+using sernick.Ast.Analysis.VariableInitialization;
+using sernick.Ast.Analysis.FunctionContextMap;
 using sernick.Ast.Analysis.NameResolution;
+using sernick.Compiler.Function;
 using sernick.Diagnostics;
+using static sernick.Ast.Analysis.VariableInitialization.VariableInitializationAnalyzer;
 using static Helpers.AstNodesExtensions;
 
 public class VariableInitializationAnalyzerTest
@@ -11,13 +18,45 @@ public class VariableInitializationAnalyzerTest
     [Fact]
     public void ErrorOnMultipleConstInitializations()
     {
-        // const x = 1; x = 2; 
+        // const x = 1; x = 2;
+        var tree = Program(
+            Const("x", 1, out var declaration),
+            "x".Assign(2, out var assignment)
+        );
+
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+        var callGraph = CallGraphBuilder.Process(tree, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
+
+        var contextFactory = SetupFunctionFactory(out var mainContext);
+        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
+
+        VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
     }
 
     [Fact]
     public void ErrorOnMultipleConstInitializations2()
     {
-        // const x = 1; if(x == 0) { x = 2;}
+        // const x = 1; if(x == 0) { x = 2; }
+        var tree = Program(
+            Const("x", 1, out var declaration),
+            If("x".Eq(Literal(1))).Then("x".Assign(2, out var assignment))
+        );
+
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+        var callGraph = CallGraphBuilder.Process(tree, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
+
+        var contextFactory = SetupFunctionFactory(out var mainContext);
+        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
+
+        VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
     }
 
     [Fact]
@@ -140,5 +179,15 @@ public class VariableInitializationAnalyzerTest
         //          break;
         //      }   
         // }
+    }
+
+    private static Mock<IFunctionFactory> SetupFunctionFactory(out IFunctionContext mainContext)
+    {
+        var contextFactory = new Mock<IFunctionFactory>();
+        mainContext = new Mock<IFunctionContext>().Object;
+        contextFactory
+            .Setup(f => f.CreateFunction(null, It.IsAny<Identifier>(), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
+            .Returns(mainContext);
+        return contextFactory;
     }
 }
