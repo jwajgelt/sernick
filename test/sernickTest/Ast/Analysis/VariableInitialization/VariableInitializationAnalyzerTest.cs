@@ -40,7 +40,7 @@ public class VariableInitializationAnalyzerTest
     [Fact]
     public void ErrorOnMultipleConstInitializations2()
     {
-        // const x = 1; if(x == 0) { x = 2; }
+        // const x = 1; if(x == 1) { x = 2; }
         var tree = Program(
             Const("x", 1, out var declaration),
             If("x".Eq(Literal(1))).Then("x".Assign(2, out var assignment))
