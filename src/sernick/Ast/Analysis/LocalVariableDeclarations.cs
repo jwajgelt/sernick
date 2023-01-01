@@ -7,7 +7,7 @@ public static class LocalVariableDeclarations
 {
     public static IEnumerable<VariableDeclaration> Process(FunctionDefinition functionDefinition)
     {
-        return functionDefinition.Accept(new LocalVariableVisitor(), Unit.I);
+        return functionDefinition.Body.Accept(new LocalVariableVisitor(), Unit.I);
     }
 
     private sealed class LocalVariableVisitor : AstVisitor<IEnumerable<VariableDeclaration>, Unit>

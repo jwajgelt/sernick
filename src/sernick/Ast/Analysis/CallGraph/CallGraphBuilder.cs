@@ -69,7 +69,7 @@ public record struct CallGraph(
             return false;
         }).ToHashSet();
 
-        var graph = enclosedFunctions.ToDictionary(function => function, _ => new HashSet<FunctionDefinition>());
+        var graph = enclosedFunctions.ToDictionary(function => function, function => new HashSet<FunctionDefinition> { function });
 
         foreach (var f in enclosedFunctions)
         {

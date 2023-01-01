@@ -340,7 +340,7 @@ public class VariableInitializationAnalyzerTest
 
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.ProcessFunction(fooDefinition, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
     }
