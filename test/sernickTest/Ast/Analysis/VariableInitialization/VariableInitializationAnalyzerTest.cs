@@ -412,7 +412,47 @@ public class VariableInitializationAnalyzerTest
     [Fact]
     public void NoErrorReentry()
     {
+        // fn foo() {
+        //      const x: Int;
+        //      fn bar() {
+        //          foo();
+        //      }
+        //      
+        //      bar();
+        //      x = 2;
+        // }
+        var tree = Program(
+            Fun<UnitType>("foo").Body(
+                Const<IntType>("x", out var xDeclaration),
+                Fun<UnitType>("bar").Body(
+                    "foo".Call()
+                ),
+                "bar".Call(),
+                "x".Assign(2)
+            )
+        );
 
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+        var callGraph = CallGraphBuilder.Process(tree, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
+
+        var contextFactory = SetupFunctionFactory(out var mainContext);
+        var fooContext = new FunctionContext(mainContext, Array.Empty<IFunctionParam>(), false, "foo");
+        contextFactory
+            .Setup(f => f.CreateFunction(mainContext, Ident("foo"), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
+            .Returns(fooContext);
+
+        var barContext = new FunctionContext(mainContext, Array.Empty<IFunctionParam>(), false, "bar");
+        contextFactory
+            .Setup(f => f.CreateFunction(mainContext, Ident("bar"), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
+            .Returns(barContext);
+
+        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
+
+        VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
     }
 
     private static Mock<IFunctionFactory> SetupFunctionFactory(out IFunctionContext mainContext)
