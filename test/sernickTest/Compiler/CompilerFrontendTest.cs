@@ -5,6 +5,7 @@ using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis;
 using sernick.Ast.Analysis.TypeChecking;
+using sernick.Ast.Analysis.VariableInitialization;
 using sernick.Ast.Nodes;
 using sernick.Compiler;
 using sernick.Diagnostics;
@@ -575,7 +576,12 @@ public class CompilerFrontendTest
             }),
             ("variable-declaration-initialization", "const_decl_and_init_and_reassignment", new IDiagnosticItem[]
             {
-                // modifying const, not detected yet
+                new VariableInitializationAnalyzer.MultipleConstAssignmentError(
+                    new Identifier(
+                        "x",
+                        new Range<ILocation>(FileUtility.LocationAt(1, 7), FileUtility.LocationAt(1, 8))
+                    )
+                )
             }),
             ("variable-declaration-initialization", "const_decl_and_init_bad_type", new IDiagnosticItem[]
             {
@@ -595,7 +601,12 @@ public class CompilerFrontendTest
             }),
             ("variable-declaration-initialization", "const_late_init_and_reassignment", new IDiagnosticItem[]
             {
-                // modifying const, not detected yet
+                new VariableInitializationAnalyzer.MultipleConstAssignmentError(
+                    new Identifier(
+                        "x",
+                        new Range<ILocation>(FileUtility.LocationAt(2, 7), FileUtility.LocationAt(2, 8))
+                    )
+                )
             }),
             ("variable-declaration-initialization", "const_late_init_bad_type", new IDiagnosticItem[]
             {

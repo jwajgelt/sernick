@@ -92,19 +92,29 @@ public static class VariableInitializationAnalyzer
         private readonly FunctionDefinition _functionDefinition;
     }
 
-    public class MultipleConstAssignmentError : VariableInitializationAnalysisError
+    public sealed class MultipleConstAssignmentError : VariableInitializationAnalysisError
     {
-        public MultipleConstAssignmentError(VariableDeclaration declaration, Assignment? assignment = null)
+        public MultipleConstAssignmentError(Identifier identifier, Assignment? assignment = null)
         {
-            _declaration = declaration;
+            _identifier = identifier;
             _assignment = assignment;
         }
 
-        public override string ToString() => $"Multiple assignment of const variable {_declaration}" +
+        public override bool Equals(object? obj)
+        {
+            return obj is MultipleConstAssignmentError other && _identifier.Equals(other._identifier);
+        }
+
+        public override int GetHashCode()
+        {
+            return _identifier.GetHashCode();
+        }
+
+        public override string ToString() => $"Multiple assignment of const variable {_identifier}" +
                                              (_assignment != null ? $" at {_assignment.LocationRange}" : "");
 
         private readonly Assignment? _assignment;
-        private readonly VariableDeclaration _declaration;
+        private readonly Identifier _identifier;
     }
 
     private sealed record VariableInitializationVisitorParam
@@ -293,7 +303,7 @@ public static class VariableInitializationAnalyzer
 
             foreach (var variable in bodyVisitResult.MaybeInitializedVariables.Where(variable => variable.IsConst))
             {
-                throw new VariableInitializationVisitorException(new MultipleConstAssignmentError(variable));
+                throw new VariableInitializationVisitorException(new MultipleConstAssignmentError(variable.Name));
             }
 
             return bodyVisitResult with { BreaksLoop = false };
@@ -306,7 +316,7 @@ public static class VariableInitializationAnalyzer
             if (assignedVariable.IsConst && param.MaybeInitializedVariables.Contains(assignedVariable))
             {
                 // check if there's multiple assignments to const
-                throw new VariableInitializationVisitorException(new MultipleConstAssignmentError(assignedVariable, node));
+                throw new VariableInitializationVisitorException(new MultipleConstAssignmentError(assignedVariable.Name, node));
             }
 
             return new VariableInitializationVisitorResult(assignedVariable);

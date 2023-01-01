@@ -4,6 +4,7 @@ using Ast.Analysis.CallGraph;
 using Ast.Analysis.NameResolution;
 using Ast.Analysis.TypeChecking;
 using Ast.Analysis.VariableAccess;
+using Ast.Analysis.VariableInitialization;
 using Ast.Nodes;
 using Ast.Nodes.Conversion;
 using Common.Dfa;
@@ -53,6 +54,14 @@ public static class CompilerFrontend
         ThrowIfErrorsOccurred(diagnostics);
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+
+        if (ast is not FunctionDefinition main)
+        {
+            throw new CompilationException("Program should parse to a `main` function definition");
+        }
+
+        VariableInitializationAnalyzer.Process(main, variableAccessMap, nameResolution, callGraph, diagnostics);
+        ThrowIfErrorsOccurred(diagnostics);
 
         return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, variableAccessMap);
     }
