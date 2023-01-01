@@ -127,7 +127,7 @@ public static class AstNodesExtensions
             Ident(name),
             Type: new T(),
             InitValue: null,
-            IsConst: false,
+            IsConst: true,
             loc);
 
     public static VariableValue Value(string name) => Value(name, out _);

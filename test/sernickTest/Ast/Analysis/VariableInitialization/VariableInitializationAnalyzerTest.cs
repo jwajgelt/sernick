@@ -24,7 +24,7 @@ public class VariableInitializationAnalyzerTest
             "x".Assign(2, out var assignment)
         );
 
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
@@ -34,19 +34,19 @@ public class VariableInitializationAnalyzerTest
 
         VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleConstAssignmentError>()));
     }
 
     [Fact]
     public void ErrorOnMultipleConstInitializations2()
     {
-        // const x = 1; if(x == 1) { x = 2; }
+        // const x = 1; if(false) { x = 2; }
         var tree = Program(
             Const("x", 1, out var declaration),
-            If("x".Eq(Literal(1))).Then("x".Assign(2, out var assignment))
+            If(Literal(false)).Then("x".Assign(2, out var assignment))
         );
 
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
@@ -56,7 +56,7 @@ public class VariableInitializationAnalyzerTest
 
         VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleConstAssignmentError>()));
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class VariableInitializationAnalyzerTest
             "x".Assign(2, out var assignment2)
         );
 
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
@@ -79,7 +79,7 @@ public class VariableInitializationAnalyzerTest
 
         VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleConstAssignmentError>()));
     }
 
     [Fact]
@@ -99,7 +99,7 @@ public class VariableInitializationAnalyzerTest
             "bar".Call()
         );
 
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
@@ -119,7 +119,7 @@ public class VariableInitializationAnalyzerTest
 
         VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
+        diagnostics.Verify(d => d.Report(It.IsAny<UninitializedNonLocalVariableUseError>()));
     }
 
     [Fact]
@@ -141,7 +141,7 @@ public class VariableInitializationAnalyzerTest
             "bar".Call()
         );
 
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
@@ -181,7 +181,7 @@ public class VariableInitializationAnalyzerTest
             "bar".Call()
         );
 
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
@@ -211,18 +211,16 @@ public class VariableInitializationAnalyzerTest
         // var y: Int;
         // if(true) {x = true} else {x = false}
         // if(x) {y = 1} else {y = 2}
-        // x = (x == false)
         // y = y + y
         var tree = Program(
             Const<BoolType>("x", out var xDeclaration),
             Var<IntType>("y", out var yDeclaration),
             If(Literal(true)).Then("x".Assign(Literal(true))).Else("x".Assign(Literal(false))),
             If(Value("x")).Then("y".Assign(1)).Else("y".Assign(2)),
-            "x".Assign((Value("x").Eq(Literal(false)))),
             "y".Assign(Value("y").Plus(Value("y")))
         );
 
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
@@ -273,7 +271,7 @@ public class VariableInitializationAnalyzerTest
             ).Get(out var fooDefinition)
         );
 
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
@@ -329,7 +327,7 @@ public class VariableInitializationAnalyzerTest
             ).Get(out var fooDefinition)
         );
 
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
@@ -365,7 +363,7 @@ public class VariableInitializationAnalyzerTest
             )
         );
 
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
@@ -396,7 +394,7 @@ public class VariableInitializationAnalyzerTest
             )
         );
 
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
@@ -432,7 +430,7 @@ public class VariableInitializationAnalyzerTest
             )
         );
 
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
