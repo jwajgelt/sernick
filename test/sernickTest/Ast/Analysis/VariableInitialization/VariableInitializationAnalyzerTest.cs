@@ -2,16 +2,16 @@ namespace sernickTest.Ast.Analysis.VariableInitialization;
 
 using Moq;
 using sernick.Ast;
-using sernick.Ast.Nodes;
 using sernick.Ast.Analysis.CallGraph;
-using sernick.Ast.Analysis.VariableAccess;
-using sernick.Ast.Analysis.VariableInitialization;
 using sernick.Ast.Analysis.FunctionContextMap;
 using sernick.Ast.Analysis.NameResolution;
+using sernick.Ast.Analysis.VariableAccess;
+using sernick.Ast.Analysis.VariableInitialization;
+using sernick.Ast.Nodes;
 using sernick.Compiler.Function;
 using sernick.Diagnostics;
-using static sernick.Ast.Analysis.VariableInitialization.VariableInitializationAnalyzer;
 using static Helpers.AstNodesExtensions;
+using static sernick.Ast.Analysis.VariableInitialization.VariableInitializationAnalyzer;
 
 public class VariableInitializationAnalyzerTest
 {
@@ -258,6 +258,37 @@ public class VariableInitializationAnalyzerTest
         //      }
         //      return x || y;
         // }
+        var tree = Program(
+            Fun<BoolType>("foo").Parameter<BoolType>("a").Parameter<IntType>("b").Body(
+                Const<BoolType>("x", out var xDeclaration),
+                Const<BoolType>("y", out var yDeclaration),
+                If(Value("a")).Then(
+                    "x".Assign(Value("b")),
+                    If(Value("x")).Then("y".Assign(Literal(true))).Else("y".Assign(Literal(false)))
+                ).Else(
+                    "y".Assign(Value("b").Eq(Literal(false))),
+                    If(Value("y")).Then("x".Assign(Value("y"))).Else("x".Assign(Value("y").Eq(Literal(false))))
+                ),
+                Return(Value("x").ScOr(Value("y")))
+            ).Get(out var fooDefinition)
+        );
+
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+        var callGraph = CallGraphBuilder.Process(tree, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
+
+        var contextFactory = SetupFunctionFactory(out var mainContext);
+        var fooContext = new FunctionContext(mainContext, fooDefinition.Parameters.ToList(), true, "foo");
+        contextFactory
+            .Setup(f => f.CreateFunction(mainContext, Ident("foo"), It.IsAny<int?>(), fooDefinition.Parameters.ToList(), true))
+            .Returns(fooContext);
+
+        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
+
+        VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+
+        diagnostics.VerifyNoOtherCalls();
     }
 
     [Fact]
@@ -283,6 +314,37 @@ public class VariableInitializationAnalyzerTest
         //      }
         //      return x || y;
         // }
+        var tree = Program(
+            Fun<BoolType>("foo").Parameter<BoolType>("a").Parameter<IntType>("b").Body(
+                Const<BoolType>("x", out var xDeclaration),
+                Const<BoolType>("y", out var yDeclaration),
+                If(Value("a")).Then(
+                    "x".Assign(Value("b")),
+                    If(Value("x")).Then("y".Assign(Literal(true))).Else("y".Assign(Literal(false)))
+                ).Else(
+                    "y".Assign(Value("b").Eq(Literal(false))),
+                    If(Value("y")).Then("y".Assign(Literal(false))).Else("x".Assign(Value("y").Eq(Literal(false))))
+                ),
+                Return(Value("x").ScOr(Value("y")))
+            ).Get(out var fooDefinition)
+        );
+
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+        var callGraph = CallGraphBuilder.Process(tree, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
+
+        var contextFactory = SetupFunctionFactory(out var mainContext);
+        var fooContext = new FunctionContext(mainContext, fooDefinition.Parameters.ToList(), true, "foo");
+        contextFactory
+            .Setup(f => f.CreateFunction(mainContext, Ident("foo"), It.IsAny<int?>(), fooDefinition.Parameters.ToList(), true))
+            .Returns(fooContext);
+
+        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
+
+        VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
     }
 
     [Fact]
@@ -344,13 +406,13 @@ public class VariableInitializationAnalyzerTest
 
         VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
-        diagnostics.VerifyNoOtherCalls();        
+        diagnostics.VerifyNoOtherCalls();
     }
 
     [Fact]
     public void NoErrorReentry()
     {
-        
+
     }
 
     private static Mock<IFunctionFactory> SetupFunctionFactory(out IFunctionContext mainContext)
