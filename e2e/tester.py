@@ -11,7 +11,6 @@ from testHelpers import get_files, should_run_generator, create_output_expected_
 
 # TODO refactor for more readable code
 # TODO refactor for less "os.path.join" -- maybe better structure would help?
-# TODO (bonus task) add argparse to do something like "python3 tester.py --clean" which would clean Output/Input/Expected directories
 
 class TestingLevel(Enum):
     ONLY_COMPILE=1
