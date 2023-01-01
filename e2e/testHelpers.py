@@ -1,5 +1,6 @@
 import os
 import subprocess
+import shutil
 import re
 import filecmp
 from typing import List
@@ -77,8 +78,18 @@ def has_tests(test_directory: str)->bool:
     input_dir = os.path.join(test_directory, INPUT_DIR)
     output_dir = os.path.join(test_directory, OUTPUT_DIR)
     expected_dir = os.path.join(test_directory, EXPECTED_DIR)
+
     for d in [input_dir, output_dir, expected_dir]:
         if not os.path.exists(d):
             logging.debug("No directory named {} for {}".format(d, test_directory))
             return False
     return True
+
+def clean_generated_files(test_directory: str)->bool:
+    input_dir = os.path.join(test_directory, INPUT_DIR)
+    output_dir = os.path.join(test_directory, OUTPUT_DIR)
+    expected_dir = os.path.join(test_directory, EXPECTED_DIR)
+
+    for d in [input_dir, output_dir, expected_dir]:
+        if os.path.exists(d):
+            shutil.rmtree(d)

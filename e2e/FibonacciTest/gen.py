@@ -36,7 +36,7 @@ def create_file(n=None):
     global global_file_counter
 
     if n is None:
-        n = random.randrange(0, 45)
+        n = random.randrange(1, 45)
 
     file_number = global_file_counter
     global_file_counter += 1

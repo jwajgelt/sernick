@@ -1,13 +1,12 @@
-import random
+import argparse
 import os
 import subprocess
-import re
 import filecmp
 from enum import Enum
 import logging
 from typing import List
 from loglevel import LOG_LEVEL
-from testHelpers import get_files, find_test_folders, get_compiled_files, has_tests, INPUT_DIR, OUTPUT_DIR, EXPECTED_DIR, TEST_DIR_REGEX
+from testHelpers import get_files, find_test_folders, get_compiled_files, has_tests, clean_generated_files, INPUT_DIR, OUTPUT_DIR, EXPECTED_DIR, TEST_DIR_REGEX
 
 # TODO refactor for more readable code
 # TODO refactor for less "os.path.join" -- maybe better structure would help?
@@ -16,6 +15,11 @@ from testHelpers import get_files, find_test_folders, get_compiled_files, has_te
 class TestingLevel(Enum):
     ONLY_COMPILE=1
     COMPILE_AND_RUN_ON_INPUT=2
+
+def prepare_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--clean', action='store_true', help="Remove all generated Input/Output/Expected directories")
+    return parser
 
 def should_run_generator(test_directory: str)->bool:
     all_files_in_dir = get_files(test_directory)
@@ -105,6 +109,22 @@ def test():
         elif testing_level == TestingLevel.COMPILE_AND_RUN_ON_INPUT:
             run_files(compiled_files=compiled_files, test_directory=test_directory)
 
-if __name__ == '__main__':
+def clean():
+    for test_directory in __TEST_FIND_TEST_FOLDERS():
+        logging.info("Cleaning {}".format(test_directory))
+        clean_generated_files(test_directory=test_directory)
+        
+
+def run():
     logging.basicConfig(level=LOG_LEVEL)
+    parser = prepare_parser()
+    args = parser.parse_args()
+    if args.clean:
+        clean()
+        return
+    
     test()
+
+if __name__ == '__main__':
+    run()
+    
