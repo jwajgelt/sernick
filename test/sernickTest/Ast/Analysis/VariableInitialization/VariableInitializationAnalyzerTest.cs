@@ -29,9 +29,6 @@ public class VariableInitializationAnalyzerTest
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
 
-        var contextFactory = SetupFunctionFactory(out var mainContext);
-        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
-
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<MultipleConstAssignmentError>()));
@@ -50,9 +47,6 @@ public class VariableInitializationAnalyzerTest
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
-
-        var contextFactory = SetupFunctionFactory(out var mainContext);
-        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
@@ -73,9 +67,6 @@ public class VariableInitializationAnalyzerTest
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
-
-        var contextFactory = SetupFunctionFactory(out var mainContext);
-        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
@@ -103,19 +94,6 @@ public class VariableInitializationAnalyzerTest
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
-
-        var contextFactory = SetupFunctionFactory(out var mainContext);
-        var fooContext = new FunctionContext(mainContext, Array.Empty<IFunctionParam>(), true, "foo");
-        contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Ident("foo"), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), true))
-            .Returns(fooContext);
-
-        var barContext = new FunctionContext(mainContext, Array.Empty<IFunctionParam>(), true, "bar");
-        contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Ident("bar"), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), true))
-            .Returns(barContext);
-
-        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
@@ -146,19 +124,6 @@ public class VariableInitializationAnalyzerTest
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
 
-        var contextFactory = SetupFunctionFactory(out var mainContext);
-        var fooContext = new FunctionContext(mainContext, Array.Empty<IFunctionParam>(), true, "foo");
-        contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Ident("foo"), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), true))
-            .Returns(fooContext);
-
-        var barContext = new FunctionContext(mainContext, Array.Empty<IFunctionParam>(), true, "bar");
-        contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Ident("bar"), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), true))
-            .Returns(barContext);
-
-        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
-
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
@@ -186,19 +151,6 @@ public class VariableInitializationAnalyzerTest
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
 
-        var contextFactory = SetupFunctionFactory(out var mainContext);
-        var fooContext = new FunctionContext(mainContext, Array.Empty<IFunctionParam>(), true, "foo");
-        contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Ident("foo"), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), true))
-            .Returns(fooContext);
-
-        var barContext = new FunctionContext(mainContext, Array.Empty<IFunctionParam>(), true, "bar");
-        contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Ident("bar"), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), true))
-            .Returns(barContext);
-
-        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
-
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.VerifyNoOtherCalls();
@@ -224,9 +176,6 @@ public class VariableInitializationAnalyzerTest
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
-
-        var contextFactory = SetupFunctionFactory(out var mainContext);
-        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
@@ -276,14 +225,6 @@ public class VariableInitializationAnalyzerTest
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
 
-        var contextFactory = SetupFunctionFactory(out var mainContext);
-        var fooContext = new FunctionContext(mainContext, fooDefinition.Parameters.ToList(), true, "foo");
-        contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Ident("foo"), It.IsAny<int?>(), fooDefinition.Parameters.ToList(), true))
-            .Returns(fooContext);
-
-        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
-
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.VerifyNoOtherCalls();
@@ -332,14 +273,6 @@ public class VariableInitializationAnalyzerTest
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
 
-        var contextFactory = SetupFunctionFactory(out var mainContext);
-        var fooContext = new FunctionContext(mainContext, fooDefinition.Parameters.ToList(), true, "foo");
-        contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Ident("foo"), It.IsAny<int?>(), fooDefinition.Parameters.ToList(), true))
-            .Returns(fooContext);
-
-        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
-
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
@@ -368,9 +301,6 @@ public class VariableInitializationAnalyzerTest
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
 
-        var contextFactory = SetupFunctionFactory(out var mainContext);
-        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
-
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
@@ -398,9 +328,6 @@ public class VariableInitializationAnalyzerTest
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
-
-        var contextFactory = SetupFunctionFactory(out var mainContext);
-        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
@@ -435,31 +362,8 @@ public class VariableInitializationAnalyzerTest
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
 
-        var contextFactory = SetupFunctionFactory(out var mainContext);
-        var fooContext = new FunctionContext(mainContext, Array.Empty<IFunctionParam>(), false, "foo");
-        contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Ident("foo"), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
-            .Returns(fooContext);
-
-        var barContext = new FunctionContext(mainContext, Array.Empty<IFunctionParam>(), false, "bar");
-        contextFactory
-            .Setup(f => f.CreateFunction(mainContext, Ident("bar"), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
-            .Returns(barContext);
-
-        var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
-
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.VerifyNoOtherCalls();
-    }
-
-    private static Mock<IFunctionFactory> SetupFunctionFactory(out IFunctionContext mainContext)
-    {
-        var contextFactory = new Mock<IFunctionFactory>();
-        mainContext = new Mock<IFunctionContext>().Object;
-        contextFactory
-            .Setup(f => f.CreateFunction(null, It.IsAny<Identifier>(), It.IsAny<int?>(), Array.Empty<IFunctionParam>(), false))
-            .Returns(mainContext);
-        return contextFactory;
     }
 }
