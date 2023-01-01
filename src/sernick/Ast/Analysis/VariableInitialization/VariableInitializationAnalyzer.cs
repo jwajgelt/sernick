@@ -45,13 +45,13 @@ public static class VariableInitializationAnalyzer
         }
     }
 
-    private abstract class VariableInitializationAnalysisError : IDiagnosticItem
+    public abstract class VariableInitializationAnalysisError : IDiagnosticItem
     {
         public abstract override string ToString();
         public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
     }
 
-    private class UninitializedVariableUseError : VariableInitializationAnalysisError
+    public class UninitializedVariableUseError : VariableInitializationAnalysisError
     {
         public UninitializedVariableUseError(VariableValue value)
         {
@@ -63,7 +63,7 @@ public static class VariableInitializationAnalyzer
         private readonly VariableValue _value;
     }
 
-    private class UninitializedNonLocalVariableUseError : VariableInitializationAnalysisError
+    public class UninitializedNonLocalVariableUseError : VariableInitializationAnalysisError
     {
         public UninitializedNonLocalVariableUseError(VariableDeclaration variable, FunctionDefinition functionDefinition)
         {
@@ -77,7 +77,7 @@ public static class VariableInitializationAnalyzer
         private readonly FunctionDefinition _functionDefinition;
     }
 
-    private class MultipleConstAssignmentError : VariableInitializationAnalysisError
+    public class MultipleConstAssignmentError : VariableInitializationAnalysisError
     {
         public MultipleConstAssignmentError(VariableDeclaration declaration, Assignment? assignment = null)
         {
@@ -135,13 +135,13 @@ public static class VariableInitializationAnalyzer
 
         protected override VariableInitializationVisitorResult VisitAstNode(AstNode node, VariableInitializationVisitorParam param)
         {
-            var initializedVariables = ImmutableHashSet<VariableDeclaration>.Empty;
-            var maybeInitializedVariables = ImmutableHashSet<VariableDeclaration>.Empty;
+            var initializedVariables = param.InitializedVariables;
+            var maybeInitializedVariables = param.MaybeInitializedVariables;
             var diverges = false;
 
             foreach (var child in node.Children)
             {
-                var childResult = VisitAstNode(child, new VariableInitializationVisitorParam(initializedVariables, maybeInitializedVariables));
+                var childResult = child.Accept(this, new VariableInitializationVisitorParam(initializedVariables, maybeInitializedVariables));
                 if (diverges)
                 {
                     initializedVariables = initializedVariables.Union(childResult.InitializedVariables);
@@ -159,39 +159,15 @@ public static class VariableInitializationAnalyzer
             return new VariableInitializationVisitorResult(initializedVariables, maybeInitializedVariables, diverges);
         }
 
-        protected override VariableInitializationVisitorResult VisitDeclaration(Declaration node, VariableInitializationVisitorParam param)
-        {
-            // this should be unreachable
-            throw new NotSupportedException();
-        }
-
-        protected override VariableInitializationVisitorResult VisitSimpleValue(SimpleValue node, VariableInitializationVisitorParam param)
-        {
-            // this should be unreachable
-            throw new NotSupportedException();
-        }
-
         protected override VariableInitializationVisitorResult VisitLiteralValue(LiteralValue node, VariableInitializationVisitorParam param)
         {
             return new VariableInitializationVisitorResult();
-        }
-
-        public override VariableInitializationVisitorResult VisitIdentifier(Identifier node, VariableInitializationVisitorParam param)
-        {
-            // this should be unreachable
-            throw new NotSupportedException();
         }
 
         public override VariableInitializationVisitorResult VisitVariableDeclaration(VariableDeclaration node,
             VariableInitializationVisitorParam param)
         {
             return node.InitValue != null ? new VariableInitializationVisitorResult(node) : new VariableInitializationVisitorResult();
-        }
-
-        public override VariableInitializationVisitorResult VisitFunctionDefinition(FunctionDefinition node,
-            VariableInitializationVisitorParam param)
-        {
-            return new VariableInitializationVisitorResult();
         }
 
         public override VariableInitializationVisitorResult VisitFunctionCall(FunctionCall node, VariableInitializationVisitorParam param)
@@ -240,7 +216,7 @@ public static class VariableInitializationAnalyzer
 
             var innerBlockParam = new VariableInitializationVisitorParam(
                 param.InitializedVariables.Union(conditionResult.InitializedVariables),
-                param.MaybeInitializedVariables.Union(conditionResult.MaybeInitializedVariables));
+                param.MaybeInitializedVariables.Union(conditionResult.MaybeInitializedVariables).Union(conditionResult.InitializedVariables));
 
             var ifBranchResult = node.IfBlock.Accept(this, innerBlockParam);
             var elseBranchResult = (node.ElseBlock ?? new EmptyExpression(node.LocationRange) as AstNode).Accept(this, innerBlockParam);
