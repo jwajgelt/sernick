@@ -6,7 +6,8 @@ from enum import Enum
 import logging
 from typing import List
 from loglevel import LOG_LEVEL
-from testHelpers import get_files, find_test_folders, get_compiled_files, has_tests, clean_generated_files, INPUT_DIR, OUTPUT_DIR, EXPECTED_DIR, TEST_DIR_REGEX
+from onlyForTestingTester import test_find_test_folders, test_get_compiled_files
+from testHelpers import get_files, should_run_generator, create_output_expected_dirs, find_test_folders, get_compiled_files, has_tests, clean_generated_files, INPUT_DIR, OUTPUT_DIR, EXPECTED_DIR, TEST_DIR_REGEX
 
 # TODO refactor for more readable code
 # TODO refactor for less "os.path.join" -- maybe better structure would help?
@@ -20,18 +21,6 @@ def prepare_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean', action='store_true', help="Remove all generated Input/Output/Expected directories")
     return parser
-
-def should_run_generator(test_directory: str)->bool:
-    all_files_in_dir = get_files(test_directory)
-    basenames = [os.path.basename(f) for f in all_files_in_dir]
-    return 'gen.py' in basenames
-
-def create_output_expected_dirs(test_directory: str):
-    expected_dir_path = os.path.join(test_directory, EXPECTED_DIR)
-    output_dir_path = os.path.join(test_directory, OUTPUT_DIR)
-    for d in [expected_dir_path, output_dir_path]:
-        if not os.path.exists(d):
-            os.makedirs(d)
 
 def prepare_test_data(test_directory: str) -> TestingLevel:
     logging.debug("Preparing test data for folder " + test_directory)
@@ -78,14 +67,6 @@ def check_output(test_directory: str) -> None:
         else:
             logging.info("Bad answer on " + expected + " ! ❌")
 
-def __TEST_GET_COMPILED_FILES(test_directory: str) -> List[str]:
-    return [
-            os.path.join(test_directory, "fibonacci-in-c"),
-            os.path.join(test_directory, "fibonacci-in-c-2")
-        ]
-
-def __TEST_FIND_TEST_FOLDERS() -> str:
-    return [os.path.join('.', 'FibonacciTest')]
 
 def run_files(compiled_files: List[str], test_directory: str)->None:
     for binary_file in compiled_files:
@@ -93,15 +74,15 @@ def run_files(compiled_files: List[str], test_directory: str)->None:
             run_file_on_input(binary_file_path=binary_file, test_dir_path=test_directory)
             check_output(test_directory)
         except Exception:
-            logging.error("Unknown exception occured, proceeding")
+            logging.error("Unknown exception occurred, proceeding")
     
 def test():
-    for test_directory in __TEST_FIND_TEST_FOLDERS():#  find_test_folders('.'):
+    for test_directory in test_find_test_folders():#  find_test_folders('.'):
         logging.info("-----------")
         
         testing_level = prepare_test_data(test_directory)
 
-        compiled_files = __TEST_GET_COMPILED_FILES(test_directory=test_directory) # just for testing TODO uncomment for the line below
+        compiled_files = test_get_compiled_files(test_directory=test_directory) # just for testing TODO uncomment for the line below
         # compiled_files = compile_sernick_files(directory) 
 
         if testing_level == TestingLevel.ONLY_COMPILE:
@@ -110,7 +91,7 @@ def test():
             run_files(compiled_files=compiled_files, test_directory=test_directory)
 
 def clean():
-    for test_directory in __TEST_FIND_TEST_FOLDERS():
+    for test_directory in test_find_test_folders():
         logging.info("Cleaning {}".format(test_directory))
         clean_generated_files(test_directory=test_directory)
         

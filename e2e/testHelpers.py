@@ -93,3 +93,15 @@ def clean_generated_files(test_directory: str)->bool:
     for d in [input_dir, output_dir, expected_dir]:
         if os.path.exists(d):
             shutil.rmtree(d)
+
+def should_run_generator(test_directory: str)->bool:
+    all_files_in_dir = get_files(test_directory)
+    basenames = [os.path.basename(f) for f in all_files_in_dir]
+    return 'gen.py' in basenames
+
+def create_output_expected_dirs(test_directory: str):
+    expected_dir_path = os.path.join(test_directory, EXPECTED_DIR)
+    output_dir_path = os.path.join(test_directory, OUTPUT_DIR)
+    for d in [expected_dir_path, output_dir_path]:
+        if not os.path.exists(d):
+            os.makedirs(d)
