@@ -135,8 +135,8 @@ public class VariableInitializationAnalyzerTest
         // fun bar(): Int { return y; };
         // foo(); bar();
         var tree = Program(
-            Var("x", 1, out var xDeclaration),
-            Const("y", 2, out var yDeclaration),
+            Var("x", 1),
+            Const("y", 2),
             Fun<IntType>("foo").Body(Return(Value("x"))),
             Fun<IntType>("bar").Body(Return(Value("y"))),
             "foo".Call(),
@@ -162,8 +162,8 @@ public class VariableInitializationAnalyzerTest
         // if(x) {y = 1} else {y = 2}
         // y = y + y
         var tree = Program(
-            Const<BoolType>("x", out var xDeclaration),
-            Var<IntType>("y", out var yDeclaration),
+            Const<BoolType>("x"),
+            Var<IntType>("y"),
             If(Literal(true)).Then("x".Assign(Literal(true))).Else("x".Assign(Literal(false))),
             If(Value("x")).Then("y".Assign(1)).Else("y".Assign(2)),
             "y".Assign(Value("y").Plus(Value("y")))
@@ -204,8 +204,8 @@ public class VariableInitializationAnalyzerTest
         // }
         var tree = Program(
             Fun<BoolType>("foo").Parameter<BoolType>("a").Parameter<IntType>("b").Body(
-                Const<BoolType>("x", out var xDeclaration),
-                Const<BoolType>("y", out var yDeclaration),
+                Const<BoolType>("x"),
+                Const<BoolType>("y"),
                 If(Value("a")).Then(
                     "x".Assign(Value("b")),
                     If(Value("x")).Then("y".Assign(Literal(true))).Else("y".Assign(Literal(false)))
@@ -214,7 +214,7 @@ public class VariableInitializationAnalyzerTest
                     If(Value("y")).Then("x".Assign(Value("y"))).Else("x".Assign(Value("y").Eq(Literal(false))))
                 ),
                 Return(Value("x").ScOr(Value("y")))
-            ).Get(out var fooDefinition)
+            )
         );
 
         var diagnostics = new Mock<IDiagnostics>();
@@ -314,7 +314,7 @@ public class VariableInitializationAnalyzerTest
         //      }   
         // }
         var tree = Program(
-            Var<IntType>("x", out var declaration),
+            Var<IntType>("x"),
             Loop(
                 "x".Assign(1),
                 If(Value("x") == Literal(2)).Then(Break)
@@ -345,13 +345,13 @@ public class VariableInitializationAnalyzerTest
         // }
         var tree = Program(
             Fun<UnitType>("foo").Body(
-                Const<IntType>("x", out var xDeclaration),
+                Const<IntType>("x"),
                 Fun<UnitType>("bar").Body(
                     "foo".Call()
                 ),
                 "bar".Call(),
                 "x".Assign(2)
-            ).Get(out var fooDefinition)
+            )
         );
 
         var diagnostics = new Mock<IDiagnostics>();
