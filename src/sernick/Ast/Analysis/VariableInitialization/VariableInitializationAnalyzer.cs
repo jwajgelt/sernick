@@ -11,7 +11,20 @@ using VariableAccess;
 
 public static class VariableInitializationAnalyzer
 {
-    public static void ProcessFunction(
+    public static void Process(
+        FunctionContextMap functionContextMap,
+        VariableAccessMap variableAccessMap,
+        NameResolutionResult nameResolution,
+        CallGraph callGraph,
+        IDiagnostics diagnostics)
+    {
+        foreach (var functionDefinition in callGraph.Graph.Keys)
+        {
+            ProcessFunction(functionDefinition, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics);
+        }
+    }
+
+    private static void ProcessFunction(
         FunctionDefinition function,
         FunctionContextMap functionContextMap,
         VariableAccessMap variableAccessMap,

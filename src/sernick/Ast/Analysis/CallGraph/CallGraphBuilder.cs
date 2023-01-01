@@ -50,6 +50,10 @@ public record struct CallGraph(
         return new CallGraph(graph);
     }
 
+    /// <summary>
+    /// Produces a (transitively closed) call graph of functions scoped within
+    /// a given function, excluding calls to functions outside of that scope.
+    /// </summary>
     public CallGraph ClosureWithinScope(FunctionDefinition enclosingFunction, FunctionContextMap functionContextMap)
     {
         var enclosingFunctionContext = functionContextMap[enclosingFunction];
