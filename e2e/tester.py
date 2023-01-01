@@ -17,15 +17,25 @@ class TestingLevel(Enum):
     ONLY_COMPILE=1
     COMPILE_AND_RUN_ON_INPUT=2
 
+def should_run_generator(test_directory: str)->bool:
+    all_files_in_dir = get_files(test_directory)
+    basenames = [os.path.basename(f) for f in all_files_in_dir]
+    return 'gen.py' in basenames
+
+def create_output_expected_dirs(test_directory: str):
+    expected_dir_path = os.path.join(test_directory, EXPECTED_DIR)
+    output_dir_path = os.path.join(test_directory, OUTPUT_DIR)
+    for d in [expected_dir_path, output_dir_path]:
+        if not os.path.exists(d):
+            os.makedirs(d)
+
 def prepare_test_data(test_directory: str) -> TestingLevel:
     logging.debug("Preparing test data for folder " + test_directory)
-    expected_dir_path = os.path.join(test_directory, EXPECTED_DIR)
-    if not os.path.exists(expected_dir_path):
-        os.makedirs(expected_dir_path)
 
-    all_files_in_dir = get_files(test_directory)
-    directory_contains_python_generator = True if 'gen.py' in all_files_in_dir else False
-    if directory_contains_python_generator:
+    create_output_expected_dirs(test_directory=test_directory)
+
+    should_run_python_generator = should_run_generator(test_directory=test_directory)
+    if should_run_python_generator:
         logging.debug("Running gen.py in " + test_directory)
         subprocess.run(['/usr/bin/python3', 'gen.py'], cwd=test_directory)
 
