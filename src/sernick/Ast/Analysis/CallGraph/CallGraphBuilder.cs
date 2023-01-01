@@ -1,6 +1,5 @@
 namespace sernick.Ast.Analysis.CallGraph;
 
-using FunctionContextMap;
 using NameResolution;
 using Nodes;
 using static ExternalFunctionsInfo;
@@ -48,48 +47,6 @@ public record struct CallGraph(
         }
 
         return new CallGraph(graph);
-    }
-
-    /// <summary>
-    /// Produces a (transitively closed) call graph of functions scoped within
-    /// a given function, excluding calls to functions outside of that scope.
-    /// </summary>
-    public CallGraph ClosureWithinScope(FunctionDefinition enclosingFunction, FunctionContextMap functionContextMap)
-    {
-        var enclosingFunctionContext = functionContextMap[enclosingFunction];
-        var enclosedFunctions = Graph.Keys.Where(function =>
-        {
-            var functionContext = functionContextMap[function];
-            while (functionContext != null)
-            {
-                if (functionContext.ParentContext == enclosingFunctionContext)
-                {
-                    return true;
-                }
-
-                functionContext = functionContext.ParentContext;
-            }
-
-            return false;
-        }).ToHashSet();
-
-        var graph = enclosedFunctions.ToDictionary(function => function, function => new HashSet<FunctionDefinition> { function });
-
-        foreach (var f in enclosedFunctions)
-        {
-            foreach (var g in Graph[f])
-            {
-                if (enclosedFunctions.Contains(g))
-                {
-                    graph[f].Add(g);
-                }
-            }
-        }
-
-        return new CallGraph(graph.ToDictionary(
-            kv => kv.Key,
-            kv => kv.Value as IEnumerable<FunctionDefinition>
-            )).Closure();
     }
 }
 

@@ -32,7 +32,7 @@ public class VariableInitializationAnalyzerTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.Process(functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<MultipleConstAssignmentError>()));
     }
@@ -54,7 +54,7 @@ public class VariableInitializationAnalyzerTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.Process(functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<MultipleConstAssignmentError>()));
     }
@@ -77,7 +77,7 @@ public class VariableInitializationAnalyzerTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.Process(functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<MultipleConstAssignmentError>()));
     }
@@ -117,7 +117,7 @@ public class VariableInitializationAnalyzerTest
 
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.Process(functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<UninitializedNonLocalVariableUseError>()));
     }
@@ -159,7 +159,7 @@ public class VariableInitializationAnalyzerTest
 
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.Process(functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
     }
@@ -199,7 +199,7 @@ public class VariableInitializationAnalyzerTest
 
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.Process(functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.VerifyNoOtherCalls();
     }
@@ -228,7 +228,7 @@ public class VariableInitializationAnalyzerTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.Process(functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.VerifyNoOtherCalls();
     }
@@ -284,7 +284,7 @@ public class VariableInitializationAnalyzerTest
 
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.Process(functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.VerifyNoOtherCalls();
     }
@@ -340,7 +340,7 @@ public class VariableInitializationAnalyzerTest
 
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.Process(functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
     }
@@ -371,7 +371,7 @@ public class VariableInitializationAnalyzerTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.Process(functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
     }
@@ -402,7 +402,7 @@ public class VariableInitializationAnalyzerTest
         var contextFactory = SetupFunctionFactory(out var mainContext);
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.Process(functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.VerifyNoOtherCalls();
     }
@@ -448,7 +448,7 @@ public class VariableInitializationAnalyzerTest
 
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.Process(functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.VerifyNoOtherCalls();
     }

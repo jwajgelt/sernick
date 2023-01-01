@@ -3,36 +3,38 @@ namespace sernick.Ast.Analysis.VariableInitialization;
 using System.Collections.Immutable;
 using CallGraph;
 using Diagnostics;
-using FunctionContextMap;
 using NameResolution;
 using Nodes;
 using Utility;
 using VariableAccess;
+using static FunctionDefinitionHierarchyAnalysis;
 
 public static class VariableInitializationAnalyzer
 {
     public static void Process(
-        FunctionContextMap functionContextMap,
+        FunctionDefinition main,
         VariableAccessMap variableAccessMap,
         NameResolutionResult nameResolution,
         CallGraph callGraph,
         IDiagnostics diagnostics)
     {
+        var functionHierarchy = FunctionDefinitionHierarchyAnalysis.Process(main);
+
         foreach (var functionDefinition in callGraph.Graph.Keys)
         {
-            ProcessFunction(functionDefinition, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics);
+            ProcessFunction(functionDefinition, functionHierarchy, variableAccessMap, nameResolution, callGraph, diagnostics);
         }
     }
 
     private static void ProcessFunction(
         FunctionDefinition function,
-        FunctionContextMap functionContextMap,
+        FunctionHierarchy functionHierarchy,
         VariableAccessMap variableAccessMap,
         NameResolutionResult nameResolution,
         CallGraph callGraph,
         IDiagnostics diagnostics)
     {
-        var enclosedFunctionsCallGraph = callGraph.ClosureWithinScope(function, functionContextMap);
+        var enclosedFunctionsCallGraph = ClosureWithinScope(callGraph, function, functionHierarchy);
         var localVariables = LocalVariableDeclarations.Process(function).ToHashSet();
 
         // for all enclosed functions, calculate the variable accesses to function's local variables
@@ -329,5 +331,32 @@ public static class VariableInitializationAnalyzer
 
         private readonly NameResolutionResult _nameResolution;
         private readonly Dictionary<FunctionDefinition, IEnumerable<VariableDeclaration>> _localVariableAccessMap;
+    }
+
+    /// <summary>
+    /// Produces a (transitively closed) call graph of functions scoped within
+    /// a given function, excluding calls to functions outside of that scope.
+    /// </summary>
+    private static CallGraph ClosureWithinScope(CallGraph callGraph, FunctionDefinition enclosingFunction, FunctionHierarchy functionHierarchy)
+    {
+        var enclosedFunctions = callGraph.Graph.Keys.Where(function => functionHierarchy.FunctionIsDescendantOf(function, enclosingFunction)).ToHashSet();
+
+        var graph = enclosedFunctions.ToDictionary(function => function, function => new HashSet<FunctionDefinition> { function });
+
+        foreach (var f in enclosedFunctions)
+        {
+            foreach (var g in callGraph.Graph[f])
+            {
+                if (enclosedFunctions.Contains(g))
+                {
+                    graph[f].Add(g);
+                }
+            }
+        }
+
+        return new CallGraph(graph.ToDictionary(
+            kv => kv.Key,
+            kv => kv.Value as IEnumerable<FunctionDefinition>
+        )).Closure();
     }
 }
