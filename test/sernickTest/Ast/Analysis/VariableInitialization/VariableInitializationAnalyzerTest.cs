@@ -284,7 +284,7 @@ public class VariableInitializationAnalyzerTest
 
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.ProcessFunction(fooDefinition, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.VerifyNoOtherCalls();
     }
@@ -427,7 +427,7 @@ public class VariableInitializationAnalyzerTest
                 ),
                 "bar".Call(),
                 "x".Assign(2)
-            )
+            ).Get(out var fooDefinition)
         );
 
         var diagnostics = new Mock<IDiagnostics>();
@@ -448,9 +448,9 @@ public class VariableInitializationAnalyzerTest
 
         var functionContextMap = FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 
-        VariableInitializationAnalyzer.ProcessFunction(tree, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+        VariableInitializationAnalyzer.ProcessFunction(fooDefinition, functionContextMap, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
+        diagnostics.VerifyNoOtherCalls();
     }
 
     private static Mock<IFunctionFactory> SetupFunctionFactory(out IFunctionContext mainContext)
