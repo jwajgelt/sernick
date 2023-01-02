@@ -3,14 +3,20 @@
 // Second line -- N numbers a_1, ... a_n
 // Output -- minimal and maximal of a_1, ..., a_n
 
-const n = read();
+const n = read(); // Also assume n is >= 1
 
-var maxNumber = -2 * 1000 * 1000 * 1000;
-var minNumber =  2 * 1000 * 1000 * 1000;
-const i = 0;
-var result = 0;
+const firstNumber = read();
+var maxNumber = firstNumber;
+var minNumber = firstNumber;
+n = n - 1;
 
 loop {
+    if(n == 0){
+        break;
+    }else{
+        n = n - 1;
+    }
+    
     var nextNumber = read();
 
     if(maxNumber < nextNumber){
@@ -20,10 +26,6 @@ loop {
         minNumber = nextNumber;
     }
 
-    i = i + 1;
-    if(i == n){
-        break;
-    }
 }
 
 write(minNumber);
