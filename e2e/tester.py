@@ -7,7 +7,7 @@ import logging
 from typing import List
 from loglevel import LOG_LEVEL
 from onlyForTestingTester import test_find_test_folders, test_get_compiled_files
-from testHelpers import get_files, should_run_generator, create_output_expected_dirs, find_test_folders, get_compiled_files, has_tests, clean_generated_files, INPUT_DIR, OUTPUT_DIR, EXPECTED_DIR, TEST_DIR_REGEX
+from testHelpers import get_files, should_run_generator, create_output_expected_dirs, find_test_folders, compile_sernick_files, has_tests, clean_generated_files, INPUT_DIR, OUTPUT_DIR, EXPECTED_DIR, TEST_DIR_REGEX
 
 # TODO refactor for more readable code
 # TODO (bonus task?) generate report from all tests
@@ -20,6 +20,7 @@ class TestingLevel(Enum):
 def prepare_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean', action='store_true', help="Remove all generated Input/Output/Expected directories")
+    parser.add_argument('--mockdata', action='store_true', help="Use binaries (prepared in advance) for Fibonacci just to test if Tester's logic works")
     return parser
 
 def prepare_test_data(test_directory: str) -> TestingLevel:
@@ -29,64 +30,66 @@ def prepare_test_data(test_directory: str) -> TestingLevel:
 
     should_run_python_generator = should_run_generator(test_directory=test_directory)
     if should_run_python_generator:
-        logging.debug("Running gen.py in " + test_directory)
+        logging.debug("Running gen.py in " + test_directory + '...')
         subprocess.run(['/usr/bin/python3', 'gen.py'], cwd=test_directory)
+    else:
+        logging.debug("No gen.py found, assuming Input/Expected folders are prepared...")
 
     if has_tests(test_directory=test_directory):
         return TestingLevel.COMPILE_AND_RUN_ON_INPUT
     else:
         return TestingLevel.ONLY_COMPILE
 
+def compare_files(actual: str, expected:str)->None:
+    are_equal = filecmp.cmp(actual, expected, shallow=False)
+    if are_equal:
+        logging.info("Correct answer on " + expected + " ! ✅")
+    else:
+        logging.info("Bad answer on " + expected + " ! ❌")
 
-def run_file_on_input(binary_file_path: str, test_dir_path: str) -> None:
+def run_file_on_input_and_check(binary_file_path: str, test_dir_path: str) -> None:
     logging.debug("Running a binary file {}".format(binary_file_path))
 
     input_dir_path = os.path.join(test_dir_path, INPUT_DIR)
     output_dir_path = os.path.join(test_dir_path, OUTPUT_DIR)
+    expected_dir_path = os.path.join(test_dir_path, EXPECTED_DIR)
+
     for input_file_path in get_files(input_dir_path):
         input_file_basename_no_extension = os.path.splitext(os.path.basename(input_file_path))[0]
         output_file_path=os.path.join(output_dir_path, input_file_basename_no_extension) + '.out'
+        expected_file_path=os.path.join(expected_dir_path, input_file_basename_no_extension) + '.out'
 
         input_fd = open(input_file_path, 'r')
         output_fd = open(output_file_path, 'w')
 
-        p = subprocess.Popen([binary_file_path], stdin=input_fd, text=True,stdout=output_fd)
-        p.wait()
-
-def check_output(test_directory: str) -> None:
-    output_dir = os.path.join(test_directory, OUTPUT_DIR)
-    expected_dir = os.path.join(test_directory, EXPECTED_DIR)
-    
-    output_files = get_files(output_dir)
-    expected_files = get_files(expected_dir)
-
-    for actual, expected in zip(output_files, expected_files):
-        are_equal = filecmp.cmp(actual, expected, shallow=False)
-        if are_equal:
-            logging.info("Correct answer on " + expected + " ! ✅")
-        else:
-            logging.info("Bad answer on " + expected + " ! ❌")
-
+        try:
+            p = subprocess.Popen([binary_file_path], stdin=input_fd, text=True,stdout=output_fd)
+            p.wait()
+            compare_files(actual=output_file_path, expected=expected_file_path)
+        except Exception:
+            logging.error("Unknown exception occurred when running {} on {}, proceeding...".format(binary_file_path, input_file_path))        
 
 def run_files(compiled_files: List[str], test_directory: str)->None:
     for binary_file in compiled_files:
         try:
-            run_file_on_input(binary_file_path=binary_file, test_dir_path=test_directory)
-            check_output(test_directory)
+            run_file_on_input_and_check(binary_file_path=binary_file, test_dir_path=test_directory)
         except Exception:
-            logging.error("Unknown exception occurred, proceeding")
+            logging.error("Unknown exception occurred when running {}, proceeding...".format(binary_file))
     
-def test():
-    for test_directory in test_find_test_folders():#  find_test_folders('.'):
+def test(use_mock_data: bool):
+    test_directories = test_find_test_folders() if use_mock_data else list(find_test_folders('.'))
+    for test_directory in test_directories:
         logging.info("-----------")
-        
+        logging.info("Entering {}...".format(test_directory))
         testing_level = prepare_test_data(test_directory)
 
-        compiled_files = test_get_compiled_files(test_directory=test_directory) # just for testing TODO uncomment for the line below
-        # compiled_files = compile_sernick_files(directory) 
+        if use_mock_data:
+            compiled_files = test_get_compiled_files(test_directory=test_directory) # just for testing TODO uncomment for the line below
+        else:
+            compiled_files = compile_sernick_files(test_directory) 
 
         if testing_level == TestingLevel.ONLY_COMPILE:
-            logging.info("Compilation successful, not running further (no test input)")
+            logging.info("Compilation executed, not running further (no test input)")
         elif testing_level == TestingLevel.COMPILE_AND_RUN_ON_INPUT:
             run_files(compiled_files=compiled_files, test_directory=test_directory)
 
@@ -103,8 +106,10 @@ def run():
     if args.clean:
         clean()
         return
-    
-    test()
+    if args.mockdata:
+        test(use_mock_data=True)
+    else:
+        test(use_mock_data=False)
 
 if __name__ == '__main__':
     run()

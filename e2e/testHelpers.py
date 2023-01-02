@@ -10,6 +10,7 @@ INPUT_DIR = r'Input'
 OUTPUT_DIR = r'Output'
 EXPECTED_DIR = r'Expected'
 TEST_DIR_REGEX = re.compile('.*Test')
+SERNICK_EXE_PATH = os.path.join('..', 'src', 'sernick', 'bin','Debug', 'net6.0', 'sernick') # TODO verify if this path is correct
 
 def find_test_folders(root_dir: str):
     for dirpath, subdirs, _ in os.walk(root_dir):
@@ -23,13 +24,26 @@ def is_sernick_file(file_path: str) -> bool:
         return False
     # Split the extension from the path and normalize it to lowercase.
     ext = os.path.splitext(file_path)[-1].lower()
-    return ext == 'ser'
+    return ext == '.ser'
 
-def get_compiled_files(dir)-> List[str]:    
-    sernick_files = [f for f in os.listdir(dir) if is_sernick_file(os.path.join(dir, f))]
-    compiled_files = []
-    for f in sernick_files:
-        pass # TODO call subprocess with something like nasm
+def drop_extension(path: str)->str:
+    return os.path.splitext(os.path.basename(path))[0]
+
+def join_path(dir: str, file_path: str)->str:
+    return os.path.join(dir,file_path)
+
+def compile_sernick_files(dir:str)-> List[str]:    
+    sernick_files = [join_path(dir, f) for f in os.listdir(dir) if is_sernick_file(join_path(dir,f))]
+    logging.debug("Found following sernick files: {}".format(sernick_files))
+
+    for file_path in sernick_files:
+        try:
+            subprocess.run([SERNICK_EXE_PATH, file_path, "--execute"])
+        except Exception:
+            logging.warn("Could not compile {} ❌".format(file_path))
+
+        
+    compiled_files = [drop_extension(f) for f in sernick_files]
     logging.info('Compiled the following files: {}'.format(compiled_files))
     return compiled_files
 
