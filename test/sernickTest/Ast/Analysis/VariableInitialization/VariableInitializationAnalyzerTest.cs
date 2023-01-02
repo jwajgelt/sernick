@@ -260,7 +260,7 @@ public class VariableInitializationAnalyzerTest
                     If(Value("y")).Then("x".Assign(Value("y")))
                 ),
                 Return(Value("x").ScOr(Value("y")))
-            ).Get(out var fooDefinition)
+            )
         );
 
         var diagnostics = new Mock<IDiagnostics>();
