@@ -32,7 +32,7 @@ fun isPrime(n: Int): Bool {
     var i = 2;
     var isPrime = true;
     loop {
-        if(i * i > n){ 
+        if(multiplyPositiveIntegers(i, i) > n){ 
             return isPrime;
         } 
         var k = divide(n,i);
