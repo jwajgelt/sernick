@@ -5,7 +5,7 @@ import os
 input_dir = r'Input'
 expected_dir = r'Expected'
 global_file_counter = 0
-random.seed()
+random.seed(0)
 
 # Copyright https://realpython.com/fibonacci-sequence-python/
 def fibonacci_of(n):

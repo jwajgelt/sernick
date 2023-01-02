@@ -5,7 +5,7 @@ import os
 input_dir = r'Input'
 expected_dir = r'Expected'
 global_file_counter = 0
-random.seed()
+random.seed(0)
 
 def is_prime(n):
     if n == 1:
