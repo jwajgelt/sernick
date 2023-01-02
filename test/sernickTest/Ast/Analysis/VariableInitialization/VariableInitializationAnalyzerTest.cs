@@ -123,7 +123,7 @@ public class VariableInitializationAnalyzerTest
 
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
+        diagnostics.Verify(d => d.Report(It.IsAny<UninitializedNonLocalVariableUseError>()));
     }
 
     [Fact]
@@ -243,9 +243,7 @@ public class VariableInitializationAnalyzerTest
         //      } else {
         //          y = (b == false);
         //          if(y) {
-        //              y = false;
-        //          } else {
-        //              x = (y == false);
+        //              x = y;
         //          }
         //      }
         //      return x || y;
@@ -259,7 +257,7 @@ public class VariableInitializationAnalyzerTest
                     If(Value("x")).Then("y".Assign(Literal(true))).Else("y".Assign(Literal(false)))
                 ).Else(
                     "y".Assign(Value("b").Eq(Literal(false))),
-                    If(Value("y")).Then("y".Assign(Literal(false))).Else("x".Assign(Value("y").Eq(Literal(false))))
+                    If(Value("y")).Then("x".Assign(Value("y")))
                 ),
                 Return(Value("x").ScOr(Value("y")))
             ).Get(out var fooDefinition)
@@ -272,7 +270,7 @@ public class VariableInitializationAnalyzerTest
 
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
+        diagnostics.Verify(d => d.Report(It.IsAny<UninitializedVariableUseError>()));
     }
 
     [Fact]
@@ -300,7 +298,7 @@ public class VariableInitializationAnalyzerTest
 
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<VariableInitializationAnalysisError>()));
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleConstAssignmentError>()));
     }
 
     [Fact]
