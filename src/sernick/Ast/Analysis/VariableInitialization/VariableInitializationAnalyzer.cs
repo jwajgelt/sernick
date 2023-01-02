@@ -35,7 +35,7 @@ public static class VariableInitializationAnalyzer
         IDiagnostics diagnostics)
     {
         var enclosedFunctionsCallGraph = ClosureWithinScope(callGraph, function, functionHierarchy);
-        var localVariables = LocalVariableDeclarations.Process(function).ToHashSet();
+        var localVariables = LocalVariableDeclarations.Process(function.Body).ToHashSet();
 
         // for all enclosed functions, calculate the variable accesses to function's local variables
         var localVariableAccessMap = enclosedFunctionsCallGraph.Graph.ToDictionary(
@@ -304,8 +304,15 @@ public static class VariableInitializationAnalyzer
         public override VariableInitializationVisitorResult VisitLoopStatement(LoopStatement node, VariableInitializationVisitorParam param)
         {
             var bodyVisitResult = node.Inner.Accept(this, param);
+            // NOTE: this is inefficient when nested loops are involved,
+            // since each `loop` statement will visit the entire subtree,
+            // but implementing this properly would require duplicating
+            // name resolution logic for getting "variables visible in this scope".
+            // If performance is an issue, we can throw in some memoization here,
+            // to only ever visit each block (or loop) once.
+            var localVariables = LocalVariableDeclarations.Process(node.Inner);
 
-            foreach (var variable in bodyVisitResult.MaybeInitializedVariables.Where(variable => variable.IsConst))
+            foreach (var variable in bodyVisitResult.MaybeInitializedVariables.Where(variable => variable.IsConst).Except(localVariables))
             {
                 throw new VariableInitializationVisitorException(new MultipleConstAssignmentError(variable.Name));
             }

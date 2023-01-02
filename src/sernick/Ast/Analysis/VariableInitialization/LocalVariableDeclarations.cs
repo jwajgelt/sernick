@@ -5,9 +5,9 @@ using Utility;
 
 public static class LocalVariableDeclarations
 {
-    public static IEnumerable<VariableDeclaration> Process(FunctionDefinition functionDefinition)
+    public static IEnumerable<VariableDeclaration> Process(CodeBlock scope)
     {
-        return functionDefinition.Body.Accept(new LocalVariableVisitor(), Unit.I);
+        return scope.Accept(new LocalVariableVisitor(), Unit.I);
     }
 
     private sealed class LocalVariableVisitor : AstVisitor<IEnumerable<VariableDeclaration>, Unit>
