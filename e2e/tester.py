@@ -10,6 +10,7 @@ from onlyForTestingTester import test_find_test_folders, test_get_compiled_files
 from testHelpers import get_files, should_run_generator, create_output_expected_dirs, find_test_folders, get_compiled_files, has_tests, clean_generated_files, INPUT_DIR, OUTPUT_DIR, EXPECTED_DIR, TEST_DIR_REGEX
 
 # TODO refactor for more readable code
+# TODO (bonus task?) generate report from all tests
 # TODO refactor for less "os.path.join" -- maybe better structure would help?
 
 class TestingLevel(Enum):
