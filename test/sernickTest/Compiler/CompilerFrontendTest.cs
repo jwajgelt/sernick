@@ -132,11 +132,12 @@ public class CompilerFrontendTest
             !fileInfo.Equals(("comments-and-separators", "multi_line_in_command_comment")) &&
             !fileInfo.Equals(("comments-and-separators", "nested_comment")));
 
+    // these variables can be used to initialize fields in expected errors that are not used in the equals method
     private static readonly Expression
         ignoredExpression = new EmptyExpression((new FakeLocation(), new FakeLocation()));
 
     private static readonly CodeBlock ignoredCodeBlock =
-        new CodeBlock(ignoredExpression, (new FakeLocation(), new FakeLocation()));
+        new(ignoredExpression, (new FakeLocation(), new FakeLocation()));
 
     public static readonly (
         string group,

@@ -90,7 +90,7 @@ public static class VariableAccessMapPreprocess
             _nameResolution = nameResolution;
             _diagnostics = diagnostics;
             VariableAccess = new VariableAccessMap();
-            _variableDeclaringFunction = new Dictionary<VariableDeclaration, FunctionDefinition>();
+            _variableDeclaringFunction = new Dictionary<VariableDeclaration, FunctionDefinition>(ReferenceEqualityComparer.Instance);
         }
 
         protected override Unit VisitAstNode(AstNode node, FunctionDefinition? currentFun)
