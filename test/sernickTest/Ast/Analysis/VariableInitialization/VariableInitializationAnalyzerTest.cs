@@ -302,6 +302,34 @@ public class VariableInitializationAnalyzerTest
     }
 
     [Fact]
+    public void NoErrorScopedConstInitializationInLoop()
+    {
+        // loop {
+        //      const x: Int;
+        //      x = 1;
+        //      if(x == 1) {
+        //          break;
+        //      }   
+        // }
+        var tree = Program(
+            Loop(
+                Const<IntType>("x"),
+                "x".Assign(1),
+                If(Value("x") == Literal(1)).Then(Break)
+            )
+        );
+
+        var diagnostics = new Mock<IDiagnostics>();
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+        var callGraph = CallGraphBuilder.Process(tree, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
+
+        VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+
+        diagnostics.VerifyNoOtherCalls();
+    }
+
+    [Fact]
     public void NoErrorVarAssignmentInLoop()
     {
         // var x: Int;
