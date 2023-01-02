@@ -51,7 +51,7 @@ public static class VariableInitializationAnalyzer
 
         try
         {
-            function.Body.Accept(new VariableInitializationVisitor(nameResolution, localVariableAccessMap),
+            function.Body.Accept(new VariableInitializationVisitor(nameResolution, localVariables, localVariableAccessMap),
                 new VariableInitializationVisitorParam());
         }
         catch (VariableInitializationVisitorException e)
@@ -152,9 +152,11 @@ public static class VariableInitializationAnalyzer
     {
         public VariableInitializationVisitor(
             NameResolutionResult nameResolution,
+            HashSet<VariableDeclaration> localVariables,
             Dictionary<FunctionDefinition, IEnumerable<VariableDeclaration>> localVariableAccessMap)
         {
             _nameResolution = nameResolution;
+            _localVariables = localVariables;
             _localVariableAccessMap = localVariableAccessMap;
         }
 
@@ -254,7 +256,9 @@ public static class VariableInitializationAnalyzer
         public override VariableInitializationVisitorResult
             VisitReturnStatement(ReturnStatement node, VariableInitializationVisitorParam param)
         {
-            return new VariableInitializationVisitorResult { Returns = true };
+            return (node.ReturnValue?.Accept(this, param) ?? new VariableInitializationVisitorResult())
+                with
+            { Returns = true };
         }
 
         public override VariableInitializationVisitorResult VisitBreakStatement(BreakStatement node, VariableInitializationVisitorParam param)
@@ -325,6 +329,7 @@ public static class VariableInitializationAnalyzer
         public override VariableInitializationVisitorResult VisitVariableValue(VariableValue node, VariableInitializationVisitorParam param)
         {
             if (_nameResolution.UsedVariableDeclarations[node] is VariableDeclaration variableDeclaration
+                && _localVariables.Contains(variableDeclaration)
                 && !param.InitializedVariables.Contains(variableDeclaration))
             {
                 throw new VariableInitializationVisitorException(new UninitializedVariableUseError(node));
@@ -340,6 +345,7 @@ public static class VariableInitializationAnalyzer
         }
 
         private readonly NameResolutionResult _nameResolution;
+        private readonly HashSet<VariableDeclaration> _localVariables;
         private readonly Dictionary<FunctionDefinition, IEnumerable<VariableDeclaration>> _localVariableAccessMap;
     }
 
