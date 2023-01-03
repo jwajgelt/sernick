@@ -53,7 +53,7 @@ public sealed record StructFieldValue(Identifier FieldName, Expression Value,
 /// Represents accessing a field of a struct object.
 /// If Left is a pointer to a struct then this evaluates to <code>(*pointer).field</code>.
 /// </summary>
-public sealed record FieldAccess(Expression Left, Identifier FieldName, Range<ILocation> LocationRange): Expression(LocationRange)
+public sealed record FieldAccess(Expression Left, Identifier FieldName, Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitFieldAccess(this, param);

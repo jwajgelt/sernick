@@ -110,6 +110,7 @@ public static class NameResolutionAlgorithm
             {
                 throw new NotImplementedException();
             }
+
             try
             {
                 var declaration = identifiersNamespace.GetResolution(identifier);

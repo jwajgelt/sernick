@@ -1,6 +1,5 @@
-using sernick.Ast.Nodes;
-
 namespace sernick.Ast;
+using sernick.Ast.Nodes;
 
 /// <summary>
 /// Base class for Sernick types
