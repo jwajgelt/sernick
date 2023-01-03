@@ -179,10 +179,9 @@ public static class SernickInstructionSet
                 yield return new CodeTreeNodePatternRule(
                     Pat.FunctionCall(out var call),
                     (_, values) =>
-                        new List<IInstruction>
-                        {
-                            new CallInstruction(values.Get<IFunctionCaller>(call).Label)
-                        }.WithOutput(null));
+                        new CallInstruction(values.Get<IFunctionCaller>(call).Label)
+                            .Enumerate()
+                            .WithOutput(null));
             }
 
             // ret
