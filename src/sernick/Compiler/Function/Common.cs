@@ -19,9 +19,7 @@ public static class Convention
         HardwareRegister.R13,
         HardwareRegister.R14,
         HardwareRegister.R15,
-        HardwareRegister.RBX,
-        HardwareRegister.RDI,
-        HardwareRegister.RSI,
+        HardwareRegister.RBX
     };
 
     public static readonly HardwareRegister[] ArgumentRegisters = {

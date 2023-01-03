@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import shutil
 import re
@@ -40,10 +41,11 @@ def compile_sernick_files(dir: str, compiler_path: str = None)-> List[str]:
 
     for file_path in sernick_files:
         try:
-            subprocess.run(["dotnet", compiler_path or SERNICK_EXE_PATH, file_path])
+            completed_process = subprocess.run(["dotnet", compiler_path or SERNICK_EXE_PATH, file_path])
+            completed_process.check_returncode() # this raises an exception
             compiled_files.append(drop_extension(file_path))
         except Exception:
-            logging.warn("Could not compile {} ❌".format(file_path))
+            logging.error("Could not compile {} ❌".format(file_path))
 
     logging.info('Compiled the following files: {}'.format(compiled_files))
     return compiled_files
@@ -56,16 +58,16 @@ def prepare_test_data(test_directory: str) -> bool:
     all_files_in_dir = get_files(test_directory)
     directory_contains_python_generator = True if 'gen.py' in all_files_in_dir else False
     if directory_contains_python_generator:
-        logging.info("Running gen.py in " + test_directory)
-        subprocess.run(['/usr/bin/python3', 'gen.py'], cwd=test_directory)
+        logging.debug("Running gen.py in " + test_directory)
+        subprocess.run([sys.executable, 'gen.py'], cwd=test_directory)
     else:
-        logging.info("No gen.py, assuming tests are already there...")
+        logging.debug("No gen.py, assuming tests are already there...")
     expected_dir_path = os.path.join(test_directory, EXPECTED_DIR)
     if not os.path.exists(expected_dir_path):
         os.makedirs(expected_dir_path)
 
 def run_file(binary_file_path: str, test_directory: str) -> None:
-    logging.info("Running {}".format(binary_file_path))
+    logging.debug("Running {}".format(binary_file_path))
 
     input_dir = os.path.join(test_directory, INPUT_DIR)
     for input_file in get_files(input_dir):

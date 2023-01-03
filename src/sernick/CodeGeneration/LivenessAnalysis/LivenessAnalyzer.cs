@@ -122,13 +122,8 @@ public static class LivenessAnalyzer
             var definedRegisters = instruction.RegistersDefined;
             foreach (var x in definedRegisters)
             {
-                foreach (var y in liveRegisters)
+                foreach (var y in liveRegisters.Where(y => y != x))
                 {
-                    if (x == y)
-                    {
-                        continue;
-                    }
-
                     if (instruction.IsCopy && instruction.RegistersUsed.Contains(y))
                     {
                         copyGraph[x].Add(y);
@@ -140,6 +135,16 @@ public static class LivenessAnalyzer
                     interferenceGraph[y].Add(x);
                 }
             }
+        }
+
+        if (interferenceGraph.TryGetValue(HardwareRegister.RBP, out var rbpInterference))
+        {
+            foreach (var x in registers)
+            {
+                interferenceGraph[x].Add(HardwareRegister.RBP);
+            }
+
+            rbpInterference.UnionWith(registers.Except(HardwareRegister.RBP.Enumerate()));
         }
 
         foreach (var x in registers)
