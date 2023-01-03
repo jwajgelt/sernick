@@ -36,5 +36,7 @@ msbuild.wrn
 # Visual Studio 2015
 .vs/
 
-# .asm files produced during the compilation
+# .asm, .o and .out files produced during the compilation
 *.asm
+*.o
+*.out
