@@ -184,7 +184,7 @@ public class CallGraphBuilderTest
             new Dictionary<VariableValue, Declaration> { },
             new Dictionary<Assignment, VariableDeclaration> { },
             functionNameResolution,
-            new Dictionary<StructIdentifier, StructDeclaration> { });
+            new Dictionary<Identifier, StructDeclaration> { });
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var callGraphClosure = callGraph.Closure();
 

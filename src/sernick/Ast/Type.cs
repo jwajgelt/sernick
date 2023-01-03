@@ -1,5 +1,5 @@
 namespace sernick.Ast;
-using sernick.Ast.Nodes;
+using Nodes;
 
 /// <summary>
 /// Base class for Sernick types
@@ -26,4 +26,4 @@ public sealed record PointerType(Type Type) : Type
     public override string ToString() => $"*{Type}";
 }
 
-public sealed record StructType(StructIdentifier Struct) : Type;
+public sealed record StructType(Identifier Struct) : Type;

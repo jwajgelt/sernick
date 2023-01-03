@@ -20,17 +20,17 @@ using Utility;
 ///     to that function's declaration
 /// </param>
 /// <param name="StructDeclarations">
-///     Maps StructIdentifier to its StructDeclaration.
+///     Maps Struct Identifier to its StructDeclaration.
 /// </param>
 public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Declaration> UsedVariableDeclarations,
     IReadOnlyDictionary<Assignment, VariableDeclaration> AssignedVariableDeclarations,
     IReadOnlyDictionary<FunctionCall, FunctionDefinition> CalledFunctionDeclarations,
-    IReadOnlyDictionary<StructIdentifier, StructDeclaration> StructDeclarations)
+    IReadOnlyDictionary<Identifier, StructDeclaration> StructDeclarations)
 {
     public NameResolutionResult() : this(new Dictionary<VariableValue, Declaration>(ReferenceEqualityComparer.Instance),
         new Dictionary<Assignment, VariableDeclaration>(ReferenceEqualityComparer.Instance),
         new Dictionary<FunctionCall, FunctionDefinition>(ReferenceEqualityComparer.Instance),
-        new Dictionary<StructIdentifier, StructDeclaration>(ReferenceEqualityComparer.Instance))
+        new Dictionary<Identifier, StructDeclaration>(ReferenceEqualityComparer.Instance))
     {
     }
 

@@ -3,17 +3,11 @@ namespace sernick.Ast.Nodes;
 using Input;
 using Utility;
 
-public sealed record StructIdentifier(string Name, Range<ILocation> LocationRange) : Identifier(Name, LocationRange)
-{
-    public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
-        visitor.VisitStructIdentifier(this, param);
-}
-
 /// <summary>
 /// Represents declaration of a struct with all its fields.
 /// </summary>
-public sealed record StructDeclaration(StructIdentifier StructName, IReadOnlyCollection<FieldDeclaration> Fields,
-    Range<ILocation> LocationRange) : Declaration(StructName, LocationRange)
+public sealed record StructDeclaration(Identifier Name, IReadOnlyCollection<FieldDeclaration> Fields,
+    Range<ILocation> LocationRange) : Declaration(Name, LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitStructDeclaration(this, param);
@@ -32,7 +26,7 @@ public sealed record FieldDeclaration(Identifier Name, Type Type, Range<ILocatio
 /// <summary>
 /// Represents creation of a new struct object.
 /// </summary>
-public sealed record StructValue(StructIdentifier StructName, IReadOnlyDictionary<string, StructFieldValue> Fields,
+public sealed record StructValue(Identifier StructName, IReadOnlyDictionary<string, StructFieldValue> Fields,
     Range<ILocation> LocationRange) : SimpleValue(LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>

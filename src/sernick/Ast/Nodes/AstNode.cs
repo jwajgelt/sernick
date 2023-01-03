@@ -39,7 +39,7 @@ public abstract record Assignable(Range<ILocation> LocationRange) : AstNode(Loca
 /// <summary>
 /// Class representing identifiers
 /// </summary>
-public record Identifier(string Name, Range<ILocation> LocationRange) : Assignable(LocationRange)
+public sealed record Identifier(string Name, Range<ILocation> LocationRange) : Assignable(LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitIdentifier(this, param);
