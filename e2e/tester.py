@@ -21,6 +21,7 @@ def prepare_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean', action='store_true', help="Remove all generated Input/Output/Expected directories")
     parser.add_argument('--mockdata', action='store_true', help="Use binaries (prepared in advance) for Fibonacci just to test if Tester's logic works")
+    parser.add_argument('--test_suite', help="Test suite to run")
     parser.add_argument('--loglevel', default='info',choices=logging._nameToLevel.keys(), help="Provide logging level. Example --loglevel debug'")
     return parser
 
@@ -77,8 +78,9 @@ def run_files(compiled_files: List[str], test_directory: str)->None:
         except Exception:
             logging.error("Unknown exception occurred when running {}, proceeding...".format(binary_file))
     
-def test(use_mock_data: bool):
-    test_directories = test_find_test_folders() if use_mock_data else list(find_test_folders('.'))
+def test(use_mock_data: bool, test_directories = None):
+    if test_directories is None:
+        test_directories = test_find_test_folders() if use_mock_data else list(find_test_folders('.'))
     for test_directory in test_directories:
         logging.info("-----------")
         logging.info("Entering {}...".format(test_directory))
@@ -110,9 +112,10 @@ def run():
         return
     if args.mockdata:
         test(use_mock_data=True)
+    elif args.test_suite:
+        test(False, [args.test_suite])
     else:
         test(use_mock_data=False)
 
 if __name__ == '__main__':
     run()
-    
