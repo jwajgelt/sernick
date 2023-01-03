@@ -32,7 +32,7 @@ def drop_extension(path: str)->str:
 def join_path(dir: str, file_path: str)->str:
     return os.path.join(dir,file_path)
 
-def compile_sernick_files(dir:str)-> List[str]:    
+def compile_sernick_files(dir: str, compiler_path: str = None)-> List[str]:    
     sernick_files = [join_path(dir, f) for f in os.listdir(dir) if is_sernick_file(join_path(dir,f))]
     logging.debug("Found following sernick files: {}".format(sernick_files))
     
@@ -40,7 +40,7 @@ def compile_sernick_files(dir:str)-> List[str]:
 
     for file_path in sernick_files:
         try:
-            subprocess.run([SERNICK_EXE_PATH, file_path, "--execute"])
+            subprocess.run(["dotnet", compiler_path or SERNICK_EXE_PATH, file_path])
             compiled_files.append(drop_extension(file_path))
         except Exception:
             logging.warn("Could not compile {} ❌".format(file_path))
