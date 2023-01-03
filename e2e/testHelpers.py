@@ -35,15 +35,16 @@ def join_path(dir: str, file_path: str)->str:
 def compile_sernick_files(dir:str)-> List[str]:    
     sernick_files = [join_path(dir, f) for f in os.listdir(dir) if is_sernick_file(join_path(dir,f))]
     logging.debug("Found following sernick files: {}".format(sernick_files))
+    
+    compiled_files = []
 
     for file_path in sernick_files:
         try:
             subprocess.run([SERNICK_EXE_PATH, file_path, "--execute"])
+            compiled_files.append(drop_extension(file_path))
         except Exception:
             logging.warn("Could not compile {} ❌".format(file_path))
 
-        
-    compiled_files = [drop_extension(f) for f in sernick_files]
     logging.info('Compiled the following files: {}'.format(compiled_files))
     return compiled_files
 
