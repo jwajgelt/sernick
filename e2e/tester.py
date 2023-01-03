@@ -23,7 +23,7 @@ def prepare_parser():
     parser.add_argument('--clean', action='store_true', help="Remove all generated Input/Output/Expected directories")
     parser.add_argument('--mockdata', action='store_true', help="Use binaries (prepared in advance) for Fibonacci just to test if Tester's logic works")
     parser.add_argument('--loglevel', default='info',choices=logging._nameToLevel.keys(), help="Provide logging level. Example --loglevel debug'")
-    parser.add_argument('--compiler', required=False, help="Path to compiler executable (default is src/sernick/bin/Debug/net6.0/sernick)")
+    parser.add_argument('--compiler', required=False, help="Path to compiler executable (default is src/sernick/bin/Debug/net6.0/sernick.dll)")
     return parser
 
 def prepare_test_data(test_directory: str) -> TestingLevel:

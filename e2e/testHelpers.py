@@ -11,7 +11,7 @@ INPUT_DIR = r'Input'
 OUTPUT_DIR = r'Output'
 EXPECTED_DIR = r'Expected'
 TEST_DIR_REGEX = re.compile('.*Test')
-SERNICK_EXE_PATH = os.path.join('..', 'src', 'sernick', 'bin','Debug', 'net6.0', 'sernick') # TODO verify if this path is correct
+SERNICK_EXE_PATH = os.path.join('..', 'src', 'sernick', 'bin','Debug', 'net6.0', 'sernick.dll')
 
 def find_test_folders(root_dir: str):
     for dirpath, subdirs, _ in os.walk(root_dir):
