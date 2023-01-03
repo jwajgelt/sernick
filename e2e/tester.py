@@ -21,6 +21,7 @@ def prepare_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--clean', action='store_true', help="Remove all generated Input/Output/Expected directories")
     parser.add_argument('--mockdata', action='store_true', help="Use binaries (prepared in advance) for Fibonacci just to test if Tester's logic works")
+    parser.add_argument('--loglevel', default='info',choices=logging._nameToLevel.keys(), help="Provide logging level. Example --loglevel debug'")
     return parser
 
 def prepare_test_data(test_directory: str) -> TestingLevel:
@@ -100,9 +101,10 @@ def clean():
         
 
 def run():
-    logging.basicConfig(level=LOG_LEVEL)
     parser = prepare_parser()
     args = parser.parse_args()
+    logging.basicConfig(level=args.loglevel.upper())
+
     if args.clean:
         clean()
         return

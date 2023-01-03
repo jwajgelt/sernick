@@ -40,7 +40,8 @@ def compile_sernick_files(dir:str)-> List[str]:
 
     for file_path in sernick_files:
         try:
-            subprocess.run([SERNICK_EXE_PATH, file_path, "--execute"])
+            completed_process = subprocess.run([SERNICK_EXE_PATH, file_path, "--execute"])
+            completed_process.check_returncode() # this raises an exception
             compiled_files.append(drop_extension(file_path))
         except Exception:
             logging.warn("Could not compile {} ❌".format(file_path))
