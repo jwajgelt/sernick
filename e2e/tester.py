@@ -25,7 +25,7 @@ def prepare_parser():
     return parser
 
 def prepare_test_data(test_directory: str) -> TestingLevel:
-    logging.debug("Preparing test data for folder " + test_directory)
+    logging.info("Preparing test data for folder " + test_directory)
 
     create_output_expected_dirs(test_directory=test_directory)
 
