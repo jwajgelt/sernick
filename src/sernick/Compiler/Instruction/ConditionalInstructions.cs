@@ -47,7 +47,7 @@ public sealed record SetCcInstruction(ConditionCode Code, Register Register) : C
     public override string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
         var reg = registerMapping[Register];
-        return $"\tset{Code.ToString().ToLower()}\t{reg.ToString().ToLower()}";
+        return $"\tset{Code.ToString().ToLower()}\t{reg.Byte}";
     }
 
     public override IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) =>
