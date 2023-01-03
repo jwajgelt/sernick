@@ -1,0 +1,19 @@
+// Input -- two lines
+// First line N -- natural number
+// Second line -- N numbers a_1, ... a_n
+// Output -- sum of all the numbers a_1, ..., a_n
+
+const n = read();
+const i = 0;
+var result = 0;
+
+loop {
+    var nextNumber = read();
+    result = result + nextNumber;
+    i = i + 1;
+    if(i == n){
+        break;
+    }
+}
+
+write(result);

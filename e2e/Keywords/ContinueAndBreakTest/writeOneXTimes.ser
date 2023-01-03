@@ -1,0 +1,10 @@
+var x = read();
+
+loop {
+    if(x != 0){
+        write(1);
+        x = x - 1;
+        continue;
+    }
+    break;
+}

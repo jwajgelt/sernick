@@ -1,0 +1,9 @@
+/*
+ * Multi-line comment
+ */
+var x = 1;
+
+ // single-line comment one
+var y = 2;
+ // single-line comment two
+var z = 3;

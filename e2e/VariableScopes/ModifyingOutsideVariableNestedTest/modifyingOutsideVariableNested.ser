@@ -1,0 +1,42 @@
+var x = read();
+var y = read();
+
+const oldX = x;
+const oldY = y;
+
+fun setXY(newX: Int, newY: Int): Unit {
+    fun setXYLevel2(newX2: Int, newY2: Int): Unit {
+        fun setXYLevel3(newX3: Int, newY3: Int): Unit {
+            x = newX3;
+            y = newY3;
+        }
+        setXYLevel3(newX2, newY2);
+    }
+    setXYLevel2(newX, newY);
+}
+
+fun setX(newX: Int): Unit {
+    x = newX;
+}
+
+fun setY(newY: Int): Unit {
+    y = newY;
+}
+
+
+setX(10);
+write(x); // 10
+write(y); // oldY
+
+x = oldX; y = oldY;
+
+setY(33);
+write(x); // oldX
+write(y); // 33
+
+setXY(100, 200);
+write(X); // 100
+write(Y); // 200
+
+
+

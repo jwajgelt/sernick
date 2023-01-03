@@ -1,0 +1,56 @@
+fun multiplyPositiveIntegers(a: Int, b: Int): Int {
+    if(b == 0 || a == 0){
+        return 0;
+    }
+    var b1 = b;
+
+    var result = a;
+    loop {
+        if(b1 == 0){
+            break;
+        }
+        result = result + a;
+        b1 = b1 - 1;
+    }
+    return result;
+}
+
+// https://en.wikipedia.org/wiki/Division_algorithm#Division_by_repeated_subtraction
+fun divide(n: Int, d: Int): Int {
+    var r = n;
+    var q = 0;
+    loop {
+        if(r < d){ break; }
+        r = r - d;
+        q = q + 1;
+    }
+    return q;
+}
+
+fun isPrime(n: Int): Bool {
+    if(n == 1){ return false; }
+    var i = 2;
+    var isPrime = true;
+    loop {
+        if(multiplyPositiveIntegers(i, i) > n){ 
+            return isPrime;
+        } 
+        var k = divide(n,i);
+        var ki = multiplyPositiveIntegers(k,i);
+        const nDivisibleByI = ki == n;
+        if(nDivisibleByI){
+            return false;
+        }else{
+            i = i + 1;
+        }
+    }
+}
+
+var n = read();
+
+const isPrimeN : Bool = isPrime(n);
+if(isPrimeN){
+    write(1);
+}else{
+    write(0);
+}

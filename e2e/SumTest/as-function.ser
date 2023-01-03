@@ -1,0 +1,27 @@
+// Input -- two lines
+// First line N -- natural number
+// Second line -- N numbers a_1, ... a_n
+// Output -- sum of all the numbers a_1, ..., a_n
+
+const n = read();
+
+fun readAndAdd(currentSum: Int): Int {
+    var x = read();
+    return currentSum + x;
+}
+
+fun calculateSum(n: Int): Int {
+    var n1 = 0;
+    var sum = 0;
+    loop {
+        if(n1 == n){
+            break;
+        }else{
+            n1 = n1 + 1;
+            sum = readAndAdd(sum);
+        }
+    }
+    return sum;
+}
+
+write(calculateSum(n));
