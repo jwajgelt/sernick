@@ -85,7 +85,7 @@ public class HardwareRegister : Register
         Byte = b;
     }
     public override string ToString() => _label;
-    
+
     public string QuadWord { get; }
     public string DoubleWord { get; }
     public string Word { get; }
