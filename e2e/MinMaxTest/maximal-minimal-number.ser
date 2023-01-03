@@ -25,7 +25,6 @@ loop {
     if(minNumber > nextNumber){
         minNumber = nextNumber;
     }
-
 }
 
 write(minNumber);
