@@ -8,32 +8,40 @@ public sealed class Linearizator
 {
     private readonly IInstructionCovering _instructionCovering;
     private readonly Dictionary<CodeTreeRoot, Label> _visitedRootsLabels;
+    private readonly LabelGenerator _labelGenerator;
 
     public Linearizator(IInstructionCovering instructionCovering)
     {
         _instructionCovering = instructionCovering;
         _visitedRootsLabels = new Dictionary<CodeTreeRoot, Label>(ReferenceEqualityComparer.Instance);
+        _labelGenerator = new LabelGenerator();
     }
 
-    public IEnumerable<IAsmable> Linearize(CodeTreeRoot root)
+    public IEnumerable<IAsmable> Linearize(CodeTreeRoot root, Label startLabel)
     {
-        return Dfs(root, 0);
+        _labelGenerator.SetStart(root, startLabel);
+        return Dfs(root, 0).asmables;
     }
 
-    private static Label GenerateLabel(int depth)
+    private (Label label, IEnumerable<IAsmable> asmables) Dfs(CodeTreeRoot root, int depth)
     {
-        var enhancedGuid = $"l{Guid.NewGuid().ToString().Replace('-', '_')}{depth}";
-        return new Label(enhancedGuid);
-    }
+        if (_visitedRootsLabels.TryGetValue(root, out var label))
+        {
+            return (label, Enumerable.Empty<IAsmable>());
+        }
 
-    private IEnumerable<IAsmable> Dfs(CodeTreeRoot v, int depth)
-    {
-        return v switch
+        label = _labelGenerator.GenerateLabel(root, depth);
+        _visitedRootsLabels.Add(root, label);
+
+        var asmables = root switch
         {
             SingleExitNode node => HandleSingleExitNode(node, depth),
             ConditionalJumpNode conditionalNode => HandleConditionalJumpNode(conditionalNode, depth),
-            _ => throw new Exception($"<Linearizator> called on a node which is neither a SingleExitNode nor ConditionalJumpNode : {v}")
+            _ => throw new Exception(
+                $"<Linearizator> called on a node which is neither a SingleExitNode nor ConditionalJumpNode : {root}")
         };
+
+        return (label, label.Enumerate().Concat(asmables));
     }
 
     private IEnumerable<IAsmable> HandleSingleExitNode(SingleExitNode node, int depth)
@@ -44,7 +52,7 @@ public sealed class Linearizator
         }
 
         var nextDepth = depth + 1;
-        var (nextTreeLabel, nextTreeCoverWithLabel) = GetTreeLabelAndCover(node.NextTree, nextDepth);
+        var (nextTreeLabel, nextTreeCoverWithLabel) = Dfs(node.NextTree, nextDepth);
 
         var nodeCover = _instructionCovering.Cover(node, nextTreeLabel);
         return nodeCover.Concat(nextTreeCoverWithLabel);
@@ -55,11 +63,11 @@ public sealed class Linearizator
         var nextDepth = depth + 1;
         var trueCaseNode = conditionalNode.TrueCase;
 
-        var (trueCaseLabel, trueCaseCoverWithLabel) = GetTreeLabelAndCover(trueCaseNode, nextDepth);
+        var (trueCaseLabel, trueCaseCoverWithLabel) = Dfs(trueCaseNode, nextDepth);
 
         var falseCaseNode = conditionalNode.FalseCase;
 
-        var (falseCaseLabel, falseCaseCoverWithLabel) = GetTreeLabelAndCover(falseCaseNode, nextDepth);
+        var (falseCaseLabel, falseCaseCoverWithLabel) = Dfs(falseCaseNode, nextDepth);
 
         var conditionalNodeCover = _instructionCovering.Cover(conditionalNode, trueCaseLabel, falseCaseLabel);
         // trueCaseCoverWithLabel and falseCaseCoverWithLabel are possibly empty lists, if those trees were already visited
@@ -67,17 +75,25 @@ public sealed class Linearizator
         return conditionalNodeCover.Concat(trueCaseCoverWithLabel).Concat(falseCaseCoverWithLabel);
     }
 
-    private ValueTuple<Label, IEnumerable<IAsmable>> GetTreeLabelAndCover(CodeTreeRoot tree, int depth)
+    private sealed class LabelGenerator
     {
-        if (_visitedRootsLabels.TryGetValue(tree, out var label))
-        {
-            var emptyCover = Enumerable.Empty<IAsmable>();
-            return (label, emptyCover);
-        }
+        private Label? _startLabel;
+        private CodeTreeRoot? _root;
 
-        var treeLabel = GenerateLabel(depth);
-        var treeCoverWithLabel = treeLabel.Enumerate().Concat(Dfs(tree, depth + 1));
-        _visitedRootsLabels.Add(tree, treeLabel);
-        return (treeLabel, treeCoverWithLabel);
+        public void SetStart(CodeTreeRoot root, Label startLabel)
+        {
+            _startLabel = startLabel;
+            _root = root;
+        }
+        public Label GenerateLabel(CodeTreeRoot root, int depth)
+        {
+            if (ReferenceEquals(root, _root))
+            {
+                return _startLabel!;
+            }
+
+            var enhancedGuid = $"l{Guid.NewGuid().ToString().Replace('-', '_')}{depth}";
+            return new Label(enhancedGuid);
+        }
     }
 }
