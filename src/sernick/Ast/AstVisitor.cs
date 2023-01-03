@@ -46,6 +46,8 @@ public abstract class AstVisitor<TResult, TParam>
     public virtual TResult VisitVariableValue(VariableValue node, TParam param) => VisitSimpleValue(node, param);
     public virtual TResult VisitBoolLiteralValue(BoolLiteralValue node, TParam param) => VisitLiteralValue(node, param);
     public virtual TResult VisitIntLiteralValue(IntLiteralValue node, TParam param) => VisitLiteralValue(node, param);
+    public virtual TResult VisitNullPointerLiteralValue(NullPointerLiteralValue node, TParam param) =>
+        VisitLiteralValue(node, param);
     public virtual TResult VisitEmptyExpression(EmptyExpression node, TParam param) => VisitExpression(node, param);
 
     public virtual TResult VisitStructIdentifier(StructIdentifier node, TParam param) => VisitIdentifier(node, param);

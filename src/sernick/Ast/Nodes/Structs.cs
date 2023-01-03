@@ -3,7 +3,7 @@ namespace sernick.Ast.Nodes;
 using Input;
 using Utility;
 
-public record StructIdentifier(string Name, Range<ILocation> LocationRange) : Identifier(Name, LocationRange)
+public sealed record StructIdentifier(string Name, Range<ILocation> LocationRange) : Identifier(Name, LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitStructIdentifier(this, param);
@@ -12,7 +12,7 @@ public record StructIdentifier(string Name, Range<ILocation> LocationRange) : Id
 /// <summary>
 /// Represents declaration of a struct with all its fields.
 /// </summary>
-public record StructDeclaration(StructIdentifier StructName, IReadOnlyCollection<FieldDeclaration> Fields,
+public sealed record StructDeclaration(StructIdentifier StructName, IReadOnlyCollection<FieldDeclaration> Fields,
     Range<ILocation> LocationRange) : Declaration(StructName, LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
@@ -22,7 +22,7 @@ public record StructDeclaration(StructIdentifier StructName, IReadOnlyCollection
 /// <summary>
 /// Represents declaration of an individual field in a struct.
 /// </summary>
-public record FieldDeclaration(Identifier Name, Type Type, Range<ILocation> LocationRange) : Declaration(Name,
+public sealed record FieldDeclaration(Identifier Name, Type Type, Range<ILocation> LocationRange) : Declaration(Name,
     LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
@@ -32,7 +32,7 @@ public record FieldDeclaration(Identifier Name, Type Type, Range<ILocation> Loca
 /// <summary>
 /// Represents creation of a new struct object.
 /// </summary>
-public record StructValue(StructIdentifier StructName, IReadOnlyDictionary<string, StructFieldValue> Fields,
+public sealed record StructValue(StructIdentifier StructName, IReadOnlyDictionary<string, StructFieldValue> Fields,
     Range<ILocation> LocationRange) : SimpleValue(LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
@@ -42,7 +42,7 @@ public record StructValue(StructIdentifier StructName, IReadOnlyDictionary<strin
 /// <summary>
 /// Represents value assigment to a struct field in StructValue
 /// </summary>
-public record StructFieldValue(Identifier FieldName, Expression Value,
+public sealed record StructFieldValue(Identifier FieldName, Expression Value,
     Range<ILocation> LocationRange) : AstNode(LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
@@ -53,7 +53,7 @@ public record StructFieldValue(Identifier FieldName, Expression Value,
 /// Represents accessing a field of a struct object.
 /// If Left is a pointer to a struct then this evaluates to <code>(*pointer).field</code>.
 /// </summary>
-public record FieldAccess(Expression Left, Identifier FieldName, Range<ILocation> LocationRange): Expression(LocationRange)
+public sealed record FieldAccess(Expression Left, Identifier FieldName, Range<ILocation> LocationRange): Expression(LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitFieldAccess(this, param);
