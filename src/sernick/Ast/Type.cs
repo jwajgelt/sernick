@@ -1,3 +1,5 @@
+using sernick.Ast.Nodes;
+
 namespace sernick.Ast;
 
 /// <summary>
@@ -19,3 +21,10 @@ public sealed record UnitType : Type
 {
     public override string ToString() => "Unit";
 }
+
+public sealed record PointerType(Type Type) : Type
+{
+    public override string ToString() => $"*{Type}";
+}
+
+public sealed record StructType(StructIdentifier Struct) : Type;
