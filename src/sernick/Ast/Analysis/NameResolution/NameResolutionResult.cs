@@ -46,29 +46,25 @@ public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Dec
 
     public static NameResolutionResult OfVariableUse(VariableValue node, Declaration variableDeclaration)
     {
-        return new NameResolutionResult(new Dictionary<VariableValue, Declaration> { { node, variableDeclaration } },
-            new Dictionary<Assignment, VariableDeclaration>(),
-            new Dictionary<FunctionCall, FunctionDefinition>(),
-            new Dictionary<StructIdentifier, StructDeclaration>());
+        return new NameResolutionResult
+        {
+            UsedVariableDeclarations = new Dictionary<VariableValue, Declaration> { { node, variableDeclaration } }
+        };
     }
 
     public static NameResolutionResult OfAssignment(Assignment node, VariableDeclaration declaration)
     {
-        return new NameResolutionResult(new Dictionary<VariableValue, Declaration>(),
-            new Dictionary<Assignment, VariableDeclaration> { { node, declaration } },
-            new Dictionary<FunctionCall, FunctionDefinition>(),
-            new Dictionary<StructIdentifier, StructDeclaration>());
+        return new NameResolutionResult
+        {
+            AssignedVariableDeclarations = new Dictionary<Assignment, VariableDeclaration> { { node, declaration } }
+        };
     }
 
     public static NameResolutionResult OfFunctionCall(FunctionCall node, FunctionDefinition declaration)
     {
-        return new NameResolutionResult(new Dictionary<VariableValue, Declaration>(),
-            new Dictionary<Assignment, VariableDeclaration>(),
-            new Dictionary<FunctionCall, FunctionDefinition> { { node, declaration } },
-            new Dictionary<StructIdentifier, StructDeclaration>());
-        // return new NameResolutionResult
-        // {
-        //     CalledFunctionDeclarations = new Dictionary<FunctionCall, FunctionDefinition> { { node, declaration } }
-        // };
+        return new NameResolutionResult
+        {
+            CalledFunctionDeclarations = new Dictionary<FunctionCall, FunctionDefinition> { { node, declaration } }
+        };
     }
 }
