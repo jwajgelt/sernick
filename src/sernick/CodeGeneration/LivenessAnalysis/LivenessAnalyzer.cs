@@ -1,5 +1,6 @@
 namespace sernick.CodeGeneration.LivenessAnalysis;
 
+using Compiler.Function;
 using ControlFlowGraph.CodeTree;
 using Utility;
 using Graph = IReadOnlyDictionary<ControlFlowGraph.CodeTree.Register, IReadOnlyCollection<ControlFlowGraph.CodeTree.Register>>;
@@ -22,6 +23,10 @@ public static class LivenessAnalyzer
                     ? new LivenessAtInstruction(new HashSet<Register>(), new HashSet<Register>())
                     : new LivenessAtInstruction(instruction.RegistersUsed.ToHashSet(), instruction.RegistersDefined.ToHashSet()))
             .ToList();
+        livenessInformation[0] = livenessInformation[0] with
+        {
+            LiveAtExit = Convention.ArgumentRegisters.Union(Convention.CalleeToSave).OfType<Register>().ToHashSet()
+        };
 
         var labelLocations = instructionList
             .SelectMany(
@@ -144,7 +149,8 @@ public static class LivenessAnalyzer
                 interferenceGraph[x].Add(HardwareRegister.RBP);
             }
 
-            rbpInterference.UnionWith(registers.Except(HardwareRegister.RBP.Enumerate()));
+            rbpInterference.UnionWith(registers);
+            rbpInterference.Remove(HardwareRegister.RBP);
         }
 
         foreach (var x in registers)
