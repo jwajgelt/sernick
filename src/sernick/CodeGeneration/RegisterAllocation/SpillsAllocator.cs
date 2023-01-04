@@ -66,7 +66,7 @@ public sealed class SpillsAllocator
             // Combine two assignments.
             // Note that if `usesAssigment`, `definesAssigment` contain the same key
             // then it should get the same hardware register.
-            var reserveAssigment = usesAssigment.JoinWith(definesAssigment);
+            var reserveAssigment = usesAssigment.JoinWithOverlapping(definesAssigment);
 
             // Add read instructions from variable locations to a reserved registers.
             var spilledInstructions = usedRegisters.SelectMany(usedRegister =>
