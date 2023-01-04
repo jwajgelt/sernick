@@ -44,6 +44,10 @@ fun isPrime(n: Int): Bool {
             i = i + 1;
         }
     }
+
+    // This might be unreachable,
+    // but it's required for return type to match
+    return false;
 }
 
 var n = read();

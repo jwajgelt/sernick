@@ -14,7 +14,7 @@ fun setX(newX: Int): Unit {
 }
 
 fun setY(newY: Int): Unit {
-    y = newY;s
+    y = newY;
 }
 
 
@@ -29,8 +29,8 @@ write(x); // oldX
 write(y); // 33
 
 setXY(100, 200);
-write(X); // 100
-write(Y); // 200
+write(x); // 100
+write(y); // 200
 
 
 
