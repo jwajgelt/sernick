@@ -39,6 +39,8 @@ public sealed record Assignment(Assignable Left, Expression Right, Range<ILocati
 /// </summary>
 public sealed record PointerDereference(Expression Pointer, Range<ILocation> LocationRange) : SimpleValue(LocationRange)
 {
+    public override IEnumerable<AstNode> Children => Pointer.Enumerate();
+
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitPointerDereference(this, param);
 }

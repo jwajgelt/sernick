@@ -47,7 +47,10 @@ public sealed record FunctionCall(Identifier FunctionName, IReadOnlyCollection<E
 /// Base class for expressions which represent some type of declaration
 /// </summary>
 public abstract record Declaration(Identifier Name, Range<ILocation> LocationRange) : Expression(LocationRange),
-    IFunctionVariable;
+    IFunctionVariable
+{
+    public abstract override IEnumerable<AstNode> Children { get; }
+}
 
 /// <summary>
 /// Base class for classes representing flow control statements
