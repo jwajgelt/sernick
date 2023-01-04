@@ -24,7 +24,7 @@ public sealed class LexicalGrammarEntry
 /// <summary>
 /// This class defines which combinations of ASCII characters constitute different lexical tokens.
 /// </summary>
-public class LexicalGrammar
+public static class LexicalGrammar
 {
     // !!! IMPORTANT !!!
     // make sure to only use POSIX-Extended Regular Expressions
@@ -33,7 +33,7 @@ public class LexicalGrammar
     //
     // You could use e.g. https://regex101.com to test if the given regex is OK 
 
-    private readonly LexicalGrammarEntry bracesAndParentheses = new(LexicalGrammarCategory.BracesAndParentheses,
+    private static readonly LexicalGrammarEntry bracesAndParentheses = new(LexicalGrammarCategory.BracesAndParentheses,
         new CategoryItems
         {
             ["leftBrace"] = "{",
@@ -42,22 +42,22 @@ public class LexicalGrammar
             ["rightParentheses"] = @"\)",
         });
 
-    private readonly LexicalGrammarEntry semicolon = new(LexicalGrammarCategory.Semicolon, new CategoryItems
+    private static readonly LexicalGrammarEntry semicolon = new(LexicalGrammarCategory.Semicolon, new CategoryItems
     {
         ["semicolon"] = ";"
     });
 
-    private readonly LexicalGrammarEntry colon = new(LexicalGrammarCategory.Colon, new CategoryItems
+    private static readonly LexicalGrammarEntry colon = new(LexicalGrammarCategory.Colon, new CategoryItems
     {
         ["colon"] = ":"
     });
 
-    private readonly LexicalGrammarEntry comma = new(LexicalGrammarCategory.Comma, new CategoryItems
+    private static readonly LexicalGrammarEntry comma = new(LexicalGrammarCategory.Comma, new CategoryItems
     {
         ["comma"] = ","
     });
 
-    private readonly LexicalGrammarEntry keywords = new(LexicalGrammarCategory.Keywords, new CategoryItems
+    private static readonly LexicalGrammarEntry keywords = new(LexicalGrammarCategory.Keywords, new CategoryItems
     {
         ["var"] = "var",
         ["const"] = "const",
@@ -70,7 +70,7 @@ public class LexicalGrammar
         ["return"] = "return",
     });
 
-    private readonly LexicalGrammarEntry typeIdentifiers = new(LexicalGrammarCategory.TypeIdentifiers, new CategoryItems
+    private static readonly LexicalGrammarEntry typeIdentifiers = new(LexicalGrammarCategory.TypeIdentifiers, new CategoryItems
     {
         ["Int"] = "Int",
         ["Bool"] = "Bool",
@@ -78,7 +78,7 @@ public class LexicalGrammar
         ["typeNames"] = "[[:upper:]][[:alnum:]]*",
     });
 
-    private readonly LexicalGrammarEntry operators = new(LexicalGrammarCategory.Operators, new CategoryItems
+    private static readonly LexicalGrammarEntry operators = new(LexicalGrammarCategory.Operators, new CategoryItems
     {
         ["plus"] = @"\+",
         ["minus"] = "-",
@@ -89,34 +89,34 @@ public class LexicalGrammar
         ["greater"] = ">",
         ["less"] = "<",
         ["greaterOrEqual"] = ">=",
-        ["lessOrEqual"] = "<="
+        ["lessOrEqual"] = "<=",
     });
 
-    private readonly LexicalGrammarEntry whitespaces = new(LexicalGrammarCategory.Whitespaces, new CategoryItems
+    private static readonly LexicalGrammarEntry whitespaces = new(LexicalGrammarCategory.Whitespaces, new CategoryItems
     {
         ["blankCharacter"] = "[[:space:]]+"
     });
 
-    private readonly LexicalGrammarEntry variableIdentifiers = new(LexicalGrammarCategory.VariableIdentifiers, new CategoryItems
+    private static readonly LexicalGrammarEntry variableIdentifiers = new(LexicalGrammarCategory.VariableIdentifiers, new CategoryItems
     {
 
         ["variableNames"] = "[[:lower:]][[:alnum:]]*",
     });
 
-    private readonly LexicalGrammarEntry literals = new(LexicalGrammarCategory.Literals, new CategoryItems
+    private static readonly LexicalGrammarEntry literals = new(LexicalGrammarCategory.Literals, new CategoryItems
     {
         ["integers"] = "[[:digit:]]+",
         ["true"] = "true",
         ["false"] = "false",
     });
 
-    private readonly LexicalGrammarEntry comments = new(LexicalGrammarCategory.Comments, new CategoryItems
+    private static readonly LexicalGrammarEntry comments = new(LexicalGrammarCategory.Comments, new CategoryItems
     {
         ["singleLineComment"] = "//.*[[:space:]]*",
         ["multiLineComment"] = @"/\*(.|[[:space:]])*\*/"
     });
 
-    public Dictionary<LexicalGrammarCategory, LexicalGrammarEntry> GenerateGrammar()
+    public static Dictionary<LexicalGrammarCategory, LexicalGrammarEntry> GenerateGrammar()
     {
         return new[]
         {

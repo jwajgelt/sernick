@@ -59,8 +59,7 @@ public static class CompilerFrontend
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
     {
-        var grammar = new LexicalGrammar();
-        var grammarDict = grammar.GenerateGrammar();
+        var grammarDict = LexicalGrammar.GenerateGrammar();
         var categoryDfas =
             grammarDict.ToDictionary(
                 e => e.Key,
