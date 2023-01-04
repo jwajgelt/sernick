@@ -106,14 +106,14 @@ public class HardwareRegister : Register
     public static readonly HardwareRegister RDI = new("RDI", "rdi", "edi", "di", "dil");
     public static readonly HardwareRegister RSI = new("RSI", "rsi", "esi", "si", "sil");
 
-    public static readonly HardwareRegister R8 = new("R8", "r8", "r8d", "r8w", "r8l");
-    public static readonly HardwareRegister R9 = new("R9", "r9", "r9d", "r9w", "r9l");
-    public static readonly HardwareRegister R10 = new("R10", "r10", "r10d", "r10w", "r10l");
-    public static readonly HardwareRegister R11 = new("R11", "r11", "r11d", "r11w", "r11l");
-    public static readonly HardwareRegister R12 = new("R12", "r12", "r12d", "r12w", "r12l");
-    public static readonly HardwareRegister R13 = new("R13", "r13", "r13d", "r13w", "r13l");
-    public static readonly HardwareRegister R14 = new("R14", "r14", "r14d", "r14w", "r14l");
-    public static readonly HardwareRegister R15 = new("R15", "r15", "r15d", "r15w", "r15l");
+    public static readonly HardwareRegister R8 = new("R8", "r8", "r8d", "r8w", "r8b");
+    public static readonly HardwareRegister R9 = new("R9", "r9", "r9d", "r9w", "r9b");
+    public static readonly HardwareRegister R10 = new("R10", "r10", "r10d", "r10w", "r10b");
+    public static readonly HardwareRegister R11 = new("R11", "r11", "r11d", "r11w", "r11b");
+    public static readonly HardwareRegister R12 = new("R12", "r12", "r12d", "r12w", "r12b");
+    public static readonly HardwareRegister R13 = new("R13", "r13", "r13d", "r13w", "r13b");
+    public static readonly HardwareRegister R14 = new("R14", "r14", "r14d", "r14w", "r14b");
+    public static readonly HardwareRegister R15 = new("R15", "r15", "r15d", "r15w", "r15b");
 }
 
 public sealed record RegisterRead(Register Register) : CodeTreeValueNode
