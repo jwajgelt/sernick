@@ -14,17 +14,6 @@ public sealed record TypeCheckingResult(TypeInformation ExpressionsTypes)
 
 public static class TypeChecking
 {
-    /// <summary>
-    /// Artificial type, which should not be used in a real programs
-    /// But is convenient in type checking, when we do not care about
-    /// what an expression returns. With "Any", we can specify it explicitly
-    /// rather than doing some implicit checks on null/undefined/etc.
-    /// </summary>
-    private sealed record AnyType : Type
-    {
-        public override string ToString() => "Any";
-    }
-
     public static TypeCheckingResult CheckTypes(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
     {
         var visitor = new TypeCheckingAstVisitor(nameResolution, diagnostics);

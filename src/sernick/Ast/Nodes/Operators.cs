@@ -25,10 +25,20 @@ public sealed record Infix
         visitor.VisitInfix(this, param);
 }
 
-public sealed record Assignment(Identifier Left, Expression Right, Range<ILocation> LocationRange) : Expression(LocationRange)
+public sealed record Assignment(Assignable Left, Expression Right, Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode[] { Left, Right };
 
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitAssignment(this, param);
+}
+
+/// <summary>
+/// Represents accessing pointer underlining value,
+/// eg. <code>*pointer</code>
+/// </summary>
+public sealed record PointerDereference(Expression Pointer, Range<ILocation> LocationRange) : SimpleValue(LocationRange)
+{
+    public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
+        visitor.VisitPointerDereference(this, param);
 }

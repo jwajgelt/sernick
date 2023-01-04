@@ -19,13 +19,18 @@ using Utility;
 ///     Maps AST nodes for function calls
 ///     to that function's declaration
 /// </param>
+/// <param name="StructDeclarations">
+///     Maps Struct Identifier to its StructDeclaration.
+/// </param>
 public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Declaration> UsedVariableDeclarations,
     IReadOnlyDictionary<Assignment, VariableDeclaration> AssignedVariableDeclarations,
-    IReadOnlyDictionary<FunctionCall, FunctionDefinition> CalledFunctionDeclarations)
+    IReadOnlyDictionary<FunctionCall, FunctionDefinition> CalledFunctionDeclarations,
+    IReadOnlyDictionary<Identifier, StructDeclaration> StructDeclarations)
 {
     public NameResolutionResult() : this(new Dictionary<VariableValue, Declaration>(ReferenceEqualityComparer.Instance),
         new Dictionary<Assignment, VariableDeclaration>(ReferenceEqualityComparer.Instance),
-        new Dictionary<FunctionCall, FunctionDefinition>(ReferenceEqualityComparer.Instance))
+        new Dictionary<FunctionCall, FunctionDefinition>(ReferenceEqualityComparer.Instance),
+        new Dictionary<Identifier, StructDeclaration>(ReferenceEqualityComparer.Instance))
     {
     }
 
@@ -34,28 +39,32 @@ public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Dec
         return new NameResolutionResult(
             UsedVariableDeclarations.JoinWith(other.UsedVariableDeclarations, ReferenceEqualityComparer.Instance),
             AssignedVariableDeclarations.JoinWith(other.AssignedVariableDeclarations, ReferenceEqualityComparer.Instance),
-            CalledFunctionDeclarations.JoinWith(other.CalledFunctionDeclarations, ReferenceEqualityComparer.Instance)
+            CalledFunctionDeclarations.JoinWith(other.CalledFunctionDeclarations, ReferenceEqualityComparer.Instance),
+            StructDeclarations.JoinWith(other.StructDeclarations, ReferenceEqualityComparer.Instance)
         );
     }
 
     public static NameResolutionResult OfVariableUse(VariableValue node, Declaration variableDeclaration)
     {
-        return new NameResolutionResult(new Dictionary<VariableValue, Declaration> { { node, variableDeclaration } },
-            new Dictionary<Assignment, VariableDeclaration>(),
-            new Dictionary<FunctionCall, FunctionDefinition>());
+        return new NameResolutionResult
+        {
+            UsedVariableDeclarations = new Dictionary<VariableValue, Declaration> { { node, variableDeclaration } }
+        };
     }
 
     public static NameResolutionResult OfAssignment(Assignment node, VariableDeclaration declaration)
     {
-        return new NameResolutionResult(new Dictionary<VariableValue, Declaration>(),
-            new Dictionary<Assignment, VariableDeclaration> { { node, declaration } },
-            new Dictionary<FunctionCall, FunctionDefinition>());
+        return new NameResolutionResult
+        {
+            AssignedVariableDeclarations = new Dictionary<Assignment, VariableDeclaration> { { node, declaration } }
+        };
     }
 
     public static NameResolutionResult OfFunctionCall(FunctionCall node, FunctionDefinition declaration)
     {
-        return new NameResolutionResult(new Dictionary<VariableValue, Declaration>(),
-            new Dictionary<Assignment, VariableDeclaration>(),
-            new Dictionary<FunctionCall, FunctionDefinition> { { node, declaration } });
+        return new NameResolutionResult
+        {
+            CalledFunctionDeclarations = new Dictionary<FunctionCall, FunctionDefinition> { { node, declaration } }
+        };
     }
 }

@@ -17,13 +17,14 @@ public abstract class AstVisitor<TResult, TParam>
 
     protected abstract TResult VisitAstNode(AstNode node, TParam param);
 
-    protected virtual TResult VisitExpression(Expression node, TParam param) => VisitAstNode(node, param);
+    protected virtual TResult VisitAssignable(Assignable node, TParam param) => VisitAstNode(node, param);
+    protected virtual TResult VisitExpression(Expression node, TParam param) => VisitAssignable(node, param);
     protected virtual TResult VisitDeclaration(Declaration node, TParam param) => VisitExpression(node, param);
     protected virtual TResult VisitFlowControlStatement(FlowControlStatement node, TParam param) => VisitExpression(node, param);
     protected virtual TResult VisitSimpleValue(SimpleValue node, TParam param) => VisitExpression(node, param);
     protected virtual TResult VisitLiteralValue(LiteralValue node, TParam param) => VisitSimpleValue(node, param);
 
-    public virtual TResult VisitIdentifier(Identifier node, TParam param) => VisitAstNode(node, param);
+    public virtual TResult VisitIdentifier(Identifier node, TParam param) => VisitAssignable(node, param);
 
     public virtual TResult VisitVariableDeclaration(VariableDeclaration node, TParam param) => VisitDeclaration(node, param);
     public virtual TResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, TParam param) => VisitDeclaration(node, param);
@@ -42,8 +43,19 @@ public abstract class AstVisitor<TResult, TParam>
     public virtual TResult VisitInfix(Infix node, TParam param) => VisitExpression(node, param);
     public virtual TResult VisitAssignment(Assignment node, TParam param) => VisitExpression(node, param);
 
+    public virtual TResult VisitPointerDereference(PointerDereference node, TParam param) =>
+        VisitExpression(node, param);
+
     public virtual TResult VisitVariableValue(VariableValue node, TParam param) => VisitSimpleValue(node, param);
     public virtual TResult VisitBoolLiteralValue(BoolLiteralValue node, TParam param) => VisitLiteralValue(node, param);
     public virtual TResult VisitIntLiteralValue(IntLiteralValue node, TParam param) => VisitLiteralValue(node, param);
+    public virtual TResult VisitNullPointerLiteralValue(NullPointerLiteralValue node, TParam param) =>
+        VisitLiteralValue(node, param);
     public virtual TResult VisitEmptyExpression(EmptyExpression node, TParam param) => VisitExpression(node, param);
+
+    public virtual TResult VisitStructDeclaration(StructDeclaration node, TParam param) => VisitDeclaration(node, param);
+    public virtual TResult VisitFieldDeclaration(FieldDeclaration node, TParam param) => VisitDeclaration(node, param);
+    public virtual TResult VisitStructValue(StructValue node, TParam param) => VisitSimpleValue(node, param);
+    public virtual TResult VisitStructFieldInitializer(StructFieldInitializer node, TParam param) => VisitAstNode(node, param);
+    public virtual TResult StructFieldAccess(StructFieldAccess node, TParam param) => VisitSimpleValue(node, param);
 }

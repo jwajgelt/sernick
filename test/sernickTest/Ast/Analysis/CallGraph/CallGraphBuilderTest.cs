@@ -183,7 +183,8 @@ public class CallGraphBuilderTest
         var nameResolution = new NameResolutionResult(
             new Dictionary<VariableValue, Declaration> { },
             new Dictionary<Assignment, VariableDeclaration> { },
-            functionNameResolution);
+            functionNameResolution,
+            new Dictionary<Identifier, StructDeclaration> { });
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var callGraphClosure = callGraph.Closure();
 
