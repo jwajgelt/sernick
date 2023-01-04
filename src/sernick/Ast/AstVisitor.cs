@@ -53,6 +53,6 @@ public abstract class AstVisitor<TResult, TParam>
     public virtual TResult VisitStructDeclaration(StructDeclaration node, TParam param) => VisitDeclaration(node, param);
     public virtual TResult VisitFieldDeclaration(FieldDeclaration node, TParam param) => VisitDeclaration(node, param);
     public virtual TResult VisitStructValue(StructValue node, TParam param) => VisitSimpleValue(node, param);
-    public virtual TResult VisitStructFieldValue(StructFieldValue node, TParam param) => VisitAstNode(node, param);
-    public virtual TResult VisitFieldAccess(FieldAccess node, TParam param) => VisitExpression(node, param);
+    public virtual TResult VisitStructFieldInitializer(StructFieldInitializer node, TParam param) => VisitAstNode(node, param);
+    public virtual TResult StructFieldAccess(StructFieldAccess node, TParam param) => VisitExpression(node, param);
 }
