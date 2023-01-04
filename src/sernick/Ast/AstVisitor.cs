@@ -43,6 +43,9 @@ public abstract class AstVisitor<TResult, TParam>
     public virtual TResult VisitInfix(Infix node, TParam param) => VisitExpression(node, param);
     public virtual TResult VisitAssignment(Assignment node, TParam param) => VisitExpression(node, param);
 
+    public virtual TResult VisitPointerDereference(PointerDereference node, TParam param) =>
+        VisitExpression(node, param);
+
     public virtual TResult VisitVariableValue(VariableValue node, TParam param) => VisitSimpleValue(node, param);
     public virtual TResult VisitBoolLiteralValue(BoolLiteralValue node, TParam param) => VisitLiteralValue(node, param);
     public virtual TResult VisitIntLiteralValue(IntLiteralValue node, TParam param) => VisitLiteralValue(node, param);
