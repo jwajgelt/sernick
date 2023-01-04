@@ -19,6 +19,22 @@ public static class StructConversion
             _ => throw new ArgumentException("Invalid ParseTree for StructDeclaration")
         };
 
+    /// <summary>
+    /// Creates StructValue from ParseTree.
+    /// Requires the top Production to be a valid StructValue production:
+    /// 1. structValue -> typeIdentifier * braceOpen * structValueFields * braceClose
+    /// </summary>
+    public static StructValue ToStructValue(this IParseTree<Symbol> node)
+    {
+        return node switch
+        {
+            { Symbol: NonTerminal { Inner: NonTerminalSymbol.StructValue }, Children: var children } =>
+                new StructValue(children[0].ToIdentifier(), children[2].ToStructValueFields(), node.LocationRange),
+
+            _ => throw new ArgumentException("Invalid ParseTree for StructDeclaration")
+        };
+    }
+
     private static IReadOnlyCollection<FieldDeclaration> ToStructDeclarationFields(this IParseTree<Symbol> node) =>
         node switch
         {
@@ -38,5 +54,26 @@ public static class StructConversion
                 => new FieldDeclaration(children[0].ToIdentifier(), children[1].ToType(), node.LocationRange),
 
             _ => throw new ArgumentException("Invalid ParseTree for StructFieldDeclaration")
+        };
+
+    private static IReadOnlyCollection<StructFieldInitializer> ToStructValueFields(this IParseTree<Symbol> node) =>
+        node switch
+        {
+            // structValueFields -> [ structFieldInitializer (, structFieldInitializer)^ ]
+            { Symbol: NonTerminal { Inner: NonTerminalSymbol.StructValueFields }, Children: var children } =>
+                children.SkipCommas().Select(field => field.ToStructFieldInitializer()).ToList(),
+
+            _ => throw new ArgumentException("Invalid ParseTree for StructValueFields")
+        };
+
+    private static StructFieldInitializer ToStructFieldInitializer(this IParseTree<Symbol> node) =>
+        node switch
+        {
+            // structFieldInitializer -> identifier : expression
+            { Symbol: NonTerminal { Inner: NonTerminalSymbol.StructFieldInitializer }, Children: var children }
+                when children.Count == 3
+                => new StructFieldInitializer(children[0].ToIdentifier(), children[2].ToExpression(), node.LocationRange),
+
+            _ => throw new ArgumentException("Invalid ParseTree for StructFieldInitializer")
         };
 }

@@ -274,4 +274,56 @@ public class ConversionTest
             Type: BoolType
         });
     }
+
+    [Fact]
+    public void StructValue_Conversion()
+    {
+        // Struct { a: 0, b: false }
+        var input = Node(NonTerminalSymbol.StructValue,
+            Leaf(LexicalGrammarCategory.TypeIdentifiers, "Struct"),
+            Leaf(LexicalGrammarCategory.BracesAndParentheses, "{"),
+            Node(NonTerminalSymbol.StructValueFields,
+                Node(NonTerminalSymbol.StructFieldInitializer,
+                    Leaf(LexicalGrammarCategory.VariableIdentifiers, "a"),
+                    Leaf(LexicalGrammarCategory.Colon, ":"),
+                    Node(NonTerminalSymbol.OpenExpression,
+                        Node(NonTerminalSymbol.LogicalOperand,
+                            Node(NonTerminalSymbol.ComparisonOperand,
+                                Node(NonTerminalSymbol.ArithmeticOperand,
+                                    Node(NonTerminalSymbol.SimpleExpression,
+                                        Node(NonTerminalSymbol.LiteralValue,
+                                            Leaf(LexicalGrammarCategory.Literals, "0")))))))),
+                Leaf(LexicalGrammarCategory.Comma, ","),
+                Node(NonTerminalSymbol.StructFieldInitializer,
+                    Leaf(LexicalGrammarCategory.VariableIdentifiers, "b"),
+                    Leaf(LexicalGrammarCategory.Colon, ":"),
+                    Node(NonTerminalSymbol.OpenExpression,
+                        Node(NonTerminalSymbol.LogicalOperand,
+                            Node(NonTerminalSymbol.ComparisonOperand,
+                                Node(NonTerminalSymbol.ArithmeticOperand,
+                                    Node(NonTerminalSymbol.SimpleExpression,
+                                        Node(NonTerminalSymbol.LiteralValue,
+                                            Leaf(LexicalGrammarCategory.Literals, "false"))))))))),
+            Leaf(LexicalGrammarCategory.BracesAndParentheses, "}")
+        ).Convert();
+        var astNode = AstNode.From(input);
+
+        Assert.True(astNode is StructValue
+        {
+            StructName.Name: "Struct",
+            Fields.Count: 2
+        });
+
+        var fields = ((StructValue)astNode).Fields.ToList();
+        Assert.True(fields[0] is
+        {
+            FieldName.Name: "a",
+            Value: IntLiteralValue { Value: 0 }
+        });
+        Assert.True(fields[1] is
+        {
+            FieldName.Name: "b",
+            Value: BoolLiteralValue { Value: false }
+        });
+    }
 }

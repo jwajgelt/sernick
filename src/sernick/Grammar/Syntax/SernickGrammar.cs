@@ -36,6 +36,9 @@ public static class SernickGrammar
         var ifCondition = Atom(Symbol.Of(NonTerminalSymbol.IfCondition));
         var ifExpression = Atom(Symbol.Of(NonTerminalSymbol.IfExpression));
         var loopExpression = Atom(Symbol.Of(NonTerminalSymbol.LoopExpression));
+        var structValue = Atom(Symbol.Of(NonTerminalSymbol.StructValue)); // StructName { ... }
+        var structValueFields = Atom(Symbol.Of(NonTerminalSymbol.StructValueFields));
+        var structFieldInitializer = Atom(Symbol.Of(NonTerminalSymbol.StructFieldInitializer)); // name: expr
         var modifier = Atom(Symbol.Of(NonTerminalSymbol.Modifier)); // var or const
         var typeSpec = Atom(Symbol.Of(NonTerminalSymbol.TypeSpecification)); // ": Type"
         var variableDeclaration = Atom(Symbol.Of(NonTerminalSymbol.VariableDeclaration));
@@ -87,7 +90,7 @@ public static class SernickGrammar
 
         // Aliases
         var aliasBlockExpression = Union(
-            codeBlock, codeGroup, ifExpression, loopExpression,
+            codeBlock, codeGroup, ifExpression, loopExpression, structValue,
             functionDeclaration, structDeclaration);
         var aliasClosedExpression =
             Union(Concat(openExpression, semicolon), Concat(aliasBlockExpression, Optional(semicolon)));
@@ -150,8 +153,11 @@ public static class SernickGrammar
                 Optional(Concat(elseKeyword, codeBlock))))
             .Add(ifCondition, Union(
                 codeGroup, // (E;E;E)
-                Concat(parOpen, aliasExpression, parClose)))// (E) or ({})
+                Concat(parOpen, aliasExpression, parClose))) // (E) or ({})
             .Add(loopExpression, Concat(loopKeyword, codeBlock))
+            .Add(structValue, Concat(typeIdentifier, braceOpen, structValueFields, braceClose))
+            .Add(structValueFields, Optional(Concat(structFieldInitializer, Star(comma, structFieldInitializer))))
+            .Add(structFieldInitializer, Concat(identifier, colon, aliasExpression)) // name: expr
 
             // Assignment
             .Add(assignment,

@@ -94,6 +94,11 @@ public static class ExpressionConversion
                     case NonTerminalSymbol.StructDeclarationFields:
                     case NonTerminalSymbol.StructFieldDeclaration:
                         throw new ArgumentException($"Unexpected symbol: {nonTerminal}");
+                    case NonTerminalSymbol.StructValue:
+                        return node.ToStructValue();
+                    case NonTerminalSymbol.StructValueFields:
+                    case NonTerminalSymbol.StructFieldInitializer:
+                        throw new ArgumentException($"Unexpected symbol: {nonTerminal}");
 
                     // Following expression can't be converted to AST node without more context
                     case NonTerminalSymbol.Start:
