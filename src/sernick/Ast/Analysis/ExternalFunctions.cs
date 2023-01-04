@@ -57,7 +57,7 @@ public static class ExternalFunctionsInfo
                         null,
                         placeholderRange)
                 },
-                new AnyType(),
+                new PointerType(new AnyType()),
                 new CodeBlock( new EmptyExpression(placeholderRange), placeholderRange),
                 placeholderRange),
             new AllocationCaller()
