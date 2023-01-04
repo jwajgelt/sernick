@@ -47,7 +47,7 @@ public sealed record StructFieldInitializer(Identifier FieldName, Expression Val
 /// Represents accessing a field of a struct object.
 /// If Left is a pointer to a struct then this evaluates to <code>(*pointer).field</code>.
 /// </summary>
-public sealed record StructFieldAccess(Expression Left, Identifier FieldName, Range<ILocation> LocationRange) : Expression(LocationRange)
+public sealed record StructFieldAccess(Expression Left, Identifier FieldName, Range<ILocation> LocationRange) : SimpleValue(LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.StructFieldAccess(this, param);

@@ -37,7 +37,7 @@ public sealed record Assignment(Assignable Left, Expression Right, Range<ILocati
 /// Represents accessing pointer underlining value,
 /// eg. <code>*pointer</code>
 /// </summary>
-public sealed record PointerDereference(Expression Pointer, Range<ILocation> LocationRange) : Expression(LocationRange)
+public sealed record PointerDereference(Expression Pointer, Range<ILocation> LocationRange) : SimpleValue(LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitPointerDereference(this, param);

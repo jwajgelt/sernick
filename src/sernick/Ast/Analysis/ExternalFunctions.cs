@@ -49,7 +49,14 @@ public static class ExternalFunctionsInfo
         new FunctionInfo(
             new FunctionDefinition(
                 new Identifier("new", placeholderRange),
-                new List<FunctionParameterDeclaration>() {},
+                new List<FunctionParameterDeclaration>
+                {
+                    new FunctionParameterDeclaration(
+                        new Identifier("value", placeholderRange),
+                        new AnyType(),
+                        null,
+                        placeholderRange)
+                },
                 new AnyType(),
                 new CodeBlock( new EmptyExpression(placeholderRange), placeholderRange),
                 placeholderRange),
