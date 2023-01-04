@@ -15,6 +15,9 @@ public class TestGrammar
     private static readonly string[] booleanLiterals = { "true", "false" };
     private static readonly string[] notBooleanLiterals = { "True", "False", "Truth", "Fals" };
 
+    private static readonly string[] nullLiterals = { "null" };
+    private static readonly string[] notNullLiterals = { "Null", "nullptr", "nil", "none", "None" };
+
     private static readonly string[] comments = { "// single-line comment", @"/* multi
     line
     comment */", "/* multi-line comment in one line */" };
@@ -161,5 +164,13 @@ public class TestGrammar
         TestCategories(new[] { LexicalGrammarCategory.Literals },
          booleanLiterals,
          notBooleanLiterals);
+    }
+
+    [Fact]
+    public void Test_literals_category_null()
+    {
+        TestCategories(new[] { LexicalGrammarCategory.Literals },
+            nullLiterals,
+            notNullLiterals);
     }
 }

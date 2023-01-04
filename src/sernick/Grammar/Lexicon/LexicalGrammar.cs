@@ -109,6 +109,7 @@ public static class LexicalGrammar
         ["integers"] = "[[:digit:]]+",
         ["true"] = "true",
         ["false"] = "false",
+        ["null"] = "null"
     });
 
     private static readonly LexicalGrammarEntry comments = new(LexicalGrammarCategory.Comments, new CategoryItems

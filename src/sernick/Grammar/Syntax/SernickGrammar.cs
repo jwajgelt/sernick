@@ -65,6 +65,7 @@ public static class SernickGrammar
         var trueLiteral = Atom(Symbol.Of(LexicalCategory.Literals, "true"));
         var falseLiteral = Atom(Symbol.Of(LexicalCategory.Literals, "false"));
         var digitLiteral = Atom(Symbol.Of(LexicalCategory.Literals));
+        var nullLiteral = Atom(Symbol.Of(LexicalCategory.Literals, "null"));
 
         var ifKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "if"));
         var elseKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "else"));
@@ -140,7 +141,7 @@ public static class SernickGrammar
 
             // Simple expression
             .Add(simpleExpression, literalValue)
-            .Add(literalValue, Union(trueLiteral, falseLiteral, digitLiteral))
+            .Add(literalValue, Union(trueLiteral, falseLiteral, digitLiteral, nullLiteral))
             .Add(simpleExpression, Concat(parOpen, aliasExpression, parClose)) // (E) or ({})
             .Add(simpleExpression, Union(identifier, functionCall)) // x or f()
             .Add(functionCall, Concat(identifier, parOpen, functionArguments, parClose))
