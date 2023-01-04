@@ -16,7 +16,7 @@ public static class DictionaryExtensions
         IReadOnlyDictionary<K, V> other,
         IEqualityComparer<K>? comparer = null) where K : notnull
     {
-        return new[] { dict, other }.SelectMany(d => d)
+        return new[] { dict, other }.SelectMany(d => d).Distinct()
             .ToDictionary(pair => pair.Key, pair => pair.Value, comparer);
     }
 
