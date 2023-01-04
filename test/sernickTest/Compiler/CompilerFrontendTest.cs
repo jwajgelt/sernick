@@ -108,6 +108,8 @@ public class CompilerFrontendTest
     [InlineData("var x: Int = 5 + 5")]
     [InlineData("(var x: Int;);")]
     [InlineData("(fun f() {};);")]
+    // TODO: uncomment once name-resolution and type-checking can handle structs
+    //[InlineData("struct Struct { a: Int, b : Bool }")]
     public void TestCorrectLexerAndParser(string program)
     {
         var diagnostics = program.CompileText();

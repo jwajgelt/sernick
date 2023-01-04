@@ -228,4 +228,50 @@ public class ConversionTest
             DefaultValue: IntLiteralValue { Value: 1 }
         });
     }
+
+    [Fact]
+    public void StructDeclaration_Conversion()
+    {
+        // struct Struct { a: Int, b: Bool }
+        var input = Node(NonTerminalSymbol.StructDeclaration,
+            Leaf(LexicalGrammarCategory.Keywords, "struct"),
+            Leaf(LexicalGrammarCategory.TypeIdentifiers, "Struct"),
+            Leaf(LexicalGrammarCategory.BracesAndParentheses, "{"),
+            Node(NonTerminalSymbol.StructDeclarationFields,
+                Node(NonTerminalSymbol.StructFieldDeclaration,
+                    Leaf(LexicalGrammarCategory.VariableIdentifiers, "a"),
+                    Node(NonTerminalSymbol.TypeSpecification,
+                        Leaf(LexicalGrammarCategory.Colon, ":"),
+                        Leaf(LexicalGrammarCategory.TypeIdentifiers, "Int")
+                    )),
+                Leaf(LexicalGrammarCategory.Comma, ","),
+                Node(NonTerminalSymbol.StructFieldDeclaration,
+                    Leaf(LexicalGrammarCategory.VariableIdentifiers, "b"),
+                    Node(NonTerminalSymbol.TypeSpecification,
+                        Leaf(LexicalGrammarCategory.Colon, ":"),
+                        Leaf(LexicalGrammarCategory.TypeIdentifiers, "Bool")
+                    ))
+            ),
+            Leaf(LexicalGrammarCategory.BracesAndParentheses, "}")
+        ).Convert();
+        var astNode = AstNode.From(input);
+
+        Assert.True(astNode is StructDeclaration
+        {
+            Name.Name: "Struct",
+            Fields.Count: 2
+        });
+
+        var fields = ((StructDeclaration)astNode).Fields.ToList();
+        Assert.True(fields[0] is
+        {
+            Name.Name: "a",
+            Type: IntType
+        });
+        Assert.True(fields[1] is
+        {
+            Name.Name: "b",
+            Type: BoolType
+        });
+    }
 }

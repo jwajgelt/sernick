@@ -6,8 +6,8 @@ using sernick.Grammar.Lexicon;
 
 public class TestGrammar
 {
-    private static readonly string[] keywords = { "loop", "var", "const", "fun", "break", "continue", "return" };
-    private static readonly string[] notKeywords = { "Loop", "Var", "CONST", "function", "breaking", "go", "ret" };
+    private static readonly string[] keywords = { "loop", "var", "const", "fun", "break", "continue", "return", "struct" };
+    private static readonly string[] notKeywords = { "Loop", "Var", "CONST", "function", "breaking", "go", "ret", "type", "class" };
 
     private static readonly string[] integerLiterals = { "123", "2", "137", "999000999" };
     private static readonly string[] notIntegerLiterals = { "123.45", "21.3", "7,99", "999,99$", "0.00", "0/0" };

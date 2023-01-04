@@ -68,6 +68,7 @@ public static class LexicalGrammar
         ["break"] = "break",
         ["continue"] = "continue",
         ["return"] = "return",
+        ["struct"] = "struct"
     });
 
     private static readonly LexicalGrammarEntry typeIdentifiers = new(LexicalGrammarCategory.TypeIdentifiers, new CategoryItems

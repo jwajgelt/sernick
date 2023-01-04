@@ -59,5 +59,8 @@ public enum NonTerminalSymbol
     FunctionDeclaration,
     FunctionParameters,
     FunctionParameter,
-    FunctionParameterWithDefaultValue
+    FunctionParameterWithDefaultValue,
+    StructDeclaration,
+    StructDeclarationFields,
+    StructFieldDeclaration
 }

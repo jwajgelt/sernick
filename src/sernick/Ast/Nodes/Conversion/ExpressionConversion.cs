@@ -88,6 +88,13 @@ public static class ExpressionConversion
                     case NonTerminalSymbol.FunctionParameterWithDefaultValue:
                         return node.ToFunctionParameterDeclaration();
 
+                    // Struct Expressions
+                    case NonTerminalSymbol.StructDeclaration:
+                        return node.ToStructDeclaration();
+                    case NonTerminalSymbol.StructDeclarationFields:
+                    case NonTerminalSymbol.StructFieldDeclaration:
+                        throw new ArgumentException($"Unexpected symbol: {nonTerminal}");
+
                     // Following expression can't be converted to AST node without more context
                     case NonTerminalSymbol.Start:
                     case NonTerminalSymbol.ArithmeticOperator:
