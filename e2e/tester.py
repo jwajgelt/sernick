@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 import subprocess
 import filecmp
 from enum import Enum
@@ -23,6 +24,7 @@ def prepare_parser():
     parser.add_argument('--mockdata', action='store_true', help="Use binaries (prepared in advance) for Fibonacci just to test if Tester's logic works")
     parser.add_argument('--test_suite', help="Test suite to run")
     parser.add_argument('--loglevel', default='info',choices=logging._nameToLevel.keys(), help="Provide logging level. Example --loglevel debug'")
+    parser.add_argument('--compiler', required=False, help="Path to compiler executable (default is src/sernick/bin/Debug/net6.0/sernick.dll)")
     return parser
 
 def prepare_test_data(test_directory: str) -> TestingLevel:
@@ -33,7 +35,7 @@ def prepare_test_data(test_directory: str) -> TestingLevel:
     should_run_python_generator = should_run_generator(test_directory=test_directory)
     if should_run_python_generator:
         logging.debug("Running gen.py in " + test_directory + '...')
-        subprocess.run(['/usr/bin/python3', 'gen.py'], cwd=test_directory)
+        subprocess.run([sys.executable, 'gen.py'], cwd=test_directory)
     else:
         logging.debug("No gen.py found, assuming Input/Expected folders are prepared...")
 
@@ -77,10 +79,11 @@ def run_files(compiled_files: List[str], test_directory: str)->None:
             run_file_on_input_and_check(binary_file_path=binary_file, test_dir_path=test_directory)
         except Exception:
             logging.error("Unknown exception occurred when running {}, proceeding...".format(binary_file))
-    
-def test(use_mock_data: bool, test_directories = None):
+
+def test(use_mock_data: bool, compiler_path: str = None, test_directories: List[str] = None):
     if test_directories is None:
         test_directories = test_find_test_folders() if use_mock_data else list(find_test_folders('.'))
+
     for test_directory in test_directories:
         logging.info("-----------")
         logging.info("Entering {}...".format(test_directory))
@@ -89,7 +92,7 @@ def test(use_mock_data: bool, test_directories = None):
         if use_mock_data:
             compiled_files = test_get_compiled_files(test_directory=test_directory) # just for testing TODO uncomment for the line below
         else:
-            compiled_files = compile_sernick_files(test_directory) 
+            compiled_files = compile_sernick_files(test_directory, compiler_path) 
 
         if testing_level == TestingLevel.ONLY_COMPILE:
             logging.info("Compilation executed, not running further (no test input)")
@@ -112,10 +115,9 @@ def run():
         return
     if args.mockdata:
         test(use_mock_data=True)
-    elif args.test_suite:
-        test(False, [args.test_suite])
     else:
-        test(use_mock_data=False)
+        test(use_mock_data=False, compiler_path=args.compiler, test_directories=[args.test_suite] if args.test_suite else None)
 
 if __name__ == '__main__':
     run()
+

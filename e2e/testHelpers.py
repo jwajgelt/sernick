@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import shutil
 import re
@@ -10,7 +11,7 @@ INPUT_DIR = r'Input'
 OUTPUT_DIR = r'Output'
 EXPECTED_DIR = r'Expected'
 TEST_DIR_REGEX = re.compile('.*Test')
-SERNICK_EXE_PATH = os.path.join('..', 'src', 'sernick', 'bin','Debug', 'net6.0', 'sernick') # TODO verify if this path is correct
+SERNICK_EXE_PATH = os.path.join('..', 'src', 'sernick', 'bin','Debug', 'net6.0', 'sernick.dll')
 
 def find_test_folders(root_dir: str):
     for dirpath, subdirs, _ in os.walk(root_dir):
@@ -32,7 +33,7 @@ def drop_extension(path: str)->str:
 def join_path(dir: str, file_path: str)->str:
     return os.path.join(dir,file_path)
 
-def compile_sernick_files(dir:str)-> List[str]:    
+def compile_sernick_files(dir: str, compiler_path: str = None)-> List[str]:    
     sernick_files = [join_path(dir, f) for f in os.listdir(dir) if is_sernick_file(join_path(dir,f))]
     logging.debug("Found following sernick files: {}".format(sernick_files))
     
@@ -40,7 +41,7 @@ def compile_sernick_files(dir:str)-> List[str]:
 
     for file_path in sernick_files:
         try:
-            completed_process = subprocess.run([SERNICK_EXE_PATH, file_path, "--execute"])
+            completed_process = subprocess.run(["dotnet", compiler_path or SERNICK_EXE_PATH, file_path])
             completed_process.check_returncode() # this raises an exception
             compiled_files.append(drop_extension(file_path))
         except Exception:
@@ -58,7 +59,7 @@ def prepare_test_data(test_directory: str) -> bool:
     directory_contains_python_generator = True if 'gen.py' in all_files_in_dir else False
     if directory_contains_python_generator:
         logging.debug("Running gen.py in " + test_directory)
-        subprocess.run(['/usr/bin/python3', 'gen.py'], cwd=test_directory)
+        subprocess.run([sys.executable, 'gen.py'], cwd=test_directory)
     else:
         logging.debug("No gen.py, assuming tests are already there...")
     expected_dir_path = os.path.join(test_directory, EXPECTED_DIR)

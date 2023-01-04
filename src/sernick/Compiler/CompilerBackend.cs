@@ -49,8 +49,8 @@ public static class CompilerBackend
             .Concat(functionCodeTreeMap
                 .SelectMany((funcDef, codeTree) =>
                 {
-                    IReadOnlyList<IAsmable> asm = functionContextMap[funcDef].Label.Enumerate()
-                        .Concat(linearizator.Linearize(CfgCompressor.CompressPaths(codeTree)))
+                    IReadOnlyList<IAsmable> asm = linearizator
+                        .Linearize(CfgCompressor.CompressPaths(codeTree), functionContextMap[funcDef].Label)
                         .ToList();
                     var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(asm);
                     var regAllocation = regAllocator.Process(interferenceGraph, copyGraph);
