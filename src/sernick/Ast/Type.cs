@@ -27,3 +27,14 @@ public sealed record PointerType(Type Type) : Type
 }
 
 public sealed record StructType(Identifier Struct) : Type;
+
+/// <summary>
+/// Artificial type, which should not be used in a real programs
+/// But is convenient in type checking, when we do not care about
+/// what an expression returns. With "Any", we can specify it explicitly
+/// rather than doing some implicit checks on null/undefined/etc.
+/// </summary>
+public sealed record AnyType : Type
+{
+    public override string ToString() => "Any";
+}

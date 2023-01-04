@@ -46,5 +46,14 @@ public static class ExternalFunctionsInfo
                 ),
                 new WriteCaller()
         ),
+        new FunctionInfo(
+            new FunctionDefinition(
+                new Identifier("new", placeholderRange),
+                new List<FunctionParameterDeclaration>() {},
+                new AnyType(),
+                new CodeBlock( new EmptyExpression(placeholderRange), placeholderRange),
+                placeholderRange),
+            new AllocationCaller()
+            ),
     };
 }
