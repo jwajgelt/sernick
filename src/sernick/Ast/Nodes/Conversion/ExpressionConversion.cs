@@ -52,6 +52,8 @@ public static class ExpressionConversion
                         return node.ToReturnStatement();
 
                     case NonTerminalSymbol.OpenExpression:
+                        return node.ToOpenExpression();
+                    case NonTerminalSymbol.AssignmentOperand:
                     case NonTerminalSymbol.LogicalOperand:
                     case NonTerminalSymbol.ComparisonOperand:
                         return node.ToInfix();
@@ -64,8 +66,6 @@ public static class ExpressionConversion
                         return node.ToSimpleExpression();
                     case NonTerminalSymbol.LiteralValue:
                         return node.ToLiteral();
-                    case NonTerminalSymbol.Assignment:
-                        return node.ToAssigment();
 
                     // Control Flow Statements
                     case NonTerminalSymbol.CodeBlock:

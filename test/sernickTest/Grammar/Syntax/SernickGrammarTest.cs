@@ -51,19 +51,20 @@ public class SernickGrammarTest
                         PT.ExpressionSeq,
                         PT.BracesAndParentheses("}")),
                     PT.OpenExpression(
-                        PT.LogicalOperand(
-                            PT.ComparisonOperand(
-                                PT.CodeBlock(
-                                    PT.BracesAndParentheses("{"),
-                                    PT.ExpressionSeq,
-                                    PT.BracesAndParentheses("}")),
-                                PT.ArithmeticOperator(
-                                    PT.Operators("+")),
-                                PT.ArithmeticOperand(
-                                    PT.PointerOperand(
-                                        PT.SimpleExpression(
-                                            PT.LiteralValue(
-                                                PT.Literals("2"))))))))))
+                        PT.AssignmentOperand(
+                            PT.LogicalOperand(
+                                PT.ComparisonOperand(
+                                    PT.CodeBlock(
+                                        PT.BracesAndParentheses("{"),
+                                        PT.ExpressionSeq,
+                                        PT.BracesAndParentheses("}")),
+                                    PT.ArithmeticOperator(
+                                        PT.Operators("+")),
+                                    PT.ArithmeticOperand(
+                                        PT.PointerOperand(
+                                            PT.SimpleExpression(
+                                                PT.LiteralValue(
+                                                    PT.Literals("2")))))))))))
         ),
         // var x = 5 + 5
         (
@@ -84,10 +85,10 @@ public class SernickGrammarTest
                         PT.VariableDeclaration(
                             PT.Modifier(
                                 PT.Keywords("var")),
-                            PT.Assignment(
-                                PT.VariableIdentifiers("x"),
-                                PT.Operators("="),
-                                PT.OpenExpression(
+                            PT.VariableIdentifiers("x"),
+                            PT.Operators("="),
+                            PT.OpenExpression(
+                                PT.AssignmentOperand(
                                     PT.LogicalOperand(
                                         PT.ComparisonOperand(
                                             PT.ArithmeticOperand(
