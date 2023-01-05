@@ -23,10 +23,6 @@ public static class LivenessAnalyzer
                     ? new LivenessAtInstruction(new HashSet<Register>(), new HashSet<Register>())
                     : new LivenessAtInstruction(instruction.RegistersUsed.ToHashSet(), instruction.RegistersDefined.ToHashSet()))
             .ToList();
-        livenessInformation[0] = livenessInformation[0] with
-        {
-            LiveAtExit = Convention.ArgumentRegisters.Union(Convention.CalleeToSave).OfType<Register>().ToHashSet()
-        };
 
         var labelLocations = instructionList
             .SelectMany(
