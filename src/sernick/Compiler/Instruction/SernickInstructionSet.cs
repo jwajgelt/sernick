@@ -234,17 +234,21 @@ public static class SernickInstructionSet
                             BinaryOperation.BitwiseAnd, BinaryOperation.BitwiseOr), out var op,
                         Pat.WildcardNode, Pat.WildcardNode),
                     (inputs, values) =>
-                        new List<IInstruction>
+                    {
+                        var output = new Register();
+                        return new List<IInstruction>
                         {
+                            Mov.ToReg(output).FromReg(inputs[0]),
                             values.Get<BinaryOperation>(op) switch
                             {
-                                BinaryOperation.Add => Bin.Add.ToReg(inputs[0]).FromReg(inputs[1]),
-                                BinaryOperation.Sub => Bin.Sub.ToReg(inputs[0]).FromReg(inputs[1]),
-                                BinaryOperation.BitwiseAnd => Bin.And.ToReg(inputs[0]).FromReg(inputs[1]),
-                                BinaryOperation.BitwiseOr => Bin.Or.ToReg(inputs[0]).FromReg(inputs[1]),
+                                BinaryOperation.Add => Bin.Add.ToReg(output).FromReg(inputs[1]),
+                                BinaryOperation.Sub => Bin.Sub.ToReg(output).FromReg(inputs[1]),
+                                BinaryOperation.BitwiseAnd => Bin.And.ToReg(output).FromReg(inputs[1]),
+                                BinaryOperation.BitwiseOr => Bin.Or.ToReg(output).FromReg(inputs[1]),
                                 _ => throw new ArgumentOutOfRangeException()
                             }
-                        }.WithOutput(inputs[0]));
+                        }.WithOutput(output);
+                    });
             }
 
             // <op> *
@@ -252,15 +256,20 @@ public static class SernickInstructionSet
                 yield return new CodeTreeNodePatternRule(
                     Pat.UnaryOperationNode(Any<UnaryOperation>(), out var op,
                         Pat.WildcardNode),
-                    (inputs, values) => new List<IInstruction>
+                    (inputs, values) =>
                     {
-                        values.Get<UnaryOperation>(op) switch
+                        var output = new Register();
+                        return new List<IInstruction>
                         {
-                            UnaryOperation.Not => Un.Not.Reg(inputs[0]),
-                            UnaryOperation.Negate => Un.Neg.Reg(inputs[0]),
-                            _ => throw new ArgumentOutOfRangeException()
-                        }
-                    }.WithOutput(inputs[0]));
+                            Mov.ToReg(output).FromReg(inputs[0]),
+                            values.Get<UnaryOperation>(op) switch
+                            {
+                                UnaryOperation.Not => Un.Not.Reg(output),
+                                UnaryOperation.Negate => Un.Neg.Reg(output),
+                                _ => throw new ArgumentOutOfRangeException()
+                            }
+                        }.WithOutput(output);
+                    });
             }
 
             /* CONDITIONALS */
