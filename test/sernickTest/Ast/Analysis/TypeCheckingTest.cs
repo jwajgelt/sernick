@@ -566,6 +566,7 @@ public class TypeCheckingTest
                 Value("x").Field("list").Field("val").Assign(Literal(1)),
                 Value("x").Field("list").Field("next").Assign(Alloc(listDefault)),
                 Deref(Value("x").Field("list").Field("next")).Assign(listDefault),
+                Deref(Value("x").Field("list").Field("next")).Field("val").Assign(Literal(2)),
                 Value("y").Field("boolVal").Assign(Literal(true))
             );
 
