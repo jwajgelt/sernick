@@ -25,7 +25,7 @@ public sealed record Infix
         visitor.VisitInfix(this, param);
 }
 
-public sealed record Assignment(Assignable Left, Expression Right, Range<ILocation> LocationRange) : Expression(LocationRange)
+public sealed record Assignment(Expression Left, Expression Right, Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode[] { Left, Right };
 

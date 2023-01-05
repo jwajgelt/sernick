@@ -32,14 +32,9 @@ public abstract record AstNode(Range<ILocation> LocationRange)
 }
 
 /// <summary>
-/// Class representing AST nodes which can appear in left-hand-side of an assigment expression.
-/// </summary>
-public abstract record Assignable(Range<ILocation> LocationRange) : AstNode(LocationRange);
-
-/// <summary>
 /// Class representing identifiers
 /// </summary>
-public sealed record Identifier(string Name, Range<ILocation> LocationRange) : Assignable(LocationRange)
+public sealed record Identifier(string Name, Range<ILocation> LocationRange) : AstNode(LocationRange)
 {
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitIdentifier(this, param);
@@ -48,4 +43,4 @@ public sealed record Identifier(string Name, Range<ILocation> LocationRange) : A
 /// <summary>
 /// Base class for all types of expressions
 /// </summary>
-public abstract record Expression(Range<ILocation> LocationRange) : Assignable(LocationRange);
+public abstract record Expression(Range<ILocation> LocationRange) : AstNode(LocationRange);
