@@ -159,7 +159,7 @@ public static class AstNodesExtensions
     public static Assignment Assign(this string name, Expression value) => name.Assign(value, out _);
 
     public static Assignment Assign(this string name, Expression value, out Assignment result) =>
-        result = new Assignment(Ident(name), value, loc);
+        result = new Assignment(Value(name), value, loc);
 
     #endregion
 

@@ -17,14 +17,13 @@ public abstract class AstVisitor<TResult, TParam>
 
     protected abstract TResult VisitAstNode(AstNode node, TParam param);
 
-    protected virtual TResult VisitAssignable(Assignable node, TParam param) => VisitAstNode(node, param);
-    protected virtual TResult VisitExpression(Expression node, TParam param) => VisitAssignable(node, param);
+    protected virtual TResult VisitExpression(Expression node, TParam param) => VisitAstNode(node, param);
     protected virtual TResult VisitDeclaration(Declaration node, TParam param) => VisitExpression(node, param);
     protected virtual TResult VisitFlowControlStatement(FlowControlStatement node, TParam param) => VisitExpression(node, param);
     protected virtual TResult VisitSimpleValue(SimpleValue node, TParam param) => VisitExpression(node, param);
     protected virtual TResult VisitLiteralValue(LiteralValue node, TParam param) => VisitSimpleValue(node, param);
 
-    public virtual TResult VisitIdentifier(Identifier node, TParam param) => VisitAssignable(node, param);
+    public virtual TResult VisitIdentifier(Identifier node, TParam param) => VisitAstNode(node, param);
 
     public virtual TResult VisitVariableDeclaration(VariableDeclaration node, TParam param) => VisitDeclaration(node, param);
     public virtual TResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, TParam param) => VisitDeclaration(node, param);
