@@ -1,7 +1,7 @@
+namespace sernick.Compiler.Function;
+
 using sernick.CodeGeneration;
 using sernick.ControlFlowGraph.CodeTree;
-
-namespace sernick.Compiler.Function;
 
 public sealed class AllocationCaller : IFunctionCaller
 {

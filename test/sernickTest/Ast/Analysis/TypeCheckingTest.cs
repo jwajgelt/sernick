@@ -1,13 +1,19 @@
 namespace sernickTest.Ast.Analysis;
+using Input;
 using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Analysis.TypeChecking;
+using sernick.Ast.Nodes;
 using sernick.Diagnostics;
+using sernick.Input;
+using sernick.Utility;
 using static Helpers.AstNodesExtensions;
 
 public class TypeCheckingTest
 {
+    private static readonly Range<ILocation> loc = new(new FakeLocation(), new FakeLocation());
+
     public class TestSimpleExpressions
     {
         [Fact]
@@ -428,6 +434,220 @@ public class TypeCheckingTest
             TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
             diagnostics.Verify(d => d.Report(It.IsAny<TypeCheckingErrorBase>()), Times.Never);
+        }
+    }
+    public class TestPointers
+    {
+        [Fact]
+        public void SimpleAllocations()
+        {
+            var allocInt = Alloc(Literal(42));
+            var allocBool = Alloc(Literal(true));
+            var allocPointer = Alloc(Alloc(Literal(0)));
+            var tree = Block(
+                allocInt, allocBool, allocPointer
+            );
+
+            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Equal(new PointerType(new IntType()), result[allocInt]);
+            Assert.Equal(new PointerType(new BoolType()), result[allocBool]);
+            Assert.Equal(new PointerType(new PointerType(new IntType())), result[allocPointer]);
+        }
+
+        [Fact]
+        public void PointerDereference()
+        {
+            var derefInt = Deref(Alloc(Literal(1)));
+            var derefPointer = Deref(Alloc(Alloc(Literal(false))));
+            var tree = Block(
+                derefInt, derefPointer
+            );
+
+            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Equal(new IntType(), result[derefInt]);
+            Assert.Equal(new PointerType(new BoolType()), result[derefPointer]);
+        }
+
+        [Fact]
+        public void NullPointerAssignment_OK()
+        {
+            var tree = Block(
+                new VariableDeclaration(Ident("x"), new PointerType(new BoolType()), Null, false, loc),
+                new VariableDeclaration(Ident("y"), new PointerType(new PointerType(new IntType())), Null, true, loc)
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Empty(diagnostics.Invocations);
+        }
+
+        [Fact]
+        public void NullPointerAssignment_BAD()
+        {
+            var tree = Block(
+                Var<IntType>("x", Null)
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<ReturnTypeError>()), Times.AtLeastOnce);
+        }
+    }
+
+    public class TestStruct
+    {
+        private static readonly StructDeclaration structList = Struct("List")
+            .Field("val", new IntType())
+            .Field("next", new PointerType(new StructType(Ident("List"))));
+
+        private static readonly StructDeclaration structTuple = Struct("Tuple")
+            .Field("intVal", new IntType())
+            .Field("boolVal", new BoolType());
+
+        private static readonly StructDeclaration structCombined = Struct("Combined")
+            .Field("list", new StructType(Ident("List")))
+            .Field("tuple", new StructType(Ident("Tuple")));
+
+        private static readonly StructValue listDefault = StructValue("List")
+            .Field("val", Literal(0))
+            .Field("next", Null);
+
+        private static readonly StructValue tupleDefault = StructValue("Tuple")
+            .Field("intVal", Literal(0))
+            .Field("boolVal", Literal(false));
+
+        private static readonly StructValue combinedDefault = StructValue("Combined")
+            .Field("list", listDefault)
+            .Field("tuple", tupleDefault);
+
+        [Fact]
+        public void StructAllocationAndDereference()
+        {
+            var alloc = Alloc(combinedDefault);
+            var deref = Deref(alloc);
+            var tree = Block(
+                structList, structTuple, structCombined,
+                deref
+            );
+
+            var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+            var result = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Equal(new PointerType(new StructType(Ident("Combined"))), result[alloc]);
+            Assert.Equal(new StructType(Ident("Combined")), result[deref]);
+        }
+
+        [Fact]
+        public void FieldAccessAndAssignment_OK()
+        {
+            var tree = Block(
+                structList, structTuple, structCombined,
+                new VariableDeclaration(Ident("x"), new StructType(Ident("Combined")), combinedDefault, false, loc),
+                new VariableDeclaration(Ident("y"), new StructType(Ident("Tuple")), tupleDefault, false, loc),
+                Value("x").Field("tuple").Assign(tupleDefault),
+                Value("x").Field("list").Field("val").Assign(Literal(1)),
+                Value("x").Field("list").Field("next").Assign(Alloc(listDefault)),
+                Deref(Value("x").Field("list").Field("next")).Assign(listDefault),
+                Value("y").Field("boolVal").Assign(Literal(true))
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Empty(diagnostics.Invocations);
+        }
+
+        [Fact]
+        public void FieldAccessAutoDereference()
+        {
+            var tree = Block(
+                structList, structTuple, structCombined,
+                new VariableDeclaration(Ident("x"), new StructType(Ident("Combined")), combinedDefault, false, loc),
+                Value("x").Field("list").Field("next").Field("next").Field("val").Assign(Literal(2))
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Empty(diagnostics.Invocations);
+        }
+
+        [Fact]
+        public void FieldAccess_BAD()
+        {
+            var tree = Block(
+                structList, structTuple, structCombined,
+                new VariableDeclaration(Ident("x"), new StructType(Ident("Combined")), combinedDefault, false, loc),
+                Value("x").Field("tuple").Field("val").Assign(Literal(1))
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<ReturnTypeError>()), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public void FieldAssignment_BAD()
+        {
+            var tree = Block(
+                structList, structTuple, structCombined,
+                new VariableDeclaration(Ident("x"), new StructType(Ident("Combined")), combinedDefault, false, loc),
+                Value("x").Field("list").Field("next").Assign(listDefault)
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<ReturnTypeError>()), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public void NullPointerInStruct()
+        {
+            var tree = Block(
+                structList, structTuple, structCombined,
+                new VariableDeclaration(Ident("x"), new StructType(Ident("List")), listDefault, false, loc),
+                Value("x").Field("next").Assign(Null)
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            Assert.Empty(diagnostics.Invocations);
         }
     }
 }
