@@ -54,8 +54,10 @@ public static class ExpressionConversion
                     case NonTerminalSymbol.OpenExpression:
                     case NonTerminalSymbol.LogicalOperand:
                     case NonTerminalSymbol.ComparisonOperand:
-                    case NonTerminalSymbol.ArithmeticOperand:
+                    case NonTerminalSymbol.PointerOperand:
                         return node.ToInfix();
+                    case NonTerminalSymbol.ArithmeticOperand:
+                        return node.ToPointerDereference();
 
                     case NonTerminalSymbol.SimpleExpression:
                         return node.ToSimpleExpression();

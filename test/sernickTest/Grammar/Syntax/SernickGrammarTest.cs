@@ -60,9 +60,10 @@ public class SernickGrammarTest
                                 PT.ArithmeticOperator(
                                     PT.Operators("+")),
                                 PT.ArithmeticOperand(
-                                    PT.SimpleExpression(
-                                        PT.LiteralValue(
-                                            PT.Literals("2")))))))))
+                                    PT.PointerOperand(
+                                        PT.SimpleExpression(
+                                            PT.LiteralValue(
+                                                PT.Literals("2"))))))))))
         ),
         // var x = 5 + 5
         (
@@ -90,15 +91,17 @@ public class SernickGrammarTest
                                     PT.LogicalOperand(
                                         PT.ComparisonOperand(
                                             PT.ArithmeticOperand(
-                                                PT.SimpleExpression(
-                                                    PT.LiteralValue(
-                                                        PT.Literals("5")))),
+                                                PT.PointerOperand(
+                                                    PT.SimpleExpression(
+                                                        PT.LiteralValue(
+                                                            PT.Literals("5"))))),
                                             PT.ArithmeticOperator(
                                                 PT.Operators("+")),
                                             PT.ArithmeticOperand(
-                                                PT.SimpleExpression(
-                                                    PT.LiteralValue(
-                                                        PT.Literals("5"))))))))))))
+                                                PT.PointerOperand(
+                                                    PT.SimpleExpression(
+                                                        PT.LiteralValue(
+                                                            PT.Literals("5")))))))))))))
         )
     };
 }

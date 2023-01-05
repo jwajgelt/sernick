@@ -22,6 +22,7 @@ public static class SernickGrammar
         var codeBlock = Atom(Symbol.Of(NonTerminalSymbol.CodeBlock)); // {}
         var codeGroup = Atom(Symbol.Of(NonTerminalSymbol.CodeGroup)); // ()
         var returnExpression = Atom(Symbol.Of(NonTerminalSymbol.ReturnExpression));
+        var pointerOperand = Atom(Symbol.Of(NonTerminalSymbol.PointerOperand));
         var logicalOperand = Atom(Symbol.Of(NonTerminalSymbol.LogicalOperand));
         var logicalOperator = Atom(Symbol.Of(NonTerminalSymbol.LogicalOperator));
         var comparisonOperand = Atom(Symbol.Of(NonTerminalSymbol.ComparisonOperand));
@@ -139,7 +140,10 @@ public static class SernickGrammar
                     Union(arithmeticOperand, aliasBlockExpression), arithmeticOperator,
                     Union(arithmeticOperand, aliasBlockExpression))))
             .Add(arithmeticOperator, Union(plusOperator, minusOperator))
-            .Add(arithmeticOperand, simpleExpression)
+            .Add(arithmeticOperand, Union(
+                pointerOperand, // anything but a block-expression
+                Concat(starOperator, Star(starOperator), Union(pointerOperand, aliasBlockExpression))))
+            .Add(pointerOperand, simpleExpression)
 
             // Simple expression
             .Add(simpleExpression, literalValue)

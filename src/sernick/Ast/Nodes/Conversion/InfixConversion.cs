@@ -23,6 +23,20 @@ public static class InfixConversion
     }
 
     /// <summary>
+    /// Builds expression assuming node is ArithmeticOperand
+    /// arithmeticOperand -> * * .. * expression
+    /// </summary>
+    public static Expression ToPointerDereference(this IParseTree<Symbol> node)
+    {
+        var children = node.Children;
+        Debug.Assert(children.Count > 0);
+        var lastExpression = children[^1].ToExpression();
+        return children.SkipLast(1).Reverse()
+            .Aggregate(lastExpression, (pointedExpression, star) =>
+                new PointerDereference(pointedExpression, (star.LocationRange.Start, pointedExpression.LocationRange.End)));
+    }
+
+    /// <summary>
     /// Returns Infix Operator matching given ParseTree or throws an exception
     /// </summary>
     private static Infix.Op ToOperator(this IParseTree<Symbol> node) => node.Symbol switch

@@ -361,4 +361,57 @@ public class ConversionTest
             }
         });
     }
+
+    [Fact]
+    public void PointerDereference_Conversion()
+    {
+        // *(**y + 2)
+        var input = Node(NonTerminalSymbol.OpenExpression,
+            Node(NonTerminalSymbol.LogicalOperand,
+                Node(NonTerminalSymbol.ComparisonOperand,
+                    Node(NonTerminalSymbol.ArithmeticOperand,
+                        Leaf(LexicalGrammarCategory.Operators, "*"),
+                        Node(NonTerminalSymbol.PointerOperand,
+                            Node(NonTerminalSymbol.SimpleExpression,
+                                Leaf(LexicalGrammarCategory.BracesAndParentheses, "("),
+                                Node(NonTerminalSymbol.OpenExpression,
+                                    Node(NonTerminalSymbol.LogicalOperand,
+                                        Node(NonTerminalSymbol.ComparisonOperand,
+                                            Node(NonTerminalSymbol.ArithmeticOperand,
+                                                Leaf(LexicalGrammarCategory.Operators, "*"),
+                                                Leaf(LexicalGrammarCategory.Operators, "*"),
+                                                Node(NonTerminalSymbol.PointerOperand,
+                                                    Node(NonTerminalSymbol.SimpleExpression,
+                                                        Leaf(LexicalGrammarCategory.VariableIdentifiers, "y")))),
+                                            Leaf(LexicalGrammarCategory.Operators, "+"),
+                                            Node(NonTerminalSymbol.ArithmeticOperand,
+                                                Node(NonTerminalSymbol.PointerOperand,
+                                                    Node(NonTerminalSymbol.SimpleExpression,
+                                                        Node(NonTerminalSymbol.LiteralValue,
+                                                            Leaf(LexicalGrammarCategory.Literals, "2")))))))),
+                                Leaf(LexicalGrammarCategory.BracesAndParentheses, ")"))))))
+        ).Convert();
+
+        Assert.True(AstNode.From(input) is PointerDereference
+        {
+            Pointer: Infix
+            {
+                Left: PointerDereference
+                {
+                    Pointer: PointerDereference
+                    {
+                        Pointer: VariableValue
+                        {
+                            Identifier.Name: "y"
+                        }
+                    }
+                },
+                Operator: Infix.Op.Plus,
+                Right: IntLiteralValue
+                {
+                    Value: 2
+                }
+            }
+        });
+    }
 }

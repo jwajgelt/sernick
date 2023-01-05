@@ -39,6 +39,7 @@ public enum NonTerminalSymbol
     CodeBlock,
     CodeGroup,
     ReturnExpression,
+    PointerOperand,
     LogicalOperand,
     LogicalOperator,
     ComparisonOperand,
