@@ -5,7 +5,6 @@ using Ast.Analysis.NameResolution;
 using Ast.Analysis.TypeChecking;
 using Ast.Analysis.VariableAccess;
 using Ast.Nodes;
-using Ast.Nodes.Conversion;
 using Common.Dfa;
 using Common.Regex;
 using Diagnostics;
@@ -36,16 +35,7 @@ public static class CompilerFrontend
         var parseTree = parser.Process(parseLeaves, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
 
-        AstNode ast;
-        try
-        {
-            ast = AstNode.From(parseTree);
-        }
-        catch (UnknownTypeException e)
-        {
-            diagnostics.Report(new UnknownTypeError(e.Name, e.LocationRange));
-            throw new CompilationException();
-        }
+        var ast = AstNode.From(parseTree);
 
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);

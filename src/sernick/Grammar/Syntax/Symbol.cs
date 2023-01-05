@@ -57,6 +57,7 @@ public enum NonTerminalSymbol
     StructValueFields,
     StructFieldInitializer,
     Modifier,
+    Type,
     TypeSpecification,
     VariableDeclaration,
     FunctionDeclaration,

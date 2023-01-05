@@ -326,4 +326,39 @@ public class ConversionTest
             Value: BoolLiteralValue { Value: false }
         });
     }
+
+    [Fact]
+    public void PointerType_Conversion()
+    {
+        // var x: **Struct;
+        var input = Node(NonTerminalSymbol.VariableDeclaration,
+            Node(NonTerminalSymbol.Modifier,
+                Leaf(LexicalGrammarCategory.Keywords, "var")),
+            Leaf(LexicalGrammarCategory.VariableIdentifiers, "x"),
+            Node(NonTerminalSymbol.TypeSpecification,
+                Leaf(LexicalGrammarCategory.Semicolon, ":"),
+                Node(NonTerminalSymbol.Type,
+                    Leaf(LexicalGrammarCategory.Operators, "*"),
+                    Node(NonTerminalSymbol.Type,
+                        Leaf(LexicalGrammarCategory.Operators, "*"),
+                        Node(NonTerminalSymbol.Type,
+                            Leaf(LexicalGrammarCategory.TypeIdentifiers, "Struct")))
+                ))
+        ).Convert();
+
+        Assert.True(AstNode.From(input) is VariableDeclaration
+        {
+            Name.Name: "x",
+            Type: PointerType
+            {
+                Type: PointerType
+                {
+                    Type: StructType
+                    {
+                        Struct.Name: "Struct"
+                    }
+                }
+            }
+        });
+    }
 }

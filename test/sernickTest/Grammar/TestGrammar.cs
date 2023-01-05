@@ -33,9 +33,9 @@ public class TestGrammar
     private static readonly string[] typeNames = { "Int", "Bool", "Unit", "CustomTypeName", "A", "B", "Z", "ABBA", "UJ" };
     private static readonly string[] variableNames = { "varia", "ble", "name", "tcs", "mess", "graphQL", };
 
-    private static readonly string[] operators = { "+", "-", "||", "&&" };
+    private static readonly string[] operators = { "+", "-", "||", "&&", "*" };
     /// <summary> maybe some of these will be operators in the future, but not now </summary>
-    private static readonly string[] notOperators = { "*", "/", "^", "//", "pow", "$", "(", ")", "{}" };
+    private static readonly string[] notOperators = { "/", "^", "//", "pow", "$", "(", ")", "{}" };
 
     private static readonly string[] whitespaces = { " ", "     ", "       ", "    ", };
     private static readonly string[] notWhitespaces = { "", "123", ";", "#" };

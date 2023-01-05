@@ -40,6 +40,7 @@ public static class SernickGrammar
         var structValueFields = Atom(Symbol.Of(NonTerminalSymbol.StructValueFields));
         var structFieldInitializer = Atom(Symbol.Of(NonTerminalSymbol.StructFieldInitializer)); // name: expr
         var modifier = Atom(Symbol.Of(NonTerminalSymbol.Modifier)); // var or const
+        var type = Atom(Symbol.Of(NonTerminalSymbol.Type)); // typeIdentifier | *type
         var typeSpec = Atom(Symbol.Of(NonTerminalSymbol.TypeSpecification)); // ": Type"
         var variableDeclaration = Atom(Symbol.Of(NonTerminalSymbol.VariableDeclaration));
         var functionDeclaration = Atom(Symbol.Of(NonTerminalSymbol.FunctionDeclaration));
@@ -88,6 +89,7 @@ public static class SernickGrammar
         var plusOperator = Atom(Symbol.Of(LexicalCategory.Operators, "+"));
         var minusOperator = Atom(Symbol.Of(LexicalCategory.Operators, "-"));
         var assignOperator = Atom(Symbol.Of(LexicalCategory.Operators, "="));
+        var starOperator = Atom(Symbol.Of(LexicalCategory.Operators, "*"));
 
         // Aliases
         var aliasBlockExpression = Union(
@@ -166,7 +168,8 @@ public static class SernickGrammar
 
             // Declarations
             .Add(modifier, Union(varKeyword, constKeyword))
-            .Add(typeSpec, Concat(colon, typeIdentifier))
+            .Add(type, Union(typeIdentifier, Concat(starOperator, type)))
+            .Add(typeSpec, Concat(colon, type))
             .Add(variableDeclaration,
                 Concat(modifier, Union(assignment, Concat(identifier, typeSpec, Optional(Concat(assignOperator, aliasExpression))))))
 

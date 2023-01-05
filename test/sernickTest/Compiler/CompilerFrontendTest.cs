@@ -111,7 +111,7 @@ public class CompilerFrontendTest
     // TODO: uncomment once name-resolution and type-checking can handle structs
     //[InlineData("struct Struct { a: Int, b : Bool }")]
     //[InlineData("var x = Struct { a: 0, b: false }")]
-    //[InlineData("var x = null")]
+    //[InlineData("var x: **Struct = null")]
     public void TestCorrectLexerAndParser(string program)
     {
         var diagnostics = program.CompileText();
