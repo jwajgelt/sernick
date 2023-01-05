@@ -15,7 +15,7 @@ public sealed record Infix
         Plus, Minus,
         Less, Greater,
         LessOrEquals, GreaterOrEquals,
-        Equals,
+        Equals, NotEqual,
         ScAnd, ScOr
     }
 

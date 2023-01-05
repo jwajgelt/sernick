@@ -73,6 +73,7 @@ public static class SernickGrammar
         var scAndOperator = Atom(Symbol.Of(LexicalCategory.Operators, "&&"));
         var scOrOperator = Atom(Symbol.Of(LexicalCategory.Operators, "||"));
         var equalsOperator = Atom(Symbol.Of(LexicalCategory.Operators, "=="));
+        var notEqualsOperator = Atom(Symbol.Of(LexicalCategory.Operators, "!="));
         var greaterOperator = Atom(Symbol.Of(LexicalCategory.Operators, ">"));
         var lessOperator = Atom(Symbol.Of(LexicalCategory.Operators, "<"));
         var greaterOrEqualOperator = Atom(Symbol.Of(LexicalCategory.Operators, ">="));
@@ -119,7 +120,7 @@ public static class SernickGrammar
                     Union(comparisonOperand, aliasBlockExpression), comparisonOperator,
                     Union(comparisonOperand, aliasBlockExpression))))
             .Add(comparisonOperator,
-                Union(equalsOperator, greaterOperator, lessOperator, greaterOrEqualOperator, lessOrEqualOperator))
+                Union(equalsOperator, notEqualsOperator, greaterOperator, lessOperator, greaterOrEqualOperator, lessOrEqualOperator))
             .Add(comparisonOperand, Union(
                 arithmeticOperand, // anything but a block-expression
                 Concat(

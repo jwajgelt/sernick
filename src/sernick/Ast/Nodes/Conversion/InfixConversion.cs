@@ -30,6 +30,7 @@ public static class InfixConversion
         Terminal { Category: LexicalGrammarCategory.Operators, Text: "&&" } => Infix.Op.ScAnd,
         Terminal { Category: LexicalGrammarCategory.Operators, Text: "||" } => Infix.Op.ScOr,
         Terminal { Category: LexicalGrammarCategory.Operators, Text: "==" } => Infix.Op.Equals,
+        Terminal { Category: LexicalGrammarCategory.Operators, Text: "!=" } => Infix.Op.NotEqual,
         Terminal { Category: LexicalGrammarCategory.Operators, Text: ">" } => Infix.Op.Greater,
         Terminal { Category: LexicalGrammarCategory.Operators, Text: "<" } => Infix.Op.Less,
         Terminal { Category: LexicalGrammarCategory.Operators, Text: ">=" } => Infix.Op.GreaterOrEquals,

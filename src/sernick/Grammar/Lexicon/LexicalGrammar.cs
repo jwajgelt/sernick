@@ -86,6 +86,7 @@ public class LexicalGrammar
         ["shortCircuitAnd"] = "&&",
         ["assignment"] = "=",
         ["equality"] = "==",
+        ["notEqual"] = "!=",
         ["greater"] = ">",
         ["less"] = "<",
         ["greaterOrEqual"] = ">=",
