@@ -28,7 +28,7 @@ def is_sernick_file(file_path: str) -> bool:
     return ext == '.ser'
 
 def drop_extension(path: str)->str:
-    return os.path.splitext(os.path.basename(path))[0]
+    return os.path.splitext(path)[0]
 
 def join_path(dir: str, file_path: str)->str:
     return os.path.join(dir,file_path)
@@ -43,7 +43,7 @@ def compile_sernick_files(dir: str, compiler_path: str = None)-> List[str]:
         try:
             completed_process = subprocess.run(["dotnet", compiler_path or SERNICK_EXE_PATH, file_path])
             completed_process.check_returncode() # this raises an exception
-            compiled_files.append(drop_extension(file_path))
+            compiled_files.append(drop_extension(file_path) + ".out")
         except Exception:
             logging.error("Could not compile {} ❌".format(file_path))
 

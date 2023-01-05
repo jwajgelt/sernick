@@ -207,6 +207,12 @@ public sealed class FunctionContext : IFunctionContext
             operations.Add(Reg(rax).Write(valToReturn));
         }
 
+        // Make main return 0
+        if (_parentContext == null)
+        {
+            operations.Add(Reg(rax).Write(0));
+        }
+
         // Restore old display value
         operations.Add(Mem(_displayEntry).Write(Reg(_oldDisplayValReg).Read()));
 
