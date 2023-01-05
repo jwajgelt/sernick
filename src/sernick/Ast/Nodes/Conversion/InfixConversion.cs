@@ -37,6 +37,21 @@ public static class InfixConversion
     }
 
     /// <summary>
+    /// Builds expression assuming node is PointerOperand
+    /// pointerOperand -> expr  ( . identifier )^
+    /// </summary>
+    public static Expression ToFieldAccess(this IParseTree<Symbol> node)
+    {
+        var children = node.Children;
+        Debug.Assert(children.Count % 2 == 1);
+        var firstExpression = children[0].ToExpression();
+        return children.Skip(1).Chunk(2)
+            .Select(chunk => chunk[1])
+            .Aggregate(firstExpression, (left, field) =>
+                new StructFieldAccess(left, field.ToIdentifier(), (left.LocationRange.Start, field.LocationRange.End)));
+    }
+
+    /// <summary>
     /// Returns Infix Operator matching given ParseTree or throws an exception
     /// </summary>
     private static Infix.Op ToOperator(this IParseTree<Symbol> node) => node.Symbol switch

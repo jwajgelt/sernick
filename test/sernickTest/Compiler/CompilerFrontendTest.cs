@@ -112,6 +112,7 @@ public class CompilerFrontendTest
     [InlineData("var x = Struct { a: 0, b: false }")]
     [InlineData("var x: **Struct = null")]
     [InlineData("*(**y + 2)")]
+    [InlineData("*(*x.field + 2).field")]
     public void TestCorrectLexerAndParser(string program)
     {
         var diagnostics = program.CompileText();

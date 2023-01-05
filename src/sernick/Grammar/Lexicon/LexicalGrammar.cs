@@ -91,7 +91,8 @@ public static class LexicalGrammar
         ["less"] = "<",
         ["greaterOrEqual"] = ">=",
         ["lessOrEqual"] = "<=",
-        ["star"] = @"\*"
+        ["star"] = @"\*",
+        ["dot"] = @"\."
     });
 
     private static readonly LexicalGrammarEntry whitespaces = new(LexicalGrammarCategory.Whitespaces, new CategoryItems

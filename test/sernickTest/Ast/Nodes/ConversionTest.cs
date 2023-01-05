@@ -414,4 +414,33 @@ public class ConversionTest
             }
         });
     }
+
+    [Fact]
+    public void FieldAccess_Conversion()
+    {
+        // *x.field
+        var input = Node(NonTerminalSymbol.OpenExpression,
+            Node(NonTerminalSymbol.LogicalOperand,
+                Node(NonTerminalSymbol.ComparisonOperand,
+                    Node(NonTerminalSymbol.ArithmeticOperand,
+                        Leaf(LexicalGrammarCategory.Operators, "*"),
+                        Node(NonTerminalSymbol.PointerOperand,
+                            Node(NonTerminalSymbol.SimpleExpression,
+                                Leaf(LexicalGrammarCategory.VariableIdentifiers, "x")),
+                            Leaf(LexicalGrammarCategory.Operators, "."),
+                            Leaf(LexicalGrammarCategory.VariableIdentifiers, "field")))))
+        ).Convert();
+
+        Assert.True(AstNode.From(input) is PointerDereference
+        {
+            Pointer: StructFieldAccess
+            {
+                FieldName.Name: "field",
+                Left: VariableValue
+                {
+                    Identifier.Name: "x"
+                }
+            }
+        });
+    }
 }

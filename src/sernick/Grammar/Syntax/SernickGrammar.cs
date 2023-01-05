@@ -91,6 +91,7 @@ public static class SernickGrammar
         var minusOperator = Atom(Symbol.Of(LexicalCategory.Operators, "-"));
         var assignOperator = Atom(Symbol.Of(LexicalCategory.Operators, "="));
         var starOperator = Atom(Symbol.Of(LexicalCategory.Operators, "*"));
+        var dotOperator = Atom(Symbol.Of(LexicalCategory.Operators, "."));
 
         // Aliases
         var aliasBlockExpression = Union(
@@ -143,7 +144,7 @@ public static class SernickGrammar
             .Add(arithmeticOperand, Union(
                 pointerOperand, // anything but a block-expression
                 Concat(starOperator, Star(starOperator), Union(pointerOperand, aliasBlockExpression))))
-            .Add(pointerOperand, simpleExpression)
+            .Add(pointerOperand, Concat(simpleExpression, Star(dotOperator, identifier))) // expr[.name]^
 
             // Simple expression
             .Add(simpleExpression, literalValue)
