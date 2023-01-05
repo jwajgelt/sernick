@@ -295,4 +295,72 @@ public static class AstNodesExtensions
     #region Loop
     public static LoopStatement Loop(CodeBlock codeBlock) => new LoopStatement(codeBlock, loc);
     #endregion
+
+    #region Pointers
+    public static FunctionCall Alloc(Expression arg) => Call("new").Argument(arg);
+    public static PointerDereference Deref(Expression pointer) => new PointerDereference(pointer, loc);
+    public static NullPointerLiteralValue Null => new(loc);
+    #endregion
+
+    #region Struct
+    public static StructDeclarationBuilder Struct(string name) => new(Ident(name));
+    public sealed class StructDeclarationBuilder
+    {
+        private readonly Identifier _identifier;
+        private readonly List<FieldDeclaration> _fields = new();
+
+        internal StructDeclarationBuilder(Identifier identifier) => _identifier = identifier;
+
+        public StructDeclarationBuilder Field(FieldDeclaration field)
+        {
+            _fields.Add(field);
+            return this;
+        }
+
+        public StructDeclarationBuilder Field(string name, Type type)
+        {
+            _fields.Add(new FieldDeclaration(Ident(name), type, loc));
+            return this;
+        }
+
+        public static implicit operator StructDeclaration(StructDeclarationBuilder builder) => new(
+            builder._identifier,
+            builder._fields,
+            loc
+        );
+
+        public StructDeclaration Get(out StructDeclaration result) => result = this;
+    }
+
+    public static StructValueBuilder StructValue(string name) => new(Ident(name));
+    public sealed class StructValueBuilder
+    {
+        private readonly Identifier _identifier;
+        private readonly List<StructFieldInitializer> _fields = new();
+
+        internal StructValueBuilder(Identifier identifier) => _identifier = identifier;
+
+        public StructValueBuilder Field(StructFieldInitializer field)
+        {
+            _fields.Add(field);
+            return this;
+        }
+
+        public StructValueBuilder Field(string name, Expression value)
+        {
+            _fields.Add(new StructFieldInitializer(Ident(name), value, loc));
+            return this;
+        }
+
+        public static implicit operator StructValue(StructValueBuilder builder) => new(
+            builder._identifier,
+            builder._fields,
+            loc
+        );
+
+        public StructValue Get(out StructValue result) => result = this;
+    }
+
+    public static StructFieldAccess Field(this Expression left, string name) => new StructFieldAccess(left, Ident(name), loc);
+    #endregion
 }
