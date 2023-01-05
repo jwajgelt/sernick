@@ -298,6 +298,7 @@ public static class TypeChecking
                 case Infix.Op.Less:
                 case Infix.Op.LessOrEquals:
                 case Infix.Op.Equals:
+                case Infix.Op.NotEqual:
                     {
                         if (commonType is not IntType or AnyType)
                         {
