@@ -102,4 +102,14 @@ public class InstructionCoveringTest
             covering.Cover(node, new Label(""));
         }
     }
+
+    [Fact]
+    public void CoversDisplayEntry()
+    {
+        var displayEntryRead = Mem(new GlobalAddress(new Label("__display_table")) + 16).Read();
+        var node = new SingleExitNode(null, new List<CodeTreeNode> { displayEntryRead });
+
+        var covering = new InstructionCovering(SernickInstructionSet.Rules);
+        covering.Cover(node, new Label(""));
+    }
 }
