@@ -1,6 +1,5 @@
 namespace sernick.CodeGeneration.LivenessAnalysis;
 
-using Compiler.Function;
 using ControlFlowGraph.CodeTree;
 using Utility;
 using Graph = IReadOnlyDictionary<ControlFlowGraph.CodeTree.Register, IReadOnlyCollection<ControlFlowGraph.CodeTree.Register>>;
