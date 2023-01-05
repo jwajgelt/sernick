@@ -41,6 +41,23 @@ public static class SernickInstructionSet
                             .WithOutput(values.Get<Register>(reg)));
             }
 
+            // [$addr + $displacement]
+            {
+                yield return new CodeTreeNodePatternRule(
+                    Pat.MemoryRead(Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _,
+                        Pat.GlobalAddress(out var addr),
+                        CodeTreePattern.Constant(Any<RegisterValue>(), out var imm))),
+                    (_, values) =>
+                    {
+                        var output = new Register();
+                        return new List<IInstruction>
+                        {
+                            Mov.ToReg(output)
+                                .FromMem(values.Get<Label>(addr), (isNegative: false, values.Get<RegisterValue>(imm)))
+                        }.WithOutput(output);
+                    });
+            }
+
             // [*]
             {
                 yield return new CodeTreeNodePatternRule(
@@ -64,20 +81,6 @@ public static class SernickInstructionSet
                         new List<IInstruction>
                         {
                             Mov.ToReg(values.Get<Register>(reg)).FromImm(values.Get<RegisterValue>(imm))
-                        }.WithOutput(null));
-            }
-
-            // mov $reg, [$addr + $displacement]
-            {
-                yield return new CodeTreeNodePatternRule(
-                    Pat.RegisterWrite(Any<Register>(), out var reg,
-                        Pat.MemoryRead(Pat.BinaryOperationNode(Is(BinaryOperation.Add), out _,
-                            Pat.GlobalAddress(out var addr), CodeTreePattern.Constant(Any<RegisterValue>(), out var imm)))),
-                    (_, values) =>
-                        new List<IInstruction>
-                        {
-                            Mov.ToReg(values.Get<Register>(reg))
-                                .FromMem(values.Get<Label>(addr), (isNegative: false, values.Get<RegisterValue>(imm)))
                         }.WithOutput(null));
             }
 
