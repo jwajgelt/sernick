@@ -144,7 +144,8 @@ public static class LivenessAnalyzer
                 interferenceGraph[x].Add(HardwareRegister.RBP);
             }
 
-            rbpInterference.UnionWith(registers.Except(HardwareRegister.RBP.Enumerate()));
+            rbpInterference.UnionWith(registers);
+            rbpInterference.Remove(HardwareRegister.RBP);
         }
 
         foreach (var x in registers)
