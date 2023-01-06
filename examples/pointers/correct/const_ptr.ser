@@ -1,0 +1,17 @@
+﻿// proper operations performed on const pointed
+
+struct TestStruct {
+    field: Int
+};
+
+const constIntPtr: *Int;
+constIntPtr = new(1);
+var intPtr = constIntPtr;
+var intVal = *constIntPtr;
+
+const constTestPtr = new( TestStruct {
+    field: 1
+});
+var testPtr = constTestPtr;
+var testVal = *constTestPtr;
+var fieldVal = constTestPtr.field;

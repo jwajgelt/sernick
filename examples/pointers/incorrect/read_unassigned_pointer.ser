@@ -1,0 +1,4 @@
+﻿// read value of pointer which hasn't been assigned
+
+var intPtr: *Int;
+var value = *intPtr;

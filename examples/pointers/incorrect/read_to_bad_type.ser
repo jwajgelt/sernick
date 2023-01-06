@@ -1,0 +1,4 @@
+﻿// save value to bad variable type
+
+var intPtr = new(1);
+var boolValue: Bool = *intPtr;

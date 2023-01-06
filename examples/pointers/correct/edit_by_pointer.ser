@@ -1,0 +1,15 @@
+﻿// edit values using pointer
+
+var intPtr = new(1);
+*intPtr = 2;
+
+struct TestStruct {
+    field: Int
+};
+
+var testPtr: *TestStruct = new( TestStruct {
+    field: 1
+});
+
+testPtr.field = 2;
+(*testPtr).field = 3;
