@@ -25,7 +25,7 @@ public sealed record Infix
         visitor.VisitInfix(this, param);
 }
 
-public sealed record Assignment(Assignable Left, Expression Right, Range<ILocation> LocationRange) : Expression(LocationRange)
+public sealed record Assignment(Expression Left, Expression Right, Range<ILocation> LocationRange) : Expression(LocationRange)
 {
     public override IEnumerable<AstNode> Children => new AstNode[] { Left, Right };
 
@@ -39,6 +39,8 @@ public sealed record Assignment(Assignable Left, Expression Right, Range<ILocati
 /// </summary>
 public sealed record PointerDereference(Expression Pointer, Range<ILocation> LocationRange) : SimpleValue(LocationRange)
 {
+    public override IEnumerable<AstNode> Children => Pointer.Enumerate();
+
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitPointerDereference(this, param);
 }
