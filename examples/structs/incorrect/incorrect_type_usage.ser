@@ -1,0 +1,23 @@
+﻿// assign field value to variable of another type
+
+struct InnerStruct {
+    field: Int
+};
+
+struct AnotherStruct {
+    field: Int
+};
+
+struct OuterStruct {
+    inner: InnerStruct,
+    anotherField: Int
+};
+
+var outerStruct = OuterStruct {
+    inner: InnerStruct {
+        field: 1
+    },
+    anotherField: 2
+};
+
+var value: AnotherStruct = outerStruct.inner;

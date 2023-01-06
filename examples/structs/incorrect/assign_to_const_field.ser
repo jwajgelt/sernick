@@ -1,0 +1,11 @@
+﻿// assign value to field of const struct
+
+struct TestStruct {
+    field: Int
+};
+
+const testStruct = TestStruct {
+    field: 5
+};
+
+testStruct.field = 6;

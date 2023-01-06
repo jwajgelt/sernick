@@ -1,0 +1,9 @@
+﻿// bad struct name in initialization
+
+struct TestStruct {
+    field: Int
+};
+
+var testStruct = TestStructButWithSomeWeirdStuff {
+    field: 5
+}

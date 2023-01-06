@@ -1,0 +1,13 @@
+﻿// assign new value to const struct
+
+struct TestStruct {
+    field: Int
+};
+
+const testStruct = TestStruct {
+    field: 5
+};
+
+testStruct = TestStruct {
+    field: 6
+};

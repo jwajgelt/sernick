@@ -1,0 +1,5 @@
+﻿// set value in struct declaration
+
+struct TestStruct {
+    filed: Int = 5
+};
