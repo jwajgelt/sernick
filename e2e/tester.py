@@ -70,15 +70,15 @@ def run_file_on_input_and_check(binary_file_path: str, test_dir_path: str) -> No
             p = subprocess.Popen([binary_file_path], stdin=input_fd, text=True,stdout=output_fd)
             p.wait()
             compare_files(actual=output_file_path, expected=expected_file_path)
-        except Exception:
-            logging.error("Unknown exception occurred when running {} on {}, proceeding...".format(binary_file_path, input_file_path))        
+        except Exception as e:
+            logging.error("Exception occurred when running {} on {}, proceeding...".format(binary_file_path, input_file_path), exc_info=e)        
 
 def run_files(compiled_files: List[str], test_directory: str)->None:
     for binary_file in compiled_files:
         try:
             run_file_on_input_and_check(binary_file_path=binary_file, test_dir_path=test_directory)
-        except Exception:
-            logging.error("Unknown exception occurred when running {}, proceeding...".format(binary_file))
+        except Exception as e:
+            logging.error("Exception occurred when running {}, proceeding...".format(binary_file), exc_info=e)
 
 def test(use_mock_data: bool, compiler_path: str = None, test_directories: List[str] = None):
     if test_directories is None:
