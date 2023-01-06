@@ -44,8 +44,8 @@ def compile_sernick_files(dir: str, compiler_path: str = None)-> List[str]:
             completed_process = subprocess.run(["dotnet", compiler_path or SERNICK_EXE_PATH, file_path])
             completed_process.check_returncode() # this raises an exception
             compiled_files.append(drop_extension(file_path) + ".out")
-        except Exception:
-            logging.error("Could not compile {} ❌".format(file_path))
+        except Exception as e:
+            logging.error("Could not compile {} ❌".format(file_path), exc_info=e)
 
     logging.info('Compiled the following files: {}'.format(compiled_files))
     return compiled_files
