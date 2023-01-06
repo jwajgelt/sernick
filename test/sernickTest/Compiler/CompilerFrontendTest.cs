@@ -620,7 +620,10 @@ public class CompilerFrontendTest
             }),
             ("structs", "bad_struct_name_initialization", new IDiagnosticItem[]
             {
-               // using nonexistent type, not detected yet
+                new UndeclaredIdentifierError
+                (
+                    new Identifier("TestStructButWithSomeWeirdStuff", (FileUtility.LocationAt(7, 18), FileUtility.LocationAt(7, 49)))
+                )
             }),
             ("structs", "bad_type_initialization", new IDiagnosticItem[]
             {
