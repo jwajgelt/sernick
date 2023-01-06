@@ -515,6 +515,209 @@ public class CompilerFrontendTest
                     )
                 )
             }),
+            
+            // pointers
+            ("pointers", "assign_ptr_to_type", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new IntType(),
+                    new PointerType(new IntType()),
+                    FileUtility.LocationAt(6, 9)
+                )
+            }),
+            ("pointers", "assign_to_const_pointer", new IDiagnosticItem[]
+            {
+                // modifying const, not detected yet
+            }),
+            ("pointers", "assign_to_const_ptr_field", new IDiagnosticItem[]
+            {
+                // modifying const, not detected yet
+            }),
+            ("pointers", "assign_two_nulls", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new PointerType(new BoolType()),
+                    new PointerType(new IntType()),
+                    FileUtility.LocationAt(4, 22)
+                )
+            }),
+            ("pointers", "assign_type_to_ptr", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new PointerType(new IntType()),
+                    new IntType(),
+                    FileUtility.LocationAt(6, 10)
+                )
+            }),
+            ("pointers", "different_pointer_types_assign", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new PointerType(new IntType()),
+                    new PointerType(new BoolType()),
+                    FileUtility.LocationAt(6, 10)
+                )
+            }),
+            ("pointers", "null_to_type", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new IntType(),
+                    new PointerType(new AnyType()), // not sure what type null is
+                    FileUtility.LocationAt(4, 10)
+                )
+            }),
+            ("pointers", "typeless_null", new IDiagnosticItem[]
+            {
+                // not sure if this is the right error, maybe this requires separate error
+               new TypeOrInitialValueShouldBePresentError(FileUtility.LocationAt(3, 15))
+            }),
+            ("pointers", "write_bad_value", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new IntType(),
+                    new BoolType(),
+                    FileUtility.LocationAt(4, 11)
+                )
+            }),
+            ("pointers", "write_to_bad_type", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new BoolType(),
+                    new IntType(),
+                    FileUtility.LocationAt(4, 11)
+                )
+            }),
+
+            // structs
+            ("structs", "assign_to_const_field", new IDiagnosticItem[]
+            {
+                // modifying const, not detected yet
+            }),
+            ("structs", "assign_to_const_struct", new IDiagnosticItem[]
+            {
+                // modifying const, not detected yet
+            }),
+            ("structs", "assign_to_nested_const_struct", new IDiagnosticItem[]
+            {
+                // modifying const, not detected yet
+            }),
+            ("structs", "bad_expression_type_in_initialization", new IDiagnosticItem[]
+            {
+                new TypesMismatchError(new IntType(), new BoolType(), FileUtility.LocationAt(8, 12))
+            }),
+            ("structs", "bad_field_name_initialization", new IDiagnosticItem[]
+            {
+                new UndeclaredIdentifierError
+                (
+                    new Identifier("differentFieldName", (FileUtility.LocationAt(8, 5), FileUtility.LocationAt(8, 23)))
+                )
+            }),
+            ("structs", "bad_struct_name_initialization", new IDiagnosticItem[]
+            {
+               // using nonexistent type, not detected yet
+            }),
+            ("structs", "bad_type_initialization", new IDiagnosticItem[]
+            {
+                new TypesMismatchError(new IntType(), new BoolType(), FileUtility.LocationAt(8, 12))
+            }),
+            ("structs", "field_without_type", new IDiagnosticItem[]
+            {
+                new SyntaxError<Symbol>
+                (
+                    new ParseTreeLeaf<Symbol>
+                    (
+                        new Terminal(LexicalGrammarCategory.Comma, ","),
+                        (FileUtility.LocationAt(4, 11), FileUtility.LocationAt(4, 12))
+                    )
+                )
+            }),
+            ("structs", "incorrect_brackets_in_declaration", new IDiagnosticItem[]
+            {
+                new SyntaxError<Symbol>
+                (
+                    new ParseTreeLeaf<Symbol>
+                    (
+                        new Terminal(LexicalGrammarCategory.BracesAndParentheses, "("),
+                        (FileUtility.LocationAt(3, 19), FileUtility.LocationAt(3, 20))
+                    )
+                )
+            }),
+            ("structs", "incorrect_struct_set", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new StructType( new Identifier("TestStruct1", (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 19))) ),
+                    new StructType( new Identifier("TestStruct2", (FileUtility.LocationAt(7, 8), FileUtility.LocationAt(7, 19))) ),
+                    FileUtility.LocationAt(15, 15)
+                )
+            }),
+            ("structs", "incorrect_type_set", new IDiagnosticItem[]
+            {
+                new TypesMismatchError(new IntType(), new BoolType(), FileUtility.LocationAt(17, 21)),
+                new TypesMismatchError(new BoolType(), new IntType(), FileUtility.LocationAt(18, 21)),
+                new TypesMismatchError(new IntType(), new BoolType(), FileUtility.LocationAt(19, 21)),
+                new TypesMismatchError
+                (
+                    new IntType(),
+                    new StructType( new Identifier("TestStruct", (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 18))) ),
+                    FileUtility.LocationAt(20, 21)
+                )
+            }),
+            ("structs", "incorrect_type_usage", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new StructType( new Identifier("AnotherStruct", (FileUtility.LocationAt(7, 8), FileUtility.LocationAt(7, 21))) ),
+                    new StructType( new Identifier("InnerStruct", (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 19))) ),
+                    FileUtility.LocationAt(23, 28)
+                )
+            }),
+            ("structs", "initialize_additional_field", new IDiagnosticItem[]
+            {
+                new UndeclaredIdentifierError
+                (
+                    new Identifier("additionalField", (FileUtility.LocationAt(9, 5), FileUtility.LocationAt(9, 20)))
+                )
+            }),
+            ("structs", "initialize_not_all_fields", new IDiagnosticItem[]
+            {
+                // Wrong number of struct fields initialized, not detected yet
+            }),
+            ("structs", "nonexistent_struct_initialization", new IDiagnosticItem[]
+            {
+                new UndeclaredIdentifierError
+                (
+                    new Identifier("TestStruct", (FileUtility.LocationAt(3, 18), FileUtility.LocationAt(3, 28)))
+                )
+            }),
+            ("structs", "nonexistent_type_in_declaration", new IDiagnosticItem[]
+            {
+                new UndeclaredIdentifierError
+                (
+                    new Identifier("NonExistentType", (FileUtility.LocationAt(4, 12), FileUtility.LocationAt(4, 27)))
+                )
+            }),
+            ("structs", "repeat_fields_in_initialization", new IDiagnosticItem[]
+            {
+                // Wrong number of struct fields initialized, not detected yet
+            }),
+            ("structs", "value_in_declaration", new IDiagnosticItem[]
+            {
+                new SyntaxError<Symbol>
+                (
+                    new ParseTreeLeaf<Symbol>
+                    (
+                        new Terminal(LexicalGrammarCategory.Operators, "="),
+                        (FileUtility.LocationAt(4, 16), FileUtility.LocationAt(4, 17))
+                    )
+                )
+            }),
 
             //types-and-naming
             ("types-and-naming", "incorrect-function-argument-name", new IDiagnosticItem[]
