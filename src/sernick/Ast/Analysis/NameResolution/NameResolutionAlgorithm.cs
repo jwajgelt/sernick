@@ -106,7 +106,7 @@ public static class NameResolutionAlgorithm
 
         public override NameResolutionVisitorResult VisitAssignment(Assignment node, IdentifiersNamespace identifiersNamespace)
         {
-            if (node.Left is not Identifier identifier)
+            if (node.Left is not VariableValue { Identifier: var identifier })
             {
                 throw new NotImplementedException();
             }

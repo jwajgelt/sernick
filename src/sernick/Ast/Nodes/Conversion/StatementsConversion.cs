@@ -91,7 +91,10 @@ public static class StatementsConversion
     {
         { Symbol: NonTerminal { Inner: NonTerminalSymbol.Assignment }, Children: var children }
             when children.Count == 3
-            => new Assignment(children[0].ToIdentifier(), children[2].ToExpression(), node.LocationRange),
+            => new Assignment(
+                new VariableValue(children[0].ToIdentifier(), children[0].LocationRange),
+                children[2].ToExpression(),
+                node.LocationRange),
 
         _ => throw new ArgumentException("Invalid ParseTree for Assignment")
     };
