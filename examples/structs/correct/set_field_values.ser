@@ -21,7 +21,7 @@ testStruct.field4 = if(testStruct.field2) {
                         11;
                     } else {
                         12;
-                    }
+                    };
 
 struct InnerStruct {
     field: Int

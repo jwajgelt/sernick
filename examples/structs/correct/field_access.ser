@@ -12,7 +12,7 @@ var testStruct = TestStruct {
     field2: true,
     field3: 3,
     field4: 4
-}
+};
 
 var val1 = testStruct.field1;
 var val2 = testStruct.field2;
