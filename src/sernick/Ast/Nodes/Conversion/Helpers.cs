@@ -12,7 +12,7 @@ public static class Helpers
     /// </summary>
     public static Identifier ToIdentifier(this IParseTree<Symbol> node) => node.Symbol switch
     {
-        Terminal { Category: LexicalGrammarCategory.VariableIdentifiers, Text: var text }
+        Terminal { Category: LexicalGrammarCategory.VariableIdentifiers or LexicalGrammarCategory.TypeIdentifiers, Text: var text }
             => new Identifier(text, node.LocationRange),
         _ => throw new AggregateException("Invalid ParseTree for Identifier")
     };

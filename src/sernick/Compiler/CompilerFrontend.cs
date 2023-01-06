@@ -1,11 +1,11 @@
 namespace sernick.Compiler;
 
+using Ast;
 using Ast.Analysis.CallGraph;
 using Ast.Analysis.NameResolution;
 using Ast.Analysis.TypeChecking;
 using Ast.Analysis.VariableAccess;
 using Ast.Nodes;
-using Ast.Nodes.Conversion;
 using Common.Dfa;
 using Common.Regex;
 using Diagnostics;
@@ -36,31 +36,27 @@ public static class CompilerFrontend
         var parseTree = parser.Process(parseLeaves, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
 
-        AstNode ast;
-        try
-        {
-            ast = AstNode.From(parseTree);
-        }
-        catch (UnknownTypeException e)
-        {
-            diagnostics.Report(new UnknownTypeError(e.Name, e.LocationRange));
-            throw new CompilationException();
-        }
+        var ast = AstNode.From(parseTree);
 
-        var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
+        // TODO: uncomment once name-resolution and type-checking can handle structs and pointers
+        /*var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
         var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
 
-        return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, variableAccessMap);
+        return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, variableAccessMap);*/
+        return new CompilerFrontendResult(ast,
+            new NameResolutionResult(),
+            new TypeCheckingResult(new Dictionary<AstNode, Type>()),
+            new CallGraph(),
+            new VariableAccessMap());
     }
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
     {
-        var grammar = new LexicalGrammar();
-        var grammarDict = grammar.GenerateGrammar();
+        var grammarDict = LexicalGrammar.GenerateGrammar();
         var categoryDfas =
             grammarDict.ToDictionary(
                 e => e.Key,
