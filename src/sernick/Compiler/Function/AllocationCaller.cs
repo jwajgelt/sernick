@@ -1,4 +1,5 @@
 namespace sernick.Compiler.Function;
+
 using sernick.CodeGeneration;
 using sernick.ControlFlowGraph.CodeTree;
 
