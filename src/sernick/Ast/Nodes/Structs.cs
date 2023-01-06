@@ -9,6 +9,8 @@ using Utility;
 public sealed record StructDeclaration(Identifier Name, IReadOnlyCollection<FieldDeclaration> Fields,
     Range<ILocation> LocationRange) : Declaration(Name, LocationRange)
 {
+    public override IEnumerable<AstNode> Children => Name.Enumerate().Concat<AstNode>(Fields);
+
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitStructDeclaration(this, param);
 }
@@ -19,6 +21,8 @@ public sealed record StructDeclaration(Identifier Name, IReadOnlyCollection<Fiel
 public sealed record FieldDeclaration(Identifier Name, Type Type, Range<ILocation> LocationRange) : Declaration(Name,
     LocationRange)
 {
+    public override IEnumerable<AstNode> Children => Name.Enumerate();
+
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitFieldDeclaration(this, param);
 }
@@ -29,6 +33,8 @@ public sealed record FieldDeclaration(Identifier Name, Type Type, Range<ILocatio
 public sealed record StructValue(Identifier StructName, IReadOnlyCollection<StructFieldInitializer> Fields,
     Range<ILocation> LocationRange) : SimpleValue(LocationRange)
 {
+    public override IEnumerable<AstNode> Children => StructName.Enumerate().Concat<AstNode>(Fields);
+
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitStructValue(this, param);
 }
@@ -39,6 +45,8 @@ public sealed record StructValue(Identifier StructName, IReadOnlyCollection<Stru
 public sealed record StructFieldInitializer(Identifier FieldName, Expression Value,
     Range<ILocation> LocationRange) : AstNode(LocationRange)
 {
+    public override IEnumerable<AstNode> Children => new AstNode[] { FieldName, Value };
+
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitStructFieldInitializer(this, param);
 }
@@ -49,6 +57,8 @@ public sealed record StructFieldInitializer(Identifier FieldName, Expression Val
 /// </summary>
 public sealed record StructFieldAccess(Expression Left, Identifier FieldName, Range<ILocation> LocationRange) : SimpleValue(LocationRange)
 {
+    public override IEnumerable<AstNode> Children => new AstNode[] { Left, FieldName };
+
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.StructFieldAccess(this, param);
 }
