@@ -50,7 +50,7 @@ public static class CompilerBackend
                 .SelectMany((funcDef, codeTree) =>
                 {
                     IReadOnlyList<IAsmable> asm = linearizator
-                        .Linearize(CfgCompressor.CompressPaths(codeTree), functionContextMap[funcDef].Label)
+                        .Linearize(codeTree, functionContextMap[funcDef].Label)
                         .ToList();
                     var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(asm);
                     var regAllocation = regAllocator.Process(interferenceGraph, copyGraph);
