@@ -1,5 +1,6 @@
 namespace sernick.Ast.Analysis.NameResolution;
 
+using System.Diagnostics;
 using Nodes;
 using Utility;
 
@@ -75,9 +76,10 @@ public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Dec
             StructDeclarations = structs
         };
     }
-    
+
     public NameResolutionResult AddStructs(Dictionary<Identifier, StructDeclaration> structs)
     {
-        return this with { StructDeclarations = StructDeclarations.JoinWith(structs) };
+        Trace.WriteLine(StructDeclarations.Count + " " + structs.Count);
+        return this with { StructDeclarations = StructDeclarations.JoinWith(structs, ReferenceEqualityComparer.Instance) };
     }
 }

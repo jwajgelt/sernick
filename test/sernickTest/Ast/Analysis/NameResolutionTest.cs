@@ -4,7 +4,6 @@ using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis;
 using sernick.Ast.Analysis.NameResolution;
-using sernick.Ast.Nodes;
 using sernick.Diagnostics;
 using static Helpers.AstNodesExtensions;
 
@@ -640,7 +639,7 @@ public class NameResolutionTest
 
         Assert.Same(declaration, result.UsedVariableDeclarations[value]);
     }
-    
+
     [Fact]
     public void CollisionInParametersReported()
     {
@@ -652,7 +651,7 @@ public class NameResolutionTest
             Fun<IntType>("f").Parameter<IntType>("a").Parameter<IntType>("a").Body(
                 Return(Literal(0))
             ));
-        
+
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -669,11 +668,197 @@ public class NameResolutionTest
             Struct("TestStruct").Get(out var declaration),
             Var("a", Pointer(Ident("TestStruct", out var ident))
             ));
-        
+
         var diagnostics = new Mock<IDiagnostics>();
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
-        
+
         Assert.Same(declaration, result.StructDeclarations[ident]);
+    }
+
+    [Fact]
+    public void StructTypeInValueRecognized()
+    {
+        // struct TestStruct {}
+        // var a = new(TestStruct{});
+        var tree = Program(
+            Struct("TestStruct").Get(out var declaration),
+            Var("a", Alloc(StructValue(Ident("TestStruct", out var ident)))
+            ));
+
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.StructDeclarations[ident]);
+    }
+
+    [Fact]
+    public void StructTypeInReturnTypeRecognized()
+    {
+        // struct TestStruct {}
+        // fun f() : *TestStruct {}
+        var tree = Program(
+            Struct("TestStruct").Get(out var declaration),
+            Fun("f", Close, Pointer(Ident("TestStruct", out var ident)))
+            );
+
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.StructDeclarations[ident]);
+    }
+
+    [Fact]
+    public void StructTypeInArgumentRecognized()
+    {
+        // struct TestStruct {}
+        // fun f(a : *TestStruct) : Unit {}
+        var tree = Program(
+            Struct("TestStruct").Get(out var declaration),
+            Fun("f", Pointer(Ident("TestStruct", out var ident)), Close)
+        );
+
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.StructDeclarations[ident]);
+    }
+
+    [Fact]
+    public void StructTypeHiddenByMultiplePointersRecognized()
+    {
+        // struct TestStruct {}
+        // var a : *(*(*TestStruct));
+        var tree = Program(
+            Struct("TestStruct").Get(out var declaration),
+            Var("a", Pointer(Pointer(Pointer(Ident("TestStruct", out var ident))))
+            ));
+
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.StructDeclarations[ident]);
+    }
+
+    [Fact]
+    public void StructOvershadowedAndRecognized()
+    {
+        // struct TestStruct {}
+        // {
+        //   struct TestStruct {}
+        //   var a : *TestStruct;
+        // }
+        var tree = Program(
+            Struct("TestStruct"),
+            Block(
+                Struct("TestStruct").Get(out var declaration),
+                Var("a", Pointer(Pointer(Pointer(Ident("TestStruct", out var ident))))
+                )
+            ));
+
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.StructDeclarations[ident]);
+    }
+
+    [Fact]
+    public void StructsWithSameNameRecognized()
+    {
+        // {
+        //   struct TestStruct {}
+        //   var a : *TestStruct;
+        // }
+        // {
+        //   struct TestStruct {}
+        //   var a : *TestStruct;
+        // }
+        var tree = Program(
+            Block(
+                Struct("TestStruct").Get(out var declaration1),
+                Var("a", Pointer(Pointer(Pointer(Ident("TestStruct", out var ident1))))
+                ),
+            Block(
+                Struct("TestStruct").Get(out var declaration2),
+                Var("a", Pointer(Pointer(Pointer(Ident("TestStruct", out var ident2))))
+            )
+            )));
+
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration1, result.StructDeclarations[ident1]);
+        Assert.Same(declaration2, result.StructDeclarations[ident2]);
+    }
+    
+    [Fact]
+    public void MultipleStructsCorrectlyResolved()
+    {
+        // struct Struct1 {}
+        // struct Struct2 {}
+        // struct Struct3 {}
+        // var var3 : *Struct3;
+        // var var1 : *Struct1;
+        // var var2 : *Struct2;
+        var tree = Program(
+            Struct("Struct1").Get(out var struct1),
+            Struct("Struct2").Get(out var struct2),
+            Struct("Struct3").Get(out var struct3),
+            Var("var3", Pointer(Ident("Struct3", out var ident3))),
+            Var("var1", Pointer(Ident("Struct1", out var ident1))),
+            Var("var2", Pointer(Ident("Struct2", out var ident2)))
+        );
+
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(struct1, result.StructDeclarations[ident1]);
+        Assert.Same(struct2, result.StructDeclarations[ident2]);
+        Assert.Same(struct3, result.StructDeclarations[ident3]);
+    }
+
+    [Fact]
+    public void StructDefinedInOtherScopeNotRecognized()
+    {
+        // {
+        //   struct TestStruct {}
+        // }
+        // var a : *TestStruct;
+        var tree = Program(
+            Block(
+                Struct("TestStruct")
+                ),
+            Var("a", Pointer(Pointer(Pointer(Ident("TestStruct"))))
+            ));
+
+        var diagnostics = new Mock<IDiagnostics>();
+
+        NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()));
+    }
+    
+    [Fact]
+    public void StructNameCollisionDetected()
+    {
+        // struct TestStruct {}
+        // struct TestStruct {}
+        var tree = Program(
+            Struct("TestStruct"),
+            Struct("TestStruct")
+            );
+
+        var diagnostics = new Mock<IDiagnostics>();
+
+        NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
     }
 }

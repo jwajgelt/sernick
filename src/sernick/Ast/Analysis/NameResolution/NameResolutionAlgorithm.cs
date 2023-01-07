@@ -53,16 +53,17 @@ public static class NameResolutionAlgorithm
                 result = visitorResult.Result;
                 identifiers = TryAdd(visitorResult.IdentifiersNamespace, node);
             }
+
             var typeStructs = FindStructDeclarationsInType(identifiersNamespace, node.Type);
             return new(result.AddStructs(typeStructs), identifiers);
         }
-        
+
         public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node,
             IdentifiersNamespace identifiersNamespace)
         {
             // Parameters, Body and ReturnType contribute to the name resolution result
             var identifiersWithFunction = TryAdd(identifiersNamespace, node);
-        
+
             var toVisit = new List<AstNode>(node.Parameters) { node.Body.Inner };
 
             var visitResult = VisitConsecutiveNodes(toVisit, identifiersWithFunction.NewScope());
@@ -190,7 +191,7 @@ public static class NameResolutionAlgorithm
             var result = NameResolutionResult.OfStructs(structNames);
             return new(result, identifiersNamespace);
         }
-        
+
         private NameResolutionVisitorResult VisitConsecutiveNodes(IEnumerable<AstNode> nodes, IdentifiersNamespace identifiersNamespace)
         {
             return nodes.Aggregate(
@@ -232,6 +233,7 @@ public static class NameResolutionAlgorithm
             {
                 return new Dictionary<Identifier, StructDeclaration>();
             }
+
             switch (type)
             {
                 case StructType structType:
@@ -257,6 +259,7 @@ public static class NameResolutionAlgorithm
                         { identifier, structDeclaration }
                     };
                 }
+
                 _diagnostics.Report(new NotATypeError(identifier));
             }
             catch (IdentifiersNamespace.NoSuchIdentifierException)
