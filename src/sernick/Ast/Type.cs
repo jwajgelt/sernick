@@ -26,7 +26,10 @@ public sealed record PointerType(Type Type) : Type
     public override string ToString() => $"*{Type}";
 }
 
-public sealed record StructType(Identifier Struct) : Type;
+public sealed record StructType(Identifier Struct) : Type
+{
+    public override string ToString() => $"{Struct.Name}";
+}
 
 /// <summary>
 /// Artificial type, which should not be used in a real programs
