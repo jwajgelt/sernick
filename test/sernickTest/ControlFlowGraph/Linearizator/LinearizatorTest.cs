@@ -45,16 +45,14 @@ public class LinearizatorTest
 
         var actual = linearizator.Linearize(p1, startLabel).ToList();
         var numUniqueNodes = 3;
-        var numExpectedLabels = 3;
+        var numExpectedLabels = 1;
 
         Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count);
 
         Assert.Same(startLabel, actual[0]);
         Assert.Same(p1, (actual[1] as IdentityInstructionNode)?.Node);
-        Assert.IsType<Label>(actual[2]);
-        Assert.Same(p2, (actual[3] as IdentityInstructionNode)?.Node);
-        Assert.IsType<Label>(actual[4]);
-        Assert.Same(p3, (actual[5] as IdentityInstructionNode)?.Node);
+        Assert.Same(p2, (actual[2] as IdentityInstructionNode)?.Node);
+        Assert.Same(p3, (actual[3] as IdentityInstructionNode)?.Node);
     }
 
     [Fact]
@@ -242,17 +240,17 @@ public class LinearizatorTest
         var emptyOperationsList = new List<CodeTreeNode>();
 
         // s1 -> s2 -> s3
-        // ^-----------|
+        //        ^----|
 
         var s3 = new SingleExitNode(null, emptyOperationsList);
         var s2 = new SingleExitNode(s3, emptyOperationsList);
         var s1 = new SingleExitNode(s2, emptyOperationsList);
-        s3.NextTree = s1;
+        s3.NextTree = s2;
 
         var actual = linearizator.Linearize(s1, startLabel).ToList();
 
         var numUniqueNodes = 3;
-        var numExpectedLabels = 3;
+        var numExpectedLabels = 2;
 
         Assert.Equal(numUniqueNodes + numExpectedLabels, actual.Count);
 
@@ -262,8 +260,7 @@ public class LinearizatorTest
         Assert.IsType<Label>(actual[2]);
         Assert.Same(s2, (actual[3] as IdentityInstructionNode)?.Node);
 
-        Assert.IsType<Label>(actual[4]);
-        Assert.Same(s3, (actual[5] as IdentityInstructionNode)?.Node);
+        Assert.Same(s3, (actual[4] as IdentityInstructionNode)?.Node);
     }
 }
 
