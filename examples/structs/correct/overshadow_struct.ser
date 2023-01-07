@@ -10,10 +10,10 @@ struct TestStruct {
     };
     
     var testStruct = TestStruct {
-        field: true;
+        field: true
     };
 }
 
 var testStruct = TestStruct {
-    field: 1;
+    field: 1
 };
