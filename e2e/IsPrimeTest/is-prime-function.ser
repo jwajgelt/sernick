@@ -4,7 +4,7 @@ fun multiplyPositiveIntegers(a: Int, b: Int): Int {
     }
     var b1 = b;
 
-    var result = a;
+    var result = 0;
     loop {
         if(b1 == 0){
             break;
