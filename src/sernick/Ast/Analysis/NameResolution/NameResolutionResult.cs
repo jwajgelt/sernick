@@ -67,4 +67,12 @@ public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Dec
             CalledFunctionDeclarations = new Dictionary<FunctionCall, FunctionDefinition> { { node, declaration } }
         };
     }
+
+    public static NameResolutionResult OfStructs(Dictionary<Identifier, StructDeclaration> structs)
+    {
+        return new NameResolutionResult
+        {
+            StructDeclarations = structs
+        };
+    }
 }

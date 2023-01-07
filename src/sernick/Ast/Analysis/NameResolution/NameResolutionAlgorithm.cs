@@ -2,6 +2,7 @@ namespace sernick.Ast.Analysis.NameResolution;
 
 using Diagnostics;
 using Nodes;
+using Utility;
 using static ExternalFunctionsInfo;
 
 public static class NameResolutionAlgorithm
@@ -57,15 +58,34 @@ public static class NameResolutionAlgorithm
             var updatedIdentifiers = TryAdd(visitorResult.IdentifiersNamespace, node);
             return visitorResult with { IdentifiersNamespace = updatedIdentifiers };
         }
+
         public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node,
             IdentifiersNamespace identifiersNamespace)
         {
             var identifiersWithFunction = TryAdd(identifiersNamespace, node);
-            var identifiersWithParameters = node.Parameters.Aggregate(identifiersWithFunction.NewScope(),
-                TryAdd);
 
-            var visitorResult = node.Body.Inner.Accept(this, identifiersWithParameters);
-            return visitorResult with { IdentifiersNamespace = identifiersWithFunction };
+            var resultAfterParameters = node.Parameters.Aggregate(
+                new NameResolutionVisitorResult(identifiersWithFunction.NewScope()),
+                (result, next) =>
+                {
+                    var childResult = next.Accept(this, result.IdentifiersNamespace);
+                    return childResult with
+                    {
+                        Result = result.Result.JoinWith(childResult.Result)
+                    };
+                });
+            var bodyResult = node.Body.Inner.Accept(this, resultAfterParameters.IdentifiersNamespace);
+            return new NameResolutionVisitorResult(resultAfterParameters.Result.JoinWith(bodyResult.Result),
+                identifiersWithFunction);
+        }
+
+        public override NameResolutionVisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
+            IdentifiersNamespace identifiersNamespace)
+        {
+            var structNames = FindStructDeclarationsInType(identifiersNamespace, node.Type);
+            var identifiers = TryAdd(identifiersNamespace, node);
+            var result = NameResolutionResult.OfStructs(structNames);
+            return new(result, identifiers);
         }
 
         public override NameResolutionVisitorResult VisitCodeBlock(CodeBlock node, IdentifiersNamespace identifiersNamespace)
@@ -134,7 +154,8 @@ public static class NameResolutionAlgorithm
             }
         }
 
-        public override NameResolutionVisitorResult VisitVariableValue(VariableValue node, IdentifiersNamespace identifiersNamespace)
+        public override NameResolutionVisitorResult VisitVariableValue(VariableValue node,
+            IdentifiersNamespace identifiersNamespace)
         {
             var identifier = node.Identifier;
             try
@@ -156,6 +177,28 @@ public static class NameResolutionAlgorithm
             }
         }
 
+        public override NameResolutionVisitorResult VisitStructDeclaration(StructDeclaration node, IdentifiersNamespace identifiersNamespace)
+        {
+            var updatedIdentifiers = TryAdd(identifiersNamespace, node);
+            return VisitAstNode(node, updatedIdentifiers);
+        }
+
+        public override NameResolutionVisitorResult VisitFieldDeclaration(FieldDeclaration node,
+            IdentifiersNamespace identifiersNamespace)
+        {
+            var structNames = FindStructDeclarationsInType(identifiersNamespace, node.Type);
+            var result = NameResolutionResult.OfStructs(structNames);
+            return new(result, identifiersNamespace);
+        }
+
+        public override NameResolutionVisitorResult VisitStructValue(StructValue node,
+            IdentifiersNamespace identifiersNamespace)
+        {
+            var structNames = FindStructDeclaration(identifiersNamespace, node.StructName);
+            var result = NameResolutionResult.OfStructs(structNames);
+            return new(result, identifiersNamespace);
+        }
+
         /// <summary>
         /// Tries to add a new declaration to identifiers.
         /// If collision occurs, reports it to _diagnostics and returns the previous set of identifiers.
@@ -171,6 +214,44 @@ public static class NameResolutionAlgorithm
                 _diagnostics.Report(new MultipleDeclarationsError(identifiers.GetResolution(declaration.Name), declaration));
                 return identifiers;
             }
+        }
+
+        private Dictionary<Identifier, StructDeclaration> FindStructDeclarationsInType(IdentifiersNamespace identifiersNamespace, Type type)
+        {
+            // a visitor for this might be an overkill
+            switch (type)
+            {
+                case StructType structType:
+                    var identifier = structType.Struct;
+                    return FindStructDeclaration(identifiersNamespace, identifier);
+                case PointerType pointerType:
+                    return FindStructDeclarationsInType(identifiersNamespace, pointerType.Type);
+                default:
+                    return new Dictionary<Identifier, StructDeclaration>();
+            }
+        }
+
+        private Dictionary<Identifier, StructDeclaration> FindStructDeclaration(
+            IdentifiersNamespace identifiersNamespace, Identifier identifier)
+        {
+            try
+            {
+                var declaration = identifiersNamespace.GetResolution(identifier);
+                if (declaration is StructDeclaration structDeclaration)
+                {
+                    return new Dictionary<Identifier, StructDeclaration>
+                    {
+                        { identifier, structDeclaration }
+                    };
+                }
+                _diagnostics.Report(new NotATypeError(identifier));
+            }
+            catch (IdentifiersNamespace.NoSuchIdentifierException)
+            {
+                _diagnostics.Report(new UndeclaredIdentifierError(identifier));
+            }
+
+            return new Dictionary<Identifier, StructDeclaration>();
         }
     }
 }

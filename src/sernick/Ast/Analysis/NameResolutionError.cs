@@ -41,6 +41,17 @@ public sealed record NotAVariableError(Identifier Identifier) : NameResolutionEr
     public override int GetHashCode() => ToString().GetHashCode();
 }
 
+public sealed record NotATypeError(Identifier Identifier) : NameResolutionError(Identifier)
+{
+    public override string ToString()
+    {
+        return $"Identifier does not represent a struct type: {Identifier.Name}, location: {Identifier.LocationRange.Start}";
+    }
+
+    public bool Equals(NotAVariableError? other) => other is not null && ToString() == other.ToString();
+    public override int GetHashCode() => ToString().GetHashCode();
+}
+
 public sealed record UndeclaredIdentifierError(Identifier Identifier) : NameResolutionError(Identifier)
 {
     public override string ToString()
