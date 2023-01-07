@@ -697,6 +697,24 @@ public class CompilerFrontendTest
             {
                 // Wrong number of struct fields initialized, not detected yet
             }),
+            ("structs", "nonexistent_field_read", new IDiagnosticItem[]
+            {
+                new FieldNotPresentInStructError
+                (
+                    new StructType( new Identifier("TestStruct", (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 18))) ),
+                    new Identifier("anotherField", (FileUtility.LocationAt(11, 24), FileUtility.LocationAt(11, 36))),
+                    FileUtility.LocationAt(11, 24)
+                )
+            }),
+            ("structs", "nonexistent_field_write", new IDiagnosticItem[]
+            {
+                new FieldNotPresentInStructError
+                (
+                    new StructType( new Identifier("TestStruct", (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 18))) ),
+                    new Identifier("anotherField", (FileUtility.LocationAt(11, 12), FileUtility.LocationAt(11, 24))),
+                    FileUtility.LocationAt(11, 12)
+                )
+            }),
             ("structs", "nonexistent_struct_initialization", new IDiagnosticItem[]
             {
                 new UndeclaredIdentifierError
