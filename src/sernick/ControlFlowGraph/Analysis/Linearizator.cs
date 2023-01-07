@@ -167,9 +167,13 @@ public sealed class Linearizator
             }
 
             _order++;
-            label = _root is null || !_cache.TryGetValue(_root, out var rootLabel) ?
-                $"l{Guid.NewGuid().ToString().Replace('-', '_')}{_order}" :
-                $"{rootLabel.Value}_{_order}";
+
+            if (_root is null || !_cache.TryGetValue(_root, out var rootLabel))
+            {
+                throw new Exception("LabelGenerator was not properly initialized with SetStart");
+            }
+
+            label = $"{rootLabel.Value}_{_order}";
             _cache[node] = label;
 
             return label;
