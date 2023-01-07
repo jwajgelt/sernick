@@ -173,7 +173,15 @@ public static class TypeChecking
                 }
             }
 
-            return AddTypeInformation(childrenTypes, functionCallNode, declaredReturnType);
+            // handle case where function is a special "new" function
+            if(functionCallNode.FunctionName.Name == "new")
+            {
+                return AddTypeInformation(childrenTypes, functionCallNode, new PointerType(childrenTypes[actualArguments.First()]));
+            }
+            else
+            {
+                return AddTypeInformation(childrenTypes, functionCallNode, declaredReturnType);
+            }
         }
 
         public override Dictionary<AstNode, Type> VisitContinueStatement(ContinueStatement node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr) =>

@@ -35,7 +35,7 @@ public sealed record StructType(Identifier Struct) : Type
 {
     public override string ToString() => $"{Struct.Name}";
 
-    public IReadOnlyDictionary<Identifier, Type> fieldTypes;
+    public IReadOnlyDictionary<Identifier, Type> ?fieldTypes;
 }
 
 
