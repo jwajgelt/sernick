@@ -506,7 +506,23 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            diagnostics.Verify(d => d.Report(It.IsAny<ReturnTypeError>()), Times.AtLeastOnce);
+            diagnostics.Verify(d => d.Report(It.IsAny<TypesMismatchError>()), Times.AtLeastOnce);
+        }
+
+        [Fact(Skip = "Type checking doesn't handle pointers")]
+        public void NullPointerAssignmentUnknownType()
+        {
+            var tree = Block(
+                new VariableDeclaration(Ident("x"), null, Null, false, loc)
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<TypeOrInitialValueShouldBePresentError>()), Times.AtLeastOnce);
         }
     }
 
@@ -612,7 +628,7 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            diagnostics.Verify(d => d.Report(It.IsAny<ReturnTypeError>()), Times.AtLeastOnce);
+            diagnostics.Verify(d => d.Report(It.IsAny<FieldNotPresentInStructError>()), Times.AtLeastOnce);
         }
 
         [Fact(Skip = "Type checking doesn't handle structs")]
@@ -630,7 +646,7 @@ public class TypeCheckingTest
             var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
             TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
 
-            diagnostics.Verify(d => d.Report(It.IsAny<ReturnTypeError>()), Times.AtLeastOnce);
+            diagnostics.Verify(d => d.Report(It.IsAny<TypesMismatchError>()), Times.AtLeastOnce);
         }
 
         [Fact(Skip = "Type checking doesn't handle structs")]

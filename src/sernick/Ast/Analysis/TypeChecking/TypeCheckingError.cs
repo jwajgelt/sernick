@@ -80,3 +80,11 @@ public sealed record WrongFunctionArgumentError(Type Required, Type Provided, IL
         return $"Wrong function argument type: expected \"{Required}\", provided \"{Provided}\" at {Location}";
     }
 }
+
+public sealed record FieldNotPresentInStructError(Type Struct, Identifier Field, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"Struct \"{Struct}\" does not contain field \"{Field.Name}\" provided at {Location}";
+    }
+}
