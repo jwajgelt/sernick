@@ -639,4 +639,21 @@ public class NameResolutionTest
 
         Assert.Same(declaration, result.UsedVariableDeclarations[value]);
     }
+    
+    [Fact]
+    public void CollisionInParametersReported()
+    {
+        //  fun f(a : Int, a : Int) : Int
+        //  {
+        //      return 0;
+        //  }
+        var tree = Fun<IntType>("f").Parameter<IntType>("a").Parameter<IntType>("a").Body(
+            Return(Literal(0))
+        );
+        var diagnostics = new Mock<IDiagnostics>();
+
+        NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
+    }
 }

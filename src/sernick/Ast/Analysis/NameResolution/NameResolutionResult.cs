@@ -75,4 +75,9 @@ public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Dec
             StructDeclarations = structs
         };
     }
+    
+    public NameResolutionResult AddStructs(Dictionary<Identifier, StructDeclaration> structs)
+    {
+        return this with { StructDeclarations = StructDeclarations.JoinWith(structs) };
+    }
 }

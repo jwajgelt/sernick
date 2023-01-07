@@ -34,16 +34,7 @@ public static class NameResolutionAlgorithm
         /// </returns>
         protected override NameResolutionVisitorResult VisitAstNode(AstNode node, IdentifiersNamespace identifiersNamespace)
         {
-            return node.Children.Aggregate(
-                new NameResolutionVisitorResult(identifiersNamespace),
-                (result, next) =>
-                {
-                    var childResult = next.Accept(this, result.IdentifiersNamespace);
-                    return childResult with
-                    {
-                        Result = result.Result.JoinWith(childResult.Result)
-                    };
-                });
+            return VisitConsecutiveNodes(node.Children, identifiersNamespace);
         }
 
         public override NameResolutionVisitorResult VisitVariableDeclaration(VariableDeclaration node,
@@ -58,25 +49,19 @@ public static class NameResolutionAlgorithm
             var updatedIdentifiers = TryAdd(visitorResult.IdentifiersNamespace, node);
             return visitorResult with { IdentifiersNamespace = updatedIdentifiers };
         }
-
+        
         public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node,
             IdentifiersNamespace identifiersNamespace)
         {
+            // Parameters, Body and ReturnType contribute to the name resolution result
             var identifiersWithFunction = TryAdd(identifiersNamespace, node);
+        
+            var toVisit = new List<AstNode>(node.Parameters) { node.Body.Inner };
 
-            var resultAfterParameters = node.Parameters.Aggregate(
-                new NameResolutionVisitorResult(identifiersWithFunction.NewScope()),
-                (result, next) =>
-                {
-                    var childResult = next.Accept(this, result.IdentifiersNamespace);
-                    return childResult with
-                    {
-                        Result = result.Result.JoinWith(childResult.Result)
-                    };
-                });
-            var bodyResult = node.Body.Inner.Accept(this, resultAfterParameters.IdentifiersNamespace);
-            return new NameResolutionVisitorResult(resultAfterParameters.Result.JoinWith(bodyResult.Result),
-                identifiersWithFunction);
+            var visitResult = VisitConsecutiveNodes(toVisit, identifiersWithFunction.NewScope());
+            var returnTypeStructs = FindStructDeclarationsInType(identifiersNamespace, node.ReturnType);
+            var nameResolutionResult = visitResult.Result.AddStructs(returnTypeStructs);
+            return new NameResolutionVisitorResult(nameResolutionResult, identifiersWithFunction);
         }
 
         public override NameResolutionVisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
@@ -198,6 +183,20 @@ public static class NameResolutionAlgorithm
             var result = NameResolutionResult.OfStructs(structNames);
             return new(result, identifiersNamespace);
         }
+        
+        private NameResolutionVisitorResult VisitConsecutiveNodes(IEnumerable<AstNode> nodes, IdentifiersNamespace identifiersNamespace)
+        {
+            return nodes.Aggregate(
+                new NameResolutionVisitorResult(identifiersNamespace),
+                (result, next) =>
+                {
+                    var childResult = next.Accept(this, result.IdentifiersNamespace);
+                    return childResult with
+                    {
+                        Result = result.Result.JoinWith(childResult.Result)
+                    };
+                });
+        }
 
         /// <summary>
         /// Tries to add a new declaration to identifiers.
@@ -216,9 +215,12 @@ public static class NameResolutionAlgorithm
             }
         }
 
+        /// <summary>
+        /// Given a Type, finds all struct references in it and returns their declarations
+        /// a visitor for this would be an overkill
+        /// </summary>
         private Dictionary<Identifier, StructDeclaration> FindStructDeclarationsInType(IdentifiersNamespace identifiersNamespace, Type type)
         {
-            // a visitor for this might be an overkill
             switch (type)
             {
                 case StructType structType:
