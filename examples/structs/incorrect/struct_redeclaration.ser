@@ -1,0 +1,9 @@
+﻿// trying to redefine a struct within the same scope
+
+struct TestStruct {
+    field: Int
+};
+
+struct TestStruct {
+    field: Bool
+};

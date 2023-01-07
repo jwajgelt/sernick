@@ -1,0 +1,19 @@
+﻿// overshadow struct name in nested scope
+
+struct TestStruct {
+    field: Int
+};
+
+{
+    struct TestStruct {
+        field: Bool
+    };
+    
+    var testStruct = TestStruct {
+        field: true;
+    };
+}
+
+var testStruct = TestStruct {
+    field: 1;
+};

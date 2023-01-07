@@ -600,6 +600,15 @@ public class CompilerFrontendTest
             }),
 
             // structs
+            ("structs", "assign_overshadowed_type", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new StructType( new Identifier("TestStruct", (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 18))) ),
+                    new StructType( new Identifier("TestStruct", (FileUtility.LocationAt(10, 12), FileUtility.LocationAt(10, 22))) ),
+                    FileUtility.LocationAt(15, 18)
+                )
+            }),
             ("structs", "assign_to_const_field", new IDiagnosticItem[]
             {
                 // modifying const, not detected yet
@@ -642,6 +651,40 @@ public class CompilerFrontendTest
                     (
                         new Terminal(LexicalGrammarCategory.Comma, ","),
                         (FileUtility.LocationAt(4, 11), FileUtility.LocationAt(4, 12))
+                    )
+                )
+            }),
+            ("structs", "grouping_struct_redeclaration", new IDiagnosticItem[]
+            {
+                new MultipleDeclarationsError
+                (
+                    new StructDeclaration
+                    (
+                        new Identifier("TestStruct", (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 18))),
+                        new []
+                        {
+                            new FieldDeclaration
+                            (
+                                new Identifier("field", (FileUtility.LocationAt(4, 5), FileUtility.LocationAt(4, 10))),
+                                new IntType(),
+                                (FileUtility.LocationAt(4, 5), FileUtility.LocationAt(4, 15))
+                            )
+                        },
+                        (FileUtility.LocationAt(3, 1), FileUtility.LocationAt(5, 2))
+                    ),
+                    new StructDeclaration
+                    (
+                        new Identifier("TestStruct", (FileUtility.LocationAt(8, 12), FileUtility.LocationAt(8, 22))),
+                        new []
+                        {
+                            new FieldDeclaration
+                            (
+                                new Identifier("field", (FileUtility.LocationAt(9, 9), FileUtility.LocationAt(9, 14))),
+                                new BoolType(),
+                                (FileUtility.LocationAt(9, 9), FileUtility.LocationAt(9, 20))
+                            )
+                        },
+                        (FileUtility.LocationAt(8, 5), FileUtility.LocationAt(10, 6))
                     )
                 )
             }),
@@ -729,9 +772,61 @@ public class CompilerFrontendTest
                     new Identifier("NonExistentType", (FileUtility.LocationAt(4, 12), FileUtility.LocationAt(4, 27)))
                 )
             }),
+            ("structs", "overshadowed_struct_in_nested_scope", new IDiagnosticItem[]
+            {
+                new UndeclaredIdentifierError
+                (
+                    new Identifier("otherField", (FileUtility.LocationAt(20, 5), FileUtility.LocationAt(20, 15)))
+                )
+            }),
+            ("structs", "recursive_type", new IDiagnosticItem[]
+            {
+                // Recursive type, this might require separate error
+            }),
             ("structs", "repeat_fields_in_initialization", new IDiagnosticItem[]
             {
                 // Wrong number of struct fields initialized, not detected yet
+            }),
+            ("structs", "struct_in_different_scope", new IDiagnosticItem[]
+            {
+                new UndeclaredIdentifierError
+                (
+                    new Identifier("TestStruct", (FileUtility.LocationAt(9, 18), FileUtility.LocationAt(9, 28)))
+                )
+            }),
+            ("structs", "struct_redeclaration", new IDiagnosticItem[]
+            {
+                new MultipleDeclarationsError
+                (
+                    new StructDeclaration
+                    (
+                        new Identifier("TestStruct", (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 18))),
+                        new []
+                        {
+                            new FieldDeclaration
+                            (
+                                new Identifier("field", (FileUtility.LocationAt(4, 5), FileUtility.LocationAt(4, 10))),
+                                new IntType(),
+                                (FileUtility.LocationAt(4, 5), FileUtility.LocationAt(4, 15))
+                            )
+                        },
+                        (FileUtility.LocationAt(3, 1), FileUtility.LocationAt(5, 2))
+                    ),
+                    new StructDeclaration
+                    (
+                        new Identifier("TestStruct", (FileUtility.LocationAt(7, 8), FileUtility.LocationAt(7, 18))),
+                        new []
+                        {
+                            new FieldDeclaration
+                            (
+                                new Identifier("field", (FileUtility.LocationAt(8, 5), FileUtility.LocationAt(8, 10))),
+                                new BoolType(),
+                                (FileUtility.LocationAt(8, 5), FileUtility.LocationAt(4, 16))
+                            )
+                        },
+                        (FileUtility.LocationAt(7, 1), FileUtility.LocationAt(9, 2))
+                    )
+                )
             }),
             ("structs", "value_in_declaration", new IDiagnosticItem[]
             {
