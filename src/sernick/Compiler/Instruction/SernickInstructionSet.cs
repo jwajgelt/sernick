@@ -290,7 +290,7 @@ public static class SernickInstructionSet
                         return new List<IInstruction>
                         {
                             Bin.Cmp.ToReg(inputs[0]).FromReg(inputs[1]), // cmp in0, in1
-                            Bin.Xor.ToReg(output).FromReg(output), // mov out, 0
+                            Mov.ToReg(output).FromImm(new RegisterValue(0)), // mov out, 0
                             values.Get<BinaryOperation>(op) switch // setcc out
                             {
                                 BinaryOperation.Equal => new SetCcInstruction(ConditionCode.E, output),
