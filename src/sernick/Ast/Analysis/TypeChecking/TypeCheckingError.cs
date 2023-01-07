@@ -17,6 +17,14 @@ public sealed record TypesMismatchError(Type Required, Type Provided, ILocation 
     }
 }
 
+public sealed record NotAStructTypeError(Type Provided, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"Type is not a struct type: \"{Provided}\" at {Location}";
+    }
+}
+
 public sealed record InferredBadFunctionReturnType(Type Declared, Type Inferred, ILocation Location) : TypeCheckingErrorBase
 {
     public override string ToString()

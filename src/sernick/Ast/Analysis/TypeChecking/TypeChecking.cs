@@ -354,8 +354,29 @@ public static class TypeChecking
 
         public override Dictionary<AstNode, Type> VisitStructFieldAccess(StructFieldAccess node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
         {
-            return CreateTypeInformation(node, node.Type);
+            var childrenTypes = VisitNodeChildren(node, new AnyType());
+
+            var structType = childrenTypes[node.Left];
+            if(structType is StructType)
+            {
+                var fieldName = node.FieldName;
+                var fieldNameDeclaredInStruct = ((StructType)structType).fieldTypes.ContainsKey(fieldName);
+
+                if (!fieldNameDeclaredInStruct)
+                {
+                    _diagnostics.Report(new FieldNotPresentInStructError(structType, node.FieldName, node.FieldName.LocationRange.Start));
+                    return CreateTypeInformation<AnyType>(node);
+                }
+
+                return CreateTypeInformation(node, ((StructType)structType).fieldTypes[fieldName]);
+            }
+            else
+            {
+                _diagnostics.Report(new NotAStructTypeError(structType, node.Left.LocationRange.Start));
+                return CreateTypeInformation<AnyType>(node);
+            }
         }
+
         /// <summary>
         /// Since we want to do a bottom-up recursion, but we're calling our node.Accept functions
         /// in a top-down order, before actually processing a node we have to make sure we've visited all of its
