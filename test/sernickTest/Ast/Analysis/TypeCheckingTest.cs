@@ -665,6 +665,8 @@ public class TypeCheckingTest
 
             Assert.Empty(diagnostics.Invocations);
         }
+
+        // TODO add tests where we try to name a struct using a keyword e.g. struct Int = {...} or struct Bool = { ... }
     }
 }
 

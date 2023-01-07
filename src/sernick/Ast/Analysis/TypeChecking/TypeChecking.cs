@@ -313,11 +313,17 @@ public static class TypeChecking
             var variableDeclarationNode = _nameResolution.AssignedVariableDeclarations[node];
             var typeOfLeftSide = _memoizedDeclarationTypes[variableDeclarationNode];
             var typeOfRightSide = childrenTypes[node.Right];
-            if (!Same(typeOfLeftSide, typeOfRightSide))
+
+            if (!CompatibleForAssigment(typeOfLeftSide, typeOfRightSide))
             {
                 _diagnostics.Report(new TypesMismatchError(typeOfLeftSide, typeOfRightSide, node.Right.LocationRange.Start));
             }
 
+
+            // TODO if rhs type is more specific than lhs type, should we change "typeOfLeftSide" to "typeOfRightSide"
+            // below, effectively being more efficient in inferring types?
+            // Example: assigning a null pointer to a variable of type Int*, currently we only store that the result
+            // is of type Int*, but we could be storing that the result is of type NULL_PTR, maybe preventing some bugs?
             return AddTypeInformation(childrenTypes, node, typeOfLeftSide);
         }
 
@@ -333,6 +339,17 @@ public static class TypeChecking
 
         public override Dictionary<AstNode, Type> VisitIntLiteralValue(IntLiteralValue node, Type expectedReturnTypeOfReturnExpr) =>
             CreateTypeInformation<IntType>(node);
+
+        public override Dictionary<AstNode, Type> VisitStructDeclaration(StructDeclaration node, Type expectedReturnTypeOfReturnExpr)
+        {
+            var childrenTypes = VisitNodeChildren(node, new AnyType());
+            return AddTypeInformation(childrenTypes, node, );
+        }
+
+        public override Dictionary<AstNode, Type> VisitFieldDeclaration(FieldDeclaration node, Type expectedReturnTypeOfReturnExpr)
+        {
+            return CreateTypeInformation(node, node.Type);
+        }
 
         /// <summary>
         /// Since we want to do a bottom-up recursion, but we're calling our node.Accept functions
@@ -366,19 +383,31 @@ public static class TypeChecking
         private static TypeInformation AddTypeInformation(TypeInformation types, AstNode node, Type type) =>
             new(types, ReferenceEqualityComparer.Instance) { { node, type } };
 
-        private static bool Same(Type t1, Type t2)
+        private static bool Same(Type lhsType, Type rhsType)
         {
-            if (t1 is AnyType)
+            if (lhsType is AnyType)
             {
                 return true;
             }
 
-            if (t2 is AnyType)
+            if (rhsType is AnyType)
             {
                 return true;
             }
 
-            return t1 == t2;
+            return lhsType == rhsType;
+        }
+
+        private static bool CompatibleForAssigment(Type lhsType, Type rhsType)
+        {
+            // first, handle some special cases
+            if (rhsType is NullPointerType && lhsType is PointerType)
+            {
+                return true;
+            }
+
+            // defer to "Same" in general case
+            return Same(lhsType, rhsType);
         }
     }
 }
