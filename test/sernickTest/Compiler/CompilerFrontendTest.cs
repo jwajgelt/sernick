@@ -561,6 +561,15 @@ public class CompilerFrontendTest
                     FileUtility.LocationAt(6, 10)
                 )
             }),
+            ("pointers", "different_pointer_types_values_assign", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new IntType(),
+                    new BoolType(),
+                    FileUtility.LocationAt(6, 11)
+                )
+            }),
             ("pointers", "null_to_type", new IDiagnosticItem[]
             {
                 new TypesMismatchError
