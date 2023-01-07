@@ -40,14 +40,21 @@ public static class NameResolutionAlgorithm
         public override NameResolutionVisitorResult VisitVariableDeclaration(VariableDeclaration node,
             IdentifiersNamespace identifiersNamespace)
         {
+            NameResolutionResult result;
+            IdentifiersNamespace identifiers;
             if (node.InitValue is null)
             {
-                return new NameResolutionVisitorResult(TryAdd(identifiersNamespace, node));
+                result = new NameResolutionResult();
+                identifiers = TryAdd(identifiersNamespace, node);
             }
-
-            var visitorResult = node.InitValue.Accept(this, identifiersNamespace);
-            var updatedIdentifiers = TryAdd(visitorResult.IdentifiersNamespace, node);
-            return visitorResult with { IdentifiersNamespace = updatedIdentifiers };
+            else
+            {
+                var visitorResult = node.InitValue.Accept(this, identifiersNamespace);
+                result = visitorResult.Result;
+                identifiers = TryAdd(visitorResult.IdentifiersNamespace, node);
+            }
+            var typeStructs = FindStructDeclarationsInType(identifiersNamespace, node.Type);
+            return new(result.AddStructs(typeStructs), identifiers);
         }
         
         public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node,
@@ -219,8 +226,12 @@ public static class NameResolutionAlgorithm
         /// Given a Type, finds all struct references in it and returns their declarations
         /// a visitor for this would be an overkill
         /// </summary>
-        private Dictionary<Identifier, StructDeclaration> FindStructDeclarationsInType(IdentifiersNamespace identifiersNamespace, Type type)
+        private Dictionary<Identifier, StructDeclaration> FindStructDeclarationsInType(IdentifiersNamespace identifiersNamespace, Type? type)
         {
+            if (type is null)
+            {
+                return new Dictionary<Identifier, StructDeclaration>();
+            }
             switch (type)
             {
                 case StructType structType:

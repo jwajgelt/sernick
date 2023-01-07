@@ -4,6 +4,7 @@ using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis;
 using sernick.Ast.Analysis.NameResolution;
+using sernick.Ast.Nodes;
 using sernick.Diagnostics;
 using static Helpers.AstNodesExtensions;
 
@@ -647,13 +648,32 @@ public class NameResolutionTest
         //  {
         //      return 0;
         //  }
-        var tree = Fun<IntType>("f").Parameter<IntType>("a").Parameter<IntType>("a").Body(
-            Return(Literal(0))
-        );
+        var tree = Program(
+            Fun<IntType>("f").Parameter<IntType>("a").Parameter<IntType>("a").Body(
+                Return(Literal(0))
+            ));
+        
         var diagnostics = new Mock<IDiagnostics>();
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
         diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
+    }
+
+    [Fact]
+    public void StructTypeInDeclarationRecognized()
+    {
+        // struct TestStruct {}
+        // var a : *TestStruct;
+        var tree = Program(
+            Struct("TestStruct").Get(out var declaration),
+            Var("a", Pointer(Ident("TestStruct", out var ident))
+            ));
+        
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+        
+        Assert.Same(declaration, result.StructDeclarations[ident]);
     }
 }

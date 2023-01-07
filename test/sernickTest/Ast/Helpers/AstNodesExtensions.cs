@@ -1,5 +1,6 @@
 namespace sernickTest.Ast.Helpers;
 
+using System.Drawing;
 using Input;
 using sernick.Ast;
 using sernick.Ast.Nodes;
@@ -16,7 +17,9 @@ public static class AstNodesExtensions
 
     private static readonly Range<ILocation> loc = new(new FakeLocation(), new FakeLocation());
 
-    public static Identifier Ident(string name) => new(name, loc);
+    public static Identifier Ident(string name) => Ident(name, out _);
+    public static Identifier Ident(string name, out Identifier result) => result = new(name, loc);
+    
 
     #region Variable
 
@@ -48,6 +51,17 @@ public static class AstNodesExtensions
             InitValue: Literal(initValue),
             IsConst: false,
             loc);
+
+    public static VariableDeclaration Var(string name, Type type) => Var(name, type, out _);
+
+    public static VariableDeclaration Var(string name, Type type, out VariableDeclaration result) =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: type,
+            InitValue: null,
+            IsConst: false,
+            loc);
+
 
     public static VariableDeclaration Var<T>(string name, bool initValue) where T : Type, new() => Var<T>(name, initValue, out _);
 
@@ -302,6 +316,7 @@ public static class AstNodesExtensions
     #endregion
 
     #region Pointers
+    public static PointerType Pointer(Identifier type) => new PointerType(new StructType(type));
     public static FunctionCall Alloc(Expression arg) => Call("new").Argument(arg);
     public static PointerDereference Deref(Expression pointer) => new PointerDereference(pointer, loc);
     public static NullPointerLiteralValue Null => new(loc);
