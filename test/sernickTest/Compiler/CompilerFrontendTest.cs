@@ -530,10 +530,6 @@ public class CompilerFrontendTest
             {
                 // modifying const, not detected yet
             }),
-            ("pointers", "assign_to_const_ptr_field", new IDiagnosticItem[]
-            {
-                // modifying const, not detected yet
-            }),
             ("pointers", "assign_two_nulls", new IDiagnosticItem[]
             {
                 new TypesMismatchError
