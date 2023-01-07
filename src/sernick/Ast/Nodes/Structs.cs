@@ -60,5 +60,5 @@ public sealed record StructFieldAccess(Expression Left, Identifier FieldName, Ra
     public override IEnumerable<AstNode> Children => new AstNode[] { Left, FieldName };
 
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
-        visitor.StructFieldAccess(this, param);
+        visitor.VisitStructFieldAccess(this, param);
 }
