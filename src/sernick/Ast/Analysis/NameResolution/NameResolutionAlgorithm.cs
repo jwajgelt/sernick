@@ -44,7 +44,7 @@ public static class NameResolutionAlgorithm
                                                ?? new NameResolutionVisitorResult(identifiersNamespace);
             var identifiers = TryAdd(updatedIdentifiers, node);
 
-            var matchedTypeStructs = FindMatchedStructsInType(identifiersNamespace, node.Type);
+            var matchedTypeStructs = node.Type.FindMatchedStructs(identifiersNamespace, _diagnostics);
             return new(result.AddStructs(matchedTypeStructs), identifiers);
         }
 
@@ -56,7 +56,7 @@ public static class NameResolutionAlgorithm
             var toVisit = node.Parameters.Append(node.Body.Inner);
 
             var visitResult = VisitConsecutiveNodes(toVisit, identifiersWithFunction.NewScope());
-            var matchedReturnTypeStructs = FindMatchedStructsInType(identifiersNamespace, node.ReturnType);
+            var matchedReturnTypeStructs = node.ReturnType.FindMatchedStructs(identifiersNamespace, _diagnostics);
             var nameResolutionResult = visitResult.Result.AddStructs(matchedReturnTypeStructs);
             return new NameResolutionVisitorResult(nameResolutionResult, identifiersWithFunction);
         }
@@ -64,7 +64,7 @@ public static class NameResolutionAlgorithm
         public override NameResolutionVisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
             IdentifiersNamespace identifiersNamespace)
         {
-            var matchedTypeStructs = FindMatchedStructsInType(identifiersNamespace, node.Type);
+            var matchedTypeStructs = node.Type.FindMatchedStructs(identifiersNamespace, _diagnostics);
             var identifiers = TryAdd(identifiersNamespace, node);
             var result = NameResolutionResult.OfStructs(matchedTypeStructs);
             return new(result, identifiers);
@@ -168,7 +168,7 @@ public static class NameResolutionAlgorithm
         public override NameResolutionVisitorResult VisitFieldDeclaration(FieldDeclaration node,
             IdentifiersNamespace identifiersNamespace)
         {
-            var matchedTypeStructs = FindMatchedStructsInType(identifiersNamespace, node.Type);
+            var matchedTypeStructs = node.Type.FindMatchedStructs(identifiersNamespace, _diagnostics);
             var result = NameResolutionResult.OfStructs(matchedTypeStructs);
             return new(result, identifiersNamespace);
         }
@@ -176,8 +176,7 @@ public static class NameResolutionAlgorithm
         public override NameResolutionVisitorResult VisitStructValue(StructValue node,
             IdentifiersNamespace identifiersNamespace)
         {
-            // either a single-entry map, or nothing if type is eg. a Bool
-            var possibleMatchedStruct = MatchStructIdentifier(identifiersNamespace, node.StructName);
+            var possibleMatchedStruct = node.StructName.MatchStruct(identifiersNamespace, _diagnostics);
             var result = NameResolutionResult.OfStructs(possibleMatchedStruct);
             return new(result, identifiersNamespace);
         }
@@ -212,45 +211,45 @@ public static class NameResolutionAlgorithm
                 return identifiers;
             }
         }
+    }
 
-        /// <summary>
-        /// Given a Type, finds all struct references in it and returns their declarations
-        /// a visitor for this would be an overkill
-        /// </summary>
-        private Dictionary<Identifier, StructDeclaration> FindMatchedStructsInType(IdentifiersNamespace identifiersNamespace, Type? type)
+    /// <summary>
+    /// Finds all struct references in the type and returns their declarations
+    /// a visitor for this would be an overkill
+    /// </summary>
+    private static Dictionary<Identifier, StructDeclaration> FindMatchedStructs(this Type? type, IdentifiersNamespace identifiersNamespace, IDiagnostics diagnostics)
+    {
+        return type switch
         {
-            return type switch
-            {
-                StructType structType =>
-                    MatchStructIdentifier(identifiersNamespace, structType.Struct),
-                PointerType pointerType =>
-                    FindMatchedStructsInType(identifiersNamespace, pointerType.Type),
-                _ => new Dictionary<Identifier, StructDeclaration>()
-            };
-        }
+            StructType structType =>
+                structType.Struct.MatchStruct(identifiersNamespace, diagnostics),
+            PointerType pointerType =>
+                pointerType.Type.FindMatchedStructs(identifiersNamespace, diagnostics),
+            _ => new Dictionary<Identifier, StructDeclaration>()
+        };
+    }
 
-        private Dictionary<Identifier, StructDeclaration> MatchStructIdentifier(
-            IdentifiersNamespace identifiersNamespace, Identifier identifier)
+    private static Dictionary<Identifier, StructDeclaration> MatchStruct(this Identifier identifier,
+        IdentifiersNamespace identifiersNamespace, IDiagnostics diagnostics)
+    {
+        try
         {
-            try
+            var declaration = identifiersNamespace.GetResolution(identifier);
+            if (declaration is StructDeclaration structDeclaration)
             {
-                var declaration = identifiersNamespace.GetResolution(identifier);
-                if (declaration is StructDeclaration structDeclaration)
+                return new Dictionary<Identifier, StructDeclaration>
                 {
-                    return new Dictionary<Identifier, StructDeclaration>
-                    {
-                        { identifier, structDeclaration }
-                    };
-                }
-
-                _diagnostics.Report(new NotATypeError(identifier));
-            }
-            catch (IdentifiersNamespace.NoSuchIdentifierException)
-            {
-                _diagnostics.Report(new NotATypeError(identifier));
+                    { identifier, structDeclaration }
+                };
             }
 
-            return new Dictionary<Identifier, StructDeclaration>();
+            diagnostics.Report(new NotATypeError(identifier));
         }
+        catch (IdentifiersNamespace.NoSuchIdentifierException)
+        {
+            diagnostics.Report(new NotATypeError(identifier));
+        }
+
+        return new Dictionary<Identifier, StructDeclaration>();
     }
 }
