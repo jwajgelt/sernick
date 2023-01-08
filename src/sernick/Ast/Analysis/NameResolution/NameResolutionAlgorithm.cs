@@ -40,19 +40,9 @@ public static class NameResolutionAlgorithm
         public override NameResolutionVisitorResult VisitVariableDeclaration(VariableDeclaration node,
             IdentifiersNamespace identifiersNamespace)
         {
-            NameResolutionResult result;
-            IdentifiersNamespace identifiers;
-            if (node.InitValue is null)
-            {
-                result = new NameResolutionResult();
-                identifiers = TryAdd(identifiersNamespace, node);
-            }
-            else
-            {
-                var visitorResult = node.InitValue.Accept(this, identifiersNamespace);
-                result = visitorResult.Result;
-                identifiers = TryAdd(visitorResult.IdentifiersNamespace, node);
-            }
+            var (result, updatedIdentifiers) = node.InitValue?.Accept(this, identifiersNamespace)
+                                               ?? new NameResolutionVisitorResult(identifiersNamespace);
+            var identifiers = TryAdd(updatedIdentifiers, node);
 
             var matchedTypeStructs = FindMatchedStructsInType(identifiersNamespace, node.Type);
             return new(result.AddStructs(matchedTypeStructs), identifiers);
