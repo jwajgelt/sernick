@@ -26,7 +26,7 @@ public sealed record PointerType(Type Type) : Type
     public override string ToString() => $"*{Type}";
 }
 
-public sealed record NullPointerType(Type Type) : Type
+public sealed record NullPointerType() : Type
 {
     public override string ToString() => "NullPointer";
 }
