@@ -63,7 +63,7 @@ public static class NameResolutionAlgorithm
         {
             var identifiersWithFunction = TryAdd(identifiersNamespace, node);
 
-            var toVisit = new List<AstNode>(node.Parameters) { node.Body.Inner };
+            var toVisit = node.Parameters.Append(node.Body.Inner);
 
             var visitResult = VisitConsecutiveNodes(toVisit, identifiersWithFunction.NewScope());
             var matchedReturnTypeStructs = FindMatchedStructsInType(identifiersNamespace, node.ReturnType);
