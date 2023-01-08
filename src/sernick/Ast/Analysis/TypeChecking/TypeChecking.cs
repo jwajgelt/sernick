@@ -358,11 +358,11 @@ public static class TypeChecking
         {
             var childrenTypes = VisitNodeChildren(node, new AnyType());
             var structTypeWithFieldTypes = new StructType(node.Name);
-            structTypeWithFieldTypes.fieldTypes = node.Fields.SelectMany<(Identifier, Type)>(
-                fieldDeclaration =>
-                (name: fieldDeclaration.Name,
-                 type: childrenTypes[fieldDeclaration.Name])
-                 ).ToDictionary(...); // TODO
+
+            structTypeWithFieldTypes.fieldTypes = node.Fields.ToDictionary(
+                keySelector: fieldDeclaration => fieldDeclaration.Name,
+                elementSelector: fieldDeclaration => fieldDeclaration.Type);
+            
             return AddTypeInformation(childrenTypes, node, structTypeWithFieldTypes);
         }
 
@@ -371,6 +371,9 @@ public static class TypeChecking
             return CreateTypeInformation(node, node.Type);
         }
 
+        // TODO can we assume that when VisitStructFieldAccess is called, the corresponding struct declaration
+        // has already been visited by VisitStructDeclaration???
+        // For now, let's assume that is has.
         public override Dictionary<AstNode, Type> VisitStructFieldAccess(StructFieldAccess node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, new AnyType());
@@ -379,15 +382,23 @@ public static class TypeChecking
             if(structType is StructType)
             {
                 var fieldName = node.FieldName;
-                var fieldNameDeclaredInStruct = ((StructType)structType).fieldTypes.ContainsKey(fieldName);
-
-                if (!fieldNameDeclaredInStruct)
+                if(((StructType)structType).fieldTypes == null)
                 {
-                    _diagnostics.Report(new FieldNotPresentInStructError(structType, node.FieldName, node.FieldName.LocationRange.Start));
+                    _diagnostics.Report(new NoTypeInformationAboutStructError(node.LocationRange.Start));
                     return CreateTypeInformation<AnyType>(node);
                 }
+                else
+                {
+                    var fieldNameDeclaredInStruct = ((StructType)structType).fieldTypes.ContainsKey(fieldName);
 
-                return CreateTypeInformation(node, ((StructType)structType).fieldTypes[fieldName]);
+                    if (!fieldNameDeclaredInStruct)
+                    {
+                        _diagnostics.Report(new FieldNotPresentInStructError(structType, node.FieldName, node.FieldName.LocationRange.Start));
+                        return CreateTypeInformation<AnyType>(node);
+                    }
+
+                    return CreateTypeInformation(node, ((StructType)structType).fieldTypes[fieldName]);
+                }
             }
             else
             {

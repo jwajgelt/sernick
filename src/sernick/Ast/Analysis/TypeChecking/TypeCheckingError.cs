@@ -104,3 +104,12 @@ public sealed record CannotDereferenceExpressionError(Type InferredExpressionTyp
         return $"Attempted to dereference expression of type \"{InferredExpressionType}\" which is not of pointer type, at: {Location}";
     }
 }
+
+// TODO figure out if we should keep this error, since it's more like an internal one, for debugging
+public sealed record NoTypeInformationAboutStructError(ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"No type information about struct, at: {Location}";
+    }
+}
