@@ -176,9 +176,9 @@ public static class NameResolutionAlgorithm
         public override NameResolutionVisitorResult VisitStructValue(StructValue node,
             IdentifiersNamespace identifiersNamespace)
         {
+            var visitorResult = VisitAstNode(node, identifiersNamespace);
             var possibleMatchedStruct = node.StructName.MatchStruct(identifiersNamespace, _diagnostics);
-            var result = NameResolutionResult.OfStructs(possibleMatchedStruct);
-            return new(result, identifiersNamespace);
+            return visitorResult with { Result = visitorResult.Result.AddStructs(possibleMatchedStruct)};
         }
 
         private NameResolutionVisitorResult VisitConsecutiveNodes(IEnumerable<AstNode> nodes, IdentifiersNamespace identifiersNamespace)

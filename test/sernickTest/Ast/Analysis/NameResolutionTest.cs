@@ -859,6 +859,31 @@ public class NameResolutionTest
 
         Assert.Same(testStruct, result.StructDeclarations[ident]);
     }
+    
+    [Fact]
+    public void IdentifierInStructValueResolved()
+    {
+        // struct TestStruct {
+        //   field: Int
+        // }
+        // var a = new(
+        //   TestStruct {
+        //     field: (var x = 1; x)
+        //   }
+        // )
+        var tree = Program(
+            Struct("TestStruct").Field("field", Pointer(new IntType())),
+            StructValue("TestStruct").Field("field", 
+                Group(Var("x", 1, out var declaration), Value("x", out var value))
+                )
+        );
+
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.UsedVariableDeclarations[value]);
+    }
 
     [Fact]
     public void StructDefinedInOtherScopeNotRecognized()
