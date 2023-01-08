@@ -225,7 +225,7 @@ public static class NameResolutionAlgorithm
                 structType.Struct.MatchStruct(identifiersNamespace, diagnostics),
             PointerType pointerType =>
                 pointerType.Type.FindMatchedStructs(identifiersNamespace, diagnostics),
-            _ => new Dictionary<Identifier, StructDeclaration>()
+            _ => new Dictionary<Identifier, StructDeclaration>(ReferenceEqualityComparer.Instance)
         };
     }
 
@@ -237,7 +237,7 @@ public static class NameResolutionAlgorithm
             var declaration = identifiersNamespace.GetResolution(identifier);
             if (declaration is StructDeclaration structDeclaration)
             {
-                return new Dictionary<Identifier, StructDeclaration>
+                return new Dictionary<Identifier, StructDeclaration>(ReferenceEqualityComparer.Instance)
                 {
                     { identifier, structDeclaration }
                 };
@@ -250,6 +250,6 @@ public static class NameResolutionAlgorithm
             diagnostics.Report(new NotATypeError(identifier));
         }
 
-        return new Dictionary<Identifier, StructDeclaration>();
+        return new Dictionary<Identifier, StructDeclaration>(ReferenceEqualityComparer.Instance);
     }
 }
