@@ -6,7 +6,6 @@ using NameResolution;
 using Nodes;
 using Utility;
 using TypeInformation = Dictionary<Nodes.AstNode, Type>;
-using ExpectedReturnTypeOfReturnExpr = Type;
 
 public sealed record TypeCheckingResult(TypeInformation ExpressionsTypes)
 {
@@ -21,7 +20,7 @@ public static class TypeChecking
         return new TypeCheckingResult(visitor.VisitAstTree(ast, new AnyType()));
     }
 
-    private class TypeCheckingAstVisitor : AstVisitor<Dictionary<AstNode, Type>, ExpectedReturnTypeOfReturnExpr>
+    private class TypeCheckingAstVisitor : AstVisitor<Dictionary<AstNode, Type>, Type>
     {
         /// <summary>
         /// Invariant: when visiting AstNode X, types for all children of X are known
@@ -45,13 +44,13 @@ public static class TypeChecking
             _memoizedDeclarationTypes = new Dictionary<Declaration, Type>(ReferenceEqualityComparer.Instance);
         }
 
-        protected override Dictionary<AstNode, Type> VisitAstNode(AstNode node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr) =>
+        protected override Dictionary<AstNode, Type> VisitAstNode(AstNode node, Type expectedReturnTypeOfReturnExpr) =>
             node.Accept(this, expectedReturnTypeOfReturnExpr);
 
         public override Dictionary<AstNode, Type> VisitIdentifier(Identifier node, Type _) =>
             CreateTypeInformation<UnitType>(node);
 
-        public override Dictionary<AstNode, Type> VisitVariableDeclaration(VariableDeclaration node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitVariableDeclaration(VariableDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
@@ -80,7 +79,7 @@ public static class TypeChecking
             return AddTypeInformation<UnitType>(childrenTypes, node);
         }
 
-        public override Dictionary<AstNode, Type> VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitFunctionParameterDeclaration(FunctionParameterDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
@@ -102,7 +101,7 @@ public static class TypeChecking
             return AddTypeInformation<UnitType>(childrenTypes, node);
         }
 
-        public override Dictionary<AstNode, Type> VisitFunctionDefinition(FunctionDefinition node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitFunctionDefinition(FunctionDefinition node, Type expectedReturnTypeOfReturnExpr)
         {
             var declaredReturnType = node.ReturnType;
             var childrenTypes = VisitNodeChildren(node, declaredReturnType);
@@ -117,7 +116,7 @@ public static class TypeChecking
             return AddTypeInformation<UnitType>(childrenTypes, node);
         }
 
-        public override Dictionary<AstNode, Type> VisitCodeBlock(CodeBlock node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitCodeBlock(CodeBlock node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
@@ -125,7 +124,7 @@ public static class TypeChecking
             return AddTypeInformation(childrenTypes, node, childrenTypes[node.Inner]);
         }
 
-        public override Dictionary<AstNode, Type> VisitExpressionJoin(ExpressionJoin node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitExpressionJoin(ExpressionJoin node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
@@ -145,7 +144,7 @@ public static class TypeChecking
             return result;
         }
 
-        public override Dictionary<AstNode, Type> VisitFunctionCall(FunctionCall functionCallNode, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitFunctionCall(FunctionCall functionCallNode, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(functionCallNode, expectedReturnTypeOfReturnExpr);
 
@@ -189,10 +188,10 @@ public static class TypeChecking
             }
         }
 
-        public override Dictionary<AstNode, Type> VisitContinueStatement(ContinueStatement node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr) =>
+        public override Dictionary<AstNode, Type> VisitContinueStatement(ContinueStatement node, Type expectedReturnTypeOfReturnExpr) =>
             CreateTypeInformation<UnitType>(node);
 
-        public override Dictionary<AstNode, Type> VisitReturnStatement(ReturnStatement node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitReturnStatement(ReturnStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
@@ -206,10 +205,10 @@ public static class TypeChecking
             return AddTypeInformation<AnyType>(childrenTypes, node);
         }
 
-        public override Dictionary<AstNode, Type> VisitBreakStatement(BreakStatement node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr) =>
+        public override Dictionary<AstNode, Type> VisitBreakStatement(BreakStatement node, Type expectedReturnTypeOfReturnExpr) =>
             CreateTypeInformation<UnitType>(node);
 
-        public override Dictionary<AstNode, Type> VisitIfStatement(IfStatement node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitIfStatement(IfStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
@@ -237,7 +236,7 @@ public static class TypeChecking
         /// break/return inside the loop would exit the loop
         /// and have no effect on the loop 
         /// </summary>
-        public override Dictionary<AstNode, Type> VisitLoopStatement(LoopStatement node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitLoopStatement(LoopStatement node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
@@ -247,7 +246,7 @@ public static class TypeChecking
         public override Dictionary<AstNode, Type> VisitEmptyExpression(EmptyExpression node, Type _) =>
             CreateTypeInformation<UnitType>(node);
 
-        public override Dictionary<AstNode, Type> VisitInfix(Infix node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitInfix(Infix node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
@@ -320,7 +319,8 @@ public static class TypeChecking
             return result;
         }
 
-        public override Dictionary<AstNode, Type> VisitAssignment(Assignment node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        // TODO https://github.com/jwajgelt/sernick/pull/283#discussion_r1064158212
+        public override Dictionary<AstNode, Type> VisitAssignment(Assignment node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
@@ -341,20 +341,20 @@ public static class TypeChecking
             return AddTypeInformation(childrenTypes, node, typeOfLeftSide);
         }
 
-        public override Dictionary<AstNode, Type> VisitVariableValue(VariableValue node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitVariableValue(VariableValue node, Type expectedReturnTypeOfReturnExpr)
         {
             var variableDeclarationNode = _nameResolution.UsedVariableDeclarations[node];
             var typeOfVariable = _memoizedDeclarationTypes[variableDeclarationNode];
             return CreateTypeInformation(node, typeOfVariable);
         }
 
-        public override Dictionary<AstNode, Type> VisitBoolLiteralValue(BoolLiteralValue node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr) =>
+        public override Dictionary<AstNode, Type> VisitBoolLiteralValue(BoolLiteralValue node, Type expectedReturnTypeOfReturnExpr) =>
             CreateTypeInformation<BoolType>(node);
 
-        public override Dictionary<AstNode, Type> VisitIntLiteralValue(IntLiteralValue node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr) =>
+        public override Dictionary<AstNode, Type> VisitIntLiteralValue(IntLiteralValue node, Type expectedReturnTypeOfReturnExpr) =>
             CreateTypeInformation<IntType>(node);
 
-        public override Dictionary<AstNode, Type> VisitStructDeclaration(StructDeclaration node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitStructDeclaration(StructDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, new AnyType());
             var structTypeWithFieldTypes = new StructType(node.Name);
@@ -366,7 +366,7 @@ public static class TypeChecking
             return AddTypeInformation(childrenTypes, node, structTypeWithFieldTypes);
         }
 
-        public override Dictionary<AstNode, Type> VisitFieldDeclaration(FieldDeclaration node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitFieldDeclaration(FieldDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
             return CreateTypeInformation(node, node.Type);
         }
@@ -374,7 +374,7 @@ public static class TypeChecking
         // TODO can we assume that when VisitStructFieldAccess is called, the corresponding struct declaration
         // has already been visited by VisitStructDeclaration???
         // For now, let's assume that is has.
-        public override Dictionary<AstNode, Type> VisitStructFieldAccess(StructFieldAccess node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        public override Dictionary<AstNode, Type> VisitStructFieldAccess(StructFieldAccess node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, new AnyType());
 
@@ -408,7 +408,7 @@ public static class TypeChecking
             }
         }
 
-        public override Dictionary<AstNode, Type> VisitPointerDereference(PointerDereference node, ExpectedReturnTypeOfReturnExpr _)
+        public override Dictionary<AstNode, Type> VisitPointerDereference(PointerDereference node, Type _)
         {
             var childrenTypes = VisitNodeChildren(node, new AnyType());
             var underlyingExpressionType = childrenTypes[node.Pointer];
@@ -429,7 +429,7 @@ public static class TypeChecking
         /// children. This helper method should be thus called at the beginning of almost each "Visit" function,
         /// except simple AST nodes (e.g. int literal), where we know there would be no recursion
         /// </summary>
-        private Dictionary<AstNode, Type> VisitNodeChildren(AstNode node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
+        private Dictionary<AstNode, Type> VisitNodeChildren(AstNode node, Type expectedReturnTypeOfReturnExpr)
         {
             return node.Children.Aggregate(new Dictionary<AstNode, Type>(ReferenceEqualityComparer.Instance),
                 (partialTypeInformation, childNode) =>
