@@ -229,21 +229,14 @@ public static class NameResolutionAlgorithm
         /// </summary>
         private Dictionary<Identifier, StructDeclaration> FindMatchedStructsInType(IdentifiersNamespace identifiersNamespace, Type? type)
         {
-            if (type is null)
+            return type switch
             {
-                return new Dictionary<Identifier, StructDeclaration>();
-            }
-
-            switch (type)
-            {
-                case StructType structType:
-                    var identifier = structType.Struct;
-                    return MatchStructIdentifier(identifiersNamespace, identifier);
-                case PointerType pointerType:
-                    return FindMatchedStructsInType(identifiersNamespace, pointerType.Type);
-                default:
-                    return new Dictionary<Identifier, StructDeclaration>();
-            }
+                StructType structType =>
+                    MatchStructIdentifier(identifiersNamespace, structType.Struct),
+                PointerType pointerType =>
+                    FindMatchedStructsInType(identifiersNamespace, pointerType.Type),
+                _ => new Dictionary<Identifier, StructDeclaration>()
+            };
         }
 
         private Dictionary<Identifier, StructDeclaration> MatchStructIdentifier(
