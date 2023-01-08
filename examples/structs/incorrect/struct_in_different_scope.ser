@@ -1,4 +1,4 @@
-﻿// trying to use scope declared in different scope
+﻿// trying to use struct declared in different scope
 
 {
     struct TestStruct {
