@@ -438,7 +438,7 @@ public class TypeCheckingTest
     }
     public class TestPointers
     {
-        [Fact(Skip = "Type checking doesn't handle pointers")]
+        [Fact]
         public void SimpleAllocations()
         {
             var allocInt = Alloc(Literal(42));
@@ -458,7 +458,7 @@ public class TypeCheckingTest
             Assert.Equal(new PointerType(new PointerType(new IntType())), result[allocPointer]);
         }
 
-        [Fact(Skip = "Type checking doesn't handle pointers")]
+        [Fact]
         public void PointerDereference()
         {
             var derefInt = Deref(Alloc(Literal(1)));
@@ -476,7 +476,7 @@ public class TypeCheckingTest
             Assert.Equal(new PointerType(new BoolType()), result[derefPointer]);
         }
 
-        [Fact(Skip = "Type checking doesn't handle pointers")]
+        [Fact]
         public void NullPointerAssignment_OK()
         {
             var tree = Block(
@@ -493,7 +493,7 @@ public class TypeCheckingTest
             Assert.Empty(diagnostics.Invocations);
         }
 
-        [Fact(Skip = "Type checking doesn't handle pointers")]
+        [Fact]
         public void NullPointerAssignment_BAD()
         {
             var tree = Block(
@@ -509,7 +509,7 @@ public class TypeCheckingTest
             diagnostics.Verify(d => d.Report(It.IsAny<TypesMismatchError>()), Times.AtLeastOnce);
         }
 
-        [Fact(Skip = "Type checking doesn't handle pointers")]
+        [Fact]
         public void NullPointerAssignmentUnknownType()
         {
             var tree = Block(
@@ -552,7 +552,7 @@ public class TypeCheckingTest
             .Field("list", GetListDefault())
             .Field("tuple", GetTupleDefault());
 
-        [Fact(Skip = "Type checking doesn't handle structs")]
+        [Fact]
         public void StructAllocationAndDereference()
         {
             var alloc = Alloc(GetCombinedDefault());
@@ -571,7 +571,7 @@ public class TypeCheckingTest
             Assert.Equal(new StructType(Ident("Combined")), result[deref]);
         }
 
-        [Fact(Skip = "Type checking doesn't handle structs")]
+        [Fact]
         public void FieldAccessAndAssignment_OK()
         {
             var tree = Block(
@@ -594,7 +594,7 @@ public class TypeCheckingTest
             Assert.Empty(diagnostics.Invocations);
         }
 
-        [Fact(Skip = "Type checking doesn't handle structs")]
+        [Fact]
         public void FieldAccessAutoDereference()
         {
             var tree = Block(
@@ -612,7 +612,7 @@ public class TypeCheckingTest
             Assert.Empty(diagnostics.Invocations);
         }
 
-        [Fact(Skip = "Type checking doesn't handle structs")]
+        [Fact]
         public void FieldAccess_BAD()
         {
             var tree = Block(
@@ -630,7 +630,7 @@ public class TypeCheckingTest
             diagnostics.Verify(d => d.Report(It.IsAny<FieldNotPresentInStructError>()), Times.AtLeastOnce);
         }
 
-        [Fact(Skip = "Type checking doesn't handle structs")]
+        [Fact]
         public void FieldAssignment_BAD()
         {
             var tree = Block(
@@ -648,7 +648,7 @@ public class TypeCheckingTest
             diagnostics.Verify(d => d.Report(It.IsAny<TypesMismatchError>()), Times.AtLeastOnce);
         }
 
-        [Fact(Skip = "Type checking doesn't handle structs")]
+        [Fact]
         public void NullPointerInStruct()
         {
             var tree = Block(
