@@ -15,7 +15,7 @@ public static class InstuctionHelper
             case MovInstruction mov:
                 if (mov.Target is RegInstructionOperand lhsOperand && mov.Source is RegInstructionOperand rhsOperand)
                 {
-                    return !regAllocation[lhsOperand.Register].Equals(regAllocation[rhsOperand.Register]);
+                    return regAllocation[lhsOperand.Register].Equals(regAllocation[rhsOperand.Register]);
                 }
 
                 return false;
