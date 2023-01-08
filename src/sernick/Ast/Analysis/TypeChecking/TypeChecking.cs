@@ -175,7 +175,8 @@ public static class TypeChecking
             // handle case where function is a special "new" function
 
             var functionCallIsANewFunctionCall =
-                (_nameResolution.CalledFunctionDeclarations[functionCallNode] ==
+                Object.ReferenceEquals(
+                _nameResolution.CalledFunctionDeclarations[functionCallNode],
                 ExternalFunctionsInfo.ExternalFunctions[2].Definition);
             if (functionCallIsANewFunctionCall)
             {
