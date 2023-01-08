@@ -389,6 +389,7 @@ public static class TypeChecking
                 }
                 else
                 {
+                    // TODO figure out c# comment about "fieldTypes" possibly being null, this should not happen :|
                     var fieldNameDeclaredInStruct = ((StructType)structType).fieldTypes.ContainsKey(fieldName);
 
                     if (!fieldNameDeclaredInStruct)
