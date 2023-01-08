@@ -25,7 +25,7 @@ public sealed record CallInstruction(Label Location) : TransferControlInstructio
 {
     public override IEnumerable<Register> RegistersDefined => Convention.CallerToSave;
 
-    public override IEnumerable<Register> RegistersUsed => Convention.ArgumentRegisters.Append(HardwareRegister.RSP);
+    public override IEnumerable<Register> RegistersUsed => Convention.ArgumentRegisters;
 
     public override bool PossibleFollow => true;
 
