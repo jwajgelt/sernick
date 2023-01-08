@@ -483,8 +483,7 @@ public static class TypeChecking
 
         private static bool IsPointerType(Type type)
         {
-            // TODO would this work for e.g. ***Int?
-            return (type is PointerType(PointerType(Type)));
+            return (type is PointerType);
         }
     }
 }
