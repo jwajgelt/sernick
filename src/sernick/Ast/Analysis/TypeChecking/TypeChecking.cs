@@ -385,7 +385,7 @@ public static class TypeChecking
                 if (structType.fieldTypes == null)
                 {
                     _diagnostics.Report(new NoTypeInformationAboutStructError(node.LocationRange.Start));
-                    return CreateTypeInformation<AnyType>(node);
+                    return AddTypeInformation<AnyType>(childrenTypes, node);
                 }
                 else
                 {
@@ -394,7 +394,7 @@ public static class TypeChecking
                     if (!fieldNameDeclaredInStruct)
                     {
                         _diagnostics.Report(new FieldNotPresentInStructError(leftType, node.FieldName, node.FieldName.LocationRange.Start));
-                        return CreateTypeInformation<AnyType>(node);
+                        return AddTypeInformation<AnyType>(childrenTypes, node);
                     }
 
                     return CreateTypeInformation(node, structType.fieldTypes[fieldName]);
@@ -403,7 +403,7 @@ public static class TypeChecking
             else
             {
                 _diagnostics.Report(new NotAStructTypeError(leftType, node.Left.LocationRange.Start));
-                return CreateTypeInformation<AnyType>(node);
+                return AddTypeInformation<AnyType>(childrenTypes, node);
             }
         }
 
