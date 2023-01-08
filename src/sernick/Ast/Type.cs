@@ -4,7 +4,7 @@ using Nodes;
 /// <summary>
 /// Base class for Sernick types
 /// </summary>
-public abstract record Type {}
+public abstract record Type { }
 
 public sealed record BoolType : Type
 {
@@ -35,10 +35,8 @@ public sealed record StructType(Identifier Struct) : Type
 {
     public override string ToString() => $"{Struct.Name}";
 
-    public IReadOnlyDictionary<Identifier, Type> ?fieldTypes;
+    public IReadOnlyDictionary<Identifier, Type>? fieldTypes;
 }
-
-
 
 /// <summary>
 /// Artificial type, which should not be used in a real programs

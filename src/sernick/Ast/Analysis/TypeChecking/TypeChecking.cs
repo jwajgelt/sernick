@@ -177,7 +177,7 @@ public static class TypeChecking
             var functionCallIsANewFunctionCall =
                 (_nameResolution.CalledFunctionDeclarations[functionCallNode] ==
                 ExternalFunctionsInfo.ExternalFunctions[2].Definition);
-            if(functionCallIsANewFunctionCall)
+            if (functionCallIsANewFunctionCall)
             {
                 var inferredArgumentType = childrenTypes[actualArguments.First()];
                 return AddTypeInformation(childrenTypes, functionCallNode, new PointerType(inferredArgumentType));
@@ -333,7 +333,6 @@ public static class TypeChecking
                 _diagnostics.Report(new TypesMismatchError(typeOfLeftSide, typeOfRightSide, node.Right.LocationRange.Start));
             }
 
-
             // TODO if rhs type is more specific than lhs type, should we change "typeOfLeftSide" to "typeOfRightSide"
             // below, effectively being more efficient in inferring types?
             // Example: assigning a null pointer to a variable of type Int*, currently we only store that the result
@@ -362,7 +361,7 @@ public static class TypeChecking
             structTypeWithFieldTypes.fieldTypes = node.Fields.ToDictionary(
                 keySelector: fieldDeclaration => fieldDeclaration.Name,
                 elementSelector: fieldDeclaration => fieldDeclaration.Type);
-            
+
             return AddTypeInformation(childrenTypes, node, structTypeWithFieldTypes);
         }
 
@@ -378,11 +377,11 @@ public static class TypeChecking
         {
             var childrenTypes = VisitNodeChildren(node, new AnyType());
 
-            var structType = childrenTypes[node.Left];
-            if(structType is StructType)
+            var leftType = childrenTypes[node.Left];
+            if (leftType is StructType structType)
             {
                 var fieldName = node.FieldName;
-                if(((StructType)structType).fieldTypes == null)
+                if (structType.fieldTypes == null)
                 {
                     _diagnostics.Report(new NoTypeInformationAboutStructError(node.LocationRange.Start));
                     return CreateTypeInformation<AnyType>(node);
@@ -390,20 +389,20 @@ public static class TypeChecking
                 else
                 {
                     // TODO figure out c# comment about "fieldTypes" possibly being null, this should not happen :|
-                    var fieldNameDeclaredInStruct = ((StructType)structType).fieldTypes.ContainsKey(fieldName);
+                    var fieldNameDeclaredInStruct = structType.fieldTypes.ContainsKey(fieldName);
 
                     if (!fieldNameDeclaredInStruct)
                     {
-                        _diagnostics.Report(new FieldNotPresentInStructError(structType, node.FieldName, node.FieldName.LocationRange.Start));
+                        _diagnostics.Report(new FieldNotPresentInStructError(leftType, node.FieldName, node.FieldName.LocationRange.Start));
                         return CreateTypeInformation<AnyType>(node);
                     }
 
-                    return CreateTypeInformation(node, ((StructType)structType).fieldTypes[fieldName]);
+                    return CreateTypeInformation(node, structType.fieldTypes[fieldName]);
                 }
             }
             else
             {
-                _diagnostics.Report(new NotAStructTypeError(structType, node.Left.LocationRange.Start));
+                _diagnostics.Report(new NotAStructTypeError(leftType, node.Left.LocationRange.Start));
                 return CreateTypeInformation<AnyType>(node);
             }
         }
@@ -414,7 +413,7 @@ public static class TypeChecking
             var underlyingExpressionType = childrenTypes[node.Pointer];
 
             // TODO check if we have tests for that
-            if (!isPointerType(underlyingExpressionType))
+            if (!IsPointerType(underlyingExpressionType))
             {
                 _diagnostics.Report(new CannotDereferenceExpressionError(underlyingExpressionType, node.LocationRange.Start));
             }
@@ -482,21 +481,10 @@ public static class TypeChecking
             return Same(lhsType, rhsType);
         }
 
-        private static bool isPointerType(Type type)
+        private static bool IsPointerType(Type type)
         {
-            if (
-                type is PointerType(IntType) ||
-                type is PointerType(BoolType) ||
-                type is PointerType(PointerType(IntType))
-                // TODO figure out how to check it properly, since it could be e.g. ****Int
-            )
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            // TODO would this work for e.g. ***Int?
+            return (type is PointerType(PointerType(Type)));
         }
     }
 }
