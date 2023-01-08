@@ -68,7 +68,7 @@ public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Dec
         };
     }
 
-    public static NameResolutionResult OfStructs(Dictionary<Identifier, StructDeclaration> structs)
+    public static NameResolutionResult OfStructs(IReadOnlyDictionary<Identifier, StructDeclaration> structs)
     {
         return new NameResolutionResult
         {
@@ -76,7 +76,7 @@ public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Dec
         };
     }
 
-    public NameResolutionResult AddStructs(Dictionary<Identifier, StructDeclaration> structs)
+    public NameResolutionResult AddStructs(IReadOnlyDictionary<Identifier, StructDeclaration> structs)
     {
         return this with { StructDeclarations = StructDeclarations.JoinWith(structs, ReferenceEqualityComparer.Instance) };
     }
