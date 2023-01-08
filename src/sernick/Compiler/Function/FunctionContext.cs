@@ -70,15 +70,6 @@ public sealed class FunctionContext : IFunctionContext
     {
         var operations = new List<CodeTreeNode>();
 
-        // Caller-saved registers
-        var callerSavedMap = new Dictionary<HardwareRegister, Register>(ReferenceEqualityComparer.Instance);
-        foreach (var reg in CallerToSave)
-        {
-            var tempReg = new Register();
-            callerSavedMap[reg] = tempReg;
-            operations.Add(Reg(tempReg).Write(Reg(reg).Read()));
-        }
-
         Register rsp = HardwareRegister.RSP;
         Register rax = HardwareRegister.RAX;
 
@@ -125,23 +116,17 @@ public sealed class FunctionContext : IFunctionContext
         // Remove arguments from stack (we already returned from call)
         operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE * stackArgs.Count));
 
-        // If value is returned, then put it from RAX to virtual register
-        CodeTreeValueNode? returnValueLocation = null;
-        if (ValueIsReturned)
+        if (!ValueIsReturned)
         {
-            var returnValueRegister = new Register();
-            var raxRead = Reg(rax).Read();
-            operations.Add(Reg(returnValueRegister).Write(raxRead));
-            returnValueLocation = Reg(returnValueRegister).Read();
+            return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations),
+                null);
         }
 
-        // Retrieve values of caller-saved registers
-        foreach (var reg in CallerToSave)
-        {
-            var tempReg = callerSavedMap[reg];
-            var tempVal = Reg(tempReg).Read();
-            operations.Add(Reg(reg).Write(tempVal));
-        }
+        // If value is returned, then put it from RAX to virtual register
+        var returnValueRegister = new Register();
+        var raxRead = Reg(rax).Read();
+        operations.Add(Reg(returnValueRegister).Write(raxRead));
+        CodeTreeValueNode returnValueLocation = Reg(returnValueRegister).Read();
 
         return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations), returnValueLocation);
     }
