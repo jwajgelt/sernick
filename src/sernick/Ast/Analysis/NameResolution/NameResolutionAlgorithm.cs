@@ -42,7 +42,7 @@ public static class NameResolutionAlgorithm
         {
             var (result, updatedIdentifiers) = node.InitValue?.Accept(this, identifiersNamespace)
                                                ?? new NameResolutionVisitorResult(identifiersNamespace);
-            var identifiers = TryAdd(updatedIdentifiers, node);
+            var identifiers = updatedIdentifiers.TryAdd(node, _diagnostics);
 
             var matchedTypeStructs = node.Type.FindMatchedStructs(identifiersNamespace, _diagnostics);
             return new(result.AddStructs(matchedTypeStructs), identifiers);
@@ -51,7 +51,7 @@ public static class NameResolutionAlgorithm
         public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node,
             IdentifiersNamespace identifiersNamespace)
         {
-            var identifiersWithFunction = TryAdd(identifiersNamespace, node);
+            var identifiersWithFunction = identifiersNamespace.TryAdd(node, _diagnostics);
 
             var toVisit = node.Parameters.Append(node.Body.Inner);
 
@@ -65,7 +65,7 @@ public static class NameResolutionAlgorithm
             IdentifiersNamespace identifiersNamespace)
         {
             var matchedTypeStructs = node.Type.FindMatchedStructs(identifiersNamespace, _diagnostics);
-            var identifiers = TryAdd(identifiersNamespace, node);
+            var identifiers = identifiersNamespace.TryAdd(node, _diagnostics);
             var result = NameResolutionResult.OfStructs(matchedTypeStructs);
             return new(result, identifiers);
         }
@@ -161,7 +161,7 @@ public static class NameResolutionAlgorithm
 
         public override NameResolutionVisitorResult VisitStructDeclaration(StructDeclaration node, IdentifiersNamespace identifiersNamespace)
         {
-            var updatedIdentifiers = TryAdd(identifiersNamespace, node);
+            var updatedIdentifiers = identifiersNamespace.TryAdd(node, _diagnostics);
             return VisitAstNode(node, updatedIdentifiers);
         }
 
@@ -178,7 +178,7 @@ public static class NameResolutionAlgorithm
         {
             var visitorResult = VisitAstNode(node, identifiersNamespace);
             var possibleMatchedStruct = node.StructName.MatchStruct(identifiersNamespace, _diagnostics);
-            return visitorResult with { Result = visitorResult.Result.AddStructs(possibleMatchedStruct)};
+            return visitorResult with { Result = visitorResult.Result.AddStructs(possibleMatchedStruct) };
         }
 
         private NameResolutionVisitorResult VisitConsecutiveNodes(IEnumerable<AstNode> nodes, IdentifiersNamespace identifiersNamespace)
@@ -194,22 +194,22 @@ public static class NameResolutionAlgorithm
                     };
                 });
         }
+    }
 
-        /// <summary>
-        /// Tries to add a new declaration to identifiers.
-        /// If collision occurs, reports it to _diagnostics and returns the previous set of identifiers.
-        /// </summary>
-        private IdentifiersNamespace TryAdd(IdentifiersNamespace identifiers, Declaration declaration)
+    /// <summary>
+    /// Tries to add a new declaration to identifiers.
+    /// If collision occurs, reports it to _diagnostics and returns the previous set of identifiers.
+    /// </summary>
+    private static IdentifiersNamespace TryAdd(this IdentifiersNamespace identifiers, Declaration declaration, IDiagnostics diagnostics)
+    {
+        try
         {
-            try
-            {
-                return identifiers.Add(declaration);
-            }
-            catch (IdentifiersNamespace.IdentifierCollisionException)
-            {
-                _diagnostics.Report(new MultipleDeclarationsError(identifiers.GetResolution(declaration.Name), declaration));
-                return identifiers;
-            }
+            return identifiers.Add(declaration);
+        }
+        catch (IdentifiersNamespace.IdentifierCollisionException)
+        {
+            diagnostics.Report(new MultipleDeclarationsError(identifiers.GetResolution(declaration.Name), declaration));
+            return identifiers;
         }
     }
 

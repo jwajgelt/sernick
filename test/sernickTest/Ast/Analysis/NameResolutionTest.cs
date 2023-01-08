@@ -859,7 +859,7 @@ public class NameResolutionTest
 
         Assert.Same(testStruct, result.StructDeclarations[ident]);
     }
-    
+
     [Fact]
     public void IdentifierInStructValueResolved()
     {
@@ -873,7 +873,7 @@ public class NameResolutionTest
         // )
         var tree = Program(
             Struct("TestStruct").Field("field", Pointer(new IntType())),
-            StructValue("TestStruct").Field("field", 
+            StructValue("TestStruct").Field("field",
                 Group(Var("x", 1, out var declaration), Value("x", out var value))
                 )
         );
