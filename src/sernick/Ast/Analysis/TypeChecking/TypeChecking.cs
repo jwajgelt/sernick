@@ -357,12 +357,13 @@ public static class TypeChecking
         public override Dictionary<AstNode, Type> VisitStructDeclaration(StructDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, new AnyType());
-            var structTypeWithFieldTypes = new StructType(node.Name);
-
-            structTypeWithFieldTypes.fieldTypes = node.Fields.ToDictionary(
-                keySelector: fieldDeclaration => fieldDeclaration.Name,
-                elementSelector: fieldDeclaration => fieldDeclaration.Type);
-
+            var structTypeWithFieldTypes = new StructType(node.Name)
+            {
+                fieldTypes = node.Fields.ToDictionary(
+                    keySelector: fieldDeclaration => fieldDeclaration.Name,
+                    elementSelector: fieldDeclaration => fieldDeclaration.Type)
+            };
+            
             return AddTypeInformation(childrenTypes, node, structTypeWithFieldTypes);
         }
 
@@ -413,9 +414,10 @@ public static class TypeChecking
             var underlyingExpressionType = childrenTypes[node.Pointer];
 
             // TODO check if we have tests for that
-            if (!IsPointerType(underlyingExpressionType))
+            if (underlyingExpressionType is not PointerType pointerType)
             {
                 _diagnostics.Report(new CannotDereferenceExpressionError(underlyingExpressionType, node.LocationRange.Start));
+                return AddTypeInformation<AnyType>(childrenTypes, node);
             }
 
             return AddTypeInformation(childrenTypes, node, underlyingExpressionType);
