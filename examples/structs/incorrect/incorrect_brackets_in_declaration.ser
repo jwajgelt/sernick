@@ -1,0 +1,5 @@
+﻿// incorrect brackets in struct declaration
+
+struct TestStruct (
+    field: Int
+);

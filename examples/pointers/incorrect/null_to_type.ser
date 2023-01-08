@@ -1,0 +1,4 @@
+﻿// assign null to non-pointer type
+
+var number = 5;
+number = null;

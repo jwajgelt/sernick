@@ -1,0 +1,17 @@
+﻿// set struct of another type
+
+struct TestStruct1 {
+    field: Int
+};
+
+struct TestStruct2 {
+    field: Int
+};
+
+var testStruct1 = TestStruct1 {
+    field: 1
+};
+
+testStruct1 = TestStruct2 {
+    field: 2
+};

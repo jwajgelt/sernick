@@ -1,0 +1,11 @@
+﻿// read from field that isn't declared in struct
+
+struct TestStruct {
+    field: Int
+};
+
+const testStruct = TestStruct {
+    field: 5
+};
+
+var value = testStruct.anotherField;

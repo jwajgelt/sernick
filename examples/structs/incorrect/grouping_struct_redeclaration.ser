@@ -1,0 +1,11 @@
+﻿// trying to redefine a struct in grouping parenthesis
+
+struct TestStruct {
+    field: Int
+};
+
+(
+    struct TestStruct {
+        field: Bool
+    };
+)

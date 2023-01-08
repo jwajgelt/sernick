@@ -1,0 +1,5 @@
+﻿// struct with no fields
+
+struct EmptyStruct {};
+
+var emptyStruct = EmptyStruct {};

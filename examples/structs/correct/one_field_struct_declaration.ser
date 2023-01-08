@@ -1,0 +1,5 @@
+﻿// correct struct with one field declaration
+
+struct TestStruct {
+    field: Int
+};

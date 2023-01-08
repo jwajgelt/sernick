@@ -1,0 +1,20 @@
+﻿// get fields from the struct
+
+struct TestStruct {
+    field1: Int,
+    field2: Bool,
+    field3: Int,
+    field4: Int
+};
+
+var testStruct = TestStruct {
+    field1: 1,
+    field2: true,
+    field3: 3,
+    field4: 4
+};
+
+var val1 = testStruct.field1;
+var val2 = testStruct.field2;
+var val3 = testStruct.field3;
+var val4 = testStruct.field4;

@@ -1,0 +1,15 @@
+﻿// perform operations on struct returned from function
+
+struct TestStruct {
+    field: Int
+};
+
+fun getStruct(): TestStruct {
+    return TestStruct {
+        field: 1
+    };
+}
+
+getStruct().field = 2;
+var testStruct = getStruct();
+var fieldValue = getStruct().field;

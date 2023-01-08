@@ -1,0 +1,6 @@
+﻿// using field of type that hasn't been declared
+
+struct OuterStruct {
+    inner: NonExistentType,
+    anotherField: Int
+};

@@ -1,0 +1,15 @@
+﻿// correct struct with multiple fields initialization and fields are given in order
+
+struct TestStruct {
+    field1: Int,
+    field2: Bool,
+    field3: Int,
+    field4: Int
+};
+
+var testStruct = TestStruct {
+    field1: 1,
+    field2: true,
+    field3: 3,
+    field4: 4
+};

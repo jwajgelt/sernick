@@ -1,0 +1,24 @@
+﻿// correct struct with multiple fields initialization using expressions
+
+fun f() : Int {
+	return 3;
+}
+
+
+struct TestStruct {
+    field1: Int,
+    field2: Bool,
+    field3: Int,
+    field4: Int
+};
+
+var testStruct = TestStruct {
+    field1: 1 + 2,
+    field2: (1 < 2),
+    field3: f(),
+    field4: if(false) {
+                1
+            } else {
+                2
+            }
+};

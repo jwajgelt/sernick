@@ -1,0 +1,8 @@
+﻿// struct with reference to its type
+// it can't be constructed because there is no first RecStruct
+// open to discussion if such declaration should be legal
+
+struct RecStruct {
+    field: Int,
+    another: RecStruct
+};

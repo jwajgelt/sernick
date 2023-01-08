@@ -1,0 +1,9 @@
+﻿// proper usage of null pointer
+
+struct TestStruct {
+    field: Int
+};
+
+var intPtr: *Int = null;
+var boolPtr: *Bool = null;
+var testPtr: *TestStruct = null;

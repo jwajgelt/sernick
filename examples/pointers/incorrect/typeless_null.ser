@@ -1,0 +1,3 @@
+﻿// assign null to unknown type
+
+var unknownPtr = null;
