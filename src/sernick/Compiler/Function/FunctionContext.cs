@@ -146,7 +146,7 @@ public sealed class FunctionContext : IFunctionContext
         operations.Add(pushRsp);
 
         // Write down old RBP value
-        operations.Add(Mem(rspRead).Write(rbpRead));
+        //operations.Add(Mem(rspRead).Write(rbpRead));
 
         // Set new RBP value
         operations.Add(Reg(rbp).Write(rspRead));
