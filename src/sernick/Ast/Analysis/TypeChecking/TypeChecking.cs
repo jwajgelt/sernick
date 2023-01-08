@@ -174,9 +174,14 @@ public static class TypeChecking
             }
 
             // handle case where function is a special "new" function
-            if(functionCallNode.FunctionName.Name == "new")
+
+            var functionCallIsANewFunctionCall =
+                (_nameResolution.CalledFunctionDeclarations[functionCallNode] ==
+                ExternalFunctionsInfo.ExternalFunctions[2].Definition);
+            if(functionCallIsANewFunctionCall)
             {
-                return AddTypeInformation(childrenTypes, functionCallNode, new PointerType(childrenTypes[actualArguments.First()]));
+                var inferredArgumentType = childrenTypes[actualArguments.First()];
+                return AddTypeInformation(childrenTypes, functionCallNode, new PointerType(inferredArgumentType));
             }
             else
             {
@@ -352,7 +357,13 @@ public static class TypeChecking
         public override Dictionary<AstNode, Type> VisitStructDeclaration(StructDeclaration node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, new AnyType());
-            return AddTypeInformation(childrenTypes, node, );
+            var structTypeWithFieldTypes = new StructType(node.Name);
+            structTypeWithFieldTypes.fieldTypes = node.Fields.SelectMany<(Identifier, Type)>(
+                fieldDeclaration =>
+                (name: fieldDeclaration.Name,
+                 type: childrenTypes[fieldDeclaration.Name])
+                 ).ToDictionary(...); // TODO
+            return AddTypeInformation(childrenTypes, node, structTypeWithFieldTypes);
         }
 
         public override Dictionary<AstNode, Type> VisitFieldDeclaration(FieldDeclaration node, ExpectedReturnTypeOfReturnExpr expectedReturnTypeOfReturnExpr)
