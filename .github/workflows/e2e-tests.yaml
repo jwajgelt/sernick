@@ -27,8 +27,8 @@ jobs:
     - name: Build
       run: dotnet build
 
-    - name: Setup GCC
-      uses: egor-tensin/setup-gcc@v1
+    - name: Set up GCC
+        uses: egor-tensin/setup-gcc@v1
         with:
           version: latest
           platform: x64
