@@ -878,7 +878,7 @@ public class NameResolutionTest
 
         NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
-        diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()));
+        diagnostics.Verify(d => d.Report(It.IsAny<NotATypeError>()));
     }
 
     [Fact]

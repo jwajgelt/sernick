@@ -54,30 +54,29 @@ public static class NameResolutionAlgorithm
                 identifiers = TryAdd(visitorResult.IdentifiersNamespace, node);
             }
 
-            var typeStructs = FindStructDeclarationsInType(identifiersNamespace, node.Type);
-            return new(result.AddStructs(typeStructs), identifiers);
+            var matchedTypeStructs = FindMatchedStructsInType(identifiersNamespace, node.Type);
+            return new(result.AddStructs(matchedTypeStructs), identifiers);
         }
 
         public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node,
             IdentifiersNamespace identifiersNamespace)
         {
-            // Parameters, Body and ReturnType contribute to the name resolution result
             var identifiersWithFunction = TryAdd(identifiersNamespace, node);
 
             var toVisit = new List<AstNode>(node.Parameters) { node.Body.Inner };
 
             var visitResult = VisitConsecutiveNodes(toVisit, identifiersWithFunction.NewScope());
-            var returnTypeStructs = FindStructDeclarationsInType(identifiersNamespace, node.ReturnType);
-            var nameResolutionResult = visitResult.Result.AddStructs(returnTypeStructs);
+            var matchedReturnTypeStructs = FindMatchedStructsInType(identifiersNamespace, node.ReturnType);
+            var nameResolutionResult = visitResult.Result.AddStructs(matchedReturnTypeStructs);
             return new NameResolutionVisitorResult(nameResolutionResult, identifiersWithFunction);
         }
 
         public override NameResolutionVisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
             IdentifiersNamespace identifiersNamespace)
         {
-            var structNames = FindStructDeclarationsInType(identifiersNamespace, node.Type);
+            var matchedTypeStructs = FindMatchedStructsInType(identifiersNamespace, node.Type);
             var identifiers = TryAdd(identifiersNamespace, node);
-            var result = NameResolutionResult.OfStructs(structNames);
+            var result = NameResolutionResult.OfStructs(matchedTypeStructs);
             return new(result, identifiers);
         }
 
@@ -179,16 +178,17 @@ public static class NameResolutionAlgorithm
         public override NameResolutionVisitorResult VisitFieldDeclaration(FieldDeclaration node,
             IdentifiersNamespace identifiersNamespace)
         {
-            var structNames = FindStructDeclarationsInType(identifiersNamespace, node.Type);
-            var result = NameResolutionResult.OfStructs(structNames);
+            var matchedTypeStructs = FindMatchedStructsInType(identifiersNamespace, node.Type);
+            var result = NameResolutionResult.OfStructs(matchedTypeStructs);
             return new(result, identifiersNamespace);
         }
 
         public override NameResolutionVisitorResult VisitStructValue(StructValue node,
             IdentifiersNamespace identifiersNamespace)
         {
-            var structNames = FindStructDeclaration(identifiersNamespace, node.StructName);
-            var result = NameResolutionResult.OfStructs(structNames);
+            // either a single-entry map, or nothing if type is eg. a Bool
+            var possibleMatchedStruct = MatchStructIdentifier(identifiersNamespace, node.StructName);
+            var result = NameResolutionResult.OfStructs(possibleMatchedStruct);
             return new(result, identifiersNamespace);
         }
 
@@ -227,7 +227,7 @@ public static class NameResolutionAlgorithm
         /// Given a Type, finds all struct references in it and returns their declarations
         /// a visitor for this would be an overkill
         /// </summary>
-        private Dictionary<Identifier, StructDeclaration> FindStructDeclarationsInType(IdentifiersNamespace identifiersNamespace, Type? type)
+        private Dictionary<Identifier, StructDeclaration> FindMatchedStructsInType(IdentifiersNamespace identifiersNamespace, Type? type)
         {
             if (type is null)
             {
@@ -238,15 +238,15 @@ public static class NameResolutionAlgorithm
             {
                 case StructType structType:
                     var identifier = structType.Struct;
-                    return FindStructDeclaration(identifiersNamespace, identifier);
+                    return MatchStructIdentifier(identifiersNamespace, identifier);
                 case PointerType pointerType:
-                    return FindStructDeclarationsInType(identifiersNamespace, pointerType.Type);
+                    return FindMatchedStructsInType(identifiersNamespace, pointerType.Type);
                 default:
                     return new Dictionary<Identifier, StructDeclaration>();
             }
         }
 
-        private Dictionary<Identifier, StructDeclaration> FindStructDeclaration(
+        private Dictionary<Identifier, StructDeclaration> MatchStructIdentifier(
             IdentifiersNamespace identifiersNamespace, Identifier identifier)
         {
             try
@@ -264,7 +264,7 @@ public static class NameResolutionAlgorithm
             }
             catch (IdentifiersNamespace.NoSuchIdentifierException)
             {
-                _diagnostics.Report(new UndeclaredIdentifierError(identifier));
+                _diagnostics.Report(new NotATypeError(identifier));
             }
 
             return new Dictionary<Identifier, StructDeclaration>();
