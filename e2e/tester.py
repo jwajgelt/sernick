@@ -14,6 +14,8 @@ from testHelpers import get_files, should_run_generator, create_output_expected_
 # TODO (bonus task?) generate report from all tests
 # TODO refactor for less "os.path.join" -- maybe better structure would help?
 
+test_failed=False
+
 class TestingLevel(Enum):
     ONLY_COMPILE=1
     COMPILE_AND_RUN_ON_INPUT=2
@@ -50,7 +52,8 @@ def compare_files(actual: str, expected:str)->None:
         logging.info("Correct answer on " + expected + " ! ✅")
     else:
         logging.info("Bad answer on " + expected + " ! ❌")
-        sys.exit(1)
+        global test_failed 
+        test_failed=True 
 
 def run_file_on_input_and_check(binary_file_path: str, test_dir_path: str) -> None:
     logging.debug("Running a binary file {}".format(binary_file_path))
@@ -67,13 +70,23 @@ def run_file_on_input_and_check(binary_file_path: str, test_dir_path: str) -> No
         input_fd = open(input_file_path, 'r')
         output_fd = open(output_file_path, 'w')
 
-        p = subprocess.Popen([binary_file_path], stdin=input_fd, text=True,stdout=output_fd)
-        p.wait()
-        compare_files(actual=output_file_path, expected=expected_file_path)
+        try:
+            p = subprocess.Popen([binary_file_path], stdin=input_fd, text=True,stdout=output_fd)
+            p.wait()
+            compare_files(actual=output_file_path, expected=expected_file_path)
+        except Exception as e:
+            logging.error("Exception occurred when running {} on {}, proceeding...".format(binary_file_path, input_file_path), exc_info=e)
+            global test_failed 
+            test_failed=True 
 
 def run_files(compiled_files: List[str], test_directory: str)->None:
     for binary_file in compiled_files:
-        run_file_on_input_and_check(binary_file_path=binary_file, test_dir_path=test_directory)
+        try:
+            run_file_on_input_and_check(binary_file_path=binary_file, test_dir_path=test_directory)
+        except Exception as e:
+            logging.error("Exception occurred when running {}, proceeding...".format(binary_file), exc_info=e)
+            global test_failed
+            test_failed=True
 
 def test(use_mock_data: bool, compiler_path: str = None, test_directories: List[str] = None):
     if test_directories is None:
@@ -112,6 +125,9 @@ def run():
         test(use_mock_data=True)
     else:
         test(use_mock_data=False, compiler_path=args.compiler, test_directories=[args.test_suite] if args.test_suite else None)
+   
+    if test_failed:
+        exit(1)
 
 if __name__ == '__main__':
     run()
