@@ -1,0 +1,48 @@
+name: E2E tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '6.0.x'
+    - name: Install dependencies
+      working-directory: src/sernick
+      run: dotnet restore
+    - name: Build
+      working-directory: src/sernick
+      run: dotnet build
+
+    - name: Set up GCC
+      uses: egor-tensin/setup-gcc@v1
+      with:
+        version: latest
+        platform: x64
+
+    - name: Setup NASM
+      uses: ilammy/setup-nasm@v1
+
+    - name: Setup Python 
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Run e2e tests
+      working-directory: e2e
+      run: python tester.py
