@@ -376,7 +376,7 @@ public static class TypeChecking
         // For now, let's assume that is has.
         public override Dictionary<AstNode, Type> VisitStructFieldAccess(StructFieldAccess node, Type expectedReturnTypeOfReturnExpr)
         {
-            var childrenTypes = VisitNodeChildren(node, new AnyType());
+            var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
             var leftType = childrenTypes[node.Left];
             if (leftType is StructType structType)
@@ -407,9 +407,9 @@ public static class TypeChecking
             }
         }
 
-        public override Dictionary<AstNode, Type> VisitPointerDereference(PointerDereference node, Type _)
+        public override Dictionary<AstNode, Type> VisitPointerDereference(PointerDereference node, Type expectedReturnTypeOfReturnExpr)
         {
-            var childrenTypes = VisitNodeChildren(node, new AnyType());
+            var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
             var underlyingExpressionType = childrenTypes[node.Pointer];
 
             // TODO check if we have tests for that
