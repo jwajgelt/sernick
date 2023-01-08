@@ -396,6 +396,21 @@ public static class TypeChecking
             }
         }
 
+        public override Dictionary<AstNode, Type> VisitPointerDereference(PointerDereference node, ExpectedReturnTypeOfReturnExpr _)
+        {
+            var childrenTypes = VisitNodeChildren(node, new AnyType());
+            var underlyingExpressionType = childrenTypes[node.Pointer];
+
+            // TODO check if we have tests for that
+            if (!isPointerType(underlyingExpressionType))
+            {
+                _diagnostics.Report(new CannotDereferenceExpressionError(underlyingExpressionType, node.LocationRange.Start));
+            }
+
+            return AddTypeInformation(childrenTypes, node, underlyingExpressionType);
+
+        }
+
         /// <summary>
         /// Since we want to do a bottom-up recursion, but we're calling our node.Accept functions
         /// in a top-down order, before actually processing a node we have to make sure we've visited all of its
@@ -453,6 +468,23 @@ public static class TypeChecking
 
             // defer to "Same" in general case
             return Same(lhsType, rhsType);
+        }
+
+        private static bool isPointerType(Type type)
+        {
+            if (
+                type is PointerType(IntType) ||
+                type is PointerType(BoolType) ||
+                type is PointerType(PointerType(IntType))
+                // TODO figure out how to check it properly, since it could be e.g. ****Int
+            )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

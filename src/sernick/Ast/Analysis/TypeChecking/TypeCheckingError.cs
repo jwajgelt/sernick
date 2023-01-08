@@ -96,3 +96,11 @@ public sealed record FieldNotPresentInStructError(Type Struct, Identifier Field,
         return $"Struct \"{Struct}\" does not contain field \"{Field.Name}\" provided at {Location}";
     }
 }
+
+public sealed record CannotDereferenceExpressionError(Type InferredExpressionType, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"Attempted to dereference expression of type \"{InferredExpressionType}\" which is not of pointer type, at: {Location}";
+    }
+}
