@@ -796,7 +796,7 @@ public class NameResolutionTest
         Assert.Same(declaration1, result.StructDeclarations[ident1]);
         Assert.Same(declaration2, result.StructDeclarations[ident2]);
     }
-    
+
     [Fact]
     public void MultipleStructsCorrectlyResolved()
     {
@@ -825,6 +825,42 @@ public class NameResolutionTest
     }
 
     [Fact]
+    public void StructFieldsResolved()
+    {
+        // struct Struct1 {}
+        // struct Struct2 {
+        //   field: *Struct1
+        // }
+        var tree = Program(
+            Struct("Struct1").Get(out var struct1),
+            Struct("Struct2").Field("field", Pointer(Ident("Struct1", out var ident)))
+        );
+
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(struct1, result.StructDeclarations[ident]);
+    }
+
+    [Fact]
+    public void SelfReferenceResolved()
+    {
+        // struct TestStruct {
+        //   field: *TestStruct
+        // }
+        var tree = Program(
+            Struct("TestStruct").Field("field", Pointer(Ident("TestStruct", out var ident))).Get(out var testStruct)
+        );
+
+        var diagnostics = new Mock<IDiagnostics>();
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(testStruct, result.StructDeclarations[ident]);
+    }
+
+    [Fact]
     public void StructDefinedInOtherScopeNotRecognized()
     {
         // {
@@ -844,7 +880,7 @@ public class NameResolutionTest
 
         diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()));
     }
-    
+
     [Fact]
     public void StructNameCollisionDetected()
     {
