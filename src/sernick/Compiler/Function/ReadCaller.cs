@@ -40,6 +40,7 @@ public sealed class ReadCaller : IFunctionCaller
 
         // Allocate slot for input value
         operations.Add(pushRsp);
+        operations.Add(Mem(rspRead).Write(0));
 
         // Arguments:
         // format string's address
