@@ -179,7 +179,7 @@ public static class TypeChecking
             // handle case where function is a special "new" function
 
             var functionCallIsANewFunctionCall =
-                Object.ReferenceEquals(
+                ReferenceEquals(
                 _nameResolution.CalledFunctionDeclarations[functionCallNode],
                 ExternalFunctionsInfo.ExternalFunctions[2].Definition);
             if (functionCallIsANewFunctionCall)
@@ -330,8 +330,7 @@ public static class TypeChecking
             var typeOfLeftSide = childrenTypes[node.Left];
 
             // we may additionally improve typeOfLeftSide if we have more type info on that
-            _nameResolution.AssignedVariableDeclarations.TryGetValue(node, out var variableDeclarationNode);
-            if (variableDeclarationNode != null)
+            if (_nameResolution.AssignedVariableDeclarations.TryGetValue(node, out var variableDeclarationNode))
             {
                 typeOfLeftSide = _memoizedDeclarationTypes[variableDeclarationNode];
             }
@@ -366,7 +365,7 @@ public static class TypeChecking
         public override Dictionary<AstNode, Type> VisitStructFieldInitializer(StructFieldInitializer node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
-            return CreateTypeInformation(node, childrenTypes[node.Value]);
+            return AddTypeInformation(childrenTypes, node, childrenTypes[node.Value]);
         }
 
         public override Dictionary<AstNode, Type> VisitStructDeclaration(StructDeclaration node, Type expectedReturnTypeOfReturnExpr)
