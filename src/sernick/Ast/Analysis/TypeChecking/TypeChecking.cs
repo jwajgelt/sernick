@@ -354,14 +354,17 @@ public static class TypeChecking
         public override Dictionary<AstNode, Type> VisitStructDeclaration(StructDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
-            var structTypeWithFieldTypes = new StructType(node.Name);
+            var structType = new StructType(node.Name);
             
-            return AddTypeInformation(childrenTypes, node, structTypeWithFieldTypes);
+            return AddTypeInformation(childrenTypes, node, structType);
         }
 
         public override Dictionary<AstNode, Type> VisitStructValue(StructValue node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var structType = new StructType(node.StructName);
+
+            return AddTypeInformation(childrenTypes, node, structType);
 
         }
 
