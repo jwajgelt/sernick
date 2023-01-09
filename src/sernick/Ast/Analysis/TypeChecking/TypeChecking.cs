@@ -380,6 +380,7 @@ public static class TypeChecking
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
             var structType = new StructType(node.StructName);
 
+            // TODO check fields, types, etc.
             return AddTypeInformation(childrenTypes, node, structType);
 
         }
@@ -429,7 +430,7 @@ public static class TypeChecking
             var structDeclaration = _nameResolution.StructDeclarations[structType.Struct];
 
             var fieldName = node.FieldName;
-            var fieldNameDeclaredInStruct = structDeclaration.Fields.Select(fieldDeclaration => fieldDeclaration.Name).Contains(fieldName);
+            var fieldNameDeclaredInStruct = structDeclaration.Fields.Select(fieldDeclaration => fieldDeclaration.Name.Name).Contains(fieldName.Name);
 
             if (!fieldNameDeclaredInStruct)
             {
