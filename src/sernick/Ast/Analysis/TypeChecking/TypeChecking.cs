@@ -351,6 +351,9 @@ public static class TypeChecking
         public override Dictionary<AstNode, Type> VisitIntLiteralValue(IntLiteralValue node, Type expectedReturnTypeOfReturnExpr) =>
             CreateTypeInformation<IntType>(node);
 
+        public override Dictionary<AstNode, Type> VisitNullPointerLiteralValue(NullPointerLiteralValue node, Type expectedReturnTypeOfReturnExpr) =>
+            CreateTypeInformation<NullPointerType>(node);
+
         public override Dictionary<AstNode, Type> VisitStructFieldInitializer(StructFieldInitializer node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
