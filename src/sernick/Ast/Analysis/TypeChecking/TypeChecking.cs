@@ -426,7 +426,7 @@ public static class TypeChecking
                 return AddTypeInformation<AnyType>(childrenTypes, node);
             }
 
-            return AddTypeInformation(childrenTypes, node, underlyingExpressionType);
+            return AddTypeInformation(childrenTypes, node, pointerType.Type);
 
         }
 
