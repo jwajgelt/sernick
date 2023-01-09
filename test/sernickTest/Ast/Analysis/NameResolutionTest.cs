@@ -991,4 +991,24 @@ public class NameResolutionTest
 
         diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()), Times.Exactly(2));
     }
+
+    [Fact]
+    public void DoesNothingWeirdOnFieldAccess()
+    {
+        // struct TestStruct {
+        //   field : Int
+        // }
+        // var a : TestStruct
+        // a.field
+        var tree = Program(
+            Struct("TestStruct").Field("field", Pointer(new IntType())),
+            Var("a", new StructType(Ident("TestStruct")), out var declaration),
+            Value("a", out var value).Field("field")
+        );
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.UsedVariableDeclarations[value]);
+    }
 }
