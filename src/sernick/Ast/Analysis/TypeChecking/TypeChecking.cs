@@ -61,6 +61,9 @@ public static class TypeChecking
                 if (declaredType != null && !CompatibleForAssigment(declaredType, rhsType))
                 {
                     _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.InitValue.LocationRange.Start));
+                }else if(declaredType == null)
+                {
+                    _diagnostics.Report(new TypeOrInitialValueShouldBePresentError(node.LocationRange.Start));
                 }
 
                 _memoizedDeclarationTypes[node] = declaredType ?? rhsType;
@@ -325,8 +328,15 @@ public static class TypeChecking
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
-            var variableDeclarationNode = _nameResolution.AssignedVariableDeclarations[node];
-            var typeOfLeftSide = _memoizedDeclarationTypes[variableDeclarationNode];
+            _nameResolution.AssignedVariableDeclarations.TryGetValue(node, out var variableDeclarationNode);
+            var typeOfLeftSide = childrenTypes[node.Left];
+
+            // we may additionally improve typeOfLeftSide if we have more type info on that
+            if(variableDeclarationNode != null)
+            {
+                typeOfLeftSide = _memoizedDeclarationTypes[variableDeclarationNode];
+            }
+
             var typeOfRightSide = childrenTypes[node.Right];
 
             if (!CompatibleForAssigment(typeOfLeftSide, typeOfRightSide))
