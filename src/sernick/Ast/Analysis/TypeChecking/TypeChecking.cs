@@ -334,10 +334,7 @@ public static class TypeChecking
                 _diagnostics.Report(new TypesMismatchError(typeOfLeftSide, typeOfRightSide, node.Right.LocationRange.Start));
             }
 
-            // TODO if rhs type is more specific than lhs type, should we change "typeOfLeftSide" to "typeOfRightSide"
-            // below, effectively being more efficient in inferring types?
-            // Example: assigning a null pointer to a variable of type Int*, currently we only store that the result
-            // is of type Int*, but we could be storing that the result is of type NULL_PTR, maybe preventing some bugs?
+            // Sometimes, rhs type is more specific than lhs type, but we deliberately ignore this information in the "return"
             return AddTypeInformation(childrenTypes, node, typeOfLeftSide);
         }
 
