@@ -106,34 +106,34 @@ public static class NameResolutionAlgorithm
             }
         }
 
+        // TODO: This is a temporary setup for transitioning away from the assumption that an assignment is associated with exactly one variable 
         public override NameResolutionVisitorResult VisitAssignment(Assignment node, IdentifiersNamespace identifiersNamespace)
         {
-            if (node.Left is not VariableValue { Identifier: var identifier })
-            {
-                throw new NotImplementedException();
-            }
+            var result = new NameResolutionResult();
 
-            try
+            if (node.Left is VariableValue { Identifier: var identifier })
             {
-                var declaration = identifiersNamespace.GetResolution(identifier);
-                if (declaration is VariableDeclaration variableDeclaration)
+                try
                 {
-                    var visitorResult = VisitAstNode(node, identifiersNamespace);
-                    return visitorResult with
+                    var declaration = identifiersNamespace.GetResolution(identifier);
+                    if (declaration is VariableDeclaration variableDeclaration)
                     {
-                        Result = visitorResult.Result.JoinWith(
-                            NameResolutionResult.OfAssignment(node, variableDeclaration))
-                    };
+                        result = NameResolutionResult.OfAssignment(node, variableDeclaration);
+                    }
+                    else
+                    {
+                        _diagnostics.Report(new NotAVariableError(identifier));
+                    }
                 }
+                catch (IdentifiersNamespace.NoSuchIdentifierException)
+                {
+                    _diagnostics.Report(new UndeclaredIdentifierError(identifier));
+                }
+            }
 
-                _diagnostics.Report(new NotAVariableError(identifier));
-                return VisitAstNode(node, identifiersNamespace);
-            }
-            catch (IdentifiersNamespace.NoSuchIdentifierException)
-            {
-                _diagnostics.Report(new UndeclaredIdentifierError(identifier));
-                return VisitAstNode(node, identifiersNamespace);
-            }
+            var visitorResult = VisitAstNode(node, identifiersNamespace);
+
+            return visitorResult with { Result = result.JoinWith(visitorResult.Result) };
         }
 
         public override NameResolutionVisitorResult VisitVariableValue(VariableValue node,

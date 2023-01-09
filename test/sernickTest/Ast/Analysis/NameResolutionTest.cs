@@ -922,4 +922,53 @@ public class NameResolutionTest
 
         diagnostics.Verify(d => d.Report(It.IsAny<MultipleDeclarationsError>()));
     }
+
+    [Fact]
+    public void AssignedVariableResolvedToUsedVariables()
+    {
+        // var x; x=1
+        var tree = Program(
+            Var("x", out var declaration),
+            Value("x", out var value).Assign(Literal(1))
+        );
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.UsedVariableDeclarations[value]);
+    }
+
+    [Fact]
+    public void AssignedPointerResolvedToUsedVariables()
+    {
+        // var x : *Int; *x=1
+        var tree = Program(
+            Var("x", Pointer(new IntType()), out var declaration),
+            Deref(Value("x", out var value)).Assign(Literal(1))
+        );
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declaration, result.UsedVariableDeclarations[value]);
+    }
+
+    [Fact]
+    public void AssignedMultipleVariablesResolvedToUsedVariables()
+    {
+        // var x;
+        // var y;
+        // {x; y} = 1 // this is invalid (?), but it's an example where there are two variables on the left of an assignment 
+        var tree = Program(
+            Var("x", out var declarationX),
+            Var("y", out var declarationY),
+            Block(Value("x", out var valueX), Value("y", out var valueY)).Assign(Literal(1))
+        );
+        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
+
+        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        Assert.Same(declarationX, result.UsedVariableDeclarations[valueX]);
+        Assert.Same(declarationY, result.UsedVariableDeclarations[valueY]);
+    }
 }
