@@ -971,8 +971,7 @@ public class NameResolutionTest
         Assert.Same(declarationX, result.UsedVariableDeclarations[valueX]);
         Assert.Same(declarationY, result.UsedVariableDeclarations[valueY]);
     }
-    
-    // NotAFunction tests
+
     [Fact]
     public void AccessToOtherScopeReported()
     {

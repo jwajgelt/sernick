@@ -102,6 +102,7 @@ public static class NameResolutionAlgorithm
             {
                 _diagnostics.Report(new UndeclaredIdentifierError(identifier));
             }
+
             return VisitAstNode(node, identifiersNamespace);
         }
 
@@ -124,7 +125,7 @@ public static class NameResolutionAlgorithm
                         _diagnostics.Report(new NotAVariableError(identifier));
                     }
                 }
-                catch (IdentifiersNamespace.NoSuchIdentifierException ignored)
+                catch (IdentifiersNamespace.NoSuchIdentifierException)
                 {
                     // the UnidentifiedIdentifier will be reported in subcall anyway
                 }
