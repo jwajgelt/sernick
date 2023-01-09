@@ -356,7 +356,7 @@ public static class TypeChecking
 
         public override Dictionary<AstNode, Type> VisitStructDeclaration(StructDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
-            var childrenTypes = VisitNodeChildren(node, new AnyType());
+            var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
             var structTypeWithFieldTypes = new StructType(node.Name)
             {
                 fieldTypes = node.Fields.ToDictionary(
@@ -367,14 +367,17 @@ public static class TypeChecking
             return AddTypeInformation(childrenTypes, node, structTypeWithFieldTypes);
         }
 
+        public override Dictionary<AstNode, Type> VisitStructValue(StructValue node, Type expectedReturnTypeOfReturnExpr)
+        {
+            var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+
+        }
+
         public override Dictionary<AstNode, Type> VisitFieldDeclaration(FieldDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
             return CreateTypeInformation(node, node.Type);
         }
 
-        // TODO can we assume that when VisitStructFieldAccess is called, the corresponding struct declaration
-        // has already been visited by VisitStructDeclaration???
-        // For now, let's assume that is has.
         public override Dictionary<AstNode, Type> VisitStructFieldAccess(StructFieldAccess node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
@@ -382,6 +385,8 @@ public static class TypeChecking
             var leftType = childrenTypes[node.Left];
             if (leftType is StructType structType)
             {
+                var structDeclaration = _nameResolution.StructDeclarations[structType.Struct];
+
                 var fieldName = node.FieldName;
                 if (structType.fieldTypes == null)
                 {
@@ -390,15 +395,16 @@ public static class TypeChecking
                 }
                 else
                 {
-                    var fieldNameDeclaredInStruct = structType.fieldTypes.ContainsKey(fieldName);
-
+                    var fieldNameDeclaredInStruct = structDeclaration.Fields.Select(fieldDeclaration => fieldDeclaration.Name).Contains(fieldName);
+                    
                     if (!fieldNameDeclaredInStruct)
                     {
                         _diagnostics.Report(new FieldNotPresentInStructError(leftType, node.FieldName, node.FieldName.LocationRange.Start));
                         return AddTypeInformation<AnyType>(childrenTypes, node);
                     }
 
-                    return CreateTypeInformation(node, structType.fieldTypes[fieldName]);
+                    var fieldType = structDeclaration.Fields.Where(fieldDeclaration => fieldDeclaration.Name == fieldName).First().Type;
+                    return CreateTypeInformation(node, fieldType);
                 }
             }
             else
