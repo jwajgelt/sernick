@@ -327,11 +327,10 @@ public static class TypeChecking
         public override Dictionary<AstNode, Type> VisitAssignment(Assignment node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
-
-            _nameResolution.AssignedVariableDeclarations.TryGetValue(node, out var variableDeclarationNode);
             var typeOfLeftSide = childrenTypes[node.Left];
 
             // we may additionally improve typeOfLeftSide if we have more type info on that
+            _nameResolution.AssignedVariableDeclarations.TryGetValue(node, out var variableDeclarationNode);
             if(variableDeclarationNode != null)
             {
                 typeOfLeftSide = _memoizedDeclarationTypes[variableDeclarationNode];
