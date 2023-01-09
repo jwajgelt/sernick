@@ -357,12 +357,7 @@ public static class TypeChecking
         public override Dictionary<AstNode, Type> VisitStructDeclaration(StructDeclaration node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
-            var structTypeWithFieldTypes = new StructType(node.Name)
-            {
-                fieldTypes = node.Fields.ToDictionary(
-                    keySelector: fieldDeclaration => fieldDeclaration.Name,
-                    elementSelector: fieldDeclaration => fieldDeclaration.Type)
-            };
+            var structTypeWithFieldTypes = new StructType(node.Name);
             
             return AddTypeInformation(childrenTypes, node, structTypeWithFieldTypes);
         }
@@ -388,24 +383,16 @@ public static class TypeChecking
                 var structDeclaration = _nameResolution.StructDeclarations[structType.Struct];
 
                 var fieldName = node.FieldName;
-                if (structType.fieldTypes == null)
+                var fieldNameDeclaredInStruct = structDeclaration.Fields.Select(fieldDeclaration => fieldDeclaration.Name).Contains(fieldName);
+                    
+                if (!fieldNameDeclaredInStruct)
                 {
-                    _diagnostics.Report(new NoTypeInformationAboutStructError(node.LocationRange.Start));
+                    _diagnostics.Report(new FieldNotPresentInStructError(leftType, node.FieldName, node.FieldName.LocationRange.Start));
                     return AddTypeInformation<AnyType>(childrenTypes, node);
                 }
-                else
-                {
-                    var fieldNameDeclaredInStruct = structDeclaration.Fields.Select(fieldDeclaration => fieldDeclaration.Name).Contains(fieldName);
-                    
-                    if (!fieldNameDeclaredInStruct)
-                    {
-                        _diagnostics.Report(new FieldNotPresentInStructError(leftType, node.FieldName, node.FieldName.LocationRange.Start));
-                        return AddTypeInformation<AnyType>(childrenTypes, node);
-                    }
 
-                    var fieldType = structDeclaration.Fields.Where(fieldDeclaration => fieldDeclaration.Name == fieldName).First().Type;
-                    return CreateTypeInformation(node, fieldType);
-                }
+                var fieldType = structDeclaration.Fields.Where(fieldDeclaration => fieldDeclaration.Name == fieldName).First().Type;
+                return CreateTypeInformation(node, fieldType);
             }
             else
             {

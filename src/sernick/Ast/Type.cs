@@ -34,8 +34,6 @@ public sealed record NullPointerType() : Type
 public sealed record StructType(Identifier Struct) : Type
 {
     public override string ToString() => $"{Struct.Name}";
-
-    public IReadOnlyDictionary<Identifier, Type>? fieldTypes;
 }
 
 /// <summary>
