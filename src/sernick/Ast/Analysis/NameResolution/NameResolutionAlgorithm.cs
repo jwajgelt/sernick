@@ -2,6 +2,7 @@ namespace sernick.Ast.Analysis.NameResolution;
 
 using Diagnostics;
 using Nodes;
+using Utility;
 using static ExternalFunctionsInfo;
 
 public static class NameResolutionAlgorithm
@@ -33,39 +34,40 @@ public static class NameResolutionAlgorithm
         /// </returns>
         protected override NameResolutionVisitorResult VisitAstNode(AstNode node, IdentifiersNamespace identifiersNamespace)
         {
-            return node.Children.Aggregate(
-                new NameResolutionVisitorResult(identifiersNamespace),
-                (result, next) =>
-                {
-                    var childResult = next.Accept(this, result.IdentifiersNamespace);
-                    return childResult with
-                    {
-                        Result = result.Result.JoinWith(childResult.Result)
-                    };
-                });
+            return VisitConsecutiveNodes(node.Children, identifiersNamespace);
         }
 
         public override NameResolutionVisitorResult VisitVariableDeclaration(VariableDeclaration node,
             IdentifiersNamespace identifiersNamespace)
         {
-            if (node.InitValue is null)
-            {
-                return new NameResolutionVisitorResult(TryAdd(identifiersNamespace, node));
-            }
+            var (result, updatedIdentifiers) = node.InitValue?.Accept(this, identifiersNamespace)
+                                               ?? new NameResolutionVisitorResult(identifiersNamespace);
+            var identifiers = updatedIdentifiers.TryAdd(node, _diagnostics);
 
-            var visitorResult = node.InitValue.Accept(this, identifiersNamespace);
-            var updatedIdentifiers = TryAdd(visitorResult.IdentifiersNamespace, node);
-            return visitorResult with { IdentifiersNamespace = updatedIdentifiers };
+            var matchedTypeStructs = node.Type.FindMatchedStructs(identifiersNamespace, _diagnostics);
+            return new(result.AddStructs(matchedTypeStructs), identifiers);
         }
+
         public override NameResolutionVisitorResult VisitFunctionDefinition(FunctionDefinition node,
             IdentifiersNamespace identifiersNamespace)
         {
-            var identifiersWithFunction = TryAdd(identifiersNamespace, node);
-            var identifiersWithParameters = node.Parameters.Aggregate(identifiersWithFunction.NewScope(),
-                TryAdd);
+            var identifiersWithFunction = identifiersNamespace.TryAdd(node, _diagnostics);
 
-            var visitorResult = node.Body.Inner.Accept(this, identifiersWithParameters);
-            return visitorResult with { IdentifiersNamespace = identifiersWithFunction };
+            var toVisit = node.Parameters.Append(node.Body.Inner);
+
+            var visitResult = VisitConsecutiveNodes(toVisit, identifiersWithFunction.NewScope());
+            var matchedReturnTypeStructs = node.ReturnType.FindMatchedStructs(identifiersNamespace, _diagnostics);
+            var nameResolutionResult = visitResult.Result.AddStructs(matchedReturnTypeStructs);
+            return new NameResolutionVisitorResult(nameResolutionResult, identifiersWithFunction);
+        }
+
+        public override NameResolutionVisitorResult VisitFunctionParameterDeclaration(FunctionParameterDeclaration node,
+            IdentifiersNamespace identifiersNamespace)
+        {
+            var matchedTypeStructs = node.Type.FindMatchedStructs(identifiersNamespace, _diagnostics);
+            var identifiers = identifiersNamespace.TryAdd(node, _diagnostics);
+            var result = NameResolutionResult.OfStructs(matchedTypeStructs);
+            return new(result, identifiers);
         }
 
         public override NameResolutionVisitorResult VisitCodeBlock(CodeBlock node, IdentifiersNamespace identifiersNamespace)
@@ -95,46 +97,47 @@ public static class NameResolutionAlgorithm
                 }
 
                 _diagnostics.Report(new NotAFunctionError(node.FunctionName));
-                return VisitAstNode(node, identifiersNamespace);
             }
             catch (IdentifiersNamespace.NoSuchIdentifierException)
             {
                 _diagnostics.Report(new UndeclaredIdentifierError(identifier));
-                return VisitAstNode(node, identifiersNamespace);
             }
+
+            return VisitAstNode(node, identifiersNamespace);
         }
 
+        // TODO: This is a temporary setup for transitioning away from the assumption that an assignment is associated with exactly one variable 
         public override NameResolutionVisitorResult VisitAssignment(Assignment node, IdentifiersNamespace identifiersNamespace)
         {
-            if (node.Left is not VariableValue { Identifier: var identifier })
-            {
-                throw new NotImplementedException();
-            }
+            var result = new NameResolutionResult();
 
-            try
+            if (node.Left is VariableValue { Identifier: var identifier })
             {
-                var declaration = identifiersNamespace.GetResolution(identifier);
-                if (declaration is VariableDeclaration variableDeclaration)
+                try
                 {
-                    var visitorResult = VisitAstNode(node, identifiersNamespace);
-                    return visitorResult with
+                    var declaration = identifiersNamespace.GetResolution(identifier);
+                    if (declaration is VariableDeclaration variableDeclaration)
                     {
-                        Result = visitorResult.Result.JoinWith(
-                            NameResolutionResult.OfAssignment(node, variableDeclaration))
-                    };
+                        result = NameResolutionResult.OfAssignment(node, variableDeclaration);
+                    }
+                    else
+                    {
+                        _diagnostics.Report(new NotAVariableError(identifier));
+                    }
                 }
+                catch (IdentifiersNamespace.NoSuchIdentifierException)
+                {
+                    // the UnidentifiedIdentifier will be reported in subcall anyway
+                }
+            }
 
-                _diagnostics.Report(new NotAVariableError(identifier));
-                return VisitAstNode(node, identifiersNamespace);
-            }
-            catch (IdentifiersNamespace.NoSuchIdentifierException)
-            {
-                _diagnostics.Report(new UndeclaredIdentifierError(identifier));
-                return VisitAstNode(node, identifiersNamespace);
-            }
+            var visitorResult = VisitAstNode(node, identifiersNamespace);
+
+            return visitorResult with { Result = result.JoinWith(visitorResult.Result) };
         }
 
-        public override NameResolutionVisitorResult VisitVariableValue(VariableValue node, IdentifiersNamespace identifiersNamespace)
+        public override NameResolutionVisitorResult VisitVariableValue(VariableValue node,
+            IdentifiersNamespace identifiersNamespace)
         {
             var identifier = node.Identifier;
             try
@@ -156,21 +159,97 @@ public static class NameResolutionAlgorithm
             }
         }
 
-        /// <summary>
-        /// Tries to add a new declaration to identifiers.
-        /// If collision occurs, reports it to _diagnostics and returns the previous set of identifiers.
-        /// </summary>
-        private IdentifiersNamespace TryAdd(IdentifiersNamespace identifiers, Declaration declaration)
+        public override NameResolutionVisitorResult VisitStructDeclaration(StructDeclaration node, IdentifiersNamespace identifiersNamespace)
         {
-            try
-            {
-                return identifiers.Add(declaration);
-            }
-            catch (IdentifiersNamespace.IdentifierCollisionException)
-            {
-                _diagnostics.Report(new MultipleDeclarationsError(identifiers.GetResolution(declaration.Name), declaration));
-                return identifiers;
-            }
+            var updatedIdentifiers = identifiersNamespace.TryAdd(node, _diagnostics);
+            return VisitAstNode(node, updatedIdentifiers);
         }
+
+        public override NameResolutionVisitorResult VisitFieldDeclaration(FieldDeclaration node,
+            IdentifiersNamespace identifiersNamespace)
+        {
+            var matchedTypeStructs = node.Type.FindMatchedStructs(identifiersNamespace, _diagnostics);
+            var result = NameResolutionResult.OfStructs(matchedTypeStructs);
+            return new(result, identifiersNamespace);
+        }
+
+        public override NameResolutionVisitorResult VisitStructValue(StructValue node,
+            IdentifiersNamespace identifiersNamespace)
+        {
+            var visitorResult = VisitAstNode(node, identifiersNamespace);
+            var possibleMatchedStruct = node.StructName.MatchStruct(identifiersNamespace, _diagnostics);
+            return visitorResult with { Result = visitorResult.Result.AddStructs(possibleMatchedStruct) };
+        }
+
+        private NameResolutionVisitorResult VisitConsecutiveNodes(IEnumerable<AstNode> nodes, IdentifiersNamespace identifiersNamespace)
+        {
+            return nodes.Aggregate(
+                new NameResolutionVisitorResult(identifiersNamespace),
+                (result, next) =>
+                {
+                    var childResult = next.Accept(this, result.IdentifiersNamespace);
+                    return childResult with
+                    {
+                        Result = result.Result.JoinWith(childResult.Result)
+                    };
+                });
+        }
+    }
+
+    /// <summary>
+    /// Tries to add a new declaration to identifiers.
+    /// If collision occurs, reports it to _diagnostics and returns the previous set of identifiers.
+    /// </summary>
+    private static IdentifiersNamespace TryAdd(this IdentifiersNamespace identifiers, Declaration declaration, IDiagnostics diagnostics)
+    {
+        try
+        {
+            return identifiers.Add(declaration);
+        }
+        catch (IdentifiersNamespace.IdentifierCollisionException)
+        {
+            diagnostics.Report(new MultipleDeclarationsError(identifiers.GetResolution(declaration.Name), declaration));
+            return identifiers;
+        }
+    }
+
+    /// <summary>
+    /// Finds all struct references in the type and returns their declarations
+    /// a visitor for this would be an overkill
+    /// </summary>
+    private static Dictionary<Identifier, StructDeclaration> FindMatchedStructs(this Type? type, IdentifiersNamespace identifiersNamespace, IDiagnostics diagnostics)
+    {
+        return type switch
+        {
+            StructType structType =>
+                structType.Struct.MatchStruct(identifiersNamespace, diagnostics),
+            PointerType pointerType =>
+                pointerType.Type.FindMatchedStructs(identifiersNamespace, diagnostics),
+            _ => new Dictionary<Identifier, StructDeclaration>(ReferenceEqualityComparer.Instance)
+        };
+    }
+
+    private static Dictionary<Identifier, StructDeclaration> MatchStruct(this Identifier identifier,
+        IdentifiersNamespace identifiersNamespace, IDiagnostics diagnostics)
+    {
+        try
+        {
+            var declaration = identifiersNamespace.GetResolution(identifier);
+            if (declaration is StructDeclaration structDeclaration)
+            {
+                return new Dictionary<Identifier, StructDeclaration>(ReferenceEqualityComparer.Instance)
+                {
+                    { identifier, structDeclaration }
+                };
+            }
+
+            diagnostics.Report(new NotATypeError(identifier));
+        }
+        catch (IdentifiersNamespace.NoSuchIdentifierException)
+        {
+            diagnostics.Report(new NotATypeError(identifier));
+        }
+
+        return new Dictionary<Identifier, StructDeclaration>(ReferenceEqualityComparer.Instance);
     }
 }

@@ -12,7 +12,7 @@ public sealed record MultipleDeclarationsError(Declaration Original, Declaration
 {
     public override string ToString()
     {
-        return $"Multiple declarations of identifier: {Original.Name}, locations: {Original.LocationRange.Start}, {Repeat.LocationRange.Start}";
+        return $"Name resolution error: multiple declarations of identifier: {Original.Name}, locations: {Original.LocationRange.Start}, {Repeat.LocationRange.Start}";
     }
 
     public bool Equals(MultipleDeclarationsError? other) => other is not null && ToString() == other.ToString();
@@ -23,7 +23,7 @@ public sealed record NotAFunctionError(Identifier Identifier) : NameResolutionEr
 {
     public override string ToString()
     {
-        return $"Identifier does not represent a function: {Identifier.Name}, location: {Identifier.LocationRange.Start}";
+        return $"Name resolution error: identifier does not represent a function: {Identifier.Name}, location: {Identifier.LocationRange.Start}";
     }
 
     public bool Equals(NotAFunctionError? other) => other is not null && ToString() == other.ToString();
@@ -34,7 +34,18 @@ public sealed record NotAVariableError(Identifier Identifier) : NameResolutionEr
 {
     public override string ToString()
     {
-        return $"Identifier does not represent a variable: {Identifier.Name}, location: {Identifier.LocationRange.Start}";
+        return $"Name resolution error: identifier does not represent a variable: {Identifier.Name}, location: {Identifier.LocationRange.Start}";
+    }
+
+    public bool Equals(NotAVariableError? other) => other is not null && ToString() == other.ToString();
+    public override int GetHashCode() => ToString().GetHashCode();
+}
+
+public sealed record NotATypeError(Identifier Identifier) : NameResolutionError(Identifier)
+{
+    public override string ToString()
+    {
+        return $"Name resolution error: identifier does not represent a struct type: {Identifier.Name}, location: {Identifier.LocationRange.Start}";
     }
 
     public bool Equals(NotAVariableError? other) => other is not null && ToString() == other.ToString();
@@ -45,7 +56,7 @@ public sealed record UndeclaredIdentifierError(Identifier Identifier) : NameReso
 {
     public override string ToString()
     {
-        return $"Undeclared identifier: {Identifier.Name}, location: {Identifier.LocationRange.Start}";
+        return $"Name resolution error: undeclared identifier: {Identifier.Name}, location: {Identifier.LocationRange.Start}";
     }
 
     public bool Equals(UndeclaredIdentifierError? other) => other is not null && ToString() == other.ToString();

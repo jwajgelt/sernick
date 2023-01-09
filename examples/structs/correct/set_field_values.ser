@@ -39,6 +39,8 @@ var outerStruct = OuterStruct {
     anotherField: 2
 };
 
+var innerStruct = outerStruct.inner;
+
 innerStruct.field = 3;
 outerStruct.inner.field = 5;
 outerStruct.inner = InnerStruct {

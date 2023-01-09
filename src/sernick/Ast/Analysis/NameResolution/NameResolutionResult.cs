@@ -10,6 +10,11 @@ using Utility;
 ///     Maps uses of variables to the declarations of these variables
 /// </param>
 /// <param name="AssignedVariableDeclarations">
+///     IMPORTANT NOTE: Only the simple assignments are in this map (x = 3)
+///     Other, like (*x = 3) are in UsedVariableDeclarations
+///     (since you probably had to descend into the left side anyway, this shouldn't be an issue)
+///     In future, we would like to remove this map and rely entirely on UsedVariableDeclarations
+/// 
 ///     Maps left-hand sides of assignments to variables
 ///     to the declarations of these variables.
 ///     NOTE: Since function parameters are non-assignable,
@@ -66,5 +71,18 @@ public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Dec
         {
             CalledFunctionDeclarations = new Dictionary<FunctionCall, FunctionDefinition> { { node, declaration } }
         };
+    }
+
+    public static NameResolutionResult OfStructs(IReadOnlyDictionary<Identifier, StructDeclaration> structs)
+    {
+        return new NameResolutionResult
+        {
+            StructDeclarations = structs
+        };
+    }
+
+    public NameResolutionResult AddStructs(IReadOnlyDictionary<Identifier, StructDeclaration> structs)
+    {
+        return this with { StructDeclarations = StructDeclarations.JoinWith(structs, ReferenceEqualityComparer.Instance) };
     }
 }
