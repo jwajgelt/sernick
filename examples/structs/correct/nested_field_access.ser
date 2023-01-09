@@ -1,0 +1,22 @@
+﻿// correct initialization during initialization
+
+struct InnerStruct {
+    field: Int
+};
+
+struct OuterStruct {
+    inner: InnerStruct,
+    anotherField: Int
+};
+
+var outerStruct = OuterStruct {
+    inner: InnerStruct {
+        field: 1
+    },
+    anotherField: 2
+};
+
+var innerValue = outerStruct.inner;
+var innerField = innerValue.field;
+var val1 = outerStruct.inner.field;
+var val2 = outerStruct.anotherField;

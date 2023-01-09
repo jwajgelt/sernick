@@ -1,0 +1,12 @@
+﻿// operations on null should throw errors in runtime not during compilation
+
+var nullPtr: *Int = null;
+var intVal: Int = *nullPtr;
+
+struct TestStruct {
+    field: Int
+};
+
+var testPtr: *TestStruct = null;
+testPtr.field = 2;
+intVal = testPtr.field;

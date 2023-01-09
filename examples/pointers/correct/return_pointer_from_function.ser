@@ -1,0 +1,20 @@
+﻿// perform operations on pointer returned from function
+
+struct TestStruct {
+    field: Int
+};
+
+fun getStruct(returnNull: Bool): *TestStruct {
+    return if(returnNull) {
+        null
+    } else {
+        new( TestStruct {
+            field: 1
+        });
+    }
+}
+
+getStruct(false).field = 2;
+var testPtr = getStruct(true);
+var testStruct = *getStruct(true);
+var fieldValue = getStruct(false).field;

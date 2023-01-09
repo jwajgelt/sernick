@@ -1,0 +1,6 @@
+﻿// assign pointer to type value
+
+var value = 5;
+var intPtr = new(1);
+
+value = intPtr;
