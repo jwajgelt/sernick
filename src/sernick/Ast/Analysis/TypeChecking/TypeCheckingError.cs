@@ -105,6 +105,14 @@ public sealed record CannotDereferenceExpressionError(Type InferredExpressionTyp
     }
 }
 
+public sealed record CannotAutoDereferenceNotAStructPointer(PointerType PointerType, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"Pointer of type \"${PointerType}\" cannot be auto-dereferenced as it is not a struct pointer, at: {Location}";
+    }
+}
+
 // TODO figure out if we should keep this error, since it's more like an internal one, for debugging
 public sealed record NoTypeInformationAboutStructError(ILocation Location) : TypeCheckingErrorBase
 {

@@ -376,29 +376,53 @@ public static class TypeChecking
         public override Dictionary<AstNode, Type> VisitStructFieldAccess(StructFieldAccess node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
-
             var leftType = childrenTypes[node.Left];
-            if (leftType is StructType structType)
+
+            // handle auto-dereference of struct pointers e.g. structPointer.field to be equivalent to *structPointer.field
+            if(leftType is PointerType pointerType)
             {
-                var structDeclaration = _nameResolution.StructDeclarations[structType.Struct];
-
-                var fieldName = node.FieldName;
-                var fieldNameDeclaredInStruct = structDeclaration.Fields.Select(fieldDeclaration => fieldDeclaration.Name).Contains(fieldName);
-                    
-                if (!fieldNameDeclaredInStruct)
-                {
-                    _diagnostics.Report(new FieldNotPresentInStructError(leftType, node.FieldName, node.FieldName.LocationRange.Start));
-                    return AddTypeInformation<AnyType>(childrenTypes, node);
-                }
-
-                var fieldType = structDeclaration.Fields.Where(fieldDeclaration => fieldDeclaration.Name == fieldName).First().Type;
-                return CreateTypeInformation(node, fieldType);
+                return HandleAutomaticStructPointerDereference(node, pointerType, expectedReturnTypeOfReturnExpr, childrenTypes);
+            }
+            else if (leftType is StructType structType)
+            {
+                return HandleRegularStructFieldAccess(node, structType, expectedReturnTypeOfReturnExpr, childrenTypes);
             }
             else
             {
                 _diagnostics.Report(new NotAStructTypeError(leftType, node.Left.LocationRange.Start));
                 return AddTypeInformation<AnyType>(childrenTypes, node);
             }
+        }
+
+        private Dictionary<AstNode, Type> HandleAutomaticStructPointerDereference(StructFieldAccess node, PointerType nodeType, Type expectedReturnTypeOfReturnExpr, Dictionary<AstNode, Type> childrenTypes)
+        {
+            nodeType.Deconstruct(out Type underlyingType);
+            if (underlyingType is StructType structType)
+            {
+                return HandleRegularStructFieldAccess(node, structType, expectedReturnTypeOfReturnExpr, childrenTypes);
+            }
+            else
+            {
+                _diagnostics.Report(new CannotAutoDereferenceNotAStructPointer(nodeType, node.LocationRange.Start));
+                return AddTypeInformation<AnyType>(childrenTypes, node);
+            }
+        }
+
+        private Dictionary<AstNode, Type> HandleRegularStructFieldAccess(StructFieldAccess node, StructType structType, Type expectedReturnTypeOfReturnExpr, Dictionary<AstNode, Type> childrenTypes)
+        {
+            var structDeclaration = _nameResolution.StructDeclarations[structType.Struct];
+
+            var fieldName = node.FieldName;
+            var fieldNameDeclaredInStruct = structDeclaration.Fields.Select(fieldDeclaration => fieldDeclaration.Name).Contains(fieldName);
+
+            if (!fieldNameDeclaredInStruct)
+            {
+                _diagnostics.Report(new FieldNotPresentInStructError(structType, node.FieldName, node.FieldName.LocationRange.Start));
+                return AddTypeInformation<AnyType>(childrenTypes, node);
+            }
+
+            var fieldType = structDeclaration.Fields.Where(fieldDeclaration => fieldDeclaration.Name == fieldName).First().Type;
+            return CreateTypeInformation(node, fieldType);
         }
 
         public override Dictionary<AstNode, Type> VisitPointerDereference(PointerDereference node, Type expectedReturnTypeOfReturnExpr)
