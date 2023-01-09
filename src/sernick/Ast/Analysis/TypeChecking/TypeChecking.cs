@@ -413,8 +413,7 @@ public static class TypeChecking
 
         private Dictionary<AstNode, Type> HandleAutomaticStructPointerDereference(StructFieldAccess node, PointerType nodeType, Dictionary<AstNode, Type> childrenTypes)
         {
-            nodeType.Deconstruct(out var underlyingType);
-            if (underlyingType is StructType structType)
+            if (nodeType.Type is StructType structType)
             {
                 return HandleRegularStructFieldAccess(node, structType, childrenTypes);
             }
