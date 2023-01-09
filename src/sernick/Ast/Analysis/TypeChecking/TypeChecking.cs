@@ -58,7 +58,7 @@ public static class TypeChecking
             if (node.InitValue != null)
             {
                 var rhsType = childrenTypes[node.InitValue];
-                if (declaredType != null && !Same(declaredType, rhsType))
+                if (declaredType != null && !CompatibleForAssigment(declaredType, rhsType))
                 {
                     _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.InitValue.LocationRange.Start));
                 }
@@ -92,7 +92,7 @@ public static class TypeChecking
             if (node.DefaultValue != null)
             {
                 var defaultValueType = childrenTypes[node.DefaultValue];
-                if (!Same(defaultValueType, node.Type))
+                if (!CompatibleForAssigment(defaultValueType, node.Type))
                 {
                     _diagnostics.Report(new TypesMismatchError(node.Type, defaultValueType, node.DefaultValue.LocationRange.Start));
                 }
@@ -502,6 +502,7 @@ public static class TypeChecking
             // first, handle some special cases
             if (rhsType is NullPointerType && lhsType is PointerType)
             {
+                System.Console.WriteLine("xdd");
                 return true;
             }
 
