@@ -97,13 +97,12 @@ public static class NameResolutionAlgorithm
                 }
 
                 _diagnostics.Report(new NotAFunctionError(node.FunctionName));
-                return VisitAstNode(node, identifiersNamespace);
             }
             catch (IdentifiersNamespace.NoSuchIdentifierException)
             {
                 _diagnostics.Report(new UndeclaredIdentifierError(identifier));
-                return VisitAstNode(node, identifiersNamespace);
             }
+            return VisitAstNode(node, identifiersNamespace);
         }
 
         // TODO: This is a temporary setup for transitioning away from the assumption that an assignment is associated with exactly one variable 
@@ -125,9 +124,9 @@ public static class NameResolutionAlgorithm
                         _diagnostics.Report(new NotAVariableError(identifier));
                     }
                 }
-                catch (IdentifiersNamespace.NoSuchIdentifierException)
+                catch (IdentifiersNamespace.NoSuchIdentifierException ignored)
                 {
-                    _diagnostics.Report(new UndeclaredIdentifierError(identifier));
+                    // the UnidentifiedIdentifier will be reported in subcall anyway
                 }
             }
 

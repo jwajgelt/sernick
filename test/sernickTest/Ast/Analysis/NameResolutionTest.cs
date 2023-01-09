@@ -971,4 +971,25 @@ public class NameResolutionTest
         Assert.Same(declarationX, result.UsedVariableDeclarations[valueX]);
         Assert.Same(declarationY, result.UsedVariableDeclarations[valueY]);
     }
+    
+    // NotAFunction tests
+    [Fact]
+    public void AccessToOtherScopeReported()
+    {
+        //  {
+        //    var x;
+        //  }
+        //  x = x + 1
+        var tree = Program(
+            Block(
+                Var("x")
+                ),
+            "x".Assign(Value("x").Plus(1))
+            );
+        var diagnostics = new Mock<IDiagnostics>();
+
+        NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<UndeclaredIdentifierError>()), Times.Exactly(2));
+    }
 }
