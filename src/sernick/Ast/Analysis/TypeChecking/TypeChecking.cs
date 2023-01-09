@@ -61,7 +61,8 @@ public static class TypeChecking
                 if (declaredType != null && !CompatibleForAssigment(declaredType, rhsType))
                 {
                     _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.InitValue.LocationRange.Start));
-                }else if(declaredType == null)
+                }
+                else if (declaredType == null)
                 {
                     _diagnostics.Report(new TypeOrInitialValueShouldBePresentError(node.LocationRange.Start));
                 }
@@ -323,7 +324,6 @@ public static class TypeChecking
             return result;
         }
 
-        // TODO https://github.com/jwajgelt/sernick/pull/283#discussion_r1064158212
         public override Dictionary<AstNode, Type> VisitAssignment(Assignment node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
@@ -331,7 +331,7 @@ public static class TypeChecking
 
             // we may additionally improve typeOfLeftSide if we have more type info on that
             _nameResolution.AssignedVariableDeclarations.TryGetValue(node, out var variableDeclarationNode);
-            if(variableDeclarationNode != null)
+            if (variableDeclarationNode != null)
             {
                 typeOfLeftSide = _memoizedDeclarationTypes[variableDeclarationNode];
             }
@@ -373,7 +373,7 @@ public static class TypeChecking
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
             var structType = new StructType(node.Name);
-            
+
             return AddTypeInformation(childrenTypes, node, structType);
         }
 
@@ -397,13 +397,13 @@ public static class TypeChecking
             var leftType = childrenTypes[node.Left];
 
             // handle auto-dereference of struct pointers e.g. structPointer.field to be equivalent to *structPointer.field
-            if(leftType is PointerType pointerType)
+            if (leftType is PointerType pointerType)
             {
-                return HandleAutomaticStructPointerDereference(node, pointerType, expectedReturnTypeOfReturnExpr, childrenTypes);
+                return HandleAutomaticStructPointerDereference(node, pointerType, childrenTypes);
             }
             else if (leftType is StructType structType)
             {
-                return HandleRegularStructFieldAccess(node, structType, expectedReturnTypeOfReturnExpr, childrenTypes);
+                return HandleRegularStructFieldAccess(node, structType, childrenTypes);
             }
             else
             {
@@ -412,12 +412,12 @@ public static class TypeChecking
             }
         }
 
-        private Dictionary<AstNode, Type> HandleAutomaticStructPointerDereference(StructFieldAccess node, PointerType nodeType, Type expectedReturnTypeOfReturnExpr, Dictionary<AstNode, Type> childrenTypes)
+        private Dictionary<AstNode, Type> HandleAutomaticStructPointerDereference(StructFieldAccess node, PointerType nodeType, Dictionary<AstNode, Type> childrenTypes)
         {
-            nodeType.Deconstruct(out Type underlyingType);
+            nodeType.Deconstruct(out var underlyingType);
             if (underlyingType is StructType structType)
             {
-                return HandleRegularStructFieldAccess(node, structType, expectedReturnTypeOfReturnExpr, childrenTypes);
+                return HandleRegularStructFieldAccess(node, structType, childrenTypes);
             }
             else
             {
@@ -426,7 +426,7 @@ public static class TypeChecking
             }
         }
 
-        private Dictionary<AstNode, Type> HandleRegularStructFieldAccess(StructFieldAccess node, StructType structType, Type expectedReturnTypeOfReturnExpr, Dictionary<AstNode, Type> childrenTypes)
+        private Dictionary<AstNode, Type> HandleRegularStructFieldAccess(StructFieldAccess node, StructType structType, Dictionary<AstNode, Type> childrenTypes)
         {
             var structDeclaration = _nameResolution.StructDeclarations[structType.Struct];
 
@@ -517,11 +517,6 @@ public static class TypeChecking
 
             // defer to "Same" in general case
             return Same(lhsType, rhsType);
-        }
-
-        private static bool IsPointerType(Type type)
-        {
-            return (type is PointerType);
         }
     }
 }
