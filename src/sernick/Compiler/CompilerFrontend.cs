@@ -1,5 +1,6 @@
 namespace sernick.Compiler;
 
+using Ast.Analysis;
 using Ast.Analysis.CallGraph;
 using Ast.Analysis.NameResolution;
 using Ast.Analysis.TypeChecking;
@@ -54,6 +55,7 @@ public static class CompilerFrontend
         ThrowIfErrorsOccurred(diagnostics);
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        InstallBuiltinFunctions(variableAccessMap);
 
         if (ast is not FunctionDefinition main)
         {
@@ -64,6 +66,15 @@ public static class CompilerFrontend
         ThrowIfErrorsOccurred(diagnostics);
 
         return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, variableAccessMap);
+    }
+
+    private static void InstallBuiltinFunctions(VariableAccessMap variableAccessMap)
+    {
+        // add built-in functions to function analysis structures
+        foreach (var externalFunction in ExternalFunctionsInfo.ExternalFunctions)
+        {
+            variableAccessMap.AddFun(externalFunction.Definition);
+        }
     }
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>

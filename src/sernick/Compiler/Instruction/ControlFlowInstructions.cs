@@ -2,18 +2,20 @@ namespace sernick.Compiler.Instruction;
 
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
+using Function;
 
 public abstract record TransferControlInstruction(Label Location) : IInstruction
 {
-    public IEnumerable<Register> RegistersDefined => Enumerable.Empty<Register>();
+    public abstract IEnumerable<Register> RegistersDefined { get; }
 
-    public IEnumerable<Register> RegistersUsed => Enumerable.Empty<Register>();
+    public abstract IEnumerable<Register> RegistersUsed { get; }
 
-    public bool PossibleFollow => false;
+    public abstract bool PossibleFollow { get; }
 
-    public Label PossibleJump => Location;
+    public abstract Label? PossibleJump { get; }
 
     public bool IsCopy => false;
+
     public IInstruction MapRegisters(IReadOnlyDictionary<Register, Register> map) => this;
 
     public abstract string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping);
@@ -21,6 +23,14 @@ public abstract record TransferControlInstruction(Label Location) : IInstruction
 
 public sealed record CallInstruction(Label Location) : TransferControlInstruction(Location)
 {
+    public override IEnumerable<Register> RegistersDefined => Convention.CallerToSave;
+
+    public override IEnumerable<Register> RegistersUsed => Convention.ArgumentRegisters;
+
+    public override bool PossibleFollow => true;
+
+    public override Label? PossibleJump => null;
+
     public override string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
         return $"\tcall\t{Location.Value}";
@@ -29,6 +39,14 @@ public sealed record CallInstruction(Label Location) : TransferControlInstructio
 
 public sealed record JmpInstruction(Label Location) : TransferControlInstruction(Location)
 {
+    public override IEnumerable<Register> RegistersDefined => Enumerable.Empty<Register>();
+
+    public override IEnumerable<Register> RegistersUsed => Enumerable.Empty<Register>();
+
+    public override bool PossibleFollow => false;
+
+    public override Label PossibleJump => Location;
+
     public override string ToAsm(IReadOnlyDictionary<Register, HardwareRegister> registerMapping)
     {
         return $"\tjmp\t{Location.Value}";

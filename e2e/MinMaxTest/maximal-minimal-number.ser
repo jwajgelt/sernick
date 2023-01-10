@@ -1,0 +1,31 @@
+// Input -- two lines
+// First line N -- natural number
+// Second line -- N numbers a_1, ... a_n
+// Output -- minimal and maximal of a_1, ..., a_n
+
+const n = read(); // Also assume n is >= 1
+
+const firstNumber = read();
+var maxNumber = firstNumber;
+var minNumber = firstNumber;
+n = n - 1;
+
+loop {
+    if(n == 0){
+        break;
+    }else{
+        n = n - 1;
+    }
+    
+    var nextNumber = read();
+
+    if(maxNumber < nextNumber){
+        maxNumber = nextNumber;
+    }
+    if(minNumber > nextNumber){
+        minNumber = nextNumber;
+    }
+}
+
+write(minNumber);
+write(maxNumber);

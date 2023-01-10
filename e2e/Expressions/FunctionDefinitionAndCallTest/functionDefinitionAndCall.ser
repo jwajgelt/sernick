@@ -1,0 +1,6 @@
+var shouldBe41 = {
+    fun return41(): Int { return 41; }
+    return41()
+};
+
+write(shouldBe41);

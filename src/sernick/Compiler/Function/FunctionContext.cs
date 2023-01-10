@@ -32,7 +32,7 @@ public sealed class FunctionContext : IFunctionContext
     {
         Label = label;
         ParentContext = parent;
-        Depth = (parent?.Depth + 1) ?? 0;
+        Depth = parent?.Depth + 1 ?? 0;
         ValueIsReturned = returnsValue;
 
         _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
@@ -69,15 +69,6 @@ public sealed class FunctionContext : IFunctionContext
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
     {
         var operations = new List<CodeTreeNode>();
-
-        // Caller-saved registers
-        var callerSavedMap = new Dictionary<HardwareRegister, Register>(ReferenceEqualityComparer.Instance);
-        foreach (var reg in CallerToSave)
-        {
-            var tempReg = new Register();
-            callerSavedMap[reg] = tempReg;
-            operations.Add(Reg(tempReg).Write(Reg(reg).Read()));
-        }
 
         Register rsp = HardwareRegister.RSP;
         Register rax = HardwareRegister.RAX;
@@ -125,23 +116,17 @@ public sealed class FunctionContext : IFunctionContext
         // Remove arguments from stack (we already returned from call)
         operations.Add(Reg(rsp).Write(rspRead + POINTER_SIZE * stackArgs.Count));
 
-        // If value is returned, then put it from RAX to virtual register
-        CodeTreeValueNode? returnValueLocation = null;
-        if (ValueIsReturned)
+        if (!ValueIsReturned)
         {
-            var returnValueRegister = new Register();
-            var raxRead = Reg(rax).Read();
-            operations.Add(Reg(returnValueRegister).Write(raxRead));
-            returnValueLocation = Reg(returnValueRegister).Read();
+            return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations),
+                null);
         }
 
-        // Retrieve values of caller-saved registers
-        foreach (var reg in CallerToSave)
-        {
-            var tempReg = callerSavedMap[reg];
-            var tempVal = Reg(tempReg).Read();
-            operations.Add(Reg(reg).Write(tempVal));
-        }
+        // If value is returned, then put it from RAX to virtual register
+        var returnValueRegister = new Register();
+        var raxRead = Reg(rax).Read();
+        operations.Add(Reg(returnValueRegister).Write(raxRead));
+        CodeTreeValueNode returnValueLocation = Reg(returnValueRegister).Read();
 
         return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations), returnValueLocation);
     }
@@ -205,6 +190,12 @@ public sealed class FunctionContext : IFunctionContext
         if (valToReturn != null)
         {
             operations.Add(Reg(rax).Write(valToReturn));
+        }
+
+        // Make main return 0
+        if (_parentContext == null)
+        {
+            operations.Add(Reg(rax).Write(0));
         }
 
         // Restore old display value

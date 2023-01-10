@@ -76,35 +76,44 @@ public class Register
 public class HardwareRegister : Register
 {
     private readonly string _label;
-    protected HardwareRegister(string label)
+    protected HardwareRegister(string label, string quadWord, string doubleWord, string word, string b)
     {
         _label = label;
+        QuadWord = quadWord;
+        DoubleWord = doubleWord;
+        Word = word;
+        Byte = b;
     }
     public override string ToString() => _label;
+
+    public string QuadWord { get; }
+    public string DoubleWord { get; }
+    public string Word { get; }
+    public string Byte { get; }
 
     public bool Equals(HardwareRegister? other) => _label.Equals(other?._label);
     public override bool Equals(object? obj) => obj is HardwareRegister other && Equals(other);
     public override int GetHashCode() => _label.GetHashCode();
 
-    public static readonly HardwareRegister RAX = new("RAX");
-    public static readonly HardwareRegister RBX = new("RBX");
-    public static readonly HardwareRegister RCX = new("RCX");
-    public static readonly HardwareRegister RDX = new("RDX");
+    public static readonly HardwareRegister RAX = new("RAX", "rax", "eax", "ax", "al");
+    public static readonly HardwareRegister RBX = new("RBX", "rbx", "ebx", "bx", "bl");
+    public static readonly HardwareRegister RCX = new("RCX", "rcx", "ecx", "cx", "cl");
+    public static readonly HardwareRegister RDX = new("RDX", "rdx", "edx", "dx", "dl");
 
-    public static readonly HardwareRegister RSP = new("RSP");
-    public static readonly HardwareRegister RBP = new("RBP");
+    public static readonly HardwareRegister RSP = new("RSP", "rsp", "esp", "sp", "spl");
+    public static readonly HardwareRegister RBP = new("RBP", "rbp", "ebp", "bp", "bpl");
 
-    public static readonly HardwareRegister RDI = new("RDI");
-    public static readonly HardwareRegister RSI = new("RSI");
+    public static readonly HardwareRegister RDI = new("RDI", "rdi", "edi", "di", "dil");
+    public static readonly HardwareRegister RSI = new("RSI", "rsi", "esi", "si", "sil");
 
-    public static readonly HardwareRegister R8 = new("R8");
-    public static readonly HardwareRegister R9 = new("R9");
-    public static readonly HardwareRegister R10 = new("R10");
-    public static readonly HardwareRegister R11 = new("R11");
-    public static readonly HardwareRegister R12 = new("R12");
-    public static readonly HardwareRegister R13 = new("R13");
-    public static readonly HardwareRegister R14 = new("R14");
-    public static readonly HardwareRegister R15 = new("R15");
+    public static readonly HardwareRegister R8 = new("R8", "r8", "r8d", "r8w", "r8b");
+    public static readonly HardwareRegister R9 = new("R9", "r9", "r9d", "r9w", "r9b");
+    public static readonly HardwareRegister R10 = new("R10", "r10", "r10d", "r10w", "r10b");
+    public static readonly HardwareRegister R11 = new("R11", "r11", "r11d", "r11w", "r11b");
+    public static readonly HardwareRegister R12 = new("R12", "r12", "r12d", "r12w", "r12b");
+    public static readonly HardwareRegister R13 = new("R13", "r13", "r13d", "r13w", "r13b");
+    public static readonly HardwareRegister R14 = new("R14", "r14", "r14d", "r14w", "r14b");
+    public static readonly HardwareRegister R15 = new("R15", "r15", "r15d", "r15w", "r15b");
 }
 
 public sealed record RegisterRead(Register Register) : CodeTreeValueNode

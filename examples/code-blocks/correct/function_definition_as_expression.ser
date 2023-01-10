@@ -1,0 +1,4 @@
+// this should compile, I can't think of another way to test it
+var a = (
+    fun foo(): Int { return 42; }
+);

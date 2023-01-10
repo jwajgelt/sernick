@@ -4,7 +4,6 @@ using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 using static Compiler.PlatformConstants;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
-using static Convention;
 using static Helpers;
 
 public sealed class ReadCaller : IFunctionCaller
@@ -21,15 +20,6 @@ public sealed class ReadCaller : IFunctionCaller
 
         var operations = new List<CodeTreeNode>();
 
-        // Caller-saved registers
-        var callerSavedMap = new Dictionary<HardwareRegister, Register>(ReferenceEqualityComparer.Instance);
-        foreach (var reg in CallerToSave)
-        {
-            var tempReg = new Register();
-            callerSavedMap[reg] = tempReg;
-            operations.Add(Reg(tempReg).Write(Reg(reg).Read()));
-        }
-
         Register rsp = HardwareRegister.RSP;
         var rspRead = Reg(rsp).Read();
         var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
@@ -40,6 +30,7 @@ public sealed class ReadCaller : IFunctionCaller
 
         // Allocate slot for input value
         operations.Add(pushRsp);
+        operations.Add(Mem(rspRead).Write(0));
 
         // Arguments:
         // format string's address
@@ -52,7 +43,7 @@ public sealed class ReadCaller : IFunctionCaller
         operations.Add(tmpRsp.Write(rspRead));
         operations.Add(Reg(rsp).Write(rspRead & -2 * POINTER_SIZE));
 
-        // Performing actual call (puts return addess on stack and jumps)
+        // Performing actual call (puts return address on stack and jumps)
         operations.Add(new FunctionCall(this));
 
         // Restore stack pointer
@@ -65,14 +56,6 @@ public sealed class ReadCaller : IFunctionCaller
 
         // Free stack output slot + format string slot
         operations.Add(Reg(rsp).Write(rspRead + 2 * POINTER_SIZE));
-
-        // Retrieve values of caller-saved registers
-        foreach (var reg in CallerToSave)
-        {
-            var tempReg = callerSavedMap[reg];
-            var tempVal = Reg(tempReg).Read();
-            operations.Add(Reg(reg).Write(tempVal));
-        }
 
         return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations), returnValueLocation);
     }

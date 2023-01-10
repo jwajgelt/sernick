@@ -49,8 +49,8 @@ public static class CompilerBackend
             .Concat(functionCodeTreeMap
                 .SelectMany((funcDef, codeTree) =>
                 {
-                    IReadOnlyList<IAsmable> asm = functionContextMap[funcDef].Label.Enumerate()
-                        .Concat(linearizator.Linearize(CfgCompressor.CompressPaths(codeTree)))
+                    IReadOnlyList<IAsmable> asm = linearizator
+                        .Linearize(codeTree, functionContextMap[funcDef].Label)
                         .ToList();
                     var (interferenceGraph, copyGraph) = LivenessAnalyzer.Process(asm);
                     var regAllocation = regAllocator.Process(interferenceGraph, copyGraph);
@@ -60,26 +60,16 @@ public static class CompilerBackend
                     {
                         regAllocation = spilledRegAllocator.Process(interferenceGraph, copyGraph);
                         (asm, completeRegAllocation) = spillsRegAllocator.Process(asm, functionContextMap[funcDef], regAllocation);
-                        foreach (var asmable in asm)
-                        {
-                            try
-                            {
-                                asmable.ToAsm(completeRegAllocation);
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine(asmable);
-                                Console.WriteLine(e);
-                                throw;
-                            }
-                        }
                     }
                     else
                     {
                         completeRegAllocation = regAllocation!;
                     }
 
-                    return asm.Select(asmable => asmable.ToAsm(completeRegAllocation));
+                    return asm
+                        // filter out `mov reg, reg` instructions
+                        .Where(asmable => !asmable.IsNoop(completeRegAllocation))
+                        .Select(asmable => asmable.ToAsm(completeRegAllocation));
                 }))
             .Append(displayTable.ToAsm(ImmutableDictionary<Register, HardwareRegister>.Empty));
 
