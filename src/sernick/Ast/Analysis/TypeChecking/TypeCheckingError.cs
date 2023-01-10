@@ -17,6 +17,14 @@ public sealed record TypesMismatchError(Type Required, Type Provided, ILocation 
     }
 }
 
+public sealed record NotAStructTypeError(Type Provided, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"Type is not a struct type: \"{Provided}\" at {Location}";
+    }
+}
+
 public sealed record InferredBadFunctionReturnType(Type Declared, Type Inferred, ILocation Location) : TypeCheckingErrorBase
 {
     public override string ToString()
@@ -86,5 +94,21 @@ public sealed record FieldNotPresentInStructError(Type Struct, Identifier Field,
     public override string ToString()
     {
         return $"Struct \"{Struct}\" does not contain field \"{Field.Name}\" provided at {Location}";
+    }
+}
+
+public sealed record CannotDereferenceExpressionError(Type InferredExpressionType, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"Attempted to dereference expression of type \"{InferredExpressionType}\" which is not of pointer type, at: {Location}";
+    }
+}
+
+public sealed record CannotAutoDereferenceNotAStructPointer(PointerType PointerType, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"Pointer of type \"${PointerType}\" cannot be auto-dereferenced as it is not a struct pointer, at: {Location}";
     }
 }

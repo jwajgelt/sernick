@@ -26,6 +26,11 @@ public sealed record PointerType(Type Type) : Type
     public override string ToString() => $"*{Type}";
 }
 
+public sealed record NullPointerType() : Type
+{
+    public override string ToString() => "NullPointer";
+}
+
 public sealed record StructType(Identifier Struct) : Type
 {
     public override string ToString() => $"{Struct.Name}";

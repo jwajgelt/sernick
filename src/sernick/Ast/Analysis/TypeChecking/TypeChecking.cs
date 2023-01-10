@@ -58,9 +58,13 @@ public static class TypeChecking
             if (node.InitValue != null)
             {
                 var rhsType = childrenTypes[node.InitValue];
-                if (declaredType != null && !Same(declaredType, rhsType))
+                if (declaredType != null && !CompatibleForAssigment(declaredType, rhsType))
                 {
                     _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.InitValue.LocationRange.Start));
+                }
+                else if (declaredType == null)
+                {
+                    _diagnostics.Report(new TypeOrInitialValueShouldBePresentError(node.LocationRange.Start));
                 }
 
                 _memoizedDeclarationTypes[node] = declaredType ?? rhsType;
@@ -92,7 +96,7 @@ public static class TypeChecking
             if (node.DefaultValue != null)
             {
                 var defaultValueType = childrenTypes[node.DefaultValue];
-                if (!Same(defaultValueType, node.Type))
+                if (!CompatibleForAssigment(defaultValueType, node.Type))
                 {
                     _diagnostics.Report(new TypesMismatchError(node.Type, defaultValueType, node.DefaultValue.LocationRange.Start));
                 }
@@ -172,7 +176,21 @@ public static class TypeChecking
                 }
             }
 
-            return AddTypeInformation(childrenTypes, functionCallNode, declaredReturnType);
+            // handle case where function is a special "new" function
+
+            var functionCallIsANewFunctionCall =
+                ReferenceEquals(
+                _nameResolution.CalledFunctionDeclarations[functionCallNode],
+                ExternalFunctionsInfo.ExternalFunctions[2].Definition);
+            if (functionCallIsANewFunctionCall)
+            {
+                var inferredArgumentType = childrenTypes[actualArguments.First()];
+                return AddTypeInformation(childrenTypes, functionCallNode, new PointerType(inferredArgumentType));
+            }
+            else
+            {
+                return AddTypeInformation(childrenTypes, functionCallNode, declaredReturnType);
+            }
         }
 
         public override Dictionary<AstNode, Type> VisitContinueStatement(ContinueStatement node, Type expectedReturnTypeOfReturnExpr) =>
@@ -250,7 +268,6 @@ public static class TypeChecking
             {
                 _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
 
-                // TODO does it make sense to return anything here? maybe a Unit type? But it could propagate the error up the tree 
                 return AddTypeInformation<UnitType>(childrenTypes, node);
             }
 
@@ -309,15 +326,22 @@ public static class TypeChecking
         public override Dictionary<AstNode, Type> VisitAssignment(Assignment node, Type expectedReturnTypeOfReturnExpr)
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var typeOfLeftSide = childrenTypes[node.Left];
 
-            var variableDeclarationNode = _nameResolution.AssignedVariableDeclarations[node];
-            var typeOfLeftSide = _memoizedDeclarationTypes[variableDeclarationNode];
+            // we may additionally improve typeOfLeftSide if we have more type info on that
+            if (_nameResolution.AssignedVariableDeclarations.TryGetValue(node, out var variableDeclarationNode))
+            {
+                typeOfLeftSide = _memoizedDeclarationTypes[variableDeclarationNode];
+            }
+
             var typeOfRightSide = childrenTypes[node.Right];
-            if (!Same(typeOfLeftSide, typeOfRightSide))
+
+            if (!CompatibleForAssigment(typeOfLeftSide, typeOfRightSide))
             {
                 _diagnostics.Report(new TypesMismatchError(typeOfLeftSide, typeOfRightSide, node.Right.LocationRange.Start));
             }
 
+            // Sometimes, rhs type is more specific than lhs type, but we deliberately ignore this information in the "return"
             return AddTypeInformation(childrenTypes, node, typeOfLeftSide);
         }
 
@@ -333,6 +357,104 @@ public static class TypeChecking
 
         public override Dictionary<AstNode, Type> VisitIntLiteralValue(IntLiteralValue node, Type expectedReturnTypeOfReturnExpr) =>
             CreateTypeInformation<IntType>(node);
+
+        public override Dictionary<AstNode, Type> VisitNullPointerLiteralValue(NullPointerLiteralValue node, Type expectedReturnTypeOfReturnExpr) =>
+            CreateTypeInformation<NullPointerType>(node);
+
+        public override Dictionary<AstNode, Type> VisitStructFieldInitializer(StructFieldInitializer node, Type expectedReturnTypeOfReturnExpr)
+        {
+            var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            return AddTypeInformation(childrenTypes, node, childrenTypes[node.Value]);
+        }
+
+        public override Dictionary<AstNode, Type> VisitStructDeclaration(StructDeclaration node, Type expectedReturnTypeOfReturnExpr)
+        {
+            var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+
+            return AddTypeInformation<UnitType>(childrenTypes, node);
+        }
+
+        public override Dictionary<AstNode, Type> VisitStructValue(StructValue node, Type expectedReturnTypeOfReturnExpr)
+        {
+            var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var structType = new StructType(node.StructName);
+
+            // TODO check fields, types, etc.
+            return AddTypeInformation(childrenTypes, node, structType);
+
+        }
+
+        public override Dictionary<AstNode, Type> VisitFieldDeclaration(FieldDeclaration node, Type expectedReturnTypeOfReturnExpr)
+        {
+            return CreateTypeInformation(node, node.Type);
+        }
+
+        public override Dictionary<AstNode, Type> VisitStructFieldAccess(StructFieldAccess node, Type expectedReturnTypeOfReturnExpr)
+        {
+            var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var leftType = childrenTypes[node.Left];
+
+            // handle auto-dereference of struct pointers e.g. structPointer.field to be equivalent to *structPointer.field
+            if (leftType is PointerType pointerType)
+            {
+                return HandleAutomaticStructPointerDereference(node, pointerType, childrenTypes);
+            }
+            else if (leftType is StructType structType)
+            {
+                return HandleRegularStructFieldAccess(node, structType, childrenTypes);
+            }
+            else
+            {
+                _diagnostics.Report(new NotAStructTypeError(leftType, node.Left.LocationRange.Start));
+                return AddTypeInformation<AnyType>(childrenTypes, node);
+            }
+        }
+
+        private Dictionary<AstNode, Type> HandleAutomaticStructPointerDereference(StructFieldAccess node, PointerType nodeType, Dictionary<AstNode, Type> childrenTypes)
+        {
+            if (nodeType.Type is StructType structType)
+            {
+                return HandleRegularStructFieldAccess(node, structType, childrenTypes);
+            }
+            else
+            {
+                _diagnostics.Report(new CannotAutoDereferenceNotAStructPointer(nodeType, node.LocationRange.Start));
+                return AddTypeInformation<AnyType>(childrenTypes, node);
+            }
+        }
+
+        private Dictionary<AstNode, Type> HandleRegularStructFieldAccess(StructFieldAccess node, StructType structType, Dictionary<AstNode, Type> childrenTypes)
+        {
+            var structDeclaration = _nameResolution.StructDeclarations[structType.Struct];
+
+            var fieldName = node.FieldName;
+            var fieldNameDeclaredInStruct = structDeclaration.Fields.Select(fieldDeclaration => fieldDeclaration.Name.Name).Contains(fieldName.Name);
+
+            if (!fieldNameDeclaredInStruct)
+            {
+                _diagnostics.Report(new FieldNotPresentInStructError(structType, node.FieldName, node.FieldName.LocationRange.Start));
+                return AddTypeInformation<AnyType>(childrenTypes, node);
+            }
+
+            var fieldType = structDeclaration.Fields.Where(fieldDeclaration => fieldDeclaration.Name == fieldName).First().Type;
+            return CreateTypeInformation(node, fieldType);
+        }
+
+        public override Dictionary<AstNode, Type> VisitPointerDereference(PointerDereference node, Type expectedReturnTypeOfReturnExpr)
+        {
+            var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
+            var underlyingExpressionType = childrenTypes[node.Pointer];
+
+            // TODO check if we have tests for that
+            if (underlyingExpressionType is not PointerType pointerType)
+            {
+                _diagnostics.Report(new CannotDereferenceExpressionError(underlyingExpressionType, node.LocationRange.Start));
+                return AddTypeInformation<AnyType>(childrenTypes, node);
+            }
+
+            return AddTypeInformation(childrenTypes, node, pointerType.Type);
+
+        }
 
         /// <summary>
         /// Since we want to do a bottom-up recursion, but we're calling our node.Accept functions
@@ -366,19 +488,32 @@ public static class TypeChecking
         private static TypeInformation AddTypeInformation(TypeInformation types, AstNode node, Type type) =>
             new(types, ReferenceEqualityComparer.Instance) { { node, type } };
 
-        private static bool Same(Type t1, Type t2)
+        private static bool Same(Type lhsType, Type rhsType)
         {
-            if (t1 is AnyType)
+            if (lhsType is AnyType)
             {
                 return true;
             }
 
-            if (t2 is AnyType)
+            if (rhsType is AnyType)
             {
                 return true;
             }
 
-            return t1 == t2;
+            return lhsType == rhsType;
+        }
+
+        private static bool CompatibleForAssigment(Type lhsType, Type rhsType)
+        {
+            // first, handle some special cases
+            if (rhsType is NullPointerType && lhsType is PointerType)
+            {
+                System.Console.WriteLine("xdd");
+                return true;
+            }
+
+            // defer to "Same" in general case
+            return Same(lhsType, rhsType);
         }
     }
 }
