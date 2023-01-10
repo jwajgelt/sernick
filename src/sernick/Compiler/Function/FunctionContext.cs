@@ -193,7 +193,7 @@ public sealed class FunctionContext : IFunctionContext
         }
 
         // Make main return 0
-        if (_parentContext == null)
+        if (ParentContext == null)
         {
             operations.Add(Reg(rax).Write(0));
         }
