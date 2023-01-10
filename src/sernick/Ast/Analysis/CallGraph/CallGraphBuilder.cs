@@ -48,7 +48,7 @@ public record struct CallGraph(
 
         return new CallGraph(graph);
     }
-};
+}
 
 /// <summary>
 ///     Static class with Process method, which extracts the call graph from a given AST.

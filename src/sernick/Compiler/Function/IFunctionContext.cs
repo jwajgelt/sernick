@@ -9,6 +9,7 @@ public interface IFunctionContext : IFunctionCaller
 
     public IReadOnlyList<SingleExitNode> GenerateEpilogue(CodeTreeValueNode? valToReturn);
 
+    public IFunctionContext? ParentContext { get; }
     public int Depth { get; }
     public bool ValueIsReturned { get; }
 

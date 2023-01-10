@@ -27,6 +27,8 @@ public sealed class FakeFunctionContext : IFunctionContext
         throw new NotImplementedException();
     }
 
+    public IFunctionContext? ParentContext => null;
+
     public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable)
     {
         return new FakeVariableRead(variable);
