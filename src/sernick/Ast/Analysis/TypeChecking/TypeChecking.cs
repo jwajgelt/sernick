@@ -268,7 +268,6 @@ public static class TypeChecking
             {
                 _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
 
-                // TODO does it make sense to return anything here? maybe a Unit type? But it could propagate the error up the tree 
                 return AddTypeInformation<UnitType>(childrenTypes, node);
             }
 
