@@ -528,37 +528,37 @@ public class TypeCheckingTest
 
     public class TestStruct
     {
-        private static readonly StructDeclaration structList = Struct("List")
+        private static StructDeclaration DeclareStructList() => Struct("List")
             .Field("val", new IntType())
             .Field("next", new PointerType(new StructType(Ident("List"))));
 
-        private static readonly StructDeclaration structTuple = Struct("Tuple")
+        private static StructDeclaration DeclareStructTuple() => Struct("Tuple")
             .Field("intVal", new IntType())
             .Field("boolVal", new BoolType());
 
-        private static readonly StructDeclaration structCombined = Struct("Combined")
+        private static StructDeclaration DeclareStructCombined() => Struct("Combined")
             .Field("list", new StructType(Ident("List")))
             .Field("tuple", new StructType(Ident("Tuple")));
 
-        private static readonly StructValue listDefault = StructValue("List")
+        private static StructValue GetListDefault() => StructValue("List")
             .Field("val", Literal(0))
             .Field("next", Null);
 
-        private static readonly StructValue tupleDefault = StructValue("Tuple")
+        private static StructValue GetTupleDefault() => StructValue("Tuple")
             .Field("intVal", Literal(0))
             .Field("boolVal", Literal(false));
 
-        private static readonly StructValue combinedDefault = StructValue("Combined")
-            .Field("list", listDefault)
-            .Field("tuple", tupleDefault);
+        private static StructValue GetCombinedDefault() => StructValue("Combined")
+            .Field("list", GetListDefault())
+            .Field("tuple", GetTupleDefault());
 
         [Fact(Skip = "Type checking doesn't handle structs")]
         public void StructAllocationAndDereference()
         {
-            var alloc = Alloc(combinedDefault);
+            var alloc = Alloc(GetCombinedDefault());
             var deref = Deref(alloc);
             var tree = Block(
-                structList, structTuple, structCombined,
+                DeclareStructList(), DeclareStructTuple(), DeclareStructCombined(),
                 deref
             );
 
@@ -575,17 +575,16 @@ public class TypeCheckingTest
         public void FieldAccessAndAssignment_OK()
         {
             var tree = Block(
-                structList, structTuple, structCombined,
-                new VariableDeclaration(Ident("x"), new StructType(Ident("Combined")), combinedDefault, false, loc),
-                new VariableDeclaration(Ident("y"), new StructType(Ident("Tuple")), tupleDefault, false, loc),
-                Value("x").Field("tuple").Assign(tupleDefault),
+                DeclareStructList(), DeclareStructTuple(), DeclareStructCombined(),
+                new VariableDeclaration(Ident("x"), new StructType(Ident("Combined")), GetCombinedDefault(), false, loc),
+                new VariableDeclaration(Ident("y"), new StructType(Ident("Tuple")), GetTupleDefault(), false, loc),
+                Value("x").Field("tuple").Assign(GetTupleDefault()),
                 Value("x").Field("list").Field("val").Assign(Literal(1)),
-                Value("x").Field("list").Field("next").Assign(Alloc(listDefault)),
-                Deref(Value("x").Field("list").Field("next")).Assign(listDefault),
+                Value("x").Field("list").Field("next").Assign(Alloc(GetListDefault())),
+                Deref(Value("x").Field("list").Field("next")).Assign(GetListDefault()),
                 Deref(Value("x").Field("list").Field("next")).Field("val").Assign(Literal(2)),
                 Value("y").Field("boolVal").Assign(Literal(true))
             );
-
             var diagnostics = new Mock<IDiagnostics>();
             diagnostics.SetupAllProperties();
 
@@ -599,8 +598,8 @@ public class TypeCheckingTest
         public void FieldAccessAutoDereference()
         {
             var tree = Block(
-                structList, structTuple, structCombined,
-                new VariableDeclaration(Ident("x"), new StructType(Ident("Combined")), combinedDefault, false, loc),
+                DeclareStructList(), DeclareStructTuple(), DeclareStructCombined(),
+                new VariableDeclaration(Ident("x"), new StructType(Ident("Combined")), GetCombinedDefault(), false, loc),
                 Value("x").Field("list").Field("next").Field("next").Field("val").Assign(Literal(2))
             );
 
@@ -617,8 +616,8 @@ public class TypeCheckingTest
         public void FieldAccess_BAD()
         {
             var tree = Block(
-                structList, structTuple, structCombined,
-                new VariableDeclaration(Ident("x"), new StructType(Ident("Combined")), combinedDefault, false, loc),
+                DeclareStructList(), DeclareStructTuple(), DeclareStructCombined(),
+                new VariableDeclaration(Ident("x"), new StructType(Ident("Combined")), GetCombinedDefault(), false, loc),
                 Value("x").Field("tuple").Field("val").Assign(Literal(1))
             );
 
@@ -635,9 +634,9 @@ public class TypeCheckingTest
         public void FieldAssignment_BAD()
         {
             var tree = Block(
-                structList, structTuple, structCombined,
-                new VariableDeclaration(Ident("x"), new StructType(Ident("Combined")), combinedDefault, false, loc),
-                Value("x").Field("list").Field("next").Assign(listDefault)
+                DeclareStructList(), DeclareStructTuple(), DeclareStructCombined(),
+                new VariableDeclaration(Ident("x"), new StructType(Ident("Combined")), GetCombinedDefault(), false, loc),
+                Value("x").Field("list").Field("next").Assign(GetListDefault())
             );
 
             var diagnostics = new Mock<IDiagnostics>();
@@ -653,8 +652,8 @@ public class TypeCheckingTest
         public void NullPointerInStruct()
         {
             var tree = Block(
-                structList, structTuple, structCombined,
-                new VariableDeclaration(Ident("x"), new StructType(Ident("List")), listDefault, false, loc),
+                DeclareStructList(), DeclareStructTuple(), DeclareStructCombined(),
+                new VariableDeclaration(Ident("x"), new StructType(Ident("List")), GetListDefault(), false, loc),
                 Value("x").Field("next").Assign(Null)
             );
 
