@@ -39,4 +39,4 @@ msbuild.wrn
 # .asm, .o and .out files produced during the compilation
 *.asm
 *.o
-*.out
+# *.out we cannot do this, since test files also have .out extension
