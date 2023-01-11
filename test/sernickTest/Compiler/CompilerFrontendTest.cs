@@ -1,10 +1,12 @@
 namespace sernickTest.Compiler;
 
 using Helpers;
+using Input;
 using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis;
 using sernick.Ast.Analysis.TypeChecking;
+using sernick.Ast.Analysis.VariableAccess;
 using sernick.Ast.Analysis.VariableInitialization;
 using sernick.Ast.Nodes;
 using sernick.Compiler;
@@ -129,6 +131,13 @@ public class CompilerFrontendTest
             !fileInfo.Equals(("comments-and-separators", "multi_line_comment")) &&
             !fileInfo.Equals(("comments-and-separators", "multi_line_in_command_comment")) &&
             !fileInfo.Equals(("comments-and-separators", "nested_comment")));
+
+    // these variables can be used to initialize fields in expected errors that are not used in the equals method
+    private static readonly Expression
+        ignoredExpression = new EmptyExpression((new FakeLocation(), new FakeLocation()));
+
+    private static readonly CodeBlock ignoredCodeBlock =
+        new(ignoredExpression, (new FakeLocation(), new FakeLocation()));
 
     public static readonly (
         string group,
@@ -453,11 +462,59 @@ public class CompilerFrontendTest
             }),
             ("function_naming_readonly_arguments", "nested_function_modifying_const_global", new IDiagnosticItem[]
             {
-                // modifying const, not detected yet
+                new InnerFunctionConstVariableWriteError(
+                    new FunctionDefinition(
+                        new Identifier("", (FileUtility.LocationAt(1, 1), FileUtility.LocationAt(1, 1))),
+                        Array.Empty<FunctionParameterDeclaration>(),
+                        new UnitType(),
+                        ignoredCodeBlock,
+                        (FileUtility.LocationAt(1, 1), FileUtility.LocationAt(11, 2))),
+                    new VariableDeclaration(
+                        new Identifier("globalScoped", (FileUtility.LocationAt(1, 7), FileUtility.LocationAt(1, 19))),
+                        new IntType(),
+                        null,
+                        true,
+                        (FileUtility.LocationAt(1, 1), FileUtility.LocationAt(1, 29))
+                        ),
+                    new FunctionDefinition(
+                        new Identifier("inner", (FileUtility.LocationAt(4, 6), FileUtility.LocationAt(4, 11))),
+                        Array.Empty<FunctionParameterDeclaration>(),
+                        new UnitType(),
+                        ignoredCodeBlock,
+                        (FileUtility.LocationAt(4, 2), FileUtility.LocationAt(8, 3))),
+                    new Assignment(
+                        new Identifier("globalScoped", (FileUtility.LocationAt(6, 3), FileUtility.LocationAt(6, 15))),
+                        ignoredExpression,
+                        (FileUtility.LocationAt(6, 3), FileUtility.LocationAt(6, 19)))
+                    )
             }),
             ("function_naming_readonly_arguments", "nested_function_modifying_const_outer_scoped", new IDiagnosticItem[]
             {
-                // modifying const, not detected yet
+                new InnerFunctionConstVariableWriteError(
+                    new FunctionDefinition(
+                        new Identifier("outer", (FileUtility.LocationAt(2, 5), FileUtility.LocationAt(2, 10))),
+                        Array.Empty<FunctionParameterDeclaration>(),
+                        new UnitType(),
+                        ignoredCodeBlock,
+                        (FileUtility.LocationAt(2, 1), FileUtility.LocationAt(11, 2))),
+                    new VariableDeclaration(
+                        new Identifier("outerScoped", (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 19))),
+                        new IntType(),
+                        null,
+                        true,
+                        (FileUtility.LocationAt(3, 2), FileUtility.LocationAt(3, 29))
+                    ),
+                    new FunctionDefinition(
+                        new Identifier("inner", (FileUtility.LocationAt(4, 6), FileUtility.LocationAt(4, 11))),
+                        Array.Empty<FunctionParameterDeclaration>(),
+                        new UnitType(),
+                        ignoredCodeBlock,
+                        (FileUtility.LocationAt(4, 2), FileUtility.LocationAt(8, 3))),
+                    new Assignment(
+                        new Identifier("outerScoped", (FileUtility.LocationAt(6, 3), FileUtility.LocationAt(6, 14))),
+                        ignoredExpression,
+                        (FileUtility.LocationAt(6, 3), FileUtility.LocationAt(6, 18)))
+                )
             }),
             ("function_naming_readonly_arguments", "pascal_case_function_argument", new IDiagnosticItem[]
             {

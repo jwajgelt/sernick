@@ -1,6 +1,7 @@
 namespace sernick.Ast.Analysis.VariableAccess;
 
 using System.Diagnostics;
+using Diagnostics;
 using NameResolution;
 using Nodes;
 using Utility;
@@ -66,9 +67,9 @@ public static class VariableAccessMapPreprocess
     ///     Constructs VariableAccessMap from AST and NameResolution.
     ///     The top node of AST should be a program node (main function declaration)
     /// </summary>
-    public static VariableAccessMap Process(AstNode ast, NameResolutionResult nameResolution)
+    public static VariableAccessMap Process(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
     {
-        var visitor = new VariableAccessVisitor(nameResolution);
+        var visitor = new VariableAccessVisitor(nameResolution, diagnostics);
         visitor.VisitAstTree(ast, null);
         return visitor.VariableAccess;
     }
@@ -79,13 +80,17 @@ public static class VariableAccessMapPreprocess
     private sealed class VariableAccessVisitor : AstVisitor<Unit, FunctionDefinition?>
     {
         private readonly NameResolutionResult _nameResolution;
+        private readonly Dictionary<VariableDeclaration, FunctionDefinition> _variableDeclaringFunction;
+        private readonly IDiagnostics _diagnostics;
 
         public VariableAccessMap VariableAccess { get; }
 
-        public VariableAccessVisitor(NameResolutionResult nameResolution)
+        public VariableAccessVisitor(NameResolutionResult nameResolution, IDiagnostics diagnostics)
         {
             _nameResolution = nameResolution;
+            _diagnostics = diagnostics;
             VariableAccess = new VariableAccessMap();
+            _variableDeclaringFunction = new Dictionary<VariableDeclaration, FunctionDefinition>(ReferenceEqualityComparer.Instance);
         }
 
         protected override Unit VisitAstNode(AstNode node, FunctionDefinition? currentFun)
@@ -115,7 +120,18 @@ public static class VariableAccessMapPreprocess
         public override Unit VisitAssignment(Assignment assignment, FunctionDefinition? currentFun)
         {
             Debug.Assert(currentFun != null);
-            VariableAccess.AddVariableWrite(currentFun, _nameResolution.AssignedVariableDeclarations[assignment]);
+            var declaration = _nameResolution.AssignedVariableDeclarations[assignment];
+
+            if (declaration.IsConst)
+            {
+                var declaringFunction = _variableDeclaringFunction[declaration];
+                if (declaringFunction != currentFun)
+                {
+                    _diagnostics.Report(new InnerFunctionConstVariableWriteError(declaringFunction, declaration, currentFun, assignment));
+                }
+            }
+
+            VariableAccess.AddVariableWrite(currentFun, declaration);
             return assignment.Right.Accept(this, currentFun);
         }
 
@@ -126,6 +142,8 @@ public static class VariableAccessMapPreprocess
             {
                 VariableAccess.AddVariableWrite(currentFun, declaration);
             }
+
+            _variableDeclaringFunction[declaration] = currentFun;
 
             return declaration.InitValue?.Accept(this, currentFun) ?? Unit.I;
         }
