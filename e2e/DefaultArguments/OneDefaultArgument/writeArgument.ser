@@ -1,0 +1,13 @@
+fun returnArgument(a: Int = 91): Int {
+    return a;
+}
+
+var a = read();
+
+var shouldBe91 = returnArgument();
+var xA = returnArgument(a);
+var shouldBe91Again = returnArgument(); // just to test if subsequent calls are also OK
+
+write(shouldBe91);
+write(xA);
+write(shouldBe91Again);
