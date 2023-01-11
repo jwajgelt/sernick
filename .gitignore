@@ -40,3 +40,6 @@ msbuild.wrn
 *.asm
 *.o
 *.out
+# In E2E, our output files are also using .out extension
+# We cannot ignore the "expected" output
+!e2e/**/Expected/*.out
