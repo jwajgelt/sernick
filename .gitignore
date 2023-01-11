@@ -39,4 +39,7 @@ msbuild.wrn
 # .asm, .o and .out files produced during the compilation
 *.asm
 *.o
-# *.out we cannot do this, since test files also have .out extension
+*.out
+# In E2E, our output files are also using .out extension
+# We cannot ignore the "expected" output
+!e2e/**/Expected/*.out
