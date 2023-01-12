@@ -6,27 +6,27 @@ fun booleanOr(a: Bool = false, b : Bool = true): Bool {
     return (a || b);
 }
 
-var aInt = read();
-var aBool: Bool;
-if(aInt == 0){
-    aBool = false;
-}else{
-    aBool = true;
+fun intToBool(i: Int): Bool {
+    if(i == 0) return false;
+    return true;
 }
+
+fun boolToInt(b : Bool): Int {
+    if(b == false) return 0;
+    return 1;
+}
+
+var aInt = read();
+var aBool: Bool = intToBool(aInt);
 
 var bInt = read();
-var bBool: Bool;
-if(bInt == 0){
-    bBool = false;
-}else{
-    bBool = true;
-}
+var bBool: Bool = intToBool(bInt);
 
 
-write(booleanAnd()); // false
-write(booleanAnd(aBool)); // a && false == false
-write(booleanAnd(aBool, bBool)); // a && b
+write(boolToInt(booleanAnd())); // false
+write(boolToInt(booleanAnd(aBool))); // a && false == false
+write(boolToInt(booleanAnd(aBool, bBool))); // a && b
 
-write(booleanOr()); // true
-write(booleanOr(aBool)); // a || true == true
-write(booleanOr(aBool, bBool)); // a || b
+write(boolToInt(booleanOr())); // true
+write(boolToInt(booleanOr(aBool))); // a || true == true
+write(boolToInt(booleanOr(aBool, bBool))); // a || b
