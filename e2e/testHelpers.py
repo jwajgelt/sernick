@@ -46,6 +46,7 @@ def compile_sernick_files(dir: str, compiler_path: str = None)-> List[str]:
             compiled_files.append(drop_extension(file_path) + ".out")
         except Exception as e:
             logging.error("Could not compile {} ❌".format(file_path), exc_info=e)
+            raise e
 
     logging.info('Compiled the following files: {}'.format(compiled_files))
     return compiled_files
