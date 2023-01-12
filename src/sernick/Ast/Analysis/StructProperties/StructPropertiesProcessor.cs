@@ -1,7 +1,8 @@
-namespace sernick.Ast.Analysis;
+namespace sernick.Ast.Analysis.StructProperties;
 
 using NameResolution;
 using Nodes;
+using sernick.Diagnostics;
 using Utility;
 using static Compiler.PlatformConstants;
 
@@ -26,19 +27,21 @@ public record struct StructProperties(
 
 public static class StructPropertiesProcessor
 {
-    public static StructProperties Process(AstNode ast, NameResolutionResult nameResolution)
+    public static StructProperties Process(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
     {
-        var visitor = new StructPropertiesVisitor(nameResolution.StructDeclarations);
+        var visitor = new StructPropertiesVisitor(nameResolution.StructDeclarations, diagnostics);
         return visitor.VisitAstTree(ast, new());
     }
 
     private sealed class StructPropertiesVisitor : AstVisitor<StructProperties, StructProperties>
     {
         private readonly IReadOnlyDictionary<Identifier, StructDeclaration> _structDeclarations;
+        private readonly IDiagnostics _diagnostics;
 
-        public StructPropertiesVisitor(IReadOnlyDictionary<Identifier, StructDeclaration> structDeclarations)
+        public StructPropertiesVisitor(IReadOnlyDictionary<Identifier, StructDeclaration> structDeclarations, IDiagnostics diagnostics)
         {
             _structDeclarations = structDeclarations;
+            _diagnostics = diagnostics;
         }
 
         protected override StructProperties VisitAstNode(AstNode node, StructProperties currentResult)
@@ -63,13 +66,10 @@ public static class StructPropertiesProcessor
                 fieldOffsets[field] = offset;
                 if (field.Type is StructType type)
                 {
-                    if (!_structDeclarations.TryGetValue(type.Struct, out var fieldTypeDeclaration))
-                    {
-                        throw new Exception($"Struct declaration not found in name resolution for \"{field.Name.Name} : {type.Struct.Name}\"");
-                    }
+                    var fieldTypeDeclaration = _structDeclarations[type.Struct];
                     if (!currentResult.StructSizes.TryGetValue(fieldTypeDeclaration, out var structSize))
                     {
-                        throw new Exception($"Struct size not found for \"{field.Name.Name} : {type.Struct.Name}\" (referencing itself)");
+                        _diagnostics.Report(new StructPropertiesProcessorError(field.Name.Name, type));
                     }
                     offset += structSize;
                 }

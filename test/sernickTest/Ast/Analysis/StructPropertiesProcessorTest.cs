@@ -3,6 +3,7 @@ namespace sernickTest.Ast.Analysis;
 using sernick.Ast;
 using sernick.Ast.Analysis;
 using sernick.Ast.Analysis.NameResolution;
+using sernick.Ast.Analysis.StructProperties;
 using sernick.Ast.Nodes;
 using sernickTest.Diagnostics;
 using static Helpers.AstNodesExtensions;
@@ -45,8 +46,9 @@ public class StructPropertiesProcessorTest
             listDeclaration
         );
 
-        var nameResolution = NameResolutionAlgorithm.Process(tree, new FakeDiagnostics());
-        var result = StructPropertiesProcessor.Process(tree, nameResolution);
+        var diagnostics = new FakeDiagnostics();
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics);
+        var result = StructPropertiesProcessor.Process(tree, nameResolution, diagnostics);
 
         Assert.Equal(16, result.StructSizes[listDeclaration]);
         Assert.Equal(0, result.FieldOffsets[listDeclaration.Fields.ElementAt(0)]);
@@ -63,8 +65,9 @@ public class StructPropertiesProcessorTest
             listDeclaration, tupleDeclaration, combinedDeclaration
         );
 
-        var nameResolution = NameResolutionAlgorithm.Process(tree, new FakeDiagnostics());
-        var result = StructPropertiesProcessor.Process(tree, nameResolution);
+        var diagnostics = new FakeDiagnostics();
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics);
+        var result = StructPropertiesProcessor.Process(tree, nameResolution, diagnostics);
 
         Assert.Equal(16, result.StructSizes[listDeclaration]);
         Assert.Equal(0, result.FieldOffsets[listDeclaration.Fields.ElementAt(0)]);
@@ -90,7 +93,10 @@ public class StructPropertiesProcessorTest
             declaration
         );
 
-        var nameResolution = NameResolutionAlgorithm.Process(tree, new FakeDiagnostics());
-        Assert.ThrowsAny<Exception>(() => StructPropertiesProcessor.Process(tree, nameResolution));
+        var diagnostics = new FakeDiagnostics();
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics);
+        StructPropertiesProcessor.Process(tree, nameResolution, diagnostics);
+
+        Assert.Contains(new StructPropertiesProcessorError("s", new StructType(Ident("S"))), diagnostics.DiagnosticItems);
     }
 }
