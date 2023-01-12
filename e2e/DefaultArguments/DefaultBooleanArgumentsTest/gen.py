@@ -49,9 +49,10 @@ def create_file():
 
 def create_files(num_files = 5):
     for _ in range(num_files):
-        create_file(n=None)
+        create_file()
 
 def create_tests():
     create_files(num_files=5)
 
+remove_and_create_folders()
 create_tests()
