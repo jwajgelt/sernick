@@ -1,4 +1,4 @@
-namespace sernick.Ast.Analysis.CallGraph;
+namespace sernick.Ast.Analysis;
 
 using NameResolution;
 using Nodes;
