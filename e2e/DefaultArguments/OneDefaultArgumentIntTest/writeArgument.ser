@@ -1,5 +1,5 @@
-fun returnArgument(a: Int = 91): Int {
-    return a;
+fun returnArgument(arg: Int = 91): Int {
+    return arg;
 }
 
 var a = read();
