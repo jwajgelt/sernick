@@ -24,9 +24,9 @@ if(bInt == 0){
 
 
 write(booleanAnd()); // false
-write(booleanAnd(a)); // a && false == false
-write(booleanAnd(a, b)); // a && b
+write(booleanAnd(aBool)); // a && false == false
+write(booleanAnd(aBool, bBool)); // a && b
 
 write(booleanOr()); // true
-write(booleanOr(a)); // a || true == true
-write(booleanOr(a,b)); // a || b
+write(booleanOr(aBool)); // a || true == true
+write(booleanOr(aBool, bBool)); // a || b
