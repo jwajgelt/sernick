@@ -1,7 +1,9 @@
 namespace sernick.CodeGeneration.RegisterAllocation;
 
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using Compiler.Function;
+using Compiler.Instruction;
 using ControlFlowGraph.Analysis;
 using ControlFlowGraph.CodeTree;
 using Utility;
@@ -46,11 +48,81 @@ public sealed class SpillsAllocator
             .Where(entry => entry.Value == null)
             .ToDictionary(entry => entry.Key, _ => functionContext.AllocateStackFrameSlot());
 
+        bool IsSpilled(IInstructionOperand x, [NotNullWhen(true)] out Register? register)
+        {
+            register = null;
+            if (x is not RegInstructionOperand regInstructionOperand || !spillsLocation.ContainsKey(regInstructionOperand.Register))
+            {
+                return false;
+            }
+
+            register = regInstructionOperand.Register;
+            return true;
+        }
+
+        bool NeedsMemory(IInstructionOperand x)
+        {
+            return x is MemInstructionOperand || IsSpilled(x, out _);
+        }
+
+        bool HandleSpecial(IInstruction instruction, out IEnumerable<IAsmable> asmables)
+        {
+            asmables = Enumerable.Empty<IAsmable>();
+            switch (instruction)
+            {
+                case MovInstruction movInstruction:
+                    if (NeedsMemory(movInstruction.Source) == NeedsMemory(movInstruction.Target))
+                    {
+                        return false;
+                    }
+
+                    CodeTreeNode? tree = null;
+
+                    if (IsSpilled(movInstruction.Source, out var sourceRegister))
+                    {
+                        if (movInstruction.Target is not RegInstructionOperand regInstructionOperand)
+                        {
+                            throw new Exception();
+                        }
+
+                        tree = new RegisterWrite(regInstructionOperand.Register, spillsLocation[sourceRegister].GenerateRead());
+                    }
+
+                    if (IsSpilled(movInstruction.Target, out var register))
+                    {
+                        tree = movInstruction.Source switch
+                        {
+                            ImmInstructionOperand immInstructionOperand => spillsLocation[register]
+                                .GenerateWrite(immInstructionOperand.Value),
+                            RegInstructionOperand regInstructionOperand => spillsLocation[register]
+                                .GenerateWrite(new RegisterRead(regInstructionOperand.Register)),
+                            _ => throw new Exception()
+                        };
+                    }
+
+                    if (tree is null)
+                    {
+                        return false;
+                    }
+
+                    asmables = _instructionCovering.Cover(tree);
+
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         IEnumerable<IAsmable> HandleSpill(IAsmable asmable)
         {
             if (asmable is not IInstruction instruction)
             {
                 return asmable.Enumerate();
+            }
+
+            if (HandleSpecial(instruction, out var x))
+            {
+                return x;
             }
 
             var usedRegisters = instruction.RegistersUsed.Where(spillsLocation.ContainsKey).ToList();
