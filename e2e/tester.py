@@ -89,23 +89,27 @@ def run_files(compiled_files: List[str], test_directory: str)->None:
             test_failed=True
 
 def test(use_mock_data: bool, compiler_path: str = None, test_directories: List[str] = None):
+    global test_failed
     if test_directories is None:
         test_directories = test_find_test_folders() if use_mock_data else list(find_test_folders('.'))
 
     for test_directory in test_directories:
-        logging.info("-----------")
-        logging.info("Entering {}...".format(test_directory))
-        testing_level = prepare_test_data(test_directory)
+        try:
+            logging.info("-----------")
+            logging.info("Entering {}...".format(test_directory))
+            testing_level = prepare_test_data(test_directory)
 
-        if use_mock_data:
-            compiled_files = test_get_compiled_files(test_directory=test_directory) # just for testing TODO uncomment for the line below
-        else:
-            compiled_files = compile_sernick_files(test_directory, compiler_path) 
+            if use_mock_data:
+                compiled_files = test_get_compiled_files(test_directory=test_directory) # just for testing TODO uncomment for the line below
+            else:
+                compiled_files = compile_sernick_files(test_directory, compiler_path) 
 
-        if testing_level == TestingLevel.ONLY_COMPILE:
-            logging.info("Compilation executed, not running further (no test input)")
-        elif testing_level == TestingLevel.COMPILE_AND_RUN_ON_INPUT:
-            run_files(compiled_files=compiled_files, test_directory=test_directory)
+            if testing_level == TestingLevel.ONLY_COMPILE:
+                logging.info("Compilation executed, not running further (no test input)")
+            elif testing_level == TestingLevel.COMPILE_AND_RUN_ON_INPUT:
+                run_files(compiled_files=compiled_files, test_directory=test_directory)
+        except Exception:
+            test_failed = True
 
 def clean():
     for test_directory in test_find_test_folders():
@@ -114,6 +118,7 @@ def clean():
         
 
 def run():
+    global test_failed
     parser = prepare_parser()
     args = parser.parse_args()
     logging.basicConfig(level=args.loglevel.upper())
