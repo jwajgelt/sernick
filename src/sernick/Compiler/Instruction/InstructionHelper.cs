@@ -28,10 +28,10 @@ public static class InstructionHelper
 
     public static CodeTreeNode? HandleSpillSpecialCases(this IInstruction instruction, IDictionary<Register, VariableLocation> spillsLocation)
     {
-        bool IsSpilled(IInstructionOperand x, [NotNullWhen(true)] out Register? register)
+        bool IsSpilled(IInstructionOperand instructionOperand, [NotNullWhen(true)] out Register? register)
         {
             register = null;
-            if (x is not RegInstructionOperand regInstructionOperand || !spillsLocation.ContainsKey(regInstructionOperand.Register))
+            if (instructionOperand is not RegInstructionOperand regInstructionOperand || !spillsLocation.ContainsKey(regInstructionOperand.Register))
             {
                 return false;
             }
@@ -40,9 +40,9 @@ public static class InstructionHelper
             return true;
         }
 
-        bool UsesMemory(IInstructionOperand x)
+        bool UsesMemory(IInstructionOperand instructionOperand)
         {
-            return x is MemInstructionOperand || IsSpilled(x, out _);
+            return instructionOperand is MemInstructionOperand || IsSpilled(instructionOperand, out _);
         }
 
         switch (instruction)
