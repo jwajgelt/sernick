@@ -128,12 +128,24 @@ public sealed record CannotAutoDereferenceNotAStructPointer(PointerType PointerT
 
 public sealed record RecursiveStructDeclaration(FieldDeclaration Field) : TypeCheckingErrorBase
 {
-    // public override string ToString() =>
-    //     $"Field \"{Field.Name.Name}\" can't have the same type \"{Field.Type}\" as the parent struct, at {Field.LocationRange.Start}, {Field.LocationRange.End}";
+    public override string ToString() =>
+        $"Field \"{Field.Name.Name}\" can't have the same type \"{Field.Type}\" as the parent struct, at {Field.LocationRange.Start}, {Field.LocationRange.End}";
 }
 
 public sealed record DuplicateFieldDeclaration(FieldDeclaration First, FieldDeclaration Second) : TypeCheckingErrorBase
 {
     public override string ToString() =>
         $"Field with name \"{First.Name.Name}\" at: {Second.LocationRange.Start}, {Second.LocationRange.End}, is declared earlier at {First.LocationRange.Start}, {First.LocationRange.End}";
+}
+
+public sealed record InvalidAssigmentLeftValue(Range<ILocation> LocationRange) : TypeCheckingErrorBase
+{
+    public override string ToString() =>
+        $"Invalid expression for an assigment at: {LocationRange.Start}, {LocationRange.End}";
+}
+
+public sealed record AssigmentToConstStructField(Range<ILocation> LocationRange) : TypeCheckingErrorBase
+{
+    public override string ToString() =>
+        $"Assigment to an individual field of a const struct at: {LocationRange.Start}, {LocationRange.End}";
 }

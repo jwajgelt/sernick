@@ -455,10 +455,12 @@ public class CompilerFrontendTest
             }),
             ("function_naming_readonly_arguments", "nested_function_modifying_const_global", new IDiagnosticItem[]
             {
+                // TODO: merge const analysis
                 // modifying const, not detected yet
             }),
             ("function_naming_readonly_arguments", "nested_function_modifying_const_outer_scoped", new IDiagnosticItem[]
             {
+                // TODO: merge const analysis
                 // modifying const, not detected yet
             }),
             ("function_naming_readonly_arguments", "pascal_case_function_argument", new IDiagnosticItem[]
@@ -487,18 +489,22 @@ public class CompilerFrontendTest
             //loops
             ("loops", "commented_break", new IDiagnosticItem[]
             {
+                // TODO: separate analysis for break-statements
                 // no break in loop, not detected yet
             }),
             ("loops", "nested_break", new IDiagnosticItem[]
             {
+                // TODO: separate analysis for break-statements
                 // no break in loop, not detected yet
             }),
             ("loops", "nested_no_break", new IDiagnosticItem[]
             {
+                // TODO: separate analysis for break-statements
                 // no break in loop, not detected yet
             }),
             ("loops", "no_break_or_return", new IDiagnosticItem[]
             {
+                // TODO: separate analysis for break-statements
                 // no break in loop, not detected yet
             }),
             ("loops", "uppercase", new IDiagnosticItem[]
@@ -527,6 +533,7 @@ public class CompilerFrontendTest
             }),
             ("pointers", "assign_to_const_pointer", new IDiagnosticItem[]
             {
+                // TODO: merge const analysis
                 // modifying const, not detected yet
             }),
             ("pointers", "assign_two_nulls", new IDiagnosticItem[]
@@ -607,19 +614,19 @@ public class CompilerFrontendTest
                     FileUtility.LocationAt(15, 18)
                 )
             }),
-            // TODO: Implement const analysis for struct
-            // ("structs", "assign_to_const_field", new IDiagnosticItem[]
-            // {
-            //     // modifying const, not detected yet
-            // }),
-            // ("structs", "assign_to_const_struct", new IDiagnosticItem[]
-            // {
-            //     // modifying const, not detected yet
-            // }),
-            // ("structs", "assign_to_nested_const_struct", new IDiagnosticItem[]
-            // {
-            //     // modifying const, not detected yet
-            // }),
+            ("structs", "assign_to_const_field", new IDiagnosticItem[]
+            {
+                new AssigmentToConstStructField(FileUtility.Line(11).Range(1, 17))
+            }),
+            ("structs", "assign_to_const_struct", new IDiagnosticItem[]
+            {
+                // TODO: merge const analysis
+                // modifying const, not detected yet
+            }),
+            ("structs", "assign_to_nested_const_struct", new IDiagnosticItem[]
+            {
+                new AssigmentToConstStructField(FileUtility.Line(19).Range(1, 24))
+            }),
             ("structs", "bad_expression_type_in_initialization", new IDiagnosticItem[]
             {
                 new TypesMismatchError(new IntType(), new BoolType(), FileUtility.LocationAt(8, 13))
@@ -765,7 +772,7 @@ public class CompilerFrontendTest
             {
                 new FieldNotPresentInStructError
                 (
-                    new StructType( new Identifier("TestStruct", FileUtility.Line(7).Range(20, 30))),
+                    new StructType( new Identifier("TestStruct", FileUtility.Line(7).Range(18, 28))),
                     new Identifier("anotherField", FileUtility.Line(11).Range(12, 24)),
                     FileUtility.LocationAt(11, 12)
                 )
@@ -932,6 +939,7 @@ public class CompilerFrontendTest
             }),
             ("variable-declaration-initialization", "const_decl_and_init_and_reassignment", new IDiagnosticItem[]
             {
+                // TODO: merge const analysis
                 // modifying const, not detected yet
             }),
             ("variable-declaration-initialization", "const_decl_and_init_bad_type", new IDiagnosticItem[]
@@ -952,6 +960,7 @@ public class CompilerFrontendTest
             }),
             ("variable-declaration-initialization", "const_late_init_and_reassignment", new IDiagnosticItem[]
             {
+                // TODO: merge const analysis
                 // modifying const, not detected yet
             }),
             ("variable-declaration-initialization", "const_late_init_bad_type", new IDiagnosticItem[]

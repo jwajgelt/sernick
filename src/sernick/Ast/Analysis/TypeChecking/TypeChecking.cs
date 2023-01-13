@@ -354,6 +354,17 @@ public static class TypeChecking
                 _diagnostics.Report(new TypesMismatchError(typeOfLeftSide, typeOfRightSide, node.Right.LocationRange.Start));
             }
 
+            var lValue = LValueChecker.Process(node.Left, _nameResolution, childrenTypes);
+            if (!lValue.IsLValue)
+            {
+                _diagnostics.Report(new InvalidAssigmentLeftValue(node.Left.LocationRange));
+            }
+
+            if (lValue.IsConstStructAccess)
+            {
+                _diagnostics.Report(new AssigmentToConstStructField(node.Left.LocationRange));
+            }
+
             // Sometimes, rhs type is more specific than lhs type, but we deliberately ignore this information in the "return"
             return AddTypeInformation(childrenTypes, node, typeOfLeftSide);
         }
@@ -512,7 +523,7 @@ public static class TypeChecking
 
             if (fieldDeclaration is not null)
             {
-                return CreateTypeInformation(node, fieldDeclaration.Type);
+                return AddTypeInformation(childrenTypes, node, fieldDeclaration.Type);
             }
 
             _diagnostics.Report(new FieldNotPresentInStructError(structType, node.FieldName, node.FieldName.LocationRange.Start));
