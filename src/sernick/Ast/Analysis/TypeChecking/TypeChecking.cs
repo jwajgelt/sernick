@@ -1,12 +1,11 @@
+namespace sernick.Ast.Analysis.TypeChecking;
 using sernick.Input;
 
-namespace sernick.Ast.Analysis.TypeChecking;
-
 using System.Linq;
-using Diagnostics;
-using NameResolution;
-using Nodes;
-using Utility;
+using sernick.Diagnostics;
+using sernick.Ast.Analysis.NameResolution;
+using sernick.Ast.Nodes;
+using sernick.Utility;
 using TypeInformation = Dictionary<Nodes.AstNode, Type>;
 
 public sealed record TypeCheckingResult(TypeInformation ExpressionsTypes)
@@ -231,14 +230,14 @@ public static class TypeChecking
             if (node.ElseBlock != null)
             {
                 var typeOfFalseBranch = childrenTypes[node.ElseBlock];
-                
+
                 // When typeOfFalseBranch is more specific then typeOfTrueBranch
                 // use typeOfFalseBranch as a type of whole if-statement
                 if (CompatibleForAssigment(typeOfFalseBranch, typeOfTrueBranch))
                 {
                     ifStatementType = typeOfFalseBranch;
                 }
-                
+
                 // Otherwise typeOfTrueBranch has to be more specific then typeOfFalseBranch.
                 // If it isn't then types aren compatible
                 else if (!CompatibleForAssigment(typeOfTrueBranch, typeOfFalseBranch))
@@ -397,7 +396,7 @@ public static class TypeChecking
                 if (!declaredFields.TryAdd(field.Name.Name, field))
                 {
                     var prevField = declaredFields[field.Name.Name];
-                    _diagnostics.Report(new DuplicateFieldDeclaration(prevField,field));
+                    _diagnostics.Report(new DuplicateFieldDeclaration(prevField, field));
                 }
             }
 
@@ -429,6 +428,7 @@ public static class TypeChecking
                         Second: locationRange)
                     );
                 }
+
                 missingFields.Remove(fieldName.Name);
 
                 if (fieldDeclaration is null)
@@ -445,7 +445,7 @@ public static class TypeChecking
                 if (!CompatibleForAssigment(requiredType, providedType))
                 {
                     _diagnostics.Report(new TypesMismatchError(
-                        requiredType, 
+                        requiredType,
                         providedType,
                         valueExpression.LocationRange.Start)
                     );
@@ -455,8 +455,8 @@ public static class TypeChecking
             foreach (var uninitializedField in missingFields)
             {
                 _diagnostics.Report(new MissingFieldInitialization(
-                    structType, 
-                    uninitializedField, 
+                    structType,
+                    uninitializedField,
                     node.LocationRange.End)
                 );
             }
@@ -514,7 +514,7 @@ public static class TypeChecking
             {
                 return CreateTypeInformation(node, fieldDeclaration.Type);
             }
-            
+
             _diagnostics.Report(new FieldNotPresentInStructError(structType, node.FieldName, node.FieldName.LocationRange.Start));
             return AddTypeInformation<AnyType>(childrenTypes, node);
         }

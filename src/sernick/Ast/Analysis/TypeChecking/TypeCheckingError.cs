@@ -1,9 +1,8 @@
+namespace sernick.Ast.Analysis.TypeChecking;
 using sernick.Utility;
 
-namespace sernick.Ast.Analysis.TypeChecking;
-
-using Diagnostics;
-using Input;
+using sernick.Diagnostics;
+using sernick.Input;
 using sernick.Ast.Nodes;
 
 public abstract record TypeCheckingErrorBase() : IDiagnosticItem
@@ -11,8 +10,8 @@ public abstract record TypeCheckingErrorBase() : IDiagnosticItem
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
 }
 
-public sealed record TypesMismatchError(Type Required, Type Provided, ILocation Location) 
-    : TypeCheckingErrorBase 
+public sealed record TypesMismatchError(Type Required, Type Provided, ILocation Location)
+    : TypeCheckingErrorBase
 {
     public override string ToString()
     {

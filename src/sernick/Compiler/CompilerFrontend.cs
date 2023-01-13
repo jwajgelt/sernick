@@ -1,6 +1,5 @@
 namespace sernick.Compiler;
 
-using Ast;
 using Ast.Analysis.CallGraph;
 using Ast.Analysis.NameResolution;
 using Ast.Analysis.TypeChecking;
