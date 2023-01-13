@@ -1,7 +1,7 @@
 ﻿// expression returns bool, but field has Int type
 
 struct TestStruct {
-    field: Int,
+    field: Int
 };
 
 var testStruct = TestStruct {

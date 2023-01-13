@@ -524,6 +524,45 @@ public class TypeCheckingTest
 
             diagnostics.Verify(d => d.Report(It.IsAny<TypeOrInitialValueShouldBePresentError>()), Times.AtLeastOnce);
         }
+
+        [Fact]
+        public void PointerDeclarationNoTypeSpecified()
+        {
+            // var ptr = new(1);
+            var tree = Block(
+                Var("ptr", Alloc(Literal(1)))
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public void NullPointerInIfBranch()
+        {
+            // var ptr = new(1);
+            // var x = if (1 <= 2) { null } else { ptr }
+            var tree = Block(
+                Var("ptr", Alloc(Literal(1))),
+                Var("x", If(Literal(1).Leq(Literal(2)))
+                    .Then(Null)
+                    .Else(Value("ptr"))
+                )
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.VerifyNoOtherCalls();
+        }
     }
 
     public class TestStruct
@@ -666,7 +705,108 @@ public class TypeCheckingTest
             Assert.Empty(diagnostics.Invocations);
         }
 
-        // TODO add tests where we try to name a struct using a keyword e.g. struct Int = {...} or struct Bool = { ... }
+        [Fact]
+        public void BadExpressionInTypeInitialization()
+        {
+            // struct TestStruct { field: Int };
+            // var x = TestStruct { field: 1 < 2 };
+            var tree = Block(
+                Struct("TestStruct").Field("field", new IntType()),
+                Var("x",
+                    StructValue("TestStruct")
+                        .Field("field", Literal(1).Leq(Literal(2)))
+                    )
+                );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<TypesMismatchError>()), Times.Once);
+        }
+
+        [Fact]
+        public void MissingFieldInitialization()
+        {
+            // struct Record = { field1: Int, field2: Int }
+            // Record { field1: 1 };
+            var tree = Block(
+                Struct("Record")
+                    .Field("field1", new IntType())
+                    .Field("field2", new IntType()),
+                StructValue("Record")
+                    .Field("field1", Literal(1))
+                );
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<MissingFieldInitialization>()), Times.Once);
+            diagnostics.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public void MultipleSameFieldInitialization()
+        {
+            // struct Record = { field: Int }
+            // Record { field1: 1 };
+            var tree = Block(
+                Struct("Record").Field("field", new IntType()),
+                StructValue("Record")
+                    .Field("field", Literal(1))
+                    .Field("field", Literal(2))
+            );
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<DuplicateFieldInitialization>()), Times.Once);
+            diagnostics.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public void IllegalRecursiveStructType()
+        {
+            // struct Record = { field: Record }
+            var tree = Block(
+                Struct("Record")
+                    .Field("field", new StructType(Ident("Record")))
+                );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<RecursiveStructDeclaration>()), Times.Once);
+            diagnostics.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public void IllegalDuplicateFieldDeclaration()
+        {
+            var tree = Block(
+                Struct("Record")
+                    .Field("field", new IntType())
+                    .Field("field", new IntType())
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<DuplicateFieldDeclaration>()), Times.Once);
+            diagnostics.VerifyNoOtherCalls();
+        }
     }
 }
 

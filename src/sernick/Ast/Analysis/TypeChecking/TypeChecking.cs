@@ -1,3 +1,5 @@
+using sernick.Input;
+
 namespace sernick.Ast.Analysis.TypeChecking;
 
 using System.Linq;
@@ -62,8 +64,9 @@ public static class TypeChecking
                 {
                     _diagnostics.Report(new TypesMismatchError(declaredType, rhsType, node.InitValue.LocationRange.Start));
                 }
-                else if (declaredType == null)
+                else if (declaredType == null && rhsType is NullPointerType)
                 {
+                    // When declaring variables with value 'null' user has to specify variable type
                     _diagnostics.Report(new TypeOrInitialValueShouldBePresentError(node.LocationRange.Start));
                 }
 
@@ -224,16 +227,27 @@ public static class TypeChecking
                 _diagnostics.Report(new TypesMismatchError(new BoolType(), typeOfCondition, node.LocationRange.Start));
             }
 
+            var ifStatementType = typeOfTrueBranch;
             if (node.ElseBlock != null)
             {
                 var typeOfFalseBranch = childrenTypes[node.ElseBlock];
-                if (!Same(typeOfTrueBranch, typeOfFalseBranch))
+                
+                // When typeOfFalseBranch is more specific then typeOfTrueBranch
+                // use typeOfFalseBranch as a type of whole if-statement
+                if (CompatibleForAssigment(typeOfFalseBranch, typeOfTrueBranch))
+                {
+                    ifStatementType = typeOfFalseBranch;
+                }
+                
+                // Otherwise typeOfTrueBranch has to be more specific then typeOfFalseBranch.
+                // If it isn't then types aren compatible
+                else if (!CompatibleForAssigment(typeOfTrueBranch, typeOfFalseBranch))
                 {
                     _diagnostics.Report(new UnequalBranchTypeError(typeOfTrueBranch, typeOfFalseBranch, node.LocationRange.Start));
                 }
             }
 
-            return AddTypeInformation(childrenTypes, node, typeOfTrueBranch);
+            return AddTypeInformation(childrenTypes, node, ifStatementType);
         }
 
         /// <summary>
@@ -371,6 +385,22 @@ public static class TypeChecking
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
 
+            var declaredFields = new Dictionary<string, FieldDeclaration>();
+            foreach (var field in node.Fields)
+            {
+                if (field.Type is StructType fieldStruct &&
+                    ReferenceEquals(_nameResolution.StructDeclarations[fieldStruct.Struct], node))
+                {
+                    _diagnostics.Report(new RecursiveStructDeclaration(field));
+                }
+
+                if (!declaredFields.TryAdd(field.Name.Name, field))
+                {
+                    var prevField = declaredFields[field.Name.Name];
+                    _diagnostics.Report(new DuplicateFieldDeclaration(prevField,field));
+                }
+            }
+
             return AddTypeInformation<UnitType>(childrenTypes, node);
         }
 
@@ -379,9 +409,59 @@ public static class TypeChecking
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
             var structType = new StructType(node.StructName);
 
-            // TODO check fields, types, etc.
-            return AddTypeInformation(childrenTypes, node, structType);
+            var structDeclaration = _nameResolution.StructDeclarations[node.StructName];
 
+            var initializedFields = new Dictionary<string, Range<ILocation>>();
+            var missingFields = structDeclaration.Fields
+                .Select(field => field.Name.Name)
+                .ToHashSet();
+
+            foreach (var (fieldName, valueExpression, locationRange) in node.Fields)
+            {
+                var fieldDeclaration = structDeclaration.Fields
+                    .FirstOrDefault(declaration => declaration.Name.Name == fieldName.Name);
+
+                if (!initializedFields.TryAdd(fieldName.Name, locationRange))
+                {
+                    _diagnostics.Report(new DuplicateFieldInitialization(
+                        fieldName.Name,
+                        First: initializedFields[fieldName.Name],
+                        Second: locationRange)
+                    );
+                }
+                missingFields.Remove(fieldName.Name);
+
+                if (fieldDeclaration is null)
+                {
+                    _diagnostics.Report(new FieldNotPresentInStructError(
+                        structType, fieldName, locationRange.Start)
+                    );
+                    continue;
+                }
+
+                var requiredType = fieldDeclaration.Type;
+                var providedType = childrenTypes[valueExpression];
+
+                if (!CompatibleForAssigment(requiredType, providedType))
+                {
+                    _diagnostics.Report(new TypesMismatchError(
+                        requiredType, 
+                        providedType,
+                        valueExpression.LocationRange.Start)
+                    );
+                }
+            }
+
+            foreach (var uninitializedField in missingFields)
+            {
+                _diagnostics.Report(new MissingFieldInitialization(
+                    structType, 
+                    uninitializedField, 
+                    node.LocationRange.End)
+                );
+            }
+
+            return AddTypeInformation(childrenTypes, node, structType);
         }
 
         public override Dictionary<AstNode, Type> VisitFieldDeclaration(FieldDeclaration node, Type expectedReturnTypeOfReturnExpr)
@@ -428,16 +508,15 @@ public static class TypeChecking
             var structDeclaration = _nameResolution.StructDeclarations[structType.Struct];
 
             var fieldName = node.FieldName;
-            var fieldNameDeclaredInStruct = structDeclaration.Fields.Select(fieldDeclaration => fieldDeclaration.Name.Name).Contains(fieldName.Name);
+            var fieldDeclaration = structDeclaration.Fields.FirstOrDefault(fieldDeclaration => fieldDeclaration.Name.Name == fieldName.Name);
 
-            if (!fieldNameDeclaredInStruct)
+            if (fieldDeclaration is not null)
             {
-                _diagnostics.Report(new FieldNotPresentInStructError(structType, node.FieldName, node.FieldName.LocationRange.Start));
-                return AddTypeInformation<AnyType>(childrenTypes, node);
+                return CreateTypeInformation(node, fieldDeclaration.Type);
             }
-
-            var fieldType = structDeclaration.Fields.Where(fieldDeclaration => fieldDeclaration.Name == fieldName).First().Type;
-            return CreateTypeInformation(node, fieldType);
+            
+            _diagnostics.Report(new FieldNotPresentInStructError(structType, node.FieldName, node.FieldName.LocationRange.Start));
+            return AddTypeInformation<AnyType>(childrenTypes, node);
         }
 
         public override Dictionary<AstNode, Type> VisitPointerDereference(PointerDereference node, Type expectedReturnTypeOfReturnExpr)
@@ -488,7 +567,7 @@ public static class TypeChecking
         private static TypeInformation AddTypeInformation(TypeInformation types, AstNode node, Type type) =>
             new(types, ReferenceEqualityComparer.Instance) { { node, type } };
 
-        private static bool Same(Type lhsType, Type rhsType)
+        private bool Same(Type lhsType, Type rhsType)
         {
             if (lhsType is AnyType)
             {
@@ -500,15 +579,21 @@ public static class TypeChecking
                 return true;
             }
 
-            return lhsType == rhsType;
+            return lhsType switch
+            {
+                StructType lhsStruct => rhsType is StructType rhsStruct && ReferenceEquals(
+                    _nameResolution.StructDeclarations[lhsStruct.Struct],
+                    _nameResolution.StructDeclarations[rhsStruct.Struct]),
+                PointerType lhsPointer => rhsType is PointerType rhsPointer && Same(lhsPointer.Type, rhsPointer.Type),
+                _ => lhsType == rhsType
+            };
         }
 
-        private static bool CompatibleForAssigment(Type lhsType, Type rhsType)
+        private bool CompatibleForAssigment(Type lhsType, Type rhsType)
         {
             // first, handle some special cases
             if (rhsType is NullPointerType && lhsType is PointerType)
             {
-                System.Console.WriteLine("xdd");
                 return true;
             }
 
