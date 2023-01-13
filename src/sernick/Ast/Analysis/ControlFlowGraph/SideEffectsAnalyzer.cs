@@ -12,6 +12,7 @@ using AstFunctionCall = Nodes.FunctionCall;
 using CodeTreeFunctionCall = sernick.ControlFlowGraph.CodeTree.FunctionCall;
 using SideEffectsVisitorParam = Utility.Unit;
 using Variable = Nodes.VariableDeclaration;
+using static Compiler.PlatformConstants;
 
 public static class SideEffectsAnalyzer
 {
@@ -382,7 +383,7 @@ public static class SideEffectsAnalyzer
                 null,
                 false,
                 node.LocationRange);
-            _currentFunctionContext.AddLocal(tempVariable, false);
+            _currentFunctionContext.AddLocal(tempVariable, POINTER_SIZE, false);
             var tempRead = _currentFunctionContext.GenerateVariableRead(tempVariable);
             var tempWrite = _currentFunctionContext.GenerateVariableWrite(tempVariable, value);
             return (tempRead, tempWrite);

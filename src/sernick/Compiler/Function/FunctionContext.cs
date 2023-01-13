@@ -2,6 +2,9 @@ namespace sernick.Compiler.Function;
 
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
+using Ast;
+using Ast.Nodes;
+using FunctionCall = ControlFlowGraph.CodeTree.FunctionCall;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static Convention;
 using static Helpers;
@@ -51,13 +54,13 @@ public sealed class FunctionContext : IFunctionContext
         }
     }
 
-    public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
+    public void AddLocal(IFunctionVariable variable, int size, bool usedElsewhere)
     {
         if (usedElsewhere)
         {
-            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset.Value + POINTER_SIZE)))
+            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset.Value + size)))
             {
-                _localsOffset.Value += POINTER_SIZE;
+                _localsOffset.Value += size;
             }
         }
         else
