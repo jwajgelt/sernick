@@ -73,7 +73,7 @@ public static class VariableInitializationAnalyzer
             _value = value;
         }
 
-        public override string ToString() => $"Use of uninitialized variable {_value.Identifier} at {_value.LocationRange}";
+        public override string ToString() => $"Use of uninitialized variable {_value.Identifier.Name} at {_value.LocationRange}";
 
         private readonly VariableValue _value;
     }
@@ -86,7 +86,7 @@ public static class VariableInitializationAnalyzer
             _functionDefinition = functionDefinition;
         }
 
-        public override string ToString() => $"Use of potentially uninitialized variable {_variable} inside {_functionDefinition}";
+        public override string ToString() => $"Use of potentially uninitialized variable {_variable.Name} inside {_functionDefinition}";
 
         private readonly VariableDeclaration _variable;
         private readonly FunctionDefinition _functionDefinition;
@@ -110,7 +110,7 @@ public static class VariableInitializationAnalyzer
             return _identifier.GetHashCode();
         }
 
-        public override string ToString() => $"Multiple assignment of const variable {_identifier}" +
+        public override string ToString() => $"Multiple assignment of const variable {_identifier.Name}" +
                                              (_assignment != null ? $" at {_assignment.LocationRange}" : "");
 
         private readonly Assignment? _assignment;
@@ -164,7 +164,8 @@ public static class VariableInitializationAnalyzer
         {
             var initializedVariables = ImmutableHashSet<VariableDeclaration>.Empty;
             var maybeInitializedVariables = ImmutableHashSet<VariableDeclaration>.Empty;
-            var diverges = false;
+            var breaksLoop = false;
+            var returns = false;
 
             foreach (var child in node.Children)
             {
@@ -173,7 +174,7 @@ public static class VariableInitializationAnalyzer
                     new VariableInitializationVisitorParam(
                         param.InitializedVariables.Union(initializedVariables),
                         param.MaybeInitializedVariables.Union(maybeInitializedVariables)));
-                if (!diverges)
+                if (!returns && !breaksLoop)
                 {
                     initializedVariables = initializedVariables.Union(childResult.InitializedVariables);
                 }
@@ -184,10 +185,11 @@ public static class VariableInitializationAnalyzer
 
                 maybeInitializedVariables = maybeInitializedVariables.Union(childResult.MaybeInitializedVariables);
                 maybeInitializedVariables = maybeInitializedVariables.Union(initializedVariables);
-                diverges = diverges || childResult.Diverges;
+                returns |= childResult.Returns;
+                breaksLoop |= childResult.BreaksLoop;
             }
 
-            return new VariableInitializationVisitorResult(initializedVariables, maybeInitializedVariables, diverges);
+            return new VariableInitializationVisitorResult(initializedVariables, maybeInitializedVariables, breaksLoop, returns);
         }
 
         protected override VariableInitializationVisitorResult VisitDeclaration(Declaration node, VariableInitializationVisitorParam param)
@@ -286,18 +288,14 @@ public static class VariableInitializationAnalyzer
             {
                 return new VariableInitializationVisitorResult(
                     conditionResult.InitializedVariables.Union(initializedVariables),
-                    conditionResult.MaybeInitializedVariables.Union(maybeInitializedVariables),
-                    conditionResult.BreaksLoop || ifBranchResult.BreaksLoop || elseBranchResult.BreaksLoop,
-                    conditionResult.Returns || ifBranchResult.Returns || elseBranchResult.Returns
+                    conditionResult.MaybeInitializedVariables.Union(maybeInitializedVariables)
                 );
             }
 
             return new VariableInitializationVisitorResult(
                 conditionResult.InitializedVariables,
                 conditionResult.MaybeInitializedVariables.Union(maybeInitializedVariables)
-                    .Union(initializedVariables),
-                conditionResult.BreaksLoop || ifBranchResult.BreaksLoop || elseBranchResult.BreaksLoop,
-                conditionResult.Returns || ifBranchResult.Returns || elseBranchResult.Returns
+                    .Union(initializedVariables)
             );
         }
 
