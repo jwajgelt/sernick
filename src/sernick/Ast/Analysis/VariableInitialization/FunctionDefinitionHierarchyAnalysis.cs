@@ -28,7 +28,8 @@ public static class FunctionDefinitionHierarchyAnalysis
 
     public static FunctionHierarchy Process(FunctionDefinition main)
     {
-        return new FunctionHierarchy(main.Accept(new FunctionHierarchyVisitor(), null));
+        return new FunctionHierarchy(main.Accept(new FunctionHierarchyVisitor(), null)
+            .AddRange(ExternalFunctionsInfo.ExternalFunctions.Select(info => new KeyValuePair<FunctionDefinition, FunctionDefinition?>(info.Definition, main))));
     }
 
     private sealed class FunctionHierarchyVisitor
