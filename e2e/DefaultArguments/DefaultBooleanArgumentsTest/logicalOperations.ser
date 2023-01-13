@@ -7,12 +7,12 @@ fun booleanOr(a: Bool = false, b : Bool = true): Bool {
 }
 
 fun intToBool(i: Int): Bool {
-    if(i == 0) return false;
+    if(i == 0) {return false};
     return true;
 }
 
 fun boolToInt(b : Bool): Int {
-    if(b == false) return 0;
+    if(b == false) {return 0};
     return 1;
 }
 
