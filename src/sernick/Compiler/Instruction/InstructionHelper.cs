@@ -26,7 +26,7 @@ public static class InstructionHelper
         }
     }
 
-    public static CodeTreeNode? HandleSpillSpecialCases(this IInstruction instruction, IDictionary<Register, VariableLocation> spillsLocation)
+    public static CodeTreeNode? HandleSpillSpecialCases(this IInstruction instruction, IReadOnlyDictionary<Register, VariableLocation> spillsLocation)
     {
         bool IsSpilled(IInstructionOperand instructionOperand, [NotNullWhen(true)] out Register? register)
         {
