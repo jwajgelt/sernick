@@ -4,7 +4,7 @@
 // Output -- sum of all the numbers a_1, ..., a_n
 
 const n = read();
-const i = 0;
+var i = 0;
 var result = 0;
 
 loop {
