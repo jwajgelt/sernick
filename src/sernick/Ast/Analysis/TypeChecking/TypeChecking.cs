@@ -524,7 +524,6 @@ public static class TypeChecking
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
             var underlyingExpressionType = childrenTypes[node.Pointer];
 
-            // TODO check if we have tests for that
             if (underlyingExpressionType is not PointerType pointerType)
             {
                 _diagnostics.Report(new CannotDereferenceExpressionError(underlyingExpressionType, node.LocationRange.Start));

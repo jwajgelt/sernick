@@ -563,6 +563,26 @@ public class TypeCheckingTest
 
             diagnostics.VerifyNoOtherCalls();
         }
+
+        [Fact]
+        public void IllegalDereference()
+        {
+            // var ptr = 1
+            // var val = *ptr
+            var tree = Block(
+                Var("ptr", Literal(1)),
+                Var("val", Deref(Value("ptr")))
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<CannotDereferenceExpressionError>()), Times.Once);
+            diagnostics.VerifyNoOtherCalls();
+        }
     }
 
     public class TestStruct
