@@ -71,7 +71,7 @@ public static class CompilerBackend
                         .Where(asmable => !asmable.IsNoop(completeRegAllocation))
                         .Select(asmable => asmable.ToAsm(completeRegAllocation));
                 }))
-            .Append(displayTable.ToAsm(ImmutableDictionary<Register, HardwareRegister>.Empty)).ToList();
+            .Append(displayTable.ToAsm(ImmutableDictionary<Register, HardwareRegister>.Empty));
 
         var asmFilename = Path.ChangeExtension(filename, ".asm");
         File.WriteAllText(asmFilename, string.Join(Environment.NewLine, asm));
