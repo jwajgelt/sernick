@@ -150,7 +150,7 @@ public class VariableAccessMapBuilderTest
                         Block(
                             Value("x", out var xValue1).Assign(Literal(1)),
                             Value("x", out var xValue2)),
-                        out var yAssign
+                        out _
                     )
                 )
                 .Get(out var foo)
@@ -239,10 +239,10 @@ public class VariableAccessMapBuilderTest
         var nameResolution = NameResolution().WithVars(
             (aValue, aDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
-        
+
         Assert.Contains((aDeclare, VariableAccessMode.WriteAndRead), variableAccessMap[fun]);
     }
-    
+
     [Fact]
     public void BuiltMap_handles_PointerValueAssignment()
     {
@@ -259,11 +259,11 @@ public class VariableAccessMapBuilderTest
         var nameResolution = NameResolution().WithVars(
             (aValue, aDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
-        
+
         // we did not modify the variable
         Assert.Contains((aDeclare, VariableAccessMode.ReadOnly), variableAccessMap[fun]);
     }
-    
+
     [Fact]
     public void BuiltMap_handles_PointerDeref()
     {
@@ -280,17 +280,17 @@ public class VariableAccessMapBuilderTest
         var nameResolution = NameResolution().WithVars(
             (valueA, aDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
-        
+
         Assert.Contains((aDeclare, VariableAccessMode.ReadOnly), variableAccessMap[fun]);
     }
-    
+
     [Fact]
     public void BuiltMap_handles_StructAssignment()
     {
         // struct TestStruct {
         //   field : Int
         // }
-        // var a = TestStruct {field : 2};
+        // var a = TestStruct { field : 2 };
         // fun f() {
         //   a.field = 1;
         // }
@@ -304,17 +304,17 @@ public class VariableAccessMapBuilderTest
         var nameResolution = NameResolution().WithVars(
             (aValue, aDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
-        
+
         Assert.Contains((aDeclare, VariableAccessMode.WriteAndRead), variableAccessMap[fun]);
     }
-    
+
     [Fact]
     public void BuiltMap_handles_StructUse()
     {
         // struct TestStruct {
         //   field : Int
         // }
-        // var a = TestStruct {field : 2};
+        // var a = TestStruct { field : 2 };
         // fun f() {
         //   var b = a.field;
         // }
@@ -328,7 +328,7 @@ public class VariableAccessMapBuilderTest
         var nameResolution = NameResolution().WithVars(
             (aValue, aDeclare));
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution);
-        
-        Assert.Contains((aDeclare, VariableAccessMode.WriteAndRead), variableAccessMap[fun]);
+
+        Assert.Contains((aDeclare, VariableAccessMode.ReadOnly), variableAccessMap[fun]);
     }
 }

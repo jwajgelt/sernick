@@ -73,7 +73,7 @@ public static class VariableAccessMapPreprocess
         return visitor.VariableAccess;
     }
 
-    private sealed record VisitorParam(FunctionDefinition? CurrentFun, bool InAssignment)
+    private sealed record VisitorParam(FunctionDefinition? CurrentFun, bool IsWrite)
     {
         public VisitorParam() : this(null, false)
         {
@@ -115,14 +115,20 @@ public static class VariableAccessMapPreprocess
         public override Unit VisitVariableValue(VariableValue variableValue, VisitorParam param)
         {
             Debug.Assert(param.CurrentFun != null);
-            VariableAccess.AddVariableRead(param.CurrentFun, _nameResolution.UsedVariableDeclarations[variableValue]);
+            var declaration = _nameResolution.UsedVariableDeclarations[variableValue];
+            VariableAccess.AddVariableRead(param.CurrentFun, declaration);
+            if (param.IsWrite)
+            {
+                VariableAccess.AddVariableWrite(param.CurrentFun, declaration);
+            }
+
             return Unit.I;
         }
 
         public override Unit VisitAssignment(Assignment assignment, VisitorParam param)
         {
             Debug.Assert(param.CurrentFun != null);
-            VariableAccess.AddVariableWrite(param.CurrentFun, _nameResolution.AssignedVariableDeclarations[assignment]);
+            assignment.Left.Accept(this, param with { IsWrite = true });
             return assignment.Right.Accept(this, param);
         }
 
@@ -135,6 +141,12 @@ public static class VariableAccessMapPreprocess
             }
 
             return declaration.InitValue?.Accept(this, param) ?? Unit.I;
+        }
+
+        public override Unit VisitPointerDereference(PointerDereference deref, VisitorParam param)
+        {
+            Debug.Assert(param.CurrentFun != null);
+            return deref.Pointer.Accept(this, param with { IsWrite = false });
         }
     }
 }
