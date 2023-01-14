@@ -265,12 +265,12 @@ public static class TypeChecking
                 return AddTypeInformation<UnitType>(childrenTypes, node);
             }
 
-            var commonType = typeOfLeftOperand is AnyType ? typeOfRightOperand : typeOfLeftOperand;
+
 
             // let's cover some special cases e.g. adding two bools or shirt-circuiting two ints
-	    var operatorType = InfixOperatorCornerCases(node.Operator, commonType);
+            var operatorType = InfixOperatorCornerCases(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start);
 
-	    return AddTypeInformation(result, node, operatorType);
+            return AddTypeInformation(childrenTypes, node, operatorType);
         }
 
         public override Dictionary<AstNode, Type> VisitAssignment(Assignment node, Type expectedReturnTypeOfReturnExpr)
@@ -349,51 +349,54 @@ public static class TypeChecking
         }
 
 
-	private static Type InfixOperatorCornerCases(Operator operator, Type commonType)
-	{
-	    switch (operator)
-	    {
-		case Infix.Op.ScAnd:
-		case Infix.Op.ScOr:
-		    {
-			if (commonType is not BoolType or AnyType)
-			{
-			    _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
-			}
+        private Type InfixOperatorCornerCases(Infix.Op op, Type typeOfLeftOperand, Type typeOfRightOperand, Input.ILocation start)
+        {
+            var commonType = typeOfLeftOperand is AnyType ? typeOfRightOperand : typeOfLeftOperand;
+            switch (op)
+            {
+                case Infix.Op.ScAnd:
+                case Infix.Op.ScOr:
+                    {
+                        if (commonType is not BoolType or AnyType)
+                        {
+                            _diagnostics.Report(new InfixOperatorTypeError(op, typeOfLeftOperand, typeOfRightOperand, start));
+                        }
 
-			return new BoolType();
-		    }
-		case Infix.Op.Plus:
-		case Infix.Op.Minus:
-		    {
-			if (commonType is not IntType or AnyType)
-			{
-			    _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
-			}
+                        return new BoolType();
+                    }
+                case Infix.Op.Plus:
+                case Infix.Op.Minus:
+                    {
+                        if (commonType is not IntType or AnyType)
+                        {
+                            _diagnostics.Report(new InfixOperatorTypeError(op, typeOfLeftOperand, typeOfRightOperand, start));
+                        }
 
-			return new IntType();
-		    }
-		case Infix.Op.Greater:
-		case Infix.Op.GreaterOrEquals:
-		case Infix.Op.Less:
-		case Infix.Op.LessOrEquals:
-		    {
-			if (commonType is not IntType or AnyType)
-			{
-			    _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
-			}
+                        return new IntType();
+                    }
+                case Infix.Op.Greater:
+                case Infix.Op.GreaterOrEquals:
+                case Infix.Op.Less:
+                case Infix.Op.LessOrEquals:
+                    {
+                        if (commonType is not IntType or AnyType)
+                        {
+                            _diagnostics.Report(new InfixOperatorTypeError(op, typeOfLeftOperand, typeOfRightOperand, start));
+                        }
 
-			return new BoolType();
-		    }
-		case Infix.Op.Equals:
-		case Infix.Op.NotEqual:
-		    {
-			return new BoolType();
-		    }
-		// intentionally do not add a "default" case, so if we add a new infix operator and not handle it here,
-		// C# compiler notices it and gives us a warning
-	    }
-	}
-
+                        return new BoolType();
+                    }
+                case Infix.Op.Equals:
+                case Infix.Op.NotEqual:
+                    {
+                        return new BoolType();
+                    }
+                default:
+                    {
+                        _diagnostics.Report(new UnhandledOperatorError(op, start));
+                        return new UnitType();
+                    }
+            }
+        }
     }
 }
