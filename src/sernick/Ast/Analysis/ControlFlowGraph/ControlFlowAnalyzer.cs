@@ -8,7 +8,6 @@ using Nodes;
 using sernick.Ast.Analysis.TypeChecking;
 using sernick.Ast.Analysis.VariableAccess;
 using sernick.ControlFlowGraph.CodeTree;
-using static Compiler.PlatformConstants;
 using FunctionCall = Nodes.FunctionCall;
 
 public static class ControlFlowAnalyzer
@@ -135,7 +134,7 @@ public static class ControlFlowAnalyzer
         public IFunctionVariable NewVariable()
         {
             var temp = new TemporaryLocalVariable();
-            _functionContext.AddLocal(temp, POINTER_SIZE, false, false);
+            _functionContext.AddLocal(temp);
             return temp;
         }
     }
@@ -358,7 +357,7 @@ public static class ControlFlowAnalyzer
                 null,
                 false,
                 node.LocationRange);
-            _currentFunctionContext.AddLocal(tempVariable, POINTER_SIZE, false, false);
+            _currentFunctionContext.AddLocal(tempVariable);
             var variableValue = new VariableValue(identifier, node.LocationRange);
             _nameResolution = _nameResolution.JoinWith(NameResolutionResult.OfVariableUse(variableValue, tempVariable));
             return (tempVariable, variableValue);

@@ -16,7 +16,7 @@ public sealed class FakeFunctionContext : IFunctionContext
     public int Depth => 0;
     public bool ValueIsReturned => false;
 
-    public void AddLocal(IFunctionVariable variable, int size, bool isStruct, bool usedElsewhere) => _locals[variable] = usedElsewhere;
+    public void AddLocal(IFunctionVariable variable, bool usedElsewhere, bool isStruct, int size) => _locals[variable] = usedElsewhere;
     public IReadOnlyList<SingleExitNode> GeneratePrologue()
     {
         throw new NotImplementedException();

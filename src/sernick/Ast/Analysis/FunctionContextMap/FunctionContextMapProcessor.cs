@@ -5,7 +5,6 @@ using Compiler.Function;
 using NameResolution;
 using Nodes;
 using Utility;
-using static Compiler.PlatformConstants;
 using static ExternalFunctionsInfo;
 using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.DistinctionNumberProvider;
 
@@ -80,7 +79,7 @@ public static class FunctionContextMapProcessor
             foreach (var (localVariable, referencingFunctions) in _locals[node])
             {
                 var usedElsewhere = referencingFunctions.Count() > 1;
-                functionContext.AddLocal(localVariable, POINTER_SIZE, false, usedElsewhere);
+                functionContext.AddLocal(localVariable, usedElsewhere);
                 _locals.DiscardLocal(localVariable);
             }
 
