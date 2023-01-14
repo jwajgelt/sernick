@@ -266,56 +266,11 @@ public static class TypeChecking
             }
 
             var commonType = typeOfLeftOperand is AnyType ? typeOfRightOperand : typeOfLeftOperand;
-            var result = new Dictionary<AstNode, Type>(childrenTypes, ReferenceEqualityComparer.Instance);
 
             // let's cover some special cases e.g. adding two bools or shirt-circuiting two ints
-            switch (node.Operator)
-            {
-                case Infix.Op.ScAnd:
-                case Infix.Op.ScOr:
-                    {
-                        if (commonType is not BoolType or AnyType)
-                        {
-                            _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
-                        }
+	    var operatorType = InfixOperatorCornerCases(node.Operator, commonType);
 
-                        result.Add(node, new BoolType());
-                        break;
-                    }
-                case Infix.Op.Plus:
-                case Infix.Op.Minus:
-                    {
-                        if (commonType is not IntType or AnyType)
-                        {
-                            _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
-                        }
-
-                        result.Add(node, new IntType());
-                        break;
-                    }
-                case Infix.Op.Greater:
-                case Infix.Op.GreaterOrEquals:
-                case Infix.Op.Less:
-                case Infix.Op.LessOrEquals:
-                case Infix.Op.Equals:
-                case Infix.Op.NotEqual:
-                    {
-                        if (commonType is not IntType or AnyType)
-                        {
-                            _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
-                        }
-
-                        result.Add(node, new BoolType());
-                        break;
-                    }
-                default:
-                    {
-                        result.Add(node, new UnitType());
-                        break;
-                    }
-            }
-
-            return result;
+	    return AddTypeInformation(result, node, operatorType);
         }
 
         public override Dictionary<AstNode, Type> VisitAssignment(Assignment node, Type expectedReturnTypeOfReturnExpr)
@@ -392,5 +347,53 @@ public static class TypeChecking
 
             return t1 == t2;
         }
+
+
+	private static Type InfixOperatorCornerCases(Operator operator, Type commonType)
+	{
+	    switch (operator)
+	    {
+		case Infix.Op.ScAnd:
+		case Infix.Op.ScOr:
+		    {
+			if (commonType is not BoolType or AnyType)
+			{
+			    _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+			}
+
+			return new BoolType();
+		    }
+		case Infix.Op.Plus:
+		case Infix.Op.Minus:
+		    {
+			if (commonType is not IntType or AnyType)
+			{
+			    _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+			}
+
+			return new IntType();
+		    }
+		case Infix.Op.Greater:
+		case Infix.Op.GreaterOrEquals:
+		case Infix.Op.Less:
+		case Infix.Op.LessOrEquals:
+		    {
+			if (commonType is not IntType or AnyType)
+			{
+			    _diagnostics.Report(new InfixOperatorTypeError(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start));
+			}
+
+			return new BoolType();
+		    }
+		case Infix.Op.Equals:
+		case Infix.Op.NotEqual:
+		    {
+			return new BoolType();
+		    }
+		// intentionally do not add a "default" case, so if we add a new infix operator and not handle it here,
+		// C# compiler notices it and gives us a warning
+	    }
+	}
+
     }
 }
