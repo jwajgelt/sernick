@@ -5,9 +5,9 @@ using Compiler.Function;
 using NameResolution;
 using Nodes;
 using Utility;
+using static Compiler.PlatformConstants;
 using static ExternalFunctionsInfo;
 using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.DistinctionNumberProvider;
-using static Compiler.PlatformConstants;
 
 /// <summary>
 ///     Static class with <see cref="Process"/> method, which constructs <see cref="IFunctionContext"/> for each

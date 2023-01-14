@@ -8,11 +8,11 @@ using Nodes;
 using sernick.ControlFlowGraph.CodeTree;
 using Utility;
 using VariableAccess;
+using static Compiler.PlatformConstants;
 using AstFunctionCall = Nodes.FunctionCall;
 using CodeTreeFunctionCall = sernick.ControlFlowGraph.CodeTree.FunctionCall;
 using SideEffectsVisitorParam = Utility.Unit;
 using Variable = Nodes.VariableDeclaration;
-using static Compiler.PlatformConstants;
 
 public static class SideEffectsAnalyzer
 {

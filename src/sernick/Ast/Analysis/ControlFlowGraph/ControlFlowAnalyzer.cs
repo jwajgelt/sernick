@@ -8,8 +8,8 @@ using Nodes;
 using sernick.Ast.Analysis.TypeChecking;
 using sernick.Ast.Analysis.VariableAccess;
 using sernick.ControlFlowGraph.CodeTree;
-using FunctionCall = Nodes.FunctionCall;
 using static Compiler.PlatformConstants;
+using FunctionCall = Nodes.FunctionCall;
 
 public static class ControlFlowAnalyzer
 {

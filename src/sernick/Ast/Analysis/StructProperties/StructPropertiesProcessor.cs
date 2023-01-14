@@ -14,7 +14,8 @@ public record struct StructProperties(
     public StructProperties() : this(
         new Dictionary<StructDeclaration, int>(ReferenceEqualityComparer.Instance),
         new Dictionary<FieldDeclaration, int>(ReferenceEqualityComparer.Instance)
-    ) { }
+    )
+    { }
 
     public StructProperties JoinWith(StructProperties other)
     {
@@ -60,8 +61,8 @@ public static class StructPropertiesProcessor
         {
             var fieldOffsets = new Dictionary<FieldDeclaration, int>(ReferenceEqualityComparer.Instance);
 
-            int offset = 0;
-            foreach (FieldDeclaration field in node.Fields)
+            var offset = 0;
+            foreach (var field in node.Fields)
             {
                 fieldOffsets[field] = offset;
                 if (field.Type is StructType type)
@@ -71,6 +72,7 @@ public static class StructPropertiesProcessor
                     {
                         _diagnostics.Report(new StructPropertiesProcessorError(field.Name.Name, type));
                     }
+
                     offset += structSize;
                 }
                 else
@@ -78,7 +80,8 @@ public static class StructPropertiesProcessor
                     offset += POINTER_SIZE;
                 }
             }
-            return new(new Dictionary<StructDeclaration, int>{ { node, offset } }, fieldOffsets);
+
+            return new(new Dictionary<StructDeclaration, int> { { node, offset } }, fieldOffsets);
         }
     }
 }

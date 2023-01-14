@@ -1,7 +1,6 @@
 namespace sernickTest.Ast.Analysis;
 
 using sernick.Ast;
-using sernick.Ast.Analysis;
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Analysis.StructProperties;
 using sernick.Ast.Nodes;
@@ -31,12 +30,6 @@ public class StructPropertiesProcessorTest
     private static StructValue GetTupleDefault() => StructValue("Tuple")
         .Field("intVal", Literal(0))
         .Field("boolVal", Literal(false));
-
-    private static StructValue GetCombinedDefault() => StructValue("Combined")
-        .Field("list", GetListDefault())
-        .Field("val", Literal(0))
-        .Field("tuple", GetTupleDefault())
-        .Field("next", Null);
 
     [Fact]
     public void TestSimple()

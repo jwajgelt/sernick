@@ -2,11 +2,11 @@ namespace sernick.Compiler.Function;
 
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
-using FunctionCall = ControlFlowGraph.CodeTree.FunctionCall;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static Convention;
 using static Helpers;
 using static PlatformConstants;
+using FunctionCall = ControlFlowGraph.CodeTree.FunctionCall;
 
 public sealed class FunctionContext : IFunctionContext
 {
@@ -241,8 +241,8 @@ public sealed class FunctionContext : IFunctionContext
 
     public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable)
     {
-        bool isStruct = IsVariableStruct(variable);
-        if(_localVariableLocation.TryGetValue(variable, out var location))
+        var isStruct = IsVariableStruct(variable);
+        if (_localVariableLocation.TryGetValue(variable, out var location))
         {
             return isStruct
                 ? ((IFunctionContext)this).GetIndirectVariableLocation(variable)
@@ -263,6 +263,7 @@ public sealed class FunctionContext : IFunctionContext
         {
             throw new ArgumentException("Variable cannot be a struct");
         }
+
         return _localVariableLocation.TryGetValue(variable, out var location)
             ? location.GenerateWrite(value)
             : new MemoryWrite(GetParentsIndirectVariableLocation(variable), value);
