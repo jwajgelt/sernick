@@ -2,6 +2,7 @@ namespace sernick.CodeGeneration.RegisterAllocation;
 
 using System.Collections.Immutable;
 using Compiler.Function;
+using Compiler.Instruction;
 using ControlFlowGraph.Analysis;
 using ControlFlowGraph.CodeTree;
 using Utility;
@@ -51,6 +52,13 @@ public sealed class SpillsAllocator
             if (asmable is not IInstruction instruction)
             {
                 return asmable.Enumerate();
+            }
+
+            var tree = instruction.HandleSpillSpecialCases(spillsLocation);
+
+            if (tree is not null)
+            {
+                return _instructionCovering.Cover(tree);
             }
 
             var usedRegisters = instruction.RegistersUsed.Where(spillsLocation.ContainsKey).ToList();
