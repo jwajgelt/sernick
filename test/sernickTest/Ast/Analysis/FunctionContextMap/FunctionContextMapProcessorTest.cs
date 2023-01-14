@@ -106,7 +106,7 @@ public class FunctionContextMapProcessorTest
                     Fun<UnitType>("g").Body(
                         Var<IntType>("z", Value("a", out var valueA), out var declZ),
                         Var<IntType>("w", out var declW),
-                        "w".Assign(Value("y", out var valueY), out var assignment)
+                        Value("w", out var assignment).Assign(Value("y", out var valueY))
                     )
             )
         );
@@ -124,8 +124,7 @@ public class FunctionContextMapProcessorTest
         var nameResolution = NameResolution()
             .WithVars(
                 (valueA, paramA),
-                (valueY, declY))
-            .WithAssigns(
+                (valueY, declY),
                 (assignment, declW));
         FunctionContextMapProcessor.Process(tree, nameResolution, _ => null, contextFactory.Object);
 

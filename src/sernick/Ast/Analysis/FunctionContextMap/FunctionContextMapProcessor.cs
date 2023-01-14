@@ -141,7 +141,11 @@ public static class FunctionContextMapProcessor
 
             node.Right.Accept(this, astContext);
 
-            var variableDeclaration = _nameResolution.AssignedVariableDeclarations[node];
+            if (node.Left is not VariableValue value)
+            {
+                throw new NotImplementedException();
+            }
+            var variableDeclaration = _nameResolution.UsedVariableDeclarations[value];
             _locals.UseLocal(variableDeclaration, astContext.EnclosingFunction);
 
             return Unit.I;

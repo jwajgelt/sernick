@@ -1,5 +1,6 @@
 namespace sernick.Ast.Analysis.ControlFlowGraph;
 
+using System.Diagnostics;
 using CallGraph;
 using Compiler.Function;
 using FunctionContextMap;
@@ -297,7 +298,12 @@ public static class SideEffectsAnalyzer
 
         public override List<TreeWithEffects> VisitAssignment(Assignment node, SideEffectsVisitorParam param)
         {
-            var variable = _nameResolution.AssignedVariableDeclarations[node];
+            if (node.Left is not VariableValue value)
+            {
+                throw new NotImplementedException();
+            }
+            var variable = _nameResolution.UsedVariableDeclarations[value] as VariableDeclaration;
+            Debug.Assert(variable is not null);
             return GenerateVariableAssignmentTree(variable, node.Right, param);
         }
 
