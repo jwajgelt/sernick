@@ -1,8 +1,7 @@
+namespace sernick.Ast.Analysis.TypeChecking;
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Nodes;
 using sernick.Utility;
-
-namespace sernick.Ast.Analysis.TypeChecking;
 
 public static class LValueChecker
 {
@@ -11,7 +10,7 @@ public static class LValueChecker
         var visitor = new LValueVisitor(nameResolutionResult, types);
         return lValue.Accept(visitor, Unit.I);
     }
-    
+
     private class LValueVisitor : AstVisitor<LValueCheckerResult, Unit>
     {
         private readonly NameResolutionResult _nameResolution;
@@ -25,7 +24,7 @@ public static class LValueChecker
 
         protected override LValueCheckerResult VisitAstNode(AstNode node, Unit param)
         {
-            return new LValueCheckerResult(IsLValue: _types[node] is PointerType, IsConstStructAccess: false);
+            return new LValueCheckerResult(IsLValue: false, IsConstStructAccess: false);
         }
 
         // Pointer dereference is always a valid L-Value
@@ -39,7 +38,7 @@ public static class LValueChecker
 
         public override LValueCheckerResult VisitStructFieldAccess(StructFieldAccess node, Unit param)
         {
-            if (_types[node] is PointerType)
+            if (_types[node.Left] is PointerType)
             {
                 return new LValueCheckerResult(IsLValue: true, IsConstStructAccess: false);
             }

@@ -1,9 +1,8 @@
 namespace sernick.Ast.Analysis.TypeChecking;
-using sernick.Utility;
-
+using sernick.Ast.Nodes;
 using sernick.Diagnostics;
 using sernick.Input;
-using sernick.Ast.Nodes;
+using sernick.Utility;
 
 public abstract record TypeCheckingErrorBase() : IDiagnosticItem
 {

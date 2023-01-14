@@ -828,5 +828,125 @@ public class TypeCheckingTest
             diagnostics.VerifyNoOtherCalls();
         }
     }
+
+    public class TestLValue
+    {
+        [Fact]
+        public void ExpressionReturningPointer_OK()
+        {
+            // var ptr1 = new(1);
+            // var ptr2 = new(2);
+            // *(if (true) { ptr1 } else { ptr2 }) = 3;
+            var tree = Block(
+                Var("ptr1", Alloc(Literal(1))),
+                Var("ptr2", Alloc(Literal(2))),
+                Deref(If(Literal(true)).Then(Value("ptr1")).Else(Value("ptr2"))
+                    ).Assign(Literal(3))
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public void ExpressionReturningPointer_BAD()
+        {
+            // var ptr1 = new(1);
+            // var ptr2 = new(2);
+            // (if (true) { ptr1 } else { ptr2 }) = new(3);
+            var tree = Block(
+                Var("ptr1", Alloc(Literal(1))),
+                Var("ptr2", Alloc(Literal(2))),
+                ((Expression)If(Literal(true)).Then(Value("ptr1")).Else(Value("ptr2")))
+                    .Assign(Alloc(Literal(3)))
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<InvalidAssigmentLeftValue>()), Times.Once);
+            diagnostics.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public void FieldAccessAutomaticDeref_OK()
+        {
+            // struct Record { field: Int }
+            // fun foo(): *Record { null }
+            // foo().field = 1
+            var tree = Block(
+                Struct("Record").Field("field", new IntType()),
+                Fun("foo", "Record".Type().Point())
+                    .Body(Null),
+                ((Expression)"foo".Call()).Field("field").Assign(Literal(1))
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public void FieldAccessAutomaticDeref_BAD()
+        {
+            // struct Record { field: Int }
+            // fun foo(): *Record { null }
+            // foo() = null
+            var tree = Block(
+                Struct("Record").Field("field", new IntType()),
+                Fun("foo", "Record".Type().Point())
+                    .Body(Null),
+                ((Expression)"foo".Call()).Assign(Null)
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<InvalidAssigmentLeftValue>()), Times.Once);
+            diagnostics.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public void AccessedConstStructField()
+        {
+            // struct Record { field: Int }
+            // struct Wrapper { field: Record }
+            // const x = Wrapper { field: { field: 1 } };
+            // x.field.field = 2
+            var tree = Block(
+                Struct("Record").Field("field", Integer),
+                Struct("Wrapper").Field("field", "Record".Type()),
+                Var("x", StructValue("Wrapper")
+                    .Field("field",
+                        StructValue("Record").Field("field", Literal(1)))
+                ).Const(),
+                Value("x").Field("field").Field("field").Assign(Literal(2))
+            );
+
+            var diagnostics = new Mock<IDiagnostics>();
+            diagnostics.SetupAllProperties();
+
+            var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+            TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
+
+            diagnostics.Verify(d => d.Report(It.IsAny<AssigmentToConstStructField>()), Times.Once);
+            diagnostics.VerifyNoOtherCalls();
+        }
+    }
 }
 

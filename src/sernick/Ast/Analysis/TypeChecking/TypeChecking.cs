@@ -1,10 +1,9 @@
 namespace sernick.Ast.Analysis.TypeChecking;
-using sernick.Input;
-
 using System.Linq;
-using sernick.Diagnostics;
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Nodes;
+using sernick.Diagnostics;
+using sernick.Input;
 using sernick.Utility;
 using TypeInformation = Dictionary<Nodes.AstNode, Type>;
 
@@ -114,7 +113,7 @@ public static class TypeChecking
 
             var bodyReturnType = childrenTypes[node.Body];
 
-            if (!Same(declaredReturnType, bodyReturnType))
+            if (!CompatibleForAssigment(declaredReturnType, bodyReturnType))
             {
                 _diagnostics.Report(new InferredBadFunctionReturnType(declaredReturnType, bodyReturnType, node.Body.Inner.LocationRange.Start));
             }
