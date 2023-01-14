@@ -16,8 +16,8 @@ public class StructHelper
     {
         return Enumerable.Range(0, structSize)
             .Select(offset =>
-                Mem(targetStruct + POINTER_SIZE * offset)
-                    .Write(Mem(sourceStruct + POINTER_SIZE * offset).Read()));
+                Mem(targetStruct + offset)
+                    .Write(Mem(sourceStruct + offset).Read()));
     }
 
     public StructHelper(StructProperties properties)
@@ -30,7 +30,7 @@ public class StructHelper
         FieldDeclaration field)
     {
         var offset = _properties.FieldOffsets[field];
-        var source = sourceStruct + POINTER_SIZE * offset;
+        var source = sourceStruct + offset;
 
         if (field.Type is not StructType)
         {
@@ -49,7 +49,7 @@ public class StructHelper
     {
         var structSize = _properties.StructSizes[targetStructDeclaration];
         var offset = _properties.FieldOffsets[field];
-        var target = targetStruct + POINTER_SIZE * offset;
+        var target = targetStruct + offset;
 
         if (field.Type is not StructType)
         {

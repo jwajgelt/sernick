@@ -436,7 +436,7 @@ public static class TypeChecking
                 return AddTypeInformation<AnyType>(childrenTypes, node);
             }
 
-            var fieldType = structDeclaration.Fields.Where(fieldDeclaration => fieldDeclaration.Name == fieldName).First().Type;
+            var fieldType = structDeclaration.Fields.First(fieldDeclaration => fieldDeclaration.Name == fieldName).Type;
             return CreateTypeInformation(node, fieldType);
         }
 
