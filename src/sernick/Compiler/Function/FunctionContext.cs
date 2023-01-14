@@ -280,7 +280,7 @@ public sealed class FunctionContext : IFunctionContext
         if (local is not MemoryLocation localMemory)
         {
             throw new ArgumentException(
-                "Variable was added with usedElsewhere=false and can't be accessed indirectly",
+                "Variable is not a struct and was added with usedElsewhere=false, so it can't be accessed indirectly",
                 nameof(variable));
         }
 
