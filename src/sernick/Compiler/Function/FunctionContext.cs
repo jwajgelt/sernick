@@ -52,6 +52,8 @@ public sealed class FunctionContext : IFunctionContext
         for (var i = REG_ARGS_COUNT; i < _functionParameters.Count; i++)
         {
             _localVariableLocation.Add(_functionParameters[i], new MemoryLocation(-(fistArgOffset - POINTER_SIZE * argNum)));
+            _localVariableSize.Add(_functionParameters[i], POINTER_SIZE);
+            _localVariableIsStruct.Add(_functionParameters[i], false);
             argNum += 1;
         }
     }
