@@ -40,10 +40,7 @@ public static class InstructionHelper
             return true;
         }
 
-        bool UsesMemory(IInstructionOperand instructionOperand)
-        {
-            return instructionOperand is MemInstructionOperand || IsSpilled(instructionOperand, out _);
-        }
+        bool UsesMemory(IInstructionOperand instructionOperand) => instructionOperand is MemInstructionOperand || IsSpilled(instructionOperand, out _);
 
         switch (instruction)
         {
