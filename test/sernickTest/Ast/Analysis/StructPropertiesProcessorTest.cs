@@ -23,14 +23,6 @@ public class StructPropertiesProcessorTest
         .Field("tuple", new StructType(Ident("Tuple")))
         .Field("next", new PointerType(new StructType(Ident("Combined"))));
 
-    private static StructValue GetListDefault() => StructValue("List")
-        .Field("val", Literal(0))
-        .Field("next", Null);
-
-    private static StructValue GetTupleDefault() => StructValue("Tuple")
-        .Field("intVal", Literal(0))
-        .Field("boolVal", Literal(false));
-
     [Fact]
     public void TestSimple()
     {
