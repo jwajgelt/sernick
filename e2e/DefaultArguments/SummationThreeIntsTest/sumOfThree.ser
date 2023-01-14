@@ -1,0 +1,17 @@
+fun sum(a: Int = 1, b: Int = 2, c: Int = 3): Int {
+    return a + b + c;
+}
+
+var a = read();
+var b = read();
+var c = read();
+
+var shouldBe6 = sum();
+var aPlusFive = sum(a);
+var aPlubBPlusThree = sum(a,b);
+var aPlusBPlusC = sum(a,b,c);
+
+write(shouldBe6);
+write(aPlusFive);
+write(aPlubBPlusThree);
+write(aPlusBPlusC);

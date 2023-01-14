@@ -1,0 +1,32 @@
+fun booleanAnd(a: Bool = true, b: Bool = false): Bool {
+    return (a && b);
+}
+
+fun booleanOr(a: Bool = false, b : Bool = true): Bool {
+    return (a || b);
+}
+
+fun intToBool(i: Int): Bool {
+    if(i == 0) {return false};
+    return true;
+}
+
+fun boolToInt(b : Bool): Int {
+    if(b == false) {return 0};
+    return 1;
+}
+
+var aInt = read();
+var aBool: Bool = intToBool(aInt);
+
+var bInt = read();
+var bBool: Bool = intToBool(bInt);
+
+
+write(boolToInt(booleanAnd())); // false
+write(boolToInt(booleanAnd(aBool))); // a && false == false
+write(boolToInt(booleanAnd(aBool, bBool))); // a && b
+
+write(boolToInt(booleanOr())); // true
+write(boolToInt(booleanOr(aBool))); // a || true == true
+write(boolToInt(booleanOr(aBool, bBool))); // a || b
