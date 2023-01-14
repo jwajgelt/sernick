@@ -18,16 +18,6 @@ public static class NameResolutionResultBuilder
                 ReferenceEqualityComparer<VariableValue>.Instance)
         };
 
-    public static NameResolutionResult WithAssigns(this NameResolutionResult nameResolution,
-        params (Assignment, VariableDeclaration)[] assigns) =>
-        nameResolution with
-        {
-            AssignedVariableDeclarations = assigns.ToDictionary(
-                variable => variable.Item1,
-                variable => variable.Item2,
-                ReferenceEqualityComparer<Assignment>.Instance)
-        };
-
     public static NameResolutionResult WithCalls(this NameResolutionResult nameResolution,
         params (FunctionCall, FunctionDefinition)[] calls) =>
         nameResolution with

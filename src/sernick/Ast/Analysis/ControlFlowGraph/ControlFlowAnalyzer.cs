@@ -334,8 +334,13 @@ public static class ControlFlowAnalyzer
             {
                 return _pullOutSideEffects(node, param.Next, param.ResultVariable);
             }
+            
+            if (node.Left is not VariableValue value)
+            {
+                throw new NotImplementedException();
+            }
 
-            return node.Right.Accept(this, param with { ResultVariable = _nameResolution.AssignedVariableDeclarations[node] });
+            return node.Right.Accept(this, param with { ResultVariable = _nameResolution.UsedVariableDeclarations[value] });
         }
 
         public override CodeTreeRoot VisitIdentifier(Identifier node, ControlFlowVisitorParam param)
