@@ -265,8 +265,6 @@ public static class TypeChecking
                 return AddTypeInformation<UnitType>(childrenTypes, node);
             }
 
-
-
             // let's cover some special cases e.g. adding two bools or shirt-circuiting two ints
             var operatorType = InfixOperatorCornerCases(node.Operator, typeOfLeftOperand, typeOfRightOperand, node.LocationRange.Start);
 
@@ -347,7 +345,6 @@ public static class TypeChecking
 
             return t1 == t2;
         }
-
 
         private Type InfixOperatorCornerCases(Infix.Op op, Type typeOfLeftOperand, Type typeOfRightOperand, Input.ILocation start)
         {
