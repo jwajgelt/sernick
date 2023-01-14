@@ -3,7 +3,7 @@ using ControlFlowGraph.CodeTree;
 
 public interface IFunctionContext : IFunctionCaller
 {
-    public void AddLocal(IFunctionVariable variable, int size, bool usedElsewhere);
+    public void AddLocal(IFunctionVariable variable, int size, bool isStruct, bool usedElsewhere);
 
     public IReadOnlyList<SingleExitNode> GeneratePrologue();
 
@@ -11,6 +11,8 @@ public interface IFunctionContext : IFunctionCaller
 
     public int Depth { get; }
     public bool ValueIsReturned { get; }
+
+    public bool IsVariableStruct(IFunctionVariable variable);
 
     /// <summary>
     ///     If variable is local then generates either memory read or register read
