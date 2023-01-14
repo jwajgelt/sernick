@@ -15,7 +15,7 @@ public class FunctionContextGenerateVariableAccessTest
     {
         var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         var variable = Var("x");
-        context.AddLocal(variable, POINTER_SIZE, false);
+        context.AddLocal(variable, POINTER_SIZE, false, false);
 
         var readCodeTree = context.GenerateVariableRead(variable);
 
@@ -27,7 +27,7 @@ public class FunctionContextGenerateVariableAccessTest
     {
         var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         var variable = Var("x");
-        context.AddLocal(variable, POINTER_SIZE, false);
+        context.AddLocal(variable, POINTER_SIZE, false, false);
         var value = new Constant(new RegisterValue(1));
 
         var writeCodeTree = context.GenerateVariableWrite(variable, value);
@@ -41,7 +41,7 @@ public class FunctionContextGenerateVariableAccessTest
     {
         var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         var variable = Var("x");
-        context.AddLocal(variable, POINTER_SIZE, true);
+        context.AddLocal(variable, POINTER_SIZE, false, true);
 
         var readCodeTree = context.GenerateVariableRead(variable);
 
@@ -73,7 +73,7 @@ public class FunctionContextGenerateVariableAccessTest
     {
         var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         var variable = Var("x");
-        context.AddLocal(variable, POINTER_SIZE, true);
+        context.AddLocal(variable, POINTER_SIZE, false, true);
         var value = new Constant(new RegisterValue(1));
 
         var readCodeTree = context.GenerateVariableWrite(variable, value);
@@ -92,9 +92,9 @@ public class FunctionContextGenerateVariableAccessTest
 
         var parentContext = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         var context = new FunctionContext(parentContext, Array.Empty<IFunctionParam>(), false, "");
-        parentContext.AddLocal(varX, POINTER_SIZE, true);
-        context.AddLocal(varX, POINTER_SIZE, true);
-        context.AddLocal(varY, POINTER_SIZE, false);
+        parentContext.AddLocal(varX, POINTER_SIZE, false, true);
+        context.AddLocal(varX, POINTER_SIZE, false, true);
+        context.AddLocal(varY, POINTER_SIZE, false, false);
 
         Assert.Throws<ArgumentException>(() => context.GenerateVariableRead(undefinedVar));
         Assert.Throws<ArgumentException>(() => context.GenerateVariableWrite(undefinedVar, value));
@@ -107,7 +107,7 @@ public class FunctionContextGenerateVariableAccessTest
         var displayAddress = new GlobalAddress(DisplayTable.DISPLAY_TABLE_SYMBOL);
 
         var parentContext = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
-        parentContext.AddLocal(variable, POINTER_SIZE, true);
+        parentContext.AddLocal(variable, POINTER_SIZE, false, true);
         var context = new FunctionContext(parentContext, Array.Empty<IFunctionParam>(), false, "");
 
         var readCodeTree = context.GenerateVariableRead(variable);
@@ -125,7 +125,7 @@ public class FunctionContextGenerateVariableAccessTest
         var displayAddress = new GlobalAddress(DisplayTable.DISPLAY_TABLE_SYMBOL);
 
         var parentContext = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
-        parentContext.AddLocal(variable, POINTER_SIZE, true);
+        parentContext.AddLocal(variable, POINTER_SIZE, false, true);
         var context = new FunctionContext(parentContext, Array.Empty<IFunctionParam>(), false, "");
 
         var readCodeTree = context.GenerateVariableWrite(variable, value);

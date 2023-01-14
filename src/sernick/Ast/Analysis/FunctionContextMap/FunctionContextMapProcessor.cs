@@ -80,7 +80,7 @@ public static class FunctionContextMapProcessor
             foreach (var (localVariable, referencingFunctions) in _locals[node])
             {
                 var usedElsewhere = referencingFunctions.Count() > 1;
-                functionContext.AddLocal(localVariable, POINTER_SIZE, usedElsewhere);
+                functionContext.AddLocal(localVariable, POINTER_SIZE, false, usedElsewhere);
                 _locals.DiscardLocal(localVariable);
             }
 

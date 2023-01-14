@@ -135,7 +135,7 @@ public static class ControlFlowAnalyzer
         public IFunctionVariable NewVariable()
         {
             var temp = new TemporaryLocalVariable();
-            _functionContext.AddLocal(temp, POINTER_SIZE, false);
+            _functionContext.AddLocal(temp, POINTER_SIZE, false, false);
             return temp;
         }
     }
@@ -358,7 +358,7 @@ public static class ControlFlowAnalyzer
                 null,
                 false,
                 node.LocationRange);
-            _currentFunctionContext.AddLocal(tempVariable, POINTER_SIZE, false);
+            _currentFunctionContext.AddLocal(tempVariable, POINTER_SIZE, false, false);
             var variableValue = new VariableValue(identifier, node.LocationRange);
             _nameResolution = _nameResolution.JoinWith(NameResolutionResult.OfVariableUse(variableValue, tempVariable));
             return (tempVariable, variableValue);
