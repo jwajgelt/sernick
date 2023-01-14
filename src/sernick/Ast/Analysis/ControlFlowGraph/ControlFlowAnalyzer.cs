@@ -368,15 +368,9 @@ public static class ControlFlowAnalyzer
     {
         protected override bool VisitAstNode(AstNode node, ISet<AstNode> set)
         {
-            if (node is FunctionDefinition)
-            {
-                return false;
-            }
-
             var children = node.Children.Select(childNode => childNode.Accept(this, set)).ToList();
 
-            if (node is not (FlowControlStatement or Infix { Operator: Infix.Op.ScAnd or Infix.Op.ScOr }) &&
-                children.All(value => !value))
+            if (children.All(value => !value))
             {
                 return false;
             }
@@ -384,6 +378,30 @@ public static class ControlFlowAnalyzer
             set.Add(node);
             return true;
 
+        }
+
+        public override bool VisitFunctionDefinition(FunctionDefinition definition, ISet<AstNode> set)
+        {
+            return false;
+        }
+
+        public override bool VisitInfix(Infix infix, ISet<AstNode> set)
+        {
+            var childrenResult = VisitAstNode(infix, set);
+            var result = infix.Operator is Infix.Op.ScAnd or Infix.Op.ScOr || childrenResult;
+            if (result)
+            {
+                set.Add(infix);
+            }
+
+            return result;
+        }
+        
+        protected override bool VisitFlowControlStatement(FlowControlStatement node, ISet<AstNode> set)
+        {
+            VisitAstNode(node, set);
+            set.Add(node);
+            return true;
         }
     }
 }
