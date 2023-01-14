@@ -122,7 +122,7 @@ public class AstToCfgConversionTest
         var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
         var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramN }, true);
 
-        fContext.AddLocal(paramN, false);
+        fContext.AddLocal(paramN, POINTER_SIZE, false);
         var fResult = Reg(new Register());
 
         var fCall = fContext.GenerateCall(new[] { new Constant(new RegisterValue(5)) });
@@ -221,8 +221,8 @@ public class AstToCfgConversionTest
         var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramX }, true);
         var gContext = funFactory.CreateFunction(fContext, Ident("g"), null, new IFunctionParam[] { paramY }, true);
 
-        fContext.AddLocal(paramX, false);
-        gContext.AddLocal(paramY, false);
+        fContext.AddLocal(paramX, POINTER_SIZE, false);
+        gContext.AddLocal(paramY, POINTER_SIZE, false);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
 
@@ -329,13 +329,13 @@ public class AstToCfgConversionTest
         var f3Context = funFactory.CreateFunction(f2Context, Ident("f3"), null, new IFunctionParam[] { paramP3 }, true);
         var f4Context = funFactory.CreateFunction(f3Context, Ident("f4"), null, new IFunctionParam[] { paramP4 }, true);
 
-        f1Context.AddLocal(paramP1, false);
-        f2Context.AddLocal(paramP2, false);
-        f3Context.AddLocal(paramP3, false);
-        f4Context.AddLocal(paramP4, false);
-        f1Context.AddLocal(v1, true);
-        f2Context.AddLocal(v2, true);
-        f3Context.AddLocal(v3, true);
+        f1Context.AddLocal(paramP1, POINTER_SIZE, false);
+        f2Context.AddLocal(paramP2, POINTER_SIZE, false);
+        f3Context.AddLocal(paramP3, POINTER_SIZE, false);
+        f4Context.AddLocal(paramP4, POINTER_SIZE, false);
+        f1Context.AddLocal(v1, POINTER_SIZE, true);
+        f2Context.AddLocal(v2, POINTER_SIZE, true);
+        f3Context.AddLocal(v3, POINTER_SIZE, true);
         var f1Result = Reg(new Register());
         var f2Result = Reg(new Register());
         var f3Result = Reg(new Register());
@@ -422,9 +422,9 @@ public class AstToCfgConversionTest
         var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramX, paramY }, true);
         var gContext = funFactory.CreateFunction(fContext, Ident("g"), null, new IFunctionParam[] { paramZ }, true);
 
-        fContext.AddLocal(paramX, false);
-        fContext.AddLocal(paramY, false);
-        gContext.AddLocal(paramZ, false);
+        fContext.AddLocal(paramX, POINTER_SIZE, false);
+        fContext.AddLocal(paramY, POINTER_SIZE, false);
+        gContext.AddLocal(paramZ, POINTER_SIZE, false);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
 
@@ -659,8 +659,8 @@ public class AstToCfgConversionTest
         var gContext = funFactory.CreateFunction(fContext, Ident("g"), null, new IFunctionParam[] { }, false);
         var hContext = funFactory.CreateFunction(fContext, Ident("h"), null, new IFunctionParam[] { }, false);
 
-        mainContext.AddLocal(x, true);
-        fContext.AddLocal(paramV, false);
+        mainContext.AddLocal(x, POINTER_SIZE, true);
+        fContext.AddLocal(paramV, POINTER_SIZE, false);
 
         var fCallInMain = fContext.GenerateCall(new[] { new Constant(new RegisterValue(1)) });
         var fCallInG = fContext.GenerateCall(new[] { new Constant(new RegisterValue(0)) });
@@ -755,9 +755,9 @@ public class AstToCfgConversionTest
         var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramVf }, true);
         var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramVg }, true);
 
-        mainContext.AddLocal(x, true);
-        fContext.AddLocal(paramVf, false);
-        gContext.AddLocal(paramVg, false);
+        mainContext.AddLocal(x, POINTER_SIZE, true);
+        fContext.AddLocal(paramVf, POINTER_SIZE, false);
+        gContext.AddLocal(paramVg, POINTER_SIZE, false);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
 
@@ -853,9 +853,9 @@ public class AstToCfgConversionTest
         var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramVf }, true);
         var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramVg }, true);
 
-        mainContext.AddLocal(x, true);
-        fContext.AddLocal(paramVf, false);
-        gContext.AddLocal(paramVg, false);
+        mainContext.AddLocal(x, POINTER_SIZE, true);
+        fContext.AddLocal(paramVf, POINTER_SIZE, false);
+        gContext.AddLocal(paramVg, POINTER_SIZE, false);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
 
@@ -959,10 +959,10 @@ public class AstToCfgConversionTest
         var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramVg }, true);
         var hContext = funFactory.CreateFunction(mainContext, Ident("h"), null, new IFunctionParam[] { paramVh }, true);
 
-        mainContext.AddLocal(x, true);
-        fContext.AddLocal(paramVf, false);
-        gContext.AddLocal(paramVg, false);
-        hContext.AddLocal(paramVh, false);
+        mainContext.AddLocal(x, POINTER_SIZE, true);
+        fContext.AddLocal(paramVf, POINTER_SIZE, false);
+        gContext.AddLocal(paramVg, POINTER_SIZE, false);
+        hContext.AddLocal(paramVh, POINTER_SIZE, false);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
         var hResult = Reg(new Register());
@@ -1051,7 +1051,7 @@ public class AstToCfgConversionTest
         var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, Array.Empty<IFunctionParam>(), true);
         var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, Array.Empty<IFunctionParam>(), true);
 
-        mainContext.AddLocal(x, true);
+        mainContext.AddLocal(x, POINTER_SIZE, true);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
 
@@ -1158,7 +1158,7 @@ public class AstToCfgConversionTest
         var f3Context = funFactory.CreateFunction(mainContext, Ident("f3"), null, Array.Empty<IFunctionParam>(), true);
         var f4Context = funFactory.CreateFunction(mainContext, Ident("f4"), null, Array.Empty<IFunctionParam>(), true);
 
-        mainContext.AddLocal(x, true);
+        mainContext.AddLocal(x, POINTER_SIZE, true);
         var f1Result = Reg(new Register());
         var f2Result = Reg(new Register());
         var f3Result = Reg(new Register());
@@ -1277,9 +1277,9 @@ public class AstToCfgConversionTest
         var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, Array.Empty<IFunctionParam>(), true);
         var hContext = funFactory.CreateFunction(mainContext, Ident("h"), null, Array.Empty<IFunctionParam>(), true);
 
-        mainContext.AddLocal(x, true);
-        fContext.AddLocal(paramA, false);
-        fContext.AddLocal(paramB, false);
+        mainContext.AddLocal(x, POINTER_SIZE, true);
+        fContext.AddLocal(paramA, POINTER_SIZE, false);
+        fContext.AddLocal(paramB, POINTER_SIZE, false);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
         var hResult = Reg(new Register());

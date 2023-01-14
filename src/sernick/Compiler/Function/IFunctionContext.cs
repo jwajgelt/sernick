@@ -3,7 +3,7 @@ using ControlFlowGraph.CodeTree;
 
 public interface IFunctionContext : IFunctionCaller
 {
-    public void AddLocal(IFunctionVariable variable, bool usedElsewhere);
+    public void AddLocal(IFunctionVariable variable, int size, bool usedElsewhere);
 
     public IReadOnlyList<SingleExitNode> GeneratePrologue();
 
