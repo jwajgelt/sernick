@@ -145,6 +145,7 @@ public static class FunctionContextMapProcessor
             {
                 throw new NotImplementedException();
             }
+
             var variableDeclaration = _nameResolution.UsedVariableDeclarations[value];
             _locals.UseLocal(variableDeclaration, astContext.EnclosingFunction);
 

@@ -334,7 +334,7 @@ public static class ControlFlowAnalyzer
             {
                 return _pullOutSideEffects(node, param.Next, param.ResultVariable);
             }
-            
+
             if (node.Left is not VariableValue value)
             {
                 throw new NotImplementedException();
@@ -401,7 +401,7 @@ public static class ControlFlowAnalyzer
 
             return result;
         }
-        
+
         protected override bool VisitFlowControlStatement(FlowControlStatement node, ISet<AstNode> set)
         {
             VisitAstNode(node, set);

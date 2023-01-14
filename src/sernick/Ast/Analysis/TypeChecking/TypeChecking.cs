@@ -327,7 +327,7 @@ public static class TypeChecking
         {
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
             var typeOfLeftSide = childrenTypes[node.Left];
-            
+
             var typeOfRightSide = childrenTypes[node.Right];
 
             if (!CompatibleForAssigment(typeOfLeftSide, typeOfRightSide))

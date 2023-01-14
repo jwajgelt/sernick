@@ -42,7 +42,7 @@ public sealed record NameResolutionResult(IReadOnlyDictionary<VariableValue, Dec
             UsedVariableDeclarations = new Dictionary<VariableValue, Declaration> { { node, variableDeclaration } }
         };
     }
-    
+
     public static NameResolutionResult OfFunctionCall(FunctionCall node, FunctionDefinition declaration)
     {
         return new NameResolutionResult

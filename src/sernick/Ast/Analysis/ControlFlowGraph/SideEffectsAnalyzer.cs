@@ -302,6 +302,7 @@ public static class SideEffectsAnalyzer
             {
                 throw new NotImplementedException();
             }
+
             var variable = _nameResolution.UsedVariableDeclarations[value] as VariableDeclaration;
             Debug.Assert(variable is not null);
             return GenerateVariableAssignmentTree(variable, node.Right, param);
