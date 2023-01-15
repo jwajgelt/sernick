@@ -1332,10 +1332,11 @@ public class AstToCfgConversionTest
     {
         var diagnostics = new FakeDiagnostics();
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
-        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, _ => null, new FunctionFactory(LabelGenerator.Generate));
+        var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
+        var structProperties = StructPropertiesProcessor.Process(ast, nameResolution, diagnostics);
+        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, structProperties, _ => null, new FunctionFactory(LabelGenerator.Generate));
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
-        var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
             // TODO: provide StructProperties here
             root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, new StructProperties(), SideEffectsAnalyzer.PullOutSideEffects));

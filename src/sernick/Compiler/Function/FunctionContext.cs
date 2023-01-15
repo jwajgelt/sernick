@@ -21,7 +21,7 @@ public sealed class FunctionContext : IFunctionContext
     private readonly RegisterValue _localsOffset;
     private readonly CodeTreeValueNode _displayEntry;
     private readonly Register _oldDisplayValReg;
-    private readonly bool _returnsStruct;
+    private readonly int? _returnedStructSize;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
 
     public Label Label { get; }
@@ -35,7 +35,7 @@ public sealed class FunctionContext : IFunctionContext
         IReadOnlyList<IFunctionParam> parameters,
         bool returnsValue,
         Label label,
-        bool returnsStruct = false
+        int? returnedStructSize = null
     )
     {
         Label = label;
@@ -51,7 +51,7 @@ public sealed class FunctionContext : IFunctionContext
         _localsOffset = new RegisterValue(0, false);
         _displayEntry = new GlobalAddress(DisplayTable.DISPLAY_TABLE_SYMBOL) + POINTER_SIZE * Depth;
         _oldDisplayValReg = new Register();
-        _returnsStruct = returnsStruct;
+        _returnedStructSize = returnedStructSize;
 
         var fistArgOffset = POINTER_SIZE * (1 + _functionParameters.Count - REG_ARGS_COUNT);
         var argNum = 0;
@@ -143,10 +143,10 @@ public sealed class FunctionContext : IFunctionContext
 
         // If value is returned, then put it from RAX to virtual register
         CodeTreeValueNode? returnValueLocation = null;
-        if (_returnsStruct)
+        if (_returnedStructSize is not null)
         {
             var raxRead = Reg(rax).Read();
-            operations = operations.Concat(GenerateStructCopy(GenerateVariableRead(_functionParameters[0]), raxRead, LocalVariableSize[_functionParameters[0]])).ToList();
+            operations = operations.Concat(GenerateStructCopy(GenerateVariableRead(_functionParameters[0]), raxRead, _returnedStructSize.GetValueOrDefault())).ToList();
         }
 
         else if (ValueIsReturned)

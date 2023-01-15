@@ -26,9 +26,9 @@ public static class CompilerBackend
     /// <exception cref="CompilationException"></exception>
     public static string Process(string filename, CompilerFrontendResult programInfo)
     {
-        var (astRoot, nameResolution, typeCheckingResult, callGraph, variableAccessMap) = programInfo;
+        var (astRoot, nameResolution, structProperties, typeCheckingResult, callGraph, variableAccessMap) = programInfo;
 
-        var functionContextMap = FunctionContextMapProcessor.Process(astRoot, nameResolution,
+        var functionContextMap = FunctionContextMapProcessor.Process(astRoot, nameResolution, structProperties,
             FunctionDistinctionNumberProcessor.Process(astRoot), new FunctionFactory(LabelGenerator.Generate));
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(astRoot,
             root =>

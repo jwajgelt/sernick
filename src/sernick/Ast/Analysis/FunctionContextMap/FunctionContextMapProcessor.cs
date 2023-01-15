@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Compiler.Function;
 using NameResolution;
 using Nodes;
+using StructProperties;
 using Utility;
 using static ExternalFunctionsInfo;
 using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.DistinctionNumberProvider;
@@ -14,10 +15,10 @@ using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.Distinction
 /// </summary>
 public static class FunctionContextMapProcessor
 {
-    public static FunctionContextMap Process(AstNode ast, NameResolutionResult nameResolution,
+    public static FunctionContextMap Process(AstNode ast, NameResolutionResult nameResolution, StructProperties structProperties,
         DistinctionNumberProvider provider, IFunctionFactory contextFactory)
     {
-        var visitor = new FunctionContextProcessVisitor(nameResolution, provider, contextFactory);
+        var visitor = new FunctionContextProcessVisitor(nameResolution, structProperties, provider, contextFactory);
         visitor.VisitAstTree(ast, new AstNodeContext());
         return visitor.ContextMap;
     }
@@ -35,13 +36,14 @@ public static class FunctionContextMapProcessor
         public readonly FunctionContextMap ContextMap = new();
 
         private readonly NameResolutionResult _nameResolution;
+        private readonly StructProperties _structProperties;
         private readonly DistinctionNumberProvider _provider;
         private readonly IFunctionFactory _contextFactory;
 
         private readonly FunctionLocalVariables _locals = new();
 
-        public FunctionContextProcessVisitor(NameResolutionResult nameResolution, DistinctionNumberProvider provider, IFunctionFactory contextFactory) =>
-            (_nameResolution, _provider, _contextFactory) = (nameResolution, provider, contextFactory);
+        public FunctionContextProcessVisitor(NameResolutionResult nameResolution, StructProperties structProperties, DistinctionNumberProvider provider, IFunctionFactory contextFactory) =>
+            (_nameResolution, _structProperties, _provider, _contextFactory) = (nameResolution, structProperties, provider, contextFactory);
 
         protected override Unit VisitAstNode(AstNode node, AstNodeContext param)
         {
@@ -56,23 +58,25 @@ public static class FunctionContextMapProcessor
         public override Unit VisitFunctionDefinition(FunctionDefinition node, AstNodeContext astContext)
         {
             var parameters = node.Parameters.ToList();
-            if (node.ReturnType is StructType type)
+            int? retStructSize = null;
+            if (node.ReturnType is StructType retType)
             {
                 parameters.Prepend(new FunctionParameterDeclaration(
                     new Identifier("", node.LocationRange),
-                    type,
+                    retType,
                     null,
                     node.LocationRange
                     ));
+                retStructSize = _structProperties.StructSizes[_nameResolution.StructDeclarations[retType.Struct]];
             }
 
             var functionContext = _contextFactory.CreateFunction(
                 parent: astContext.EnclosingFunction is not null ? ContextMap[astContext.EnclosingFunction] : null,
                 name: node.Name,
                 _provider(node),
-                parameters: node.Parameters.ToList(),
+                parameters: parameters,
                 returnsValue: !node.ReturnType.Equals(new UnitType()),
-                node.ReturnType is StructType);
+                retStructSize);
 
             ContextMap[node] = functionContext;
 

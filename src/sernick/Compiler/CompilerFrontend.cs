@@ -3,6 +3,7 @@ namespace sernick.Compiler;
 using Ast;
 using Ast.Analysis.CallGraph;
 using Ast.Analysis.NameResolution;
+using Ast.Analysis.StructProperties;
 using Ast.Analysis.TypeChecking;
 using Ast.Analysis.VariableAccess;
 using Ast.Nodes;
@@ -47,8 +48,11 @@ public static class CompilerFrontend
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
 
         return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, variableAccessMap);*/
+        var structProperties = StructPropertiesProcessor.Process(ast, nameResolution, diagnostics);
+        ThrowIfErrorsOccurred(diagnostics);
         return new CompilerFrontendResult(ast,
             nameResolution,
+            structProperties,
             new TypeCheckingResult(new Dictionary<AstNode, Type>()),
             new CallGraph(),
             new VariableAccessMap());
