@@ -6,6 +6,7 @@ using sernick.Ast.Analysis.CallGraph;
 using sernick.Ast.Analysis.ControlFlowGraph;
 using sernick.Ast.Analysis.FunctionContextMap;
 using sernick.Ast.Analysis.NameResolution;
+using sernick.Ast.Analysis.StructProperties;
 using sernick.Ast.Analysis.TypeChecking;
 using sernick.Ast.Analysis.VariableAccess;
 using sernick.Ast.Nodes;
@@ -1336,7 +1337,8 @@ public class AstToCfgConversionTest
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
         var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
-            root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, SideEffectsAnalyzer.PullOutSideEffects));
+            // TODO: provide StructProperties here
+            root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, new StructProperties(), SideEffectsAnalyzer.PullOutSideEffects));
 
         foreach (var (fun, codeTree) in expected)
         {

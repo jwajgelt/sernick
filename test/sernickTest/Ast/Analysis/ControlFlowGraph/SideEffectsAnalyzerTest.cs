@@ -7,6 +7,8 @@ using sernick.Ast.Analysis.CallGraph;
 using sernick.Ast.Analysis.ControlFlowGraph;
 using sernick.Ast.Analysis.FunctionContextMap;
 using sernick.Ast.Analysis.NameResolution;
+using sernick.Ast.Analysis.StructProperties;
+using sernick.Ast.Analysis.TypeChecking;
 using sernick.Ast.Analysis.VariableAccess;
 using sernick.Ast.Nodes;
 using sernick.ControlFlowGraph.CodeTree;
@@ -16,6 +18,7 @@ public class SideEffectsAnalyzerTest
 {
     private static readonly CallGraph callGraph = new CallGraph();
     private static readonly VariableAccessMap variableAccessMap = new VariableAccessMap();
+    private static readonly TypeCheckingResult typeCheckingResult = new TypeCheckingResult(new Dictionary<AstNode, Type>());
 
     [Theory]
     [InlineData(Infix.Op.Plus, BinaryOperation.Add)]
@@ -45,7 +48,7 @@ public class SideEffectsAnalyzerTest
             })
         };
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, new NameResolutionResult(), functionContext, functionContextMap, callGraph, variableAccessMap);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, new NameResolutionResult(), functionContext, functionContextMap, callGraph, variableAccessMap, new StructProperties(), typeCheckingResult);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
@@ -94,7 +97,7 @@ public class SideEffectsAnalyzerTest
             (xUse, declX),
             (yUse, declY));
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap, new StructProperties(), typeCheckingResult);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
@@ -140,7 +143,7 @@ public class SideEffectsAnalyzerTest
             (xSecondUse, declX),
             (xThirdUse, declX))
             .WithAssigns((xAss, declX));
-        _ = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap);
+        _ = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap, new StructProperties(), typeCheckingResult);
     }
 
     [Fact]
@@ -170,7 +173,7 @@ public class SideEffectsAnalyzerTest
 
         var nameResolution = new NameResolutionResult().WithVars((xUse, declX));
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap, new StructProperties(), typeCheckingResult);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
@@ -207,10 +210,9 @@ public class SideEffectsAnalyzerTest
         };
 
         var nameResolution = new NameResolutionResult()
-            .WithVars((xUse, declX), (yUse, declY))
-            .WithAssigns((xAss, declX));
+            .WithVars((xUse, declX), (yUse, declY), ((VariableValue)xAss.Left, declX));
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap, new StructProperties(), typeCheckingResult);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
@@ -249,10 +251,9 @@ public class SideEffectsAnalyzerTest
         };
 
         var nameResolution = new NameResolutionResult()
-            .WithVars((xUse, declX))
-            .WithAssigns((xAss, declX));
+            .WithVars((xUse, declX), ((VariableValue)xAss.Left, declX));
 
-        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap);
+        var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap, new StructProperties(), typeCheckingResult);
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }

@@ -6,8 +6,11 @@ using FunctionContextMap;
 using NameResolution;
 using Nodes;
 using sernick.ControlFlowGraph.CodeTree;
+using StructProperties;
+using TypeChecking;
 using Utility;
 using VariableAccess;
+using static Compiler.PlatformConstants;
 using AstFunctionCall = Nodes.FunctionCall;
 using CodeTreeFunctionCall = sernick.ControlFlowGraph.CodeTree.FunctionCall;
 using SideEffectsVisitorParam = Utility.Unit;
@@ -21,10 +24,12 @@ public static class SideEffectsAnalyzer
         IFunctionContext currentFunctionContext,
         FunctionContextMap functionContextMap,
         CallGraph callGraph,
-        VariableAccessMap variableAccessMap
+        VariableAccessMap variableAccessMap,
+        StructProperties structProperties,
+        TypeCheckingResult typeCheckingResult
     )
     {
-        var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext, functionContextMap, callGraph, variableAccessMap);
+        var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext, functionContextMap, callGraph, variableAccessMap, structProperties, typeCheckingResult);
         var visitorResult = root.Accept(visitor, Unit.I);
 
         if (!visitorResult.Any())
@@ -107,13 +112,16 @@ public static class SideEffectsAnalyzer
             IFunctionContext currentFunctionContext,
             FunctionContextMap functionContextMap,
             CallGraph callGraph,
-            VariableAccessMap variableAccessMap)
+            VariableAccessMap variableAccessMap,
+            StructProperties structProperties, TypeCheckingResult typeChecking)
         {
             _nameResolution = nameResolution;
             _currentFunctionContext = currentFunctionContext;
             _functionContextMap = functionContextMap;
             _callGraph = callGraph;
             _variableAccessMap = variableAccessMap;
+            _structProperties = structProperties;
+            _typeChecking = typeChecking;
         }
 
         protected override List<TreeWithEffects> VisitAstNode(AstNode node, SideEffectsVisitorParam param)
@@ -297,8 +305,21 @@ public static class SideEffectsAnalyzer
 
         public override List<TreeWithEffects> VisitAssignment(Assignment node, SideEffectsVisitorParam param)
         {
-            var variable = _nameResolution.AssignedVariableDeclarations[node];
-            return GenerateVariableAssignmentTree(variable, node.Right, param);
+            switch (node.Left)
+            {
+                case StructFieldAccess fieldAccess:
+                    return GenerateStructFieldAssignmentTree(fieldAccess, node.Right, param);
+                case VariableValue variableValue:
+                    var declaration = _nameResolution.UsedVariableDeclarations[variableValue];
+                    if (declaration is VariableDeclaration variableDeclaration)
+                    {
+                        return GenerateVariableAssignmentTree(variableDeclaration, node.Right, param);
+                    }
+
+                    break;
+            }
+
+            throw new NotSupportedException($"Invalid lvalue for assignment {node}");
         }
 
         public override List<TreeWithEffects> VisitVariableValue(VariableValue node, SideEffectsVisitorParam param)
@@ -350,6 +371,51 @@ public static class SideEffectsAnalyzer
             return new List<TreeWithEffects>();
         }
 
+        public override List<TreeWithEffects> VisitStructValue(StructValue node, Unit param)
+        {
+            var structType = (StructType)_typeChecking.ExpressionsTypes[node];
+            var structDeclaration = _nameResolution.StructDeclarations[node.StructName];
+            var temp = GenerateStructTemporary(structDeclaration, node);
+
+            var result = new List<TreeWithEffects>();
+
+            foreach (var (fieldName, expression, _) in node.Fields)
+            {
+                var field = _structHelper.GetStructFieldDeclaration(structType, fieldName);
+                var fieldResult = expression.Accept(this, param);
+
+                var last = fieldResult[^1];
+                if (last.CodeTree is not CodeTreeValueNode value)
+                {
+                    throw new NotSupportedException("Internal error");
+                }
+
+                fieldResult.RemoveAt(fieldResult.Count - 1);
+                var fieldWrite = _structHelper.GenerateStructFieldWrite(temp, value, field, structDeclaration);
+                result.AddRange(fieldResult);
+                result.AddRange(fieldWrite.Select(tree => last with { CodeTree = tree }));
+            }
+
+            result.Add(new TreeWithEffects(temp));
+
+            return result;
+        }
+
+        public override List<TreeWithEffects> VisitStructFieldAccess(StructFieldAccess node, Unit param)
+        {
+            var result = node.Left.Accept(this, param);
+            // NOTE: for pointer types, add derefs here
+            var structType = (StructType)_typeChecking.ExpressionsTypes[node.Left];
+            var field = _structHelper.GetStructFieldDeclaration(structType, node.FieldName);
+            if (result[^1].CodeTree is not CodeTreeValueNode value)
+            {
+                throw new NotSupportedException("Internal error");
+            }
+
+            result[^1] = result[^1] with { CodeTree = value + _structProperties.FieldOffsets[field] };
+            return result;
+        }
+
         private List<TreeWithEffects> GenerateVariableAssignmentTree(VariableDeclaration variable, AstNode value, SideEffectsVisitorParam param)
         {
             var result = value.Accept(this, param);
@@ -369,9 +435,55 @@ public static class SideEffectsAnalyzer
             }
 
             last.WrittenVariables.Add(variable);
-            result[^1] = last with { CodeTree = _currentFunctionContext.GenerateVariableWrite(variable, assignedValue) };
-            return result;
 
+            if (!_currentFunctionContext.IsVariableStruct(variable))
+            {
+                result[^1] = last with
+                {
+                    CodeTree = _currentFunctionContext.GenerateVariableWrite(variable, assignedValue)
+                };
+                return result;
+            }
+
+            var targetStruct = _currentFunctionContext.GenerateVariableRead(variable);
+            var targetSize = _currentFunctionContext.LocalVariableSize[variable];
+
+            return result.SkipLast(1).Concat(StructHelper.GenerateStructCopy(targetStruct, assignedValue, targetSize)
+                .Select(tree => last with { CodeTree = tree })).ToList();
+        }
+
+        private List<TreeWithEffects> GenerateStructFieldAssignmentTree(StructFieldAccess node, AstNode value,
+            SideEffectsVisitorParam param)
+        {
+            var structType = (StructType)_typeChecking.ExpressionsTypes[node.Left];
+            var structDeclaration = _nameResolution.StructDeclarations[structType.Struct];
+            var field = _structHelper.GetStructFieldDeclaration(structType, node.FieldName);
+
+            var result = value.Accept(this, param);
+            if (result[^1].CodeTree is not CodeTreeValueNode resultValue)
+            {
+                throw new NotSupportedException("Internal error");
+            }
+
+            // NOTE: we assume this has no side effects.
+            // Once we add pointers, we have to store either this
+            // or value in a temporary, to avoid conflicts
+            var structLocationResult = node.Left.Accept(this, param);
+
+            if (structLocationResult[^1].CodeTree is not CodeTreeValueNode structLocationValue)
+            {
+                throw new NotSupportedException("Internal error");
+            }
+
+            var resultWrite =
+                _structHelper.GenerateStructFieldWrite(structLocationValue, resultValue, field, structDeclaration);
+
+            return structLocationResult.SkipLast(1)
+                .Concat(result.SkipLast(1))
+                .Concat(resultWrite
+                    .Select(tree =>
+                        new TreeWithEffects(result[^1].ReadVariables, structLocationResult[^1].ReadVariables, tree)))
+                .ToList();
         }
 
         private (CodeTreeValueNode, CodeTreeNode) GenerateTemporary(CodeTreeValueNode value, AstNode node)
@@ -386,6 +498,20 @@ public static class SideEffectsAnalyzer
             var tempRead = _currentFunctionContext.GenerateVariableRead(tempVariable);
             var tempWrite = _currentFunctionContext.GenerateVariableWrite(tempVariable, value);
             return (tempRead, tempWrite);
+        }
+
+        private CodeTreeValueNode GenerateStructTemporary(StructDeclaration type, AstNode node)
+        {
+            var structSize = _structProperties.StructSizes[type];
+            var tempVariable = new VariableDeclaration(
+                new Identifier($"Temp{type.Name}Var@{node.GetHashCode()}", node.LocationRange),
+                new StructType(type.Name),
+                null,
+                false,
+                node.LocationRange);
+            _currentFunctionContext.AddLocal(tempVariable,size: structSize, isStruct:true);
+            var tempRead = _currentFunctionContext.GenerateVariableRead(tempVariable);
+            return tempRead;
         }
 
         private TreeWithEffects AddFunctionCallSideEffects(TreeWithEffects tree, AstFunctionCall node)
@@ -434,5 +560,8 @@ public static class SideEffectsAnalyzer
         private readonly FunctionContextMap _functionContextMap;
         private readonly CallGraph _callGraph;
         private readonly VariableAccessMap _variableAccessMap;
+        private readonly StructProperties _structProperties;
+        private readonly StructHelper _structHelper;
+        private readonly TypeCheckingResult _typeChecking;
     }
 }

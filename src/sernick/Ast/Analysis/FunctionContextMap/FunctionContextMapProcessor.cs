@@ -6,6 +6,7 @@ using NameResolution;
 using Nodes;
 using sernick.Input;
 using Utility;
+using static Compiler.PlatformConstants;
 using static ExternalFunctionsInfo;
 using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.DistinctionNumberProvider;
 
