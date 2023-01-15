@@ -1,0 +1,4 @@
+# ignoring everything input-output related since we have gen.py in this directory
+Expected/
+Input/
+Output/
