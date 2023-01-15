@@ -382,7 +382,7 @@ public static class SideEffectsAnalyzer
                 null,
                 false,
                 node.LocationRange);
-            _currentFunctionContext.AddLocal(tempVariable, false);
+            _currentFunctionContext.AddLocal(tempVariable);
             var tempRead = _currentFunctionContext.GenerateVariableRead(tempVariable);
             var tempWrite = _currentFunctionContext.GenerateVariableWrite(tempVariable, value);
             return (tempRead, tempWrite);

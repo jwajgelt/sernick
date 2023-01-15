@@ -16,7 +16,7 @@ public sealed class FakeFunctionContext : IFunctionContext
     public int Depth => 0;
     public bool ValueIsReturned => false;
 
-    public void AddLocal(IFunctionVariable variable, bool usedElsewhere) => _locals[variable] = usedElsewhere;
+    public void AddLocal(IFunctionVariable variable, bool usedElsewhere, bool isStruct, int size) => _locals[variable] = usedElsewhere;
     public IReadOnlyList<SingleExitNode> GeneratePrologue()
     {
         throw new NotImplementedException();
@@ -48,6 +48,11 @@ public sealed class FakeFunctionContext : IFunctionContext
     }
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
+    {
+        throw new NotImplementedException();
+    }
+
+    bool IFunctionContext.IsVariableStruct(IFunctionVariable variable)
     {
         throw new NotImplementedException();
     }

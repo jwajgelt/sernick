@@ -14,7 +14,7 @@ public class FunctionContextGenerateVariableAccessTest
     {
         var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         var variable = Var("x");
-        context.AddLocal(variable, false);
+        context.AddLocal(variable);
 
         var readCodeTree = context.GenerateVariableRead(variable);
 
@@ -26,7 +26,7 @@ public class FunctionContextGenerateVariableAccessTest
     {
         var context = new FunctionContext(null, Array.Empty<IFunctionParam>(), false, "");
         var variable = Var("x");
-        context.AddLocal(variable, false);
+        context.AddLocal(variable);
         var value = new Constant(new RegisterValue(1));
 
         var writeCodeTree = context.GenerateVariableWrite(variable, value);
@@ -93,7 +93,7 @@ public class FunctionContextGenerateVariableAccessTest
         var context = new FunctionContext(parentContext, Array.Empty<IFunctionParam>(), false, "");
         parentContext.AddLocal(varX, true);
         context.AddLocal(varX, true);
-        context.AddLocal(varY, false);
+        context.AddLocal(varY);
 
         Assert.Throws<ArgumentException>(() => context.GenerateVariableRead(undefinedVar));
         Assert.Throws<ArgumentException>(() => context.GenerateVariableWrite(undefinedVar, value));

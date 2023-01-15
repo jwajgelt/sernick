@@ -1,9 +1,10 @@
 namespace sernick.Compiler.Function;
 using ControlFlowGraph.CodeTree;
+using static PlatformConstants;
 
 public interface IFunctionContext : IFunctionCaller
 {
-    public void AddLocal(IFunctionVariable variable, bool usedElsewhere);
+    public void AddLocal(IFunctionVariable variable, bool usedElsewhere = false, bool isStruct = false, int size = POINTER_SIZE);
 
     public IReadOnlyList<SingleExitNode> GeneratePrologue();
 
@@ -11,6 +12,8 @@ public interface IFunctionContext : IFunctionCaller
 
     public int Depth { get; }
     public bool ValueIsReturned { get; }
+
+    public bool IsVariableStruct(IFunctionVariable variable);
 
     /// <summary>
     ///     If variable is local then generates either memory read or register read
