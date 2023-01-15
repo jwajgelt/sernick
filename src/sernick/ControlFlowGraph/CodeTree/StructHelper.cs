@@ -5,7 +5,6 @@ using Ast.Analysis.StructProperties;
 using Ast.Nodes;
 using Utility;
 using static CodeTreeExtensions;
-using static Compiler.PlatformConstants;
 
 public class StructHelper
 {

@@ -5,9 +5,11 @@ using Compiler.Function;
 using FunctionContextMap;
 using NameResolution;
 using Nodes;
-using sernick.Ast.Analysis.TypeChecking;
-using sernick.Ast.Analysis.VariableAccess;
 using sernick.ControlFlowGraph.CodeTree;
+using StructProperties;
+using TypeChecking;
+using Utility;
+using VariableAccess;
 using static Compiler.PlatformConstants;
 using FunctionCall = Nodes.FunctionCall;
 
@@ -25,7 +27,8 @@ public static class ControlFlowAnalyzer
         VariableAccessMap variableAccessMap,
         TypeCheckingResult typeCheckingResult,
         Func<AstNode, NameResolutionResult, IFunctionContext, FunctionContextMap, CallGraph, VariableAccessMap, IReadOnlyList<SingleExitNode>>
-            pullOutSideEffects
+            pullOutSideEffects,
+        StructProperties structProperties
     )
     {
         var nodesWithControlFlow = new HashSet<AstNode>();
@@ -54,7 +57,7 @@ public static class ControlFlowAnalyzer
                         {
                             nodes[^1] = new SingleExitNode(next,
                                 nodes[^1].Operations.SkipLast(1)
-                                    .Append(currentFunctionContext.GenerateVariableWrite(resultVariable, valueNode))
+                                    .Concat(resultVariable.GenerateValueWrite(valueNode))
                                     .ToList());
                         }
                         // otherwise skip the value completely
@@ -84,15 +87,16 @@ public static class ControlFlowAnalyzer
                 variableFactory,
                 typeCheckingResult,
                 nameResolution,
-                contextMap
+                contextMap,
+                structProperties
             );
 
-        IFunctionVariable? resultVariable = null;
+        IValueLocation? resultVariable = null;
         CodeTreeValueNode? valToReturn = null;
         if (currentFunctionContext.ValueIsReturned)
         {
-            resultVariable = variableFactory.NewVariable();
-            valToReturn = currentFunctionContext.GenerateVariableRead(resultVariable);
+            resultVariable = variableFactory.NewPrimitiveVariable();
+            valToReturn = resultVariable.GenerateValueRead();
         }
 
         var prologue = currentFunctionContext.GeneratePrologue();
@@ -118,47 +122,192 @@ public static class ControlFlowAnalyzer
         CodeTreeRoot? Break, // CFG node that will be visited after a break statement
         CodeTreeRoot? Continue, // CFG node that will be visited after a continue statement
         CodeTreeRoot Return, // CFG node that will be visited after a return statement
-        IFunctionVariable? ResultVariable, // variable in which the result of the given tree should be stored
-        IFunctionVariable? ReturnResultVariable, // variable in which the return result should be stored
+        IValueLocation? ResultVariable, // variable in which the result of the given tree should be stored
+        IValueLocation? ReturnResultVariable, // variable in which the return result should be stored
         bool IsCondition
     );
 
-    private class TemporaryLocalVariable : IFunctionVariable { }
+    private interface IValueLocation
+    {
+        public IEnumerable<CodeTreeNode> GenerateValueWrite(CodeTreeValueNode value);
+
+        public CodeTreeValueNode GenerateValueRead();
+    }
+
+    private interface IStructValueLocation : IValueLocation
+    {
+        public IValueLocation GetPrimitiveField(int fieldOffset);
+        public IStructValueLocation GetField(int fieldOffset);
+    }
+
+    private class VariableValueLocation : IValueLocation
+    {
+        private readonly IFunctionContext _functionContext;
+        private readonly IFunctionVariable _variable;
+
+        public VariableValueLocation(IFunctionContext functionContext, IFunctionVariable variable)
+        {
+            _functionContext = functionContext;
+            _variable = variable;
+        }
+
+        public IEnumerable<CodeTreeNode> GenerateValueWrite(CodeTreeValueNode value)
+        {
+            return _functionContext.GenerateVariableWrite(_variable, value).Enumerate();
+        }
+
+        public CodeTreeValueNode GenerateValueRead()
+        {
+            return _functionContext.GenerateVariableRead(_variable);
+        }
+    }
+
+    private class StructValueLocation : IStructValueLocation
+    {
+        private class PrimitiveFieldLocation : IValueLocation
+        {
+            private readonly int _offset;
+            private readonly IFunctionContext _functionContext;
+            private readonly IFunctionVariable _temp;
+
+            public PrimitiveFieldLocation(IFunctionContext functionContext, IFunctionVariable temp, int offset)
+            {
+                _offset = offset;
+                _functionContext = functionContext;
+                _temp = temp;
+            }
+
+            public IEnumerable<CodeTreeNode> GenerateValueWrite(CodeTreeValueNode value)
+            {
+                return CodeTreeExtensions.Mem(StackLocationAddress).Write(value).Enumerate();
+            }
+
+            public CodeTreeValueNode GenerateValueRead()
+            {
+                return CodeTreeExtensions.Mem(StackLocationAddress).Read();
+            }
+
+            private CodeTreeValueNode StackLocationAddress => _functionContext.GenerateVariableRead(_temp) + _offset;
+        }
+
+        private readonly IFunctionContext _functionContext;
+        private readonly int _size;
+        private readonly int _offset;
+        private readonly IFunctionVariable _temp;
+
+        public StructValueLocation(IFunctionContext functionContext, IFunctionVariable temp, int size)
+        {
+            _functionContext = functionContext;
+            _size = size;
+            _offset = 0;
+            _temp = temp;
+        }
+
+        private StructValueLocation(IFunctionContext functionContext, IFunctionVariable temp, int size, int offset)
+        {
+            _functionContext = functionContext;
+            _temp = temp;
+            _size = size;
+            _offset = offset;
+        }
+
+        public IValueLocation GetPrimitiveField(int fieldOffset)
+        {
+            if (fieldOffset >= _size)
+            {
+                throw new NotSupportedException();
+            }
+
+            return new PrimitiveFieldLocation(_functionContext, _temp, _offset + fieldOffset);
+        }
+
+        public IStructValueLocation GetField(int fieldOffset)
+        {
+            if (fieldOffset > _size)
+            {
+                throw new NotSupportedException();
+            }
+
+            return new StructValueLocation(_functionContext, _temp, _size - fieldOffset, _offset + fieldOffset);
+        }
+
+        public IEnumerable<CodeTreeNode> GenerateValueWrite(CodeTreeValueNode value)
+        {
+            return StructHelper.GenerateStructCopy(StackLocationAddress, value, _size);
+        }
+
+        public CodeTreeValueNode GenerateValueRead()
+        {
+            return StackLocationAddress;
+        }
+
+        private CodeTreeValueNode StackLocationAddress => _functionContext.GenerateVariableRead(_temp) + _offset;
+    }
 
     private class TemporaryLocalVariableFactory
     {
+        private class TemporaryVariable : IFunctionVariable { }
+
+        public class RegisterValueLocation : IValueLocation
+        {
+            private readonly IFunctionContext _functionContext;
+            private readonly TemporaryVariable _temp;
+
+            public RegisterValueLocation(IFunctionContext functionContext)
+            {
+                _functionContext = functionContext;
+                _temp = new TemporaryVariable();
+                _functionContext.AddLocal(_temp, POINTER_SIZE, false, false);
+            }
+
+            public IEnumerable<CodeTreeNode> GenerateValueWrite(CodeTreeValueNode value)
+            {
+                return _functionContext.GenerateVariableWrite(_temp, value).Enumerate();
+            }
+
+            public CodeTreeValueNode GenerateValueRead()
+            {
+                return _functionContext.GenerateVariableRead(_temp);
+            }
+        }
         private readonly IFunctionContext _functionContext;
         public TemporaryLocalVariableFactory(IFunctionContext functionContext)
         {
             _functionContext = functionContext;
         }
-        public IFunctionVariable NewVariable()
+
+        public RegisterValueLocation NewPrimitiveVariable()
         {
-            var temp = new TemporaryLocalVariable();
-            _functionContext.AddLocal(temp, POINTER_SIZE, false, false);
-            return temp;
+            return new RegisterValueLocation(_functionContext);
+        }
+
+        public StructValueLocation NewStructVariable(int size)
+        {
+            return new StructValueLocation(_functionContext, new TemporaryVariable(), size);
         }
     }
 
     private sealed class ControlFlowVisitor : AstVisitor<CodeTreeRoot, ControlFlowVisitorParam>
     {
-        private readonly Func<AstNode, CodeTreeRoot, IFunctionVariable?, CodeTreeRoot> _pullOutSideEffects;
+        private readonly Func<AstNode, CodeTreeRoot, IValueLocation?, CodeTreeRoot> _pullOutSideEffects;
         private readonly IFunctionContext _currentFunctionContext;
         private readonly IReadOnlySet<AstNode> _nodesWithControlFlow;
         private readonly TemporaryLocalVariableFactory _variableFactory;
         private readonly TypeCheckingResult _typeChecking;
         private readonly FunctionContextMap _functionContextMap;
+        private readonly StructProperties _structProperties;
         private NameResolutionResult _nameResolution;
 
         public ControlFlowVisitor
         (
             IFunctionContext currentFunctionContext,
             IReadOnlySet<AstNode> nodesWithControlFlow,
-            Func<AstNode, CodeTreeRoot, IFunctionVariable?, NameResolutionResult, CodeTreeRoot> pullOutSideEffects,
+            Func<AstNode, CodeTreeRoot, IValueLocation?, NameResolutionResult, CodeTreeRoot> pullOutSideEffects,
             TemporaryLocalVariableFactory variableFactory,
             TypeCheckingResult typeChecking,
             NameResolutionResult nameResolution,
-            FunctionContextMap functionContextMap
+            FunctionContextMap functionContextMap,
+            StructProperties structProperties
         )
         {
             _nameResolution = nameResolution;
@@ -168,6 +317,7 @@ public static class ControlFlowAnalyzer
             _variableFactory = variableFactory;
             _typeChecking = typeChecking;
             _functionContextMap = functionContextMap;
+            _structProperties = structProperties;
         }
 
         protected override CodeTreeRoot VisitAstNode(AstNode node, ControlFlowVisitorParam param)
@@ -197,14 +347,14 @@ public static class ControlFlowAnalyzer
 
         public override CodeTreeRoot VisitIfStatement(IfStatement node, ControlFlowVisitorParam param)
         {
-            var tempVariable = _variableFactory.NewVariable();
+            var tempVariable = _variableFactory.NewPrimitiveVariable();
 
             return node.Condition.Accept(this, param with
             {
                 Next = new ConditionalJumpNode(
                     node.IfBlock.Accept(this, param),
                     node.ElseBlock?.Accept(this, param) ?? param.Next,
-                    _currentFunctionContext.GenerateVariableRead(tempVariable)
+                    tempVariable.GenerateValueRead()
                 ),
                 ResultVariable = tempVariable,
                 IsCondition = true
@@ -255,9 +405,9 @@ public static class ControlFlowAnalyzer
                             param with
                             {
                                 Next = _pullOutSideEffects(infix, param.Next, param.ResultVariable),
-                                ResultVariable = rightVariable
+                                ResultVariable = new VariableValueLocation(_currentFunctionContext, rightVariable)
                             }),
-                        ResultVariable = leftVariable
+                        ResultVariable = new VariableValueLocation(_currentFunctionContext, leftVariable)
                     }
                 );
             }
@@ -273,7 +423,7 @@ public static class ControlFlowAnalyzer
                 next = param.Next;
             }
 
-            var variable = param.ResultVariable ?? _variableFactory.NewVariable();
+            var variable = param.ResultVariable ?? _variableFactory.NewPrimitiveVariable();
             var evaluateRight = node.Right.Accept(this, param with { ResultVariable = variable });
             var returnLeft = next;
 
@@ -282,7 +432,7 @@ public static class ControlFlowAnalyzer
                 Next = new ConditionalJumpNode(
                     node.Operator is Infix.Op.ScAnd ? evaluateRight : returnLeft,
                     node.Operator is Infix.Op.ScAnd ? returnLeft : evaluateRight,
-                    _currentFunctionContext.GenerateVariableRead(variable)
+                    variable.GenerateValueRead()
                 ),
                 ResultVariable = variable
             });
@@ -301,7 +451,7 @@ public static class ControlFlowAnalyzer
             var arguments = node.Arguments.Reverse().Select(argumentNode =>
             {
                 var (tempVariable, variableValueNode) = GenerateTemporaryAst(argumentNode);
-                result = argumentNode.Accept(this, param with { Next = result, ResultVariable = tempVariable, IsCondition = false });
+                result = argumentNode.Accept(this, param with { Next = result, ResultVariable = new VariableValueLocation(_currentFunctionContext, tempVariable), IsCondition = false });
                 return variableValueNode;
             }).Reverse();
 
@@ -326,7 +476,14 @@ public static class ControlFlowAnalyzer
                 return _pullOutSideEffects(node, param.Next, param.ResultVariable);
             }
 
-            return node.InitValue.Accept(this, param with { ResultVariable = node });
+            if (node.Type is not StructType structType)
+            {
+                return node.InitValue.Accept(this,
+                    param with { ResultVariable = new VariableValueLocation(_currentFunctionContext, node) });
+            }
+
+            return node.InitValue.Accept(this,
+                param with { ResultVariable = new StructValueLocation(_currentFunctionContext, node, GetStructTypeSize(structType)) });
         }
 
         public override CodeTreeRoot VisitAssignment(Assignment node, ControlFlowVisitorParam param)
@@ -336,7 +493,76 @@ public static class ControlFlowAnalyzer
                 return _pullOutSideEffects(node, param.Next, param.ResultVariable);
             }
 
-            return node.Right.Accept(this, param with { ResultVariable = _nameResolution.AssignedVariableDeclarations[node] });
+            // there are two cases of lvalues:
+            switch (node.Left)
+            {
+                case VariableValue variableAccess:
+                    {
+                        // assignment to variable
+                        var variable = _nameResolution.UsedVariableDeclarations[variableAccess];
+                        return node.Right.Accept(this,
+                            param with { ResultVariable = new VariableValueLocation(_currentFunctionContext, variable) });
+                    }
+                case StructFieldAccess fieldAccess:
+                    {
+                        // field access from struct variable
+                        var targetStructType = _typeChecking.ExpressionsTypes[fieldAccess.Left];
+                        if (targetStructType is not StructType structType)
+                        {
+                            break;
+                        }
+
+                        var fieldPath = new List<FieldDeclaration>();
+                        Expression structFieldAccessNode = fieldAccess;
+
+                        // adds the rhs of field access to `fieldPath`,
+                        // and continues inspecting the lhs.
+                        while (structFieldAccessNode is not VariableValue)
+                        {
+                            // we only accept accesses of kind `variable.field.field.(...).field`
+                            if (structFieldAccessNode is not StructFieldAccess access)
+                            {
+                                break;
+                            }
+
+                            // NOTE: in the future, support a case `[pointer-typed expr].field.(...).field`
+
+                            var lhsType = (StructType)_typeChecking[access.Left];
+                            fieldPath.Add(GetStructFieldDeclaration(lhsType, access.FieldName));
+                            structFieldAccessNode = access.Left;
+                        }
+
+                        fieldPath.Reverse();
+
+                        var accessedVariable = _nameResolution.UsedVariableDeclarations[(VariableValue)structFieldAccessNode];
+                        IStructValueLocation variableLocation =
+                            new StructValueLocation(_currentFunctionContext, accessedVariable, _structProperties.StructSizes[_nameResolution.StructDeclarations[structType.Struct]]);
+
+                        var isLhsPrimitiveType = _typeChecking[node.Left] is not StructType;
+                        IValueLocation resultLocation;
+                        if (isLhsPrimitiveType)
+                        {
+                            resultLocation = fieldPath
+                                .SkipLast(1)
+                                .Aggregate(variableLocation,
+                                    (location, field) => location.GetField(_structProperties.FieldOffsets[field]))
+                                .GetPrimitiveField(_structProperties.FieldOffsets[fieldPath.Last()]);
+                        }
+                        else
+                        {
+                            resultLocation = fieldPath
+                                .SkipLast(1)
+                                .Aggregate(variableLocation,
+                                    (location, field) => location.GetField(_structProperties.FieldOffsets[field]))
+                                .GetField(_structProperties.FieldOffsets[fieldPath.Last()]);
+                        }
+
+                        return node.Right.Accept(this, param with { ResultVariable = resultLocation });
+                    }
+                    // NOTE: in the future, add pointer dereference cases here
+            }
+
+            throw new NotSupportedException($"Invalid lvalue in assignment {node}");
         }
 
         public override CodeTreeRoot VisitIdentifier(Identifier node, ControlFlowVisitorParam param)
@@ -351,17 +577,49 @@ public static class ControlFlowAnalyzer
 
         private (IFunctionVariable, VariableValue) GenerateTemporaryAst(Expression node)
         {
-            var identifier = new Identifier($"TempVar@{node.GetHashCode()}", node.LocationRange);
+            var variableType =
+                _typeChecking.ExpressionsTypes[node];
+            var identifier = new Identifier($"Temp{variableType.ToString()}@{node.GetHashCode()}", node.LocationRange);
             var tempVariable = new VariableDeclaration(
                 identifier,
-                _typeChecking.ExpressionsTypes[node],
+                variableType,
                 null,
                 false,
                 node.LocationRange);
-            _currentFunctionContext.AddLocal(tempVariable, POINTER_SIZE, false, false);
+
+            if (variableType is StructType structType)
+            {
+                _currentFunctionContext.AddLocal(tempVariable, GetStructTypeSize(structType), true, false);
+            }
+            else
+            {
+                _currentFunctionContext.AddLocal(tempVariable, POINTER_SIZE, false, false);
+            }
+
             var variableValue = new VariableValue(identifier, node.LocationRange);
             _nameResolution = _nameResolution.JoinWith(NameResolutionResult.OfVariableUse(variableValue, tempVariable));
             return (tempVariable, variableValue);
+        }
+
+        private int GetStructTypeSize(StructType type)
+        {
+            var structDeclaration = _nameResolution.StructDeclarations[type.Struct];
+            return _structProperties.StructSizes[structDeclaration];
+        }
+
+        private FieldDeclaration GetStructFieldDeclaration(StructType type, Identifier fieldName)
+        {
+            var structDeclaration = _nameResolution.StructDeclarations[type.Struct];
+            foreach (var field in structDeclaration.Fields)
+            {
+                if (field.Name.Equals(fieldName))
+                {
+                    return field;
+                }
+            }
+
+            throw new NotSupportedException(
+                $"Invalid field {fieldName.Name} access on struct of type {type}");
         }
     }
 
@@ -384,7 +642,6 @@ public static class ControlFlowAnalyzer
 
             set.Add(node);
             return true;
-
         }
     }
 }
