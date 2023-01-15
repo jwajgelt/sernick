@@ -222,7 +222,7 @@ public static class SideEffectsAnalyzer
             if (definition.ReturnType is StructType retType)
             {
                 returnStructAddress = GenerateStructTemporary(_nameResolution.StructDeclarations[retType.Struct], node);
-                argsValues.Prepend(returnStructAddress);
+                argsValues = argsValues.Prepend(returnStructAddress).ToList();
             }
 
             var (functionCall, resultLocation) = _functionContextMap.Callers[node].GenerateCall(argsValues);

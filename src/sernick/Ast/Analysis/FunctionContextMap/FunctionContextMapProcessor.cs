@@ -61,12 +61,12 @@ public static class FunctionContextMapProcessor
             int? retStructSize = null;
             if (node.ReturnType is StructType retType)
             {
-                parameters.Prepend(new FunctionParameterDeclaration(
+                parameters = parameters.Prepend(new FunctionParameterDeclaration(
                     new Identifier("", node.LocationRange),
                     retType,
                     null,
                     node.LocationRange
-                    ));
+                    )).ToList();
                 retStructSize = _structProperties.StructSizes[_nameResolution.StructDeclarations[retType.Struct]];
             }
 
