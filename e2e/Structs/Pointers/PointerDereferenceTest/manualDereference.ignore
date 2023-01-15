@@ -15,7 +15,7 @@ var pair = Pair {
     second: b
 }
 
-var pointer: *Pair = new Pair();
+var pointer: *Pair = new Pair(pair);
 
 // manually dereference pointer using * operator
 *pointer.first = b;

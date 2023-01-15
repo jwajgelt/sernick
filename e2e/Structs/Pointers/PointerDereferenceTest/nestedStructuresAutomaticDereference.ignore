@@ -2,7 +2,6 @@
 // swap them using structs and pointers
 // write to the output
 
-
 struct Pair {
     first: Int,
     second: Int
@@ -16,12 +15,10 @@ var a = read();
 var b = read();
 
 var nestedPair = {
-    pair: new Pair()
+    pair: new Pair(Pair { first: a, second: b})
 }
 
-nestedPair.pair.first = a;
-nestedPair.pair.second = b;
-
+// swap values
 var c = nestedPair.pair.first;
 nestedPair.pair.first = nestedPair.pair.second;
 nestedPair.pair.second = c;
