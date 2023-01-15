@@ -3,6 +3,7 @@ namespace sernick.Compiler.Function;
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
+using static ControlFlowGraph.CodeTree.StructHelper;
 using static Convention;
 using static Helpers;
 using static PlatformConstants;
@@ -145,9 +146,9 @@ public sealed class FunctionContext : IFunctionContext
         if (_returnsStruct)
         {
             var raxRead = Reg(rax).Read();
-            // Copy the struct
+            operations = operations.Concat(GenerateStructCopy(GenerateVariableRead(_functionParameters[0]), raxRead, LocalVariableSize[_functionParameters[0]])).ToList();
         }
-        
+
         else if (ValueIsReturned)
         {
             var returnValueRegister = new Register();

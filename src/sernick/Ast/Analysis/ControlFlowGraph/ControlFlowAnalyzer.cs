@@ -10,7 +10,6 @@ using StructProperties;
 using TypeChecking;
 using Utility;
 using VariableAccess;
-using static Compiler.PlatformConstants;
 using static ControlFlowAnalysisHelpers;
 using FunctionCall = Nodes.FunctionCall;
 

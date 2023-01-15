@@ -10,7 +10,6 @@ using StructProperties;
 using TypeChecking;
 using Utility;
 using VariableAccess;
-using static Compiler.PlatformConstants;
 using AstFunctionCall = Nodes.FunctionCall;
 using CodeTreeFunctionCall = sernick.ControlFlowGraph.CodeTree.FunctionCall;
 using SideEffectsVisitorParam = Utility.Unit;
@@ -200,7 +199,20 @@ public static class SideEffectsAnalyzer
                 }
             }
 
+            var definition = _nameResolution.CalledFunctionDeclarations[node];
+            CodeTreeValueNode? returnStructAddress = null;
+            if (definition.ReturnType is StructType type)
+            {
+                returnStructAddress = GenerateStructTemporary(_nameResolution.StructDeclarations[type.Struct], node);
+                argsValues.Prepend(returnStructAddress);
+            }
+
             var (functionCall, resultLocation) = _functionContextMap.Callers[node].GenerateCall(argsValues);
+
+            if (returnStructAddress is not null)
+            {
+                resultLocation = returnStructAddress;
+            }
 
             var functionCallTrees = functionCall.SelectMany(
                 callTree => callTree.Operations
@@ -509,7 +521,7 @@ public static class SideEffectsAnalyzer
                 null,
                 false,
                 node.LocationRange);
-            _currentFunctionContext.AddLocal(tempVariable,size: structSize, isStruct:true);
+            _currentFunctionContext.AddLocal(tempVariable, size: structSize, isStruct: true);
             var tempRead = _currentFunctionContext.GenerateVariableRead(tempVariable);
             return tempRead;
         }

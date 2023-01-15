@@ -4,9 +4,7 @@ using System.Diagnostics;
 using Compiler.Function;
 using NameResolution;
 using Nodes;
-using sernick.Input;
 using Utility;
-using static Compiler.PlatformConstants;
 using static ExternalFunctionsInfo;
 using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.DistinctionNumberProvider;
 
@@ -58,13 +56,13 @@ public static class FunctionContextMapProcessor
         public override Unit VisitFunctionDefinition(FunctionDefinition node, AstNodeContext astContext)
         {
             var parameters = node.Parameters.ToList();
-            if(node.ReturnType is StructType type)
+            if (node.ReturnType is StructType type)
             {
                 parameters.Prepend(new FunctionParameterDeclaration(
                     new Identifier("", node.LocationRange),
                     type,
                     null,
-                    node.LocationRange 
+                    node.LocationRange
                     ));
             }
 
