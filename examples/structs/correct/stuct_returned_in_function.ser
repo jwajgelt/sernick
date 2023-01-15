@@ -10,6 +10,5 @@ fun getStruct(): TestStruct {
     };
 }
 
-getStruct().field = 2;
 var testStruct = getStruct();
 var fieldValue = getStruct().field;

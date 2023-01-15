@@ -4,7 +4,7 @@ struct TestStruct {
     field: Int
 };
 
-const testStruct = TestStruct {
+var testStruct = TestStruct {
     field: 5
 };
 

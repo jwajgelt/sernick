@@ -1,6 +1,5 @@
 namespace sernick.Compiler;
 
-using Ast;
 using Ast.Analysis.CallGraph;
 using Ast.Analysis.NameResolution;
 using Ast.Analysis.TypeChecking;
@@ -40,18 +39,14 @@ public static class CompilerFrontend
 
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        // TODO: uncomment once type-checking can handle structs and pointers
-        /*var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
+        var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
-        var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
+        // TODO: uncomment when variable access will handle structs
+        // var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
 
-        return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, variableAccessMap);*/
-        return new CompilerFrontendResult(ast,
-            nameResolution,
-            new TypeCheckingResult(new Dictionary<AstNode, Type>()),
-            new CallGraph(),
-            new VariableAccessMap());
+        // return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, variableAccessMap);
+        return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, new VariableAccessMap());
     }
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
