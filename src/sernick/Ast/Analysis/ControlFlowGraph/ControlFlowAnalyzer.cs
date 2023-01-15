@@ -385,10 +385,7 @@ public static class ControlFlowAnalyzer
 
         }
 
-        public override bool VisitFunctionDefinition(FunctionDefinition definition, ISet<AstNode> set)
-        {
-            return false;
-        }
+        public override bool VisitFunctionDefinition(FunctionDefinition definition, ISet<AstNode> set) => false;
 
         public override bool VisitInfix(Infix infix, ISet<AstNode> set)
         {
