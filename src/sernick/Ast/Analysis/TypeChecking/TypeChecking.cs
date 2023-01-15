@@ -360,7 +360,7 @@ public static class TypeChecking
             {
                 _diagnostics.Report(new AssigmentToConstStructField(node.Left.LocationRange));
             }
-            
+
             // 3. (corner case), left value can't be assigment to function parameter
             if (node.Left is VariableValue value &&
                 _nameResolution.UsedVariableDeclarations[value] is FunctionParameterDeclaration)
