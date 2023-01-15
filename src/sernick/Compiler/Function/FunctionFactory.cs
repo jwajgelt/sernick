@@ -13,8 +13,8 @@ public sealed class FunctionFactory : IFunctionFactory
     }
 
     public IFunctionContext CreateFunction(IFunctionContext? parent, Identifier name, int? distinctionNumber,
-        IReadOnlyList<IFunctionParam> parameters, bool returnsValue)
+        IReadOnlyList<IFunctionParam> parameters, bool returnsValue, bool returnsStruct = false)
     {
-        return new FunctionContext(parent, parameters, returnsValue, _generateLabel(parent, name, distinctionNumber));
+        return new FunctionContext(parent, parameters, returnsValue, _generateLabel(parent, name, distinctionNumber), returnsStruct);
     }
 }

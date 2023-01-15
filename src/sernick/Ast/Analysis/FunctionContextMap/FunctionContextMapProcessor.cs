@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Compiler.Function;
 using NameResolution;
 using Nodes;
+using sernick.Input;
 using Utility;
 using static ExternalFunctionsInfo;
 using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.DistinctionNumberProvider;
@@ -55,12 +56,24 @@ public static class FunctionContextMapProcessor
 
         public override Unit VisitFunctionDefinition(FunctionDefinition node, AstNodeContext astContext)
         {
+            var parameters = node.Parameters.ToList();
+            if(node.ReturnType is StructType type)
+            {
+                parameters.Prepend(new FunctionParameterDeclaration(
+                    new Identifier("", node.LocationRange),
+                    type,
+                    null,
+                    node.LocationRange 
+                    ));
+            }
+
             var functionContext = _contextFactory.CreateFunction(
                 parent: astContext.EnclosingFunction is not null ? ContextMap[astContext.EnclosingFunction] : null,
                 name: node.Name,
                 _provider(node),
                 parameters: node.Parameters.ToList(),
-                returnsValue: !node.ReturnType.Equals(new UnitType()));
+                returnsValue: !node.ReturnType.Equals(new UnitType()),
+                node.ReturnType is StructType);
 
             ContextMap[node] = functionContext;
 

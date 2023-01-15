@@ -18,6 +18,7 @@ public sealed class FunctionContext : IFunctionContext
     private readonly RegisterValue _localsOffset;
     private readonly CodeTreeValueNode _displayEntry;
     private readonly Register _oldDisplayValReg;
+    private readonly bool _returnsStruct;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
 
     public Label Label { get; }
@@ -31,7 +32,8 @@ public sealed class FunctionContext : IFunctionContext
         IFunctionContext? parent,
         IReadOnlyList<IFunctionParam> parameters,
         bool returnsValue,
-        Label label
+        Label label,
+        bool returnsStruct = false
     )
     {
         Label = label;
@@ -47,6 +49,7 @@ public sealed class FunctionContext : IFunctionContext
         _localsOffset = new RegisterValue(0, false);
         _displayEntry = new GlobalAddress(DisplayTable.DISPLAY_TABLE_SYMBOL) + POINTER_SIZE * Depth;
         _oldDisplayValReg = new Register();
+        _returnsStruct = returnsStruct;
 
         var fistArgOffset = POINTER_SIZE * (1 + _functionParameters.Count - REG_ARGS_COUNT);
         var argNum = 0;
@@ -138,7 +141,13 @@ public sealed class FunctionContext : IFunctionContext
 
         // If value is returned, then put it from RAX to virtual register
         CodeTreeValueNode? returnValueLocation = null;
-        if (ValueIsReturned)
+        if (_returnsStruct)
+        {
+            var raxRead = Reg(rax).Read();
+            // Copy the struct
+        }
+        
+        else if (ValueIsReturned)
         {
             var returnValueRegister = new Register();
             var raxRead = Reg(rax).Read();
