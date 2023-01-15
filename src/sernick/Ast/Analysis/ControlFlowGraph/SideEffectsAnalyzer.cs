@@ -28,7 +28,7 @@ public static class SideEffectsAnalyzer
         TypeCheckingResult typeCheckingResult
     )
     {
-        var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext, functionContextMap, callGraph, variableAccessMap, structProperties, typeCheckingResult);
+        var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, structProperties);
         var visitorResult = root.Accept(visitor, Unit.I);
 
         if (!visitorResult.Any())
@@ -112,7 +112,8 @@ public static class SideEffectsAnalyzer
             FunctionContextMap functionContextMap,
             CallGraph callGraph,
             VariableAccessMap variableAccessMap,
-            StructProperties structProperties, TypeCheckingResult typeChecking)
+            TypeCheckingResult typeChecking,
+            StructProperties structProperties)
         {
             _nameResolution = nameResolution;
             _currentFunctionContext = currentFunctionContext;
@@ -121,6 +122,7 @@ public static class SideEffectsAnalyzer
             _variableAccessMap = variableAccessMap;
             _structProperties = structProperties;
             _typeChecking = typeChecking;
+            _structHelper = new StructHelper(structProperties, nameResolution);
         }
 
         protected override List<TreeWithEffects> VisitAstNode(AstNode node, SideEffectsVisitorParam param)
@@ -366,6 +368,11 @@ public static class SideEffectsAnalyzer
         }
 
         public override List<TreeWithEffects> VisitEmptyExpression(EmptyExpression node, SideEffectsVisitorParam param)
+        {
+            return new List<TreeWithEffects>();
+        }
+
+        public override List<TreeWithEffects> VisitStructDeclaration(StructDeclaration node, Unit param)
         {
             return new List<TreeWithEffects>();
         }

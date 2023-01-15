@@ -73,7 +73,7 @@ public class StructHelper
         var structDeclaration = _nameResolution.StructDeclarations[type.Struct];
         foreach (var field in structDeclaration.Fields)
         {
-            if (field.Name.Equals(fieldName))
+            if (field.Name.Name.Equals(fieldName.Name))
             {
                 return field;
             }
