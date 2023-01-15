@@ -141,7 +141,7 @@ public static class ControlFlowAnalyzer
             {
                 _functionContext = functionContext;
                 _temp = new TemporaryVariable();
-                _functionContext.AddLocal(_temp, POINTER_SIZE, false, false);
+                _functionContext.AddLocal(_temp);
             }
 
             public IEnumerable<CodeTreeNode> GenerateValueWrite(CodeTreeValueNode value)
@@ -511,11 +511,11 @@ public static class ControlFlowAnalyzer
 
             if (variableType is StructType structType)
             {
-                _currentFunctionContext.AddLocal(tempVariable, _structHelper.GetStructTypeSize(structType), true, false);
+                _currentFunctionContext.AddLocal(tempVariable, false, true, _structHelper.GetStructTypeSize(structType));
             }
             else
             {
-                _currentFunctionContext.AddLocal(tempVariable, POINTER_SIZE, false, false);
+                _currentFunctionContext.AddLocal(tempVariable);
             }
 
             var variableValue = new VariableValue(identifier, node.LocationRange);

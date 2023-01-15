@@ -494,7 +494,7 @@ public static class SideEffectsAnalyzer
                 null,
                 false,
                 node.LocationRange);
-            _currentFunctionContext.AddLocal(tempVariable, POINTER_SIZE, false, false);
+            _currentFunctionContext.AddLocal(tempVariable);
             var tempRead = _currentFunctionContext.GenerateVariableRead(tempVariable);
             var tempWrite = _currentFunctionContext.GenerateVariableWrite(tempVariable, value);
             return (tempRead, tempWrite);
@@ -509,7 +509,7 @@ public static class SideEffectsAnalyzer
                 null,
                 false,
                 node.LocationRange);
-            _currentFunctionContext.AddLocal(tempVariable, structSize, true, false);
+            _currentFunctionContext.AddLocal(tempVariable,size: structSize, isStruct:true);
             var tempRead = _currentFunctionContext.GenerateVariableRead(tempVariable);
             return tempRead;
         }

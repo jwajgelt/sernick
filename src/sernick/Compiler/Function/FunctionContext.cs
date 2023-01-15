@@ -60,7 +60,7 @@ public sealed class FunctionContext : IFunctionContext
         }
     }
 
-    public void AddLocal(IFunctionVariable variable, int size, bool isStruct, bool usedElsewhere)
+    public void AddLocal(IFunctionVariable variable, bool usedElsewhere = false, bool isStruct = false, int size = POINTER_SIZE)
     {
         if (isStruct || usedElsewhere)
         {
