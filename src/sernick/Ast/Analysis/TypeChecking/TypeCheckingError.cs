@@ -106,7 +106,7 @@ public sealed record MissingFieldInitialization(Type Struct, string Field, ILoca
 public sealed record DuplicateFieldInitialization(string Field, Range<ILocation> First, Range<ILocation> Second) : TypeCheckingErrorBase
 {
     public override string ToString() =>
-        $"Field \"{Field}\" at: {Second.Start}, {Second.End}, is declared earlier at: {First.Start}, {First.End}.";
+        $"Field \"{Field}\" at: {Second.Start}, {Second.End}, is initialized earlier at: {First.Start}, {First.End}.";
 }
 
 public sealed record CannotDereferenceExpressionError(Type InferredExpressionType, ILocation Location) : TypeCheckingErrorBase

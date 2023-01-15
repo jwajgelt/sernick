@@ -773,7 +773,7 @@ public class TypeCheckingTest
         public void MultipleSameFieldInitialization()
         {
             // struct Record = { field: Int }
-            // Record { field1: 1 };
+            // Record { field: 1, field: 2 };
             var tree = Block(
                 Struct("Record").Field("field", new IntType()),
                 StructValue("Record")
@@ -812,6 +812,7 @@ public class TypeCheckingTest
         [Fact]
         public void IllegalDuplicateFieldDeclaration()
         {
+            // struct Record = { field: Int, field: Int }
             var tree = Block(
                 Struct("Record")
                     .Field("field", new IntType())
@@ -926,7 +927,7 @@ public class TypeCheckingTest
         {
             // struct Record { field: Int }
             // struct Wrapper { field: Record }
-            // const x = Wrapper { field: { field: 1 } };
+            // const x = Wrapper { field: Record { field: 1 } };
             // x.field.field = 2
             var tree = Block(
                 Struct("Record").Field("field", Integer),

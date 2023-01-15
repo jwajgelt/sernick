@@ -52,12 +52,7 @@ public static class LValueChecker
 
         private bool IsConstVariable(AstNode expression)
         {
-            if (expression is not VariableValue value)
-            {
-                return false;
-            }
-
-            if (_types[expression] is PointerType)
+            if (expression is not VariableValue value || _types[expression] is PointerType)
             {
                 return false;
             }
