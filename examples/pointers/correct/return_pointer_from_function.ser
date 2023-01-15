@@ -10,7 +10,7 @@ fun getStruct(returnNull: Bool): *TestStruct {
     } else {
         new( TestStruct {
             field: 1
-        });
+        })
     }
 }
 

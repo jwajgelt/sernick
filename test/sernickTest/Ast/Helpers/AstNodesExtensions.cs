@@ -94,6 +94,9 @@ public static class AstNodesExtensions
             IsConst: false,
             loc);
 
+    public static VariableDeclaration Const(this VariableDeclaration variableDeclaration) =>
+        variableDeclaration with { IsConst = true };
+
     public static VariableValue Value(string name) => Value(name, out _);
 
     public static VariableValue Value(string name, out VariableValue result) =>
@@ -236,6 +239,8 @@ public static class AstNodesExtensions
 
     public static FuncDeclarationBuilder Fun<ReturnType>(string name) where ReturnType : Type, new() =>
         new(Ident(name), new ReturnType());
+
+    public static FuncDeclarationBuilder Fun(string name, Type returnType) => new(Ident(name), returnType);
 
     public sealed class FuncDeclarationBuilder
     {
@@ -406,5 +411,15 @@ public static class AstNodesExtensions
     }
 
     public static StructFieldAccess Field(this Expression left, string name) => new StructFieldAccess(left, Ident(name), loc);
+    #endregion
+
+    #region Types
+
+    public static StructType Type(this string name) => new(Ident(name));
+
+    public static PointerType Point(this Type type) => new(type);
+
+    public static readonly IntType Integer = new IntType();
+
     #endregion
 }
