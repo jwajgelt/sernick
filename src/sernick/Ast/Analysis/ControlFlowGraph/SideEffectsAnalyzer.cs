@@ -10,6 +10,7 @@ using StructProperties;
 using TypeChecking;
 using Utility;
 using VariableAccess;
+using static sernick.ControlFlowGraph.CodeTree.StructHelper;
 using AstFunctionCall = Nodes.FunctionCall;
 using CodeTreeFunctionCall = sernick.ControlFlowGraph.CodeTree.FunctionCall;
 using SideEffectsVisitorParam = Utility.Unit;
@@ -159,6 +160,8 @@ public static class SideEffectsAnalyzer
 
         public override List<TreeWithEffects> VisitFunctionCall(AstFunctionCall node, SideEffectsVisitorParam param)
         {
+            var definition = _nameResolution.CalledFunctionDeclarations[node];
+            var parameterList = definition.Parameters.ToList();
             var args = node.Arguments.ToList();
             var argsEvals = args.Select(arg => arg.Accept(this, param)).ToList();
             var argsValues = argsEvals.Select(result =>
@@ -179,6 +182,22 @@ public static class SideEffectsAnalyzer
             for (var i = 0; i < argsEvals.Count; i++)
             {
                 var currentArgValue = argsEvals[i].Last();
+
+                // If struct is returned, then first param will hold return value location
+                var paramIndex = (definition.ReturnType is StructType ? i + 1 : i);
+                if (parameterList[paramIndex].Type is StructType argType)
+                {
+                    var structSize = _structProperties.StructSizes[_nameResolution.StructDeclarations[argType.Struct]];
+                    var copyLocation = GenerateStructTemporary(_nameResolution.StructDeclarations[argType.Struct], parameterList[paramIndex]);
+                    var structAddress = argsValues[i];
+                    var copyOps = GenerateStructCopy(copyLocation, structAddress, structSize);
+                    var copyOpsWithEffects = copyOps.Select(x => new TreeWithEffects(x, false));
+                    argsEvals[i].RemoveAt(argsEvals[i].Count - 1);
+                    argsEvals[i] = argsEvals[i].Concat(copyOpsWithEffects).ToList();
+                    argsValues[i] = copyLocation;
+                    continue;
+                }
+
                 for (var j = i + 1; j < argsEvals.Count; j++)
                 {
                     var followingArgEval = argsEvals[j];
@@ -199,11 +218,10 @@ public static class SideEffectsAnalyzer
                 }
             }
 
-            var definition = _nameResolution.CalledFunctionDeclarations[node];
             CodeTreeValueNode? returnStructAddress = null;
-            if (definition.ReturnType is StructType type)
+            if (definition.ReturnType is StructType retType)
             {
-                returnStructAddress = GenerateStructTemporary(_nameResolution.StructDeclarations[type.Struct], node);
+                returnStructAddress = GenerateStructTemporary(_nameResolution.StructDeclarations[retType.Struct], node);
                 argsValues.Prepend(returnStructAddress);
             }
 
