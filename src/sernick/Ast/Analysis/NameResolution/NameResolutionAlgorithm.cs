@@ -110,27 +110,6 @@ public static class NameResolutionAlgorithm
         public override NameResolutionVisitorResult VisitAssignment(Assignment node, IdentifiersNamespace identifiersNamespace)
         {
             var result = new NameResolutionResult();
-
-            if (node.Left is VariableValue { Identifier: var identifier })
-            {
-                try
-                {
-                    var declaration = identifiersNamespace.GetResolution(identifier);
-                    if (declaration is VariableDeclaration variableDeclaration)
-                    {
-                        result = NameResolutionResult.OfAssignment(node, variableDeclaration);
-                    }
-                    else
-                    {
-                        _diagnostics.Report(new NotAVariableError(identifier));
-                    }
-                }
-                catch (IdentifiersNamespace.NoSuchIdentifierException)
-                {
-                    // the UnidentifiedIdentifier will be reported in subcall anyway
-                }
-            }
-
             var visitorResult = VisitAstNode(node, identifiersNamespace);
 
             return visitorResult with { Result = result.JoinWith(visitorResult.Result) };

@@ -79,41 +79,7 @@ public class NameResolutionTest
         Assert.Same(innerDeclaration, result.UsedVariableDeclarations[variableValue]);
     }
 
-    // AssignedVariable tests
-    [Fact]
-    public void VariableAssignmentFromTheSameScopeResolved()
-    {
-        // var x; x=1; x=1
-        var tree = Program(
-            Var("x", out var declaration),
-            "x".Assign(1, out var assignment1),
-            "x".Assign(1, out var assignment2)
-        );
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
-
-        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
-
-        Assert.Same(declaration, result.AssignedVariableDeclarations[assignment1]);
-        Assert.Same(declaration, result.AssignedVariableDeclarations[assignment2]);
-    }
-
-    [Fact]
-    public void VariableAssignmentAmongDifferentDeclarationsResolved()
-    {
-        // var y; var x; var z; x=1
-        var tree = Program(
-            Var("y"),
-            Var("x", out var declarationX),
-            Var("z"),
-            "x".Assign(1, out var assignment)
-        );
-        var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
-
-        var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
-
-        Assert.Same(declarationX, result.AssignedVariableDeclarations[assignment]);
-    }
-
+    // assigned variable tests
     [Fact]
     public void VariableAssignmentFromOuterScopeResolved()
     {
@@ -121,14 +87,14 @@ public class NameResolutionTest
         var tree = Program(
             Var("x", out var declaration),
             Block(
-                "x".Assign(1, out var assignment)
+                Value("x", out var value).Assign(Literal(1))
             )
         );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
-        Assert.Same(declaration, result.AssignedVariableDeclarations[assignment]);
+        Assert.Same(declaration, result.UsedVariableDeclarations[value]);
     }
 
     [Fact]
@@ -139,14 +105,14 @@ public class NameResolutionTest
             Var("x"),
             Block(
                 Var("x", out var innerDeclaration),
-                "x".Assign(1, out var assignment)
+                Value("x", out var value).Assign(Literal(1))
             )
         );
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
 
         var result = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
 
-        Assert.Same(innerDeclaration, result.AssignedVariableDeclarations[assignment]);
+        Assert.Same(innerDeclaration, result.UsedVariableDeclarations[value]);
     }
 
     // CalledFunction tests
@@ -958,7 +924,7 @@ public class NameResolutionTest
     {
         // var x;
         // var y;
-        // {x; y} = 1 // this is invalid (?), but it's an example where there are two variables on the left of an assignment 
+        // {x; y} = 1 // this is invalid, but it's an example where there are two variables on the left of an assignment 
         var tree = Program(
             Var("x", out var declarationX),
             Var("y", out var declarationY),

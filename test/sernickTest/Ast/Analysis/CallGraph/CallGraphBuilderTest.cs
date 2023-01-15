@@ -181,10 +181,9 @@ public class CallGraphBuilderTest
         CallGraph expectedClosure)
     {
         var nameResolution = new NameResolutionResult(
-            new Dictionary<VariableValue, Declaration> { },
-            new Dictionary<Assignment, VariableDeclaration> { },
+            new Dictionary<VariableValue, Declaration>(),
             functionNameResolution,
-            new Dictionary<Identifier, StructDeclaration> { });
+            new Dictionary<Identifier, StructDeclaration>());
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
         var callGraphClosure = callGraph.Closure();
 

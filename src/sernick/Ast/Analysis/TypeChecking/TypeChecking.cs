@@ -328,12 +328,6 @@ public static class TypeChecking
             var childrenTypes = VisitNodeChildren(node, expectedReturnTypeOfReturnExpr);
             var typeOfLeftSide = childrenTypes[node.Left];
 
-            // we may additionally improve typeOfLeftSide if we have more type info on that
-            if (_nameResolution.AssignedVariableDeclarations.TryGetValue(node, out var variableDeclarationNode))
-            {
-                typeOfLeftSide = _memoizedDeclarationTypes[variableDeclarationNode];
-            }
-
             var typeOfRightSide = childrenTypes[node.Right];
 
             if (!CompatibleForAssigment(typeOfLeftSide, typeOfRightSide))
