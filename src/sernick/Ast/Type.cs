@@ -21,12 +21,12 @@ public sealed record UnitType : Type
     public override string ToString() => "Unit";
 }
 
-public sealed record PointerType(Type Type) : Type
+public record PointerType(Type Type) : Type
 {
     public override string ToString() => $"*{Type}";
 }
 
-public sealed record NullPointerType() : Type
+public sealed record NullPointerType() : PointerType(new AnyType())
 {
     public override string ToString() => "NullPointer";
 }
