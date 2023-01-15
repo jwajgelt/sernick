@@ -451,6 +451,42 @@ public static class ControlFlowAnalyzer
             throw new NotSupportedException($"Invalid lvalue in assignment {node}");
         }
 
+        public override CodeTreeRoot VisitStructValue(StructValue node, ControlFlowVisitorParam param)
+        {
+            if (!_nodesWithControlFlow.Contains(node))
+            {
+                return _pullOutSideEffects(node, param.Next, param.ResultVariable);
+            }
+
+            var structType = (StructType)_typeChecking.ExpressionsTypes[node];
+            var structSize = _structHelper.GetStructTypeSize(structType);
+            var tempStruct = _variableFactory.NewStructVariable(structSize);
+
+            var copyOperations = param.ResultVariable?.GenerateValueWrite(tempStruct.GenerateValueRead()).ToList();
+
+            var next = copyOperations == null ? param.Next : new SingleExitNode(param.Next, copyOperations);
+
+            foreach (var (fieldName, expression, _) in node.Fields.Reverse())
+            {
+                var field = _structHelper.GetStructFieldDeclaration(structType, fieldName);
+                var fieldOffset = _structProperties.FieldOffsets[field];
+                next = expression.Accept(this, param with { Next = next, ResultVariable = tempStruct.GetField(fieldOffset) });
+            }
+
+            return next;
+        }
+
+        public override CodeTreeRoot VisitStructFieldAccess(StructFieldAccess node, ControlFlowVisitorParam param)
+        {
+            if (!_nodesWithControlFlow.Contains(node))
+            {
+                return _pullOutSideEffects(node, param.Next, param.ResultVariable);
+            }
+
+            // NOTE: this won't be true, once any (pointer-to-struct) expression can be on the left
+            throw new NotSupportedException("StructFieldAccess cannot contain control flow");
+        }
+
         public override CodeTreeRoot VisitIdentifier(Identifier node, ControlFlowVisitorParam param)
         {
             throw new NotSupportedException("Control flow analysis shouldn't descend into Identifiers");
