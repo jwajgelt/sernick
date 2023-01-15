@@ -3,24 +3,26 @@
 // write to the output
 
 
+struct Pair {
+    first: Int,
+    second: Int
+}
+
 struct NestedPair {
-    pair: struct Pair {
-        first: Int,
-        second: Int
-    }
+    pair: Pair 
 }
 
 var a = read();
 var b = read();
 
 var nestedPair = {
-    pair: new Pair();
+    pair: new Pair()
 }
 
 nestedPair.pair.first = a;
 nestedPair.pair.second = b;
 
-c = nestedPair.pair.first;
+var c = nestedPair.pair.first;
 nestedPair.pair.first = nestedPair.pair.second;
 nestedPair.pair.second = c;
 

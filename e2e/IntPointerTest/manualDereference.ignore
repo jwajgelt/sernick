@@ -6,9 +6,9 @@
 var a = read();
 var b = read();
 
-var aPtr = new Int();
-var bPtr = new Int();
-var cPtr = new Int();
+var aPtr = new Int(0);
+var bPtr = new Int(0);
+var cPtr = new Int(0);
 
 *aPtr = a;
 *bPtr = b;

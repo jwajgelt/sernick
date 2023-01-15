@@ -15,7 +15,7 @@ var pair = Pair {
     second: b
 }
 
-var pointer: *Pair = new Pair();
+var pointer: *Pair = new Pair(pair);
 
 // automatically dereference a struct pointer (without a "*" operator)
 pointer.first = b;

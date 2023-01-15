@@ -16,9 +16,10 @@ function swapFirstAndSecondInPair(p: *Pair){
 var a = read();
 var b = read();
 
-var pair = new Pair();
-pair.first = a;
-pair.second = b;
+var pair = new Pair(Pair {
+    first: a,
+    second: b
+});
 
 swapFirstAndSecondInPair(pair);
 

@@ -2,7 +2,7 @@
 // write them to output (but using pointers)
 // swap them using and pointers
 // write a swapped pair to the output
-function swap(a: *Int, b: *Int){
+fun swap(a: *Int, b: *Int){
     var c : Int = *a;
     *a = *b;
     *b = c;
