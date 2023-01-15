@@ -5,7 +5,6 @@ using Compiler.Function;
 using NameResolution;
 using Nodes;
 using Utility;
-using static Compiler.PlatformConstants;
 using static ExternalFunctionsInfo;
 using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.DistinctionNumberProvider;
 

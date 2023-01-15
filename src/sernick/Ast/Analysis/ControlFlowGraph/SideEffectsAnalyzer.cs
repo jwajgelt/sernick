@@ -10,7 +10,6 @@ using StructProperties;
 using TypeChecking;
 using Utility;
 using VariableAccess;
-using static Compiler.PlatformConstants;
 using AstFunctionCall = Nodes.FunctionCall;
 using CodeTreeFunctionCall = sernick.ControlFlowGraph.CodeTree.FunctionCall;
 using SideEffectsVisitorParam = Utility.Unit;
@@ -509,7 +508,7 @@ public static class SideEffectsAnalyzer
                 null,
                 false,
                 node.LocationRange);
-            _currentFunctionContext.AddLocal(tempVariable,size: structSize, isStruct:true);
+            _currentFunctionContext.AddLocal(tempVariable, size: structSize, isStruct: true);
             var tempRead = _currentFunctionContext.GenerateVariableRead(tempVariable);
             return tempRead;
         }
