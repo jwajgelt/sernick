@@ -347,15 +347,25 @@ public static class TypeChecking
                 _diagnostics.Report(new TypesMismatchError(typeOfLeftSide, typeOfRightSide, node.Right.LocationRange.Start));
             }
 
+            // Verify the left expression
+            // 1. It hast to be a valid l-value expression
             var lValue = LValueChecker.Process(node.Left, _nameResolution, childrenTypes);
             if (!lValue.IsLValue)
             {
                 _diagnostics.Report(new InvalidAssigmentLeftValue(node.Left.LocationRange));
             }
 
+            // 2. l-value expression can't be a field-access to a const struct 
             if (lValue.IsConstStructAccess)
             {
                 _diagnostics.Report(new AssigmentToConstStructField(node.Left.LocationRange));
+            }
+
+            // 3. (corner case), left value can't be assigment to function parameter
+            if (node.Left is VariableValue value &&
+                _nameResolution.UsedVariableDeclarations[value] is FunctionParameterDeclaration)
+            {
+                _diagnostics.Report(new NotAVariableError(value.Identifier));
             }
 
             // Sometimes, rhs type is more specific than lhs type, but we deliberately ignore this information in the "return"
