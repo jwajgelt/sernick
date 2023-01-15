@@ -146,7 +146,7 @@ public sealed class FunctionContext : IFunctionContext
         if (_returnedStructSize is not null)
         {
             var raxRead = Reg(rax).Read();
-            operations = operations.Concat(GenerateStructCopy(GenerateVariableRead(_functionParameters[0]), raxRead, _returnedStructSize.GetValueOrDefault())).ToList();
+            operations.AddRange(GenerateStructCopy(GenerateVariableRead(_functionParameters[0]), raxRead, _returnedStructSize.GetValueOrDefault()));
         }
 
         else if (ValueIsReturned)
