@@ -27,9 +27,9 @@ public static class ControlFlowAnalyzer
         CallGraph callGraph,
         VariableAccessMap variableAccessMap,
         TypeCheckingResult typeCheckingResult,
-        Func<AstNode, NameResolutionResult, IFunctionContext, FunctionContextMap, CallGraph, VariableAccessMap, IReadOnlyList<SingleExitNode>>
-            pullOutSideEffects,
-        StructProperties structProperties
+        StructProperties structProperties,
+        Func<AstNode, NameResolutionResult, IFunctionContext, FunctionContextMap, CallGraph, VariableAccessMap, StructProperties, TypeCheckingResult, IReadOnlyList<SingleExitNode>>
+            pullOutSideEffects
     )
     {
         var nodesWithControlFlow = new HashSet<AstNode>();
@@ -44,7 +44,7 @@ public static class ControlFlowAnalyzer
                 nodesWithControlFlow,
                 (root, next, resultVariable, nameResolutionResult) =>
                 {
-                    var nodes = pullOutSideEffects(root, nameResolutionResult, currentFunctionContext, contextMap, callGraph, variableAccessMap).ToList();
+                    var nodes = pullOutSideEffects(root, nameResolutionResult, currentFunctionContext, contextMap, callGraph, variableAccessMap, structProperties, typeCheckingResult).ToList();
                     if (nodes.Count == 0)
                     {
                         return next;

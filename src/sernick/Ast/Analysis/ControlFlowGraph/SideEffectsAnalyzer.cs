@@ -11,7 +11,6 @@ using TypeChecking;
 using Utility;
 using VariableAccess;
 using static Compiler.PlatformConstants;
-using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using AstFunctionCall = Nodes.FunctionCall;
 using CodeTreeFunctionCall = sernick.ControlFlowGraph.CodeTree.FunctionCall;
 using SideEffectsVisitorParam = Utility.Unit;
@@ -313,7 +312,10 @@ public static class SideEffectsAnalyzer
                 case VariableValue variableValue:
                     var declaration = _nameResolution.UsedVariableDeclarations[variableValue];
                     if (declaration is VariableDeclaration variableDeclaration)
+                    {
                         return GenerateVariableAssignmentTree(variableDeclaration, node.Right, param);
+                    }
+
                     break;
             }
 
@@ -387,13 +389,13 @@ public static class SideEffectsAnalyzer
                 {
                     throw new NotSupportedException("Internal error");
                 }
-                
+
                 fieldResult.RemoveAt(fieldResult.Count - 1);
                 var fieldWrite = _structHelper.GenerateStructFieldWrite(temp, value, field, structDeclaration);
                 result.AddRange(fieldResult);
                 result.AddRange(fieldWrite.Select(tree => last with { CodeTree = tree }));
             }
-            
+
             result.Add(new TreeWithEffects(temp));
 
             return result;
@@ -409,7 +411,8 @@ public static class SideEffectsAnalyzer
             {
                 throw new NotSupportedException("Internal error");
             }
-            result[^1] = result[^1] with {CodeTree = value + _structProperties.FieldOffsets[field]};
+
+            result[^1] = result[^1] with { CodeTree = value + _structProperties.FieldOffsets[field] };
             return result;
         }
 
@@ -432,7 +435,7 @@ public static class SideEffectsAnalyzer
             }
 
             last.WrittenVariables.Add(variable);
-            
+
             if (!_currentFunctionContext.IsVariableStruct(variable))
             {
                 result[^1] = last with
@@ -455,13 +458,13 @@ public static class SideEffectsAnalyzer
             var structType = (StructType)_typeChecking.ExpressionsTypes[node.Left];
             var structDeclaration = _nameResolution.StructDeclarations[structType.Struct];
             var field = _structHelper.GetStructFieldDeclaration(structType, node.FieldName);
-            
+
             var result = value.Accept(this, param);
             if (result[^1].CodeTree is not CodeTreeValueNode resultValue)
             {
                 throw new NotSupportedException("Internal error");
             }
-            
+
             // NOTE: we assume this has no side effects.
             // Once we add pointers, we have to store either this
             // or value in a temporary, to avoid conflicts

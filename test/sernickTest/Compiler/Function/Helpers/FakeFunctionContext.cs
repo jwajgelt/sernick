@@ -15,6 +15,10 @@ public sealed class FakeFunctionContext : IFunctionContext
 
     public int Depth => 0;
     public bool ValueIsReturned => false;
+    public IReadOnlyDictionary<IFunctionVariable, int> LocalVariableSize => new Dictionary<IFunctionVariable, int>();
+
+    public IReadOnlyDictionary<IFunctionVariable, bool> LocalVariableIsStruct =>
+        new Dictionary<IFunctionVariable, bool>();
 
     public void AddLocal(IFunctionVariable variable, int size, bool isStruct, bool usedElsewhere) => _locals[variable] = usedElsewhere;
     public IReadOnlyList<SingleExitNode> GeneratePrologue()
@@ -54,7 +58,8 @@ public sealed class FakeFunctionContext : IFunctionContext
 
     bool IFunctionContext.IsVariableStruct(IFunctionVariable variable)
     {
-        throw new NotImplementedException();
+        // for now
+        return false;
     }
 }
 
