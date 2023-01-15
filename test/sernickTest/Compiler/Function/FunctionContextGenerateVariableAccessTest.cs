@@ -4,7 +4,6 @@ using sernick.Ast;
 using sernick.CodeGeneration;
 using sernick.Compiler.Function;
 using sernick.ControlFlowGraph.CodeTree;
-using static sernick.Compiler.PlatformConstants;
 using static sernick.ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static sernickTest.Ast.Helpers.AstNodesExtensions;
 
