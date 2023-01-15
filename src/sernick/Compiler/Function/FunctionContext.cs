@@ -25,6 +25,8 @@ public sealed class FunctionContext : IFunctionContext
     public Label Label { get; }
     public int Depth { get; }
     public bool ValueIsReturned { get; }
+    public IReadOnlyDictionary<IFunctionVariable, int> LocalVariableSize => _localVariableSize;
+    public IReadOnlyDictionary<IFunctionVariable, bool> LocalVariableIsStruct => _localVariableIsStruct;
 
     public FunctionContext(
         IFunctionContext? parent,
@@ -236,7 +238,7 @@ public sealed class FunctionContext : IFunctionContext
     }
 
     public bool IsVariableStruct(IFunctionVariable variable) =>
-        _localVariableIsStruct.TryGetValue(variable, out var isStruct)
+        LocalVariableIsStruct.TryGetValue(variable, out var isStruct)
             ? isStruct
             : _parentContext?.IsVariableStruct(variable)
                 ?? throw new ArgumentException("Variable is undefined");

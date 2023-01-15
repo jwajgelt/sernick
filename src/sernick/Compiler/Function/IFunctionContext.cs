@@ -11,6 +11,8 @@ public interface IFunctionContext : IFunctionCaller
 
     public int Depth { get; }
     public bool ValueIsReturned { get; }
+    public IReadOnlyDictionary<IFunctionVariable, int> LocalVariableSize { get; }
+    public IReadOnlyDictionary<IFunctionVariable, bool> LocalVariableIsStruct { get; }
 
     public bool IsVariableStruct(IFunctionVariable variable);
 

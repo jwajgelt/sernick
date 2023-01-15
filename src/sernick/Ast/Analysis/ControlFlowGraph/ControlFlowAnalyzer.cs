@@ -181,6 +181,7 @@ public static class ControlFlowAnalyzer
         private readonly FunctionContextMap _functionContextMap;
         private readonly StructProperties _structProperties;
         private NameResolutionResult _nameResolution;
+        private readonly StructHelper _structHelper;
 
         public ControlFlowVisitor
         (
@@ -202,6 +203,7 @@ public static class ControlFlowAnalyzer
             _typeChecking = typeChecking;
             _functionContextMap = functionContextMap;
             _structProperties = structProperties;
+            _structHelper = new StructHelper(structProperties, nameResolution);
         }
 
         protected override CodeTreeRoot VisitAstNode(AstNode node, ControlFlowVisitorParam param)
@@ -367,7 +369,7 @@ public static class ControlFlowAnalyzer
             }
 
             return node.InitValue.Accept(this,
-                param with { ResultVariable = new StructValueLocation(_currentFunctionContext, node, GetStructTypeSize(structType)) });
+                param with { ResultVariable = new StructValueLocation(_currentFunctionContext, node, _structHelper.GetStructTypeSize(structType)) });
         }
 
         public override CodeTreeRoot VisitAssignment(Assignment node, ControlFlowVisitorParam param)
@@ -412,7 +414,7 @@ public static class ControlFlowAnalyzer
                             // NOTE: in the future, support a case `[pointer-typed expr].field.(...).field`
 
                             var lhsType = (StructType)_typeChecking[access.Left];
-                            fieldPath.Add(GetStructFieldDeclaration(lhsType, access.FieldName));
+                            fieldPath.Add(_structHelper.GetStructFieldDeclaration(lhsType, access.FieldName));
                             structFieldAccessNode = access.Left;
                         }
 
@@ -473,7 +475,7 @@ public static class ControlFlowAnalyzer
 
             if (variableType is StructType structType)
             {
-                _currentFunctionContext.AddLocal(tempVariable, GetStructTypeSize(structType), true, false);
+                _currentFunctionContext.AddLocal(tempVariable, _structHelper.GetStructTypeSize(structType), true, false);
             }
             else
             {
@@ -483,27 +485,6 @@ public static class ControlFlowAnalyzer
             var variableValue = new VariableValue(identifier, node.LocationRange);
             _nameResolution = _nameResolution.JoinWith(NameResolutionResult.OfVariableUse(variableValue, tempVariable));
             return (tempVariable, variableValue);
-        }
-
-        private int GetStructTypeSize(StructType type)
-        {
-            var structDeclaration = _nameResolution.StructDeclarations[type.Struct];
-            return _structProperties.StructSizes[structDeclaration];
-        }
-
-        private FieldDeclaration GetStructFieldDeclaration(StructType type, Identifier fieldName)
-        {
-            var structDeclaration = _nameResolution.StructDeclarations[type.Struct];
-            foreach (var field in structDeclaration.Fields)
-            {
-                if (field.Name.Equals(fieldName))
-                {
-                    return field;
-                }
-            }
-
-            throw new NotSupportedException(
-                $"Invalid field {fieldName.Name} access on struct of type {type}");
         }
     }
 
