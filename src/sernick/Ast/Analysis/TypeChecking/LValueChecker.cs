@@ -57,7 +57,12 @@ public static class LValueChecker
                 return false;
             }
 
-            return _nameResolution.UsedVariableDeclarations[value] is VariableDeclaration { IsConst: true };
+            return _nameResolution.UsedVariableDeclarations[value] switch
+            {
+                VariableDeclaration { IsConst: true } => true,
+                FunctionParameterDeclaration => true,
+                _ => false
+            };
         }
     }
 }
