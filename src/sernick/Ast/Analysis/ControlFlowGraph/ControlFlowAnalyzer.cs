@@ -430,6 +430,7 @@ public static class ControlFlowAnalyzer
                                 .SkipLast(1)
                                 .Aggregate(variableLocation,
                                     (location, field) => location.GetField(_structProperties.FieldOffsets[field], _structProperties.FieldSizes[field]))
+
                                 .GetPrimitiveField(_structProperties.FieldOffsets[fieldPath.Last()]);
                         }
                         else
@@ -470,6 +471,7 @@ public static class ControlFlowAnalyzer
             {
                 var field = _structHelper.GetStructFieldDeclaration(structType, fieldName);
                 var fieldOffset = _structProperties.FieldOffsets[field];
+
                 if (field.Type is StructType)
                 {
                     var fieldSize = _structHelper.GetStructFieldSize(structType, fieldName);

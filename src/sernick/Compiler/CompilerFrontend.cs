@@ -2,6 +2,7 @@ namespace sernick.Compiler;
 
 using Ast.Analysis.CallGraph;
 using Ast.Analysis.NameResolution;
+using Ast.Analysis.StructProperties;
 using Ast.Analysis.TypeChecking;
 using Ast.Analysis.VariableAccess;
 using Ast.Nodes;
@@ -45,8 +46,10 @@ public static class CompilerFrontend
         // TODO: uncomment when variable access will handle structs
         // var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution);
 
+        var structProperties = StructPropertiesProcessor.Process(ast, nameResolution, diagnostics);
+
         // return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, variableAccessMap);
-        return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, new VariableAccessMap());
+        return new CompilerFrontendResult(ast, nameResolution, structProperties, typeCheckingResult, callGraph, new VariableAccessMap());
     }
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
