@@ -33,7 +33,6 @@ public static class ControlFlowAnalysisHelpers
 
         public IEnumerable<CodeTreeNode> GenerateValueWrite(CodeTreeValueNode value) => _functionContext.GenerateVariableWrite(_variable, value).Enumerate();
 
-
         public CodeTreeValueNode GenerateValueRead()
         {
             return _functionContext.GenerateVariableRead(_variable);
