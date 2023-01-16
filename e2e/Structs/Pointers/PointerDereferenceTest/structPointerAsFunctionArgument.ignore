@@ -7,7 +7,7 @@ struct Pair {
     second: Int
 }
 
-function swapFirstAndSecondInPair(p: *Pair){
+fun swapFirstAndSecondInPair(p: *Pair){
     var c : Int = pair.first;
     pair.first = pair.second;
     pair.second = c;
