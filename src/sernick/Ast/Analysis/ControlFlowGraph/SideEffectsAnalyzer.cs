@@ -397,7 +397,7 @@ public static class SideEffectsAnalyzer
                 }
 
                 fieldResult.RemoveAt(fieldResult.Count - 1);
-                var fieldWrite = _structHelper.GenerateStructFieldWrite(temp, value, field, structDeclaration);
+                var fieldWrite = _structHelper.GenerateStructFieldWrite(temp, value, field);
                 result.AddRange(fieldResult);
                 result.AddRange(fieldWrite.Select(tree => last with { CodeTree = tree }));
             }
@@ -483,7 +483,7 @@ public static class SideEffectsAnalyzer
             }
 
             var resultWrite =
-                _structHelper.GenerateStructFieldWrite(structLocationValue, resultValue, field, structDeclaration);
+                _structHelper.GenerateStructFieldWrite(structLocationValue, resultValue, field);
 
             return structLocationResult.SkipLast(1)
                 .Concat(result.SkipLast(1))

@@ -41,16 +41,13 @@ public class StructHelper
         }
 
         return source;
-
     }
 
     public IEnumerable<CodeTreeNode> GenerateStructFieldWrite(
         CodeTreeValueNode targetStruct,
         CodeTreeValueNode source,
-        FieldDeclaration field,
-        StructDeclaration targetStructDeclaration)
+        FieldDeclaration field)
     {
-        var structSize = _properties.StructSizes[targetStructDeclaration];
         var offset = _properties.FieldOffsets[field];
         var target = targetStruct + offset;
 
@@ -59,15 +56,7 @@ public class StructHelper
             return Mem(target).Write(source).Enumerate();
         }
 
-        var fieldSize = _properties.FieldOffsets
-                // check fields of this struct
-                .Where(kv => targetStructDeclaration.Fields.Contains(kv.Key))
-                // for fields with offsets larger than the accessed field
-                .Select(kv => kv.Value).Where(fieldOffset => fieldOffset > offset)
-                // or the struct end
-                .Concat(structSize.Enumerate())
-                // and get the smallest
-                .Min() - offset;
+        var fieldSize = _properties.FieldSizes[field];
         return GenerateStructCopy(target, source, fieldSize);
     }
 
@@ -90,5 +79,11 @@ public class StructHelper
 
         throw new NotSupportedException(
             $"Invalid field {fieldName.Name} access on struct of type {type}");
+    }
+
+    public int GetStructFieldSize(StructType type, Identifier fieldName)
+    {
+        var field = GetStructFieldDeclaration(type, fieldName);
+        return _properties.FieldSizes[field];
     }
 }

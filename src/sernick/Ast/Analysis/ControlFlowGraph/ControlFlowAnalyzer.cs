@@ -166,7 +166,9 @@ public static class ControlFlowAnalyzer
 
         public StructValueLocation NewStructVariable(int size)
         {
-            return new StructValueLocation(_functionContext, new TemporaryVariable(), size);
+            var temp = new TemporaryVariable();
+            _functionContext.AddLocal(temp, isStruct: true, size: size);
+            return new StructValueLocation(_functionContext, temp, size);
         }
     }
 
@@ -430,7 +432,7 @@ public static class ControlFlowAnalyzer
                             resultLocation = fieldPath
                                 .SkipLast(1)
                                 .Aggregate(variableLocation,
-                                    (location, field) => location.GetField(_structProperties.FieldOffsets[field]))
+                                    (location, field) => location.GetField(_structProperties.FieldOffsets[field], _structProperties.FieldSizes[field]))
                                 .GetPrimitiveField(_structProperties.FieldOffsets[fieldPath.Last()]);
                         }
                         else
@@ -438,8 +440,10 @@ public static class ControlFlowAnalyzer
                             resultLocation = fieldPath
                                 .SkipLast(1)
                                 .Aggregate(variableLocation,
-                                    (location, field) => location.GetField(_structProperties.FieldOffsets[field]))
-                                .GetField(_structProperties.FieldOffsets[fieldPath.Last()]);
+                                    (location, field) => location.GetField(_structProperties.FieldOffsets[field], _structProperties.FieldSizes[field]
+                                        ))
+                                .GetField(_structProperties.FieldOffsets[fieldPath.Last()], _structProperties.FieldSizes[fieldPath.Last()]
+                                    );
                         }
 
                         return node.Right.Accept(this, param with { ResultVariable = resultLocation });
@@ -469,7 +473,7 @@ public static class ControlFlowAnalyzer
             {
                 var field = _structHelper.GetStructFieldDeclaration(structType, fieldName);
                 var fieldOffset = _structProperties.FieldOffsets[field];
-                next = expression.Accept(this, param with { Next = next, ResultVariable = tempStruct.GetField(fieldOffset) });
+                next = expression.Accept(this, param with { Next = next, ResultVariable = tempStruct.GetField(fieldOffset, _structHelper.GetStructFieldSize(structType, fieldName)) });
             }
 
             return next;

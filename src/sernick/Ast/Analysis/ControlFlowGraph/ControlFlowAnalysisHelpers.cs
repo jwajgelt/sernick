@@ -1,5 +1,6 @@
 namespace sernick.Ast.Analysis.ControlFlowGraph;
 
+using Compiler;
 using Compiler.Function;
 using sernick.ControlFlowGraph.CodeTree;
 using Utility;
@@ -16,7 +17,7 @@ public static class ControlFlowAnalysisHelpers
     public interface IStructValueLocation : IValueLocation
     {
         public IValueLocation GetPrimitiveField(int fieldOffset);
-        public IStructValueLocation GetField(int fieldOffset);
+        public IStructValueLocation GetField(int fieldOffset, int fieldSize);
     }
 
     public class VariableValueLocation : IValueLocation
@@ -92,7 +93,7 @@ public static class ControlFlowAnalysisHelpers
 
         public IValueLocation GetPrimitiveField(int fieldOffset)
         {
-            if (fieldOffset >= _size)
+            if (fieldOffset + PlatformConstants.POINTER_SIZE > _size)
             {
                 throw new NotSupportedException();
             }
@@ -100,14 +101,14 @@ public static class ControlFlowAnalysisHelpers
             return new PrimitiveFieldLocation(_functionContext, _temp, _offset + fieldOffset);
         }
 
-        public IStructValueLocation GetField(int fieldOffset)
+        public IStructValueLocation GetField(int fieldOffset, int fieldSize)
         {
-            if (fieldOffset > _size)
+            if (fieldOffset + fieldSize > _size)
             {
                 throw new NotSupportedException();
             }
 
-            return new StructValueLocation(_functionContext, _temp, _size - fieldOffset, _offset + fieldOffset);
+            return new StructValueLocation(_functionContext, _temp, fieldSize, _offset + fieldOffset);
         }
 
         public IEnumerable<CodeTreeNode> GenerateValueWrite(CodeTreeValueNode value)
