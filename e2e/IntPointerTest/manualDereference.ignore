@@ -1,0 +1,25 @@
+// read a pair of integers
+// write them to output (but using pointers)
+// swap them using and pointers
+// write a swapped pair to the output
+
+var a = read();
+var b = read();
+
+var aPtr = new Int(0);
+var bPtr = new Int(0);
+var cPtr = new Int(0);
+
+*aPtr = a;
+*bPtr = b;
+
+write(*aPtr);
+write(*bPtr);
+
+// swap aPtr, bPtr values
+*cPtr = *aPtr;
+*aPtr = *bPtr;
+*bPtr = *cPtr;
+
+write(*aPtr);
+write(*bPtr);

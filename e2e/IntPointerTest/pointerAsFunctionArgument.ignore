@@ -1,0 +1,24 @@
+// read a pair of integers
+// write them to output (but using pointers)
+// swap them using and pointers
+// write a swapped pair to the output
+
+fun swap(a: *Int, b: *Int){
+    var c : Int = *a;
+    *a = *b;
+    *b = c;
+}
+
+var a = read();
+var b = read();
+
+var aPtr : *Int = new Int(a);
+var bPtr : *Int = new Int(b);
+
+write(*aPtr);
+write(*bPtr);
+
+swap(aPtr, bPtr);
+
+write(*aPtr);
+write(*bPtr);

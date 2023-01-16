@@ -1,0 +1,28 @@
+// read a pair of integers
+// swap them using structs and pointers
+// write to the output
+
+struct Pair {
+    first: Int,
+    second: Int
+}
+
+struct NestedPair {
+    pair: Pair 
+}
+
+var a = read();
+var b = read();
+
+var nestedPair = NestedPair {
+    pair: Pair { first: a, second: b}
+}
+
+// swap values
+var c = nestedPair.pair.first;
+nestedPair.pair.first = nestedPair.pair.second;
+nestedPair.pair.second = c;
+
+// automatically dereference a struct pointer (without a "*" operator)
+write(pointer.pair.first);
+write(pointer.pair.second);

@@ -1,0 +1,27 @@
+// read a pair of integers
+// swap them using structs and pointers
+// write a swapped pair to the output
+
+struct Pair {
+    first: Int,
+    second: Int
+}
+
+fun swapFirstAndSecondInPair(p: *Pair){
+    var c : Int = pair.first;
+    pair.first = pair.second;
+    pair.second = c;
+}
+
+var a = read();
+var b = read();
+
+var pair = new Pair(Pair {
+    first: a,
+    second: b
+});
+
+swapFirstAndSecondInPair(pair);
+
+write(*pair.first);
+write(pair.second);
