@@ -148,10 +148,7 @@ public static class ControlFlowAnalyzer
                 return _functionContext.GenerateVariableWrite(_temp, value).Enumerate();
             }
 
-            public CodeTreeValueNode GenerateValueRead()
-            {
-                return _functionContext.GenerateVariableRead(_temp);
-            }
+            public CodeTreeValueNode GenerateValueRead() => _functionContext.GenerateVariableRead(_temp);
         }
         private readonly IFunctionContext _functionContext;
         public TemporaryLocalVariableFactory(IFunctionContext functionContext)
