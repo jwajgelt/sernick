@@ -1,0 +1,27 @@
+struct Pair {
+    first: Int,
+    second: Int
+}
+
+fun swapPair(pair: Pair): Pair{
+    return Pair{first: pair.second, second: pair.first};
+}
+
+fun newPair(first: Int, second: Int): Pair{
+    return Pair{first: first, second: second};
+}
+
+fun sumPair(pair: Pair): Int{
+    return pair.first + pair.second;
+}
+
+fun printPair(pair: Pair){
+    write(pair.first);
+    write(pair.second);
+}
+
+var first = read();
+var second = read();
+
+printPair(swapPair(newPair(first, second)))
+write(sumPair(Pair{first: first, second: second}))

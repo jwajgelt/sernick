@@ -1,0 +1,30 @@
+struct Grandchild {
+    first: Int,
+    second: Int
+}
+
+struct Child {
+    grandchild: Grandchild,
+    value: Int
+}
+
+struct Parent {
+    child: Child,
+    value: Int
+}
+
+var parent = Parent {
+    child: Child {
+        grandchild: Grandchild {
+            first: read(),
+            second: read()
+        },
+        value: read()
+    },
+    value: read()
+}
+
+write(parent.child.grandchild.first)
+write(parent.child.grandchild.second)
+write(parent.child.value)
+write(parent.value)
