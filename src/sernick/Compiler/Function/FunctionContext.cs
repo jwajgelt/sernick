@@ -15,6 +15,8 @@ public sealed class FunctionContext : IFunctionContext
 
     // Maps accesses to registers/memory
     private readonly Dictionary<IFunctionVariable, VariableLocation> _localVariableLocation;
+    private readonly Dictionary<IFunctionVariable, int> _localVariableSize;
+    private readonly Dictionary<IFunctionVariable, bool> _localVariableIsStruct;
     private readonly RegisterValue _localsOffset;
     private readonly CodeTreeValueNode _displayEntry;
     private readonly Register _oldDisplayValReg;
@@ -23,9 +25,8 @@ public sealed class FunctionContext : IFunctionContext
     public Label Label { get; }
     public int Depth { get; }
     public bool ValueIsReturned { get; }
-
-    public Dictionary<IFunctionVariable, int> LocalVariableSize { get; }
-    public Dictionary<IFunctionVariable, bool> LocalVariableIsStruct { get; }
+    public IReadOnlyDictionary<IFunctionVariable, int> LocalVariableSize => _localVariableSize;
+    public IReadOnlyDictionary<IFunctionVariable, bool> LocalVariableIsStruct => _localVariableIsStruct;
 
     public FunctionContext(
         IFunctionContext? parent,
@@ -37,10 +38,10 @@ public sealed class FunctionContext : IFunctionContext
         Label = label;
         Depth = parent?.Depth + 1 ?? 0;
         ValueIsReturned = returnsValue;
-        LocalVariableSize = new Dictionary<IFunctionVariable, int>(ReferenceEqualityComparer.Instance);
-        LocalVariableIsStruct = new Dictionary<IFunctionVariable, bool>(ReferenceEqualityComparer.Instance);
 
         _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
+        _localVariableSize = new Dictionary<IFunctionVariable, int>(ReferenceEqualityComparer.Instance);
+        _localVariableIsStruct = new Dictionary<IFunctionVariable, bool>(ReferenceEqualityComparer.Instance);
         _parentContext = parent;
         _functionParameters = parameters;
         _registerToTemporaryMap = CalleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
@@ -53,8 +54,8 @@ public sealed class FunctionContext : IFunctionContext
         for (var i = REG_ARGS_COUNT; i < _functionParameters.Count; i++)
         {
             _localVariableLocation.Add(_functionParameters[i], new MemoryLocation(-(fistArgOffset - POINTER_SIZE * argNum)));
-            LocalVariableSize.Add(_functionParameters[i], POINTER_SIZE);
-            LocalVariableIsStruct.Add(_functionParameters[i], false);
+            _localVariableSize.Add(_functionParameters[i], POINTER_SIZE);
+            _localVariableIsStruct.Add(_functionParameters[i], false);
             argNum += 1;
         }
     }
@@ -73,8 +74,8 @@ public sealed class FunctionContext : IFunctionContext
             _localVariableLocation.TryAdd(variable, new RegisterLocation());
         }
 
-        LocalVariableSize.TryAdd(variable, size);
-        LocalVariableIsStruct.TryAdd(variable, isStruct);
+        _localVariableSize.TryAdd(variable, size);
+        _localVariableIsStruct.TryAdd(variable, isStruct);
     }
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)

@@ -8,11 +8,12 @@ using static Compiler.PlatformConstants;
 
 public record struct StructProperties(
     IReadOnlyDictionary<StructDeclaration, int> StructSizes,
-    IReadOnlyDictionary<FieldDeclaration, int> FieldOffsets
-)
+    IReadOnlyDictionary<FieldDeclaration, int> FieldOffsets,
+    IReadOnlyDictionary<FieldDeclaration, int> FieldSizes)
 {
     public StructProperties() : this(
         new Dictionary<StructDeclaration, int>(ReferenceEqualityComparer.Instance),
+        new Dictionary<FieldDeclaration, int>(ReferenceEqualityComparer.Instance),
         new Dictionary<FieldDeclaration, int>(ReferenceEqualityComparer.Instance)
     )
     { }
@@ -21,7 +22,8 @@ public record struct StructProperties(
     {
         return new StructProperties(
             StructSizes.JoinWith(other.StructSizes, ReferenceEqualityComparer.Instance),
-            FieldOffsets.JoinWith(other.FieldOffsets, ReferenceEqualityComparer.Instance)
+            FieldOffsets.JoinWith(other.FieldOffsets, ReferenceEqualityComparer.Instance),
+            FieldSizes.JoinWith(other.FieldSizes, ReferenceEqualityComparer.Instance)
         );
     }
 };
@@ -60,6 +62,7 @@ public static class StructPropertiesProcessor
         public override StructProperties VisitStructDeclaration(StructDeclaration node, StructProperties currentResult)
         {
             var fieldOffsets = new Dictionary<FieldDeclaration, int>(ReferenceEqualityComparer.Instance);
+            var fieldSizes = new Dictionary<FieldDeclaration, int>(ReferenceEqualityComparer.Instance);
 
             var offset = 0;
             foreach (var field in node.Fields)
@@ -73,15 +76,17 @@ public static class StructPropertiesProcessor
                         _diagnostics.Report(new StructPropertiesProcessorError(field.Name.Name, type));
                     }
 
+                    fieldSizes[field] = structSize;
                     offset += structSize;
                 }
                 else
                 {
+                    fieldSizes[field] = POINTER_SIZE;
                     offset += POINTER_SIZE;
                 }
             }
 
-            return new(new Dictionary<StructDeclaration, int> { { node, offset } }, fieldOffsets);
+            return new(new Dictionary<StructDeclaration, int> { { node, offset } }, fieldOffsets, fieldSizes);
         }
     }
 }
