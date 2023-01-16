@@ -418,7 +418,8 @@ public static class SideEffectsAnalyzer
                 throw new NotSupportedException("Internal error");
             }
 
-            result[^1] = result[^1] with { CodeTree = value + _structProperties.FieldOffsets[field] };
+            result[^1] = result[^1] with { CodeTree = _structHelper.GenerateStructFieldRead(value, field) };
+
             return result;
         }
 

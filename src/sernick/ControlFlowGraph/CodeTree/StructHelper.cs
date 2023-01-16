@@ -6,6 +6,7 @@ using Ast.Analysis.StructProperties;
 using Ast.Nodes;
 using Utility;
 using static CodeTreeExtensions;
+using static Compiler.PlatformConstants;
 
 public class StructHelper
 {
@@ -15,10 +16,10 @@ public class StructHelper
     public static IEnumerable<CodeTreeNode> GenerateStructCopy(CodeTreeValueNode targetStruct, CodeTreeValueNode sourceStruct,
         int structSize)
     {
-        return Enumerable.Range(0, structSize)
+        return Enumerable.Range(0, structSize / POINTER_SIZE)
             .Select(offset =>
-                Mem(targetStruct + offset)
-                    .Write(Mem(sourceStruct + offset).Read()));
+                Mem(targetStruct + POINTER_SIZE * offset)
+                    .Write(Mem(sourceStruct + POINTER_SIZE * offset).Read()));
     }
 
     public StructHelper(StructProperties properties, NameResolutionResult nameResolution)
@@ -27,7 +28,7 @@ public class StructHelper
         _nameResolution = nameResolution;
     }
 
-    public IEnumerable<CodeTreeNode> GenerateStructFieldRead(
+    public CodeTreeValueNode GenerateStructFieldRead(
         CodeTreeValueNode sourceStruct,
         FieldDeclaration field)
     {
@@ -36,10 +37,10 @@ public class StructHelper
 
         if (field.Type is not StructType)
         {
-            return Mem(source).Read().Enumerate();
+            return Mem(source).Read();
         }
 
-        return source.Enumerate();
+        return source;
 
     }
 
@@ -58,7 +59,15 @@ public class StructHelper
             return Mem(target).Write(source).Enumerate();
         }
 
-        var fieldSize = _properties.FieldOffsets.Values.Where(fieldOffset => fieldOffset > offset).Concat(structSize.Enumerate()).Min() - offset;
+        var fieldSize = _properties.FieldOffsets
+                // check fields of this struct
+                .Where(kv => targetStructDeclaration.Fields.Contains(kv.Key))
+                // for fields with offsets larger than the accessed field
+                .Select(kv => kv.Value).Where(fieldOffset => fieldOffset > offset)
+                // or the struct end
+                .Concat(structSize.Enumerate())
+                // and get the smallest
+                .Min() - offset;
         return GenerateStructCopy(target, source, fieldSize);
     }
 
