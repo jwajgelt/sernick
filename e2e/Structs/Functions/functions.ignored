@@ -3,19 +3,19 @@ struct Pair {
     second: Int
 }
 
-function swapPair(pair: Pair): Pair{
+fun swapPair(pair: Pair): Pair{
     return Pair{first: pair.second, second: pair.first};
 }
 
-function newPair(first: Int, second: Int): Pair{
+fun newPair(first: Int, second: Int): Pair{
     return Pair{first: first, second: second};
 }
 
-function sumPair(pair: Pair): Int{
+fun sumPair(pair: Pair): Int{
     return pair.first + pair.second;
 }
 
-function printPair(pair: Pair){
+fun printPair(pair: Pair){
     write(pair.first);
     write(pair.second);
 }
