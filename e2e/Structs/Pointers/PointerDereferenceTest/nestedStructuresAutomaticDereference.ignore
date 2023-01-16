@@ -14,8 +14,8 @@ struct NestedPair {
 var a = read();
 var b = read();
 
-var nestedPair = {
-    pair: new Pair(Pair { first: a, second: b})
+var nestedPair = NestedPair {
+    pair: Pair { first: a, second: b}
 }
 
 // swap values
