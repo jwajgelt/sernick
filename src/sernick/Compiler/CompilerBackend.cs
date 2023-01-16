@@ -32,7 +32,7 @@ public static class CompilerBackend
             FunctionDistinctionNumberProcessor.Process(astRoot), new FunctionFactory(LabelGenerator.Generate));
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(astRoot,
             root =>
-                ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, structProperties, SideEffectsAnalyzer.PullOutSideEffects));
+                ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, new StructProperties(), SideEffectsAnalyzer.PullOutSideEffects));
 
         var instructionCovering = new InstructionCovering(SernickInstructionSet.Rules);
         var linearizator = new Linearizator(instructionCovering);

@@ -29,7 +29,7 @@ public static class SideEffectsAnalyzer
         TypeCheckingResult typeCheckingResult
     )
     {
-        var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext, functionContextMap, callGraph, variableAccessMap, structProperties, typeCheckingResult);
+        var visitor = new SideEffectsVisitor(nameResolution, currentFunctionContext, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, structProperties);
         var visitorResult = root.Accept(visitor, Unit.I);
 
         if (!visitorResult.Any())
@@ -113,7 +113,8 @@ public static class SideEffectsAnalyzer
             FunctionContextMap functionContextMap,
             CallGraph callGraph,
             VariableAccessMap variableAccessMap,
-            StructProperties structProperties, TypeCheckingResult typeChecking)
+            TypeCheckingResult typeChecking,
+            StructProperties structProperties)
         {
             _nameResolution = nameResolution;
             _currentFunctionContext = currentFunctionContext;
@@ -122,6 +123,8 @@ public static class SideEffectsAnalyzer
             _variableAccessMap = variableAccessMap;
             _structProperties = structProperties;
             _typeChecking = typeChecking;
+
+            _structHelper = new StructHelper(structProperties, nameResolution);
         }
 
         protected override List<TreeWithEffects> VisitAstNode(AstNode node, SideEffectsVisitorParam param)
@@ -401,6 +404,11 @@ public static class SideEffectsAnalyzer
             return new List<TreeWithEffects>();
         }
 
+        public override List<TreeWithEffects> VisitStructDeclaration(StructDeclaration node, Unit param)
+        {
+            return new List<TreeWithEffects>();
+        }
+
         public override List<TreeWithEffects> VisitStructValue(StructValue node, Unit param)
         {
             var structType = (StructType)_typeChecking.ExpressionsTypes[node];
@@ -421,7 +429,7 @@ public static class SideEffectsAnalyzer
                 }
 
                 fieldResult.RemoveAt(fieldResult.Count - 1);
-                var fieldWrite = _structHelper.GenerateStructFieldWrite(temp, value, field, structDeclaration);
+                var fieldWrite = _structHelper.GenerateStructFieldWrite(temp, value, field);
                 result.AddRange(fieldResult);
                 result.AddRange(fieldWrite.Select(tree => last with { CodeTree = tree }));
             }
@@ -442,7 +450,7 @@ public static class SideEffectsAnalyzer
                 throw new NotSupportedException("Internal error");
             }
 
-            result[^1] = result[^1] with { CodeTree = value + _structProperties.FieldOffsets[field] };
+            result[^1] = result[^1] with { CodeTree = _structHelper.GenerateStructFieldRead(value, field) };
             return result;
         }
 
@@ -506,7 +514,7 @@ public static class SideEffectsAnalyzer
             }
 
             var resultWrite =
-                _structHelper.GenerateStructFieldWrite(structLocationValue, resultValue, field, structDeclaration);
+                _structHelper.GenerateStructFieldWrite(structLocationValue, resultValue, field);
 
             return structLocationResult.SkipLast(1)
                 .Concat(result.SkipLast(1))

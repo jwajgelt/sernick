@@ -129,9 +129,8 @@ public class SideEffectsAnalyzerTest
                 new Infix(
                     Value("x", out var xFirstUse),
                     Block(
-                        "x".Assign(
-                            Value("x", out var xSecondUse).Plus(1),
-                            out var xAss
+                        Value("x", out var xAss).Assign(
+                            Value("x", out var xSecondUse).Plus(1)
                         ),
                         Value("x", out var xThirdUse)
                         ),
@@ -141,8 +140,8 @@ public class SideEffectsAnalyzerTest
         var nameResolution = new NameResolutionResult().WithVars(
             (xFirstUse, declX),
             (xSecondUse, declX),
-            (xThirdUse, declX))
-            .WithAssigns((xAss, declX));
+            (xThirdUse, declX),
+            (xAss, declX));
         _ = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap, new StructProperties(), typeCheckingResult);
     }
 
@@ -191,7 +190,7 @@ public class SideEffectsAnalyzerTest
             .Body(
                 Var("x", 1, out var declX),
                 Var<IntType>("y", Value("x", out var xUse), out var declY),
-                "x".Assign(Value("y", out var yUse), out var xAss)
+                Value("x", out var xAss).Assign(Value("y", out var yUse))
             ).Get(out var tree);
         var expected = new List<SingleExitNode>
         {
@@ -210,7 +209,7 @@ public class SideEffectsAnalyzerTest
         };
 
         var nameResolution = new NameResolutionResult()
-            .WithVars((xUse, declX), (yUse, declY), ((VariableValue)xAss.Left, declX));
+            .WithVars((xUse, declX), (yUse, declY), (xAss, declX));
 
         var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap, new StructProperties(), typeCheckingResult);
 
@@ -230,7 +229,7 @@ public class SideEffectsAnalyzerTest
         Fun<UnitType>("f")
             .Body(
                 Var("x", 1, out var declX),
-                "x".Assign(Value("x", out var xUse).Plus(Literal(1)), out var xAss)
+                Value("x", out var xAss).Assign(Value("x", out var xUse).Plus(Literal(1)))
             ).Get(out var tree);
         var expected = new List<SingleExitNode>
         {
@@ -251,7 +250,7 @@ public class SideEffectsAnalyzerTest
         };
 
         var nameResolution = new NameResolutionResult()
-            .WithVars((xUse, declX), ((VariableValue)xAss.Left, declX));
+            .WithVars((xUse, declX), (xAss, declX));
 
         var result = SideEffectsAnalyzer.PullOutSideEffects(tree.Body, nameResolution, functionContext, functionContextMap, callGraph, variableAccessMap, new StructProperties(), typeCheckingResult);
 

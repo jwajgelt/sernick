@@ -148,10 +148,7 @@ public static class ControlFlowAnalyzer
                 return _functionContext.GenerateVariableWrite(_temp, value).Enumerate();
             }
 
-            public CodeTreeValueNode GenerateValueRead()
-            {
-                return _functionContext.GenerateVariableRead(_temp);
-            }
+            public CodeTreeValueNode GenerateValueRead() => _functionContext.GenerateVariableRead(_temp);
         }
         private readonly IFunctionContext _functionContext;
         public TemporaryLocalVariableFactory(IFunctionContext functionContext)
@@ -166,7 +163,9 @@ public static class ControlFlowAnalyzer
 
         public StructValueLocation NewStructVariable(int size)
         {
-            return new StructValueLocation(_functionContext, new TemporaryVariable(), size);
+            var temp = new TemporaryVariable();
+            _functionContext.AddLocal(temp, isStruct: true, size: size);
+            return new StructValueLocation(_functionContext, temp, size);
         }
     }
 
@@ -430,7 +429,8 @@ public static class ControlFlowAnalyzer
                             resultLocation = fieldPath
                                 .SkipLast(1)
                                 .Aggregate(variableLocation,
-                                    (location, field) => location.GetField(_structProperties.FieldOffsets[field]))
+                                    (location, field) => location.GetField(_structProperties.FieldOffsets[field], _structProperties.FieldSizes[field]))
+
                                 .GetPrimitiveField(_structProperties.FieldOffsets[fieldPath.Last()]);
                         }
                         else
@@ -438,8 +438,10 @@ public static class ControlFlowAnalyzer
                             resultLocation = fieldPath
                                 .SkipLast(1)
                                 .Aggregate(variableLocation,
-                                    (location, field) => location.GetField(_structProperties.FieldOffsets[field]))
-                                .GetField(_structProperties.FieldOffsets[fieldPath.Last()]);
+                                    (location, field) => location.GetField(_structProperties.FieldOffsets[field], _structProperties.FieldSizes[field]
+                                        ))
+                                .GetField(_structProperties.FieldOffsets[fieldPath.Last()], _structProperties.FieldSizes[fieldPath.Last()]
+                                    );
                         }
 
                         return node.Right.Accept(this, param with { ResultVariable = resultLocation });
@@ -469,7 +471,18 @@ public static class ControlFlowAnalyzer
             {
                 var field = _structHelper.GetStructFieldDeclaration(structType, fieldName);
                 var fieldOffset = _structProperties.FieldOffsets[field];
-                next = expression.Accept(this, param with { Next = next, ResultVariable = tempStruct.GetField(fieldOffset) });
+
+                if (field.Type is StructType)
+                {
+                    var fieldSize = _structHelper.GetStructFieldSize(structType, fieldName);
+                    next = expression.Accept(this,
+                        param with { Next = next, ResultVariable = tempStruct.GetField(fieldOffset, fieldSize) });
+                }
+                else
+                {
+                    next = expression.Accept(this,
+                        param with { Next = next, ResultVariable = tempStruct.GetPrimitiveField(fieldOffset) });
+                }
             }
 
             return next;
@@ -527,19 +540,35 @@ public static class ControlFlowAnalyzer
     {
         protected override bool VisitAstNode(AstNode node, ISet<AstNode> set)
         {
-            if (node is FunctionDefinition)
-            {
-                return false;
-            }
-
             var children = node.Children.Select(childNode => childNode.Accept(this, set)).ToList();
 
-            if (node is not (FlowControlStatement or Infix { Operator: Infix.Op.ScAnd or Infix.Op.ScOr }) &&
-                children.All(value => !value))
+            if (children.All(value => !value))
             {
                 return false;
             }
 
+            set.Add(node);
+            return true;
+
+        }
+
+        public override bool VisitFunctionDefinition(FunctionDefinition definition, ISet<AstNode> set) => false;
+
+        public override bool VisitInfix(Infix infix, ISet<AstNode> set)
+        {
+            var childrenResult = VisitAstNode(infix, set);
+            var result = infix.Operator is Infix.Op.ScAnd or Infix.Op.ScOr || childrenResult;
+            if (result)
+            {
+                set.Add(infix);
+            }
+
+            return result;
+        }
+
+        protected override bool VisitFlowControlStatement(FlowControlStatement node, ISet<AstNode> set)
+        {
+            VisitAstNode(node, set);
             set.Add(node);
             return true;
         }

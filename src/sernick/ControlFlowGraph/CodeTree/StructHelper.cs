@@ -6,6 +6,7 @@ using Ast.Analysis.StructProperties;
 using Ast.Nodes;
 using Utility;
 using static CodeTreeExtensions;
+using static Compiler.PlatformConstants;
 
 public class StructHelper
 {
@@ -15,10 +16,10 @@ public class StructHelper
     public static IEnumerable<CodeTreeNode> GenerateStructCopy(CodeTreeValueNode targetStruct, CodeTreeValueNode sourceStruct,
         int structSize)
     {
-        return Enumerable.Range(0, structSize)
+        return Enumerable.Range(0, structSize / POINTER_SIZE)
             .Select(offset =>
-                Mem(targetStruct + offset)
-                    .Write(Mem(sourceStruct + offset).Read()));
+                Mem(targetStruct + POINTER_SIZE * offset)
+                    .Write(Mem(sourceStruct + POINTER_SIZE * offset).Read()));
     }
 
     public StructHelper(StructProperties properties, NameResolutionResult nameResolution)
@@ -27,7 +28,7 @@ public class StructHelper
         _nameResolution = nameResolution;
     }
 
-    public IEnumerable<CodeTreeNode> GenerateStructFieldRead(
+    public CodeTreeValueNode GenerateStructFieldRead(
         CodeTreeValueNode sourceStruct,
         FieldDeclaration field)
     {
@@ -36,20 +37,17 @@ public class StructHelper
 
         if (field.Type is not StructType)
         {
-            return Mem(source).Read().Enumerate();
+            return Mem(source).Read();
         }
 
-        return source.Enumerate();
-
+        return source;
     }
 
     public IEnumerable<CodeTreeNode> GenerateStructFieldWrite(
         CodeTreeValueNode targetStruct,
         CodeTreeValueNode source,
-        FieldDeclaration field,
-        StructDeclaration targetStructDeclaration)
+        FieldDeclaration field)
     {
-        var structSize = _properties.StructSizes[targetStructDeclaration];
         var offset = _properties.FieldOffsets[field];
         var target = targetStruct + offset;
 
@@ -58,7 +56,7 @@ public class StructHelper
             return Mem(target).Write(source).Enumerate();
         }
 
-        var fieldSize = _properties.FieldOffsets.Values.Where(fieldOffset => fieldOffset > offset).Concat(structSize.Enumerate()).Min() - offset;
+        var fieldSize = _properties.FieldSizes[field];
         return GenerateStructCopy(target, source, fieldSize);
     }
 
@@ -73,7 +71,7 @@ public class StructHelper
         var structDeclaration = _nameResolution.StructDeclarations[type.Struct];
         foreach (var field in structDeclaration.Fields)
         {
-            if (field.Name.Equals(fieldName))
+            if (field.Name.Name.Equals(fieldName.Name))
             {
                 return field;
             }
@@ -81,5 +79,11 @@ public class StructHelper
 
         throw new NotSupportedException(
             $"Invalid field {fieldName.Name} access on struct of type {type}");
+    }
+
+    public int GetStructFieldSize(StructType type, Identifier fieldName)
+    {
+        var field = GetStructFieldDeclaration(type, fieldName);
+        return _properties.FieldSizes[field];
     }
 }

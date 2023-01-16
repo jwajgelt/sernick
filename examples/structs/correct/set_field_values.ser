@@ -18,9 +18,9 @@ testStruct.field1 = 10;
 testStruct.field2 = (testStruct.field3 > testStruct.field1);
 testStruct.field3 = testStruct.field4;
 testStruct.field4 = if(testStruct.field2) {
-                        11;
+                        11
                     } else {
-                        12;
+                        12
                     };
 
 struct InnerStruct {
@@ -44,7 +44,7 @@ var innerStruct = outerStruct.inner;
 innerStruct.field = 3;
 outerStruct.inner.field = 5;
 outerStruct.inner = InnerStruct {
-    value: 10                   
+    field: 10                   
 };
 innerStruct = outerStruct.inner;
 innerStruct.field = 0;
