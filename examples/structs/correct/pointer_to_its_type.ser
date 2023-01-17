@@ -1,0 +1,22 @@
+﻿// struct with pointer to object its type
+// this can be necessary in e.g. lists
+
+struct IntList {
+    value: Int,
+    next: *IntList
+};
+
+var end = new( IntList {
+    value: 3,
+    next: null
+});
+
+var middle = new( IntList {
+     value: 2,
+     next: end
+ });
+ 
+var beginning = new( IntList {
+    value: 1,
+    next: middle
+});

@@ -1,5 +1,6 @@
 namespace sernickTest.Ast.Helpers;
 
+using System.Collections.Immutable;
 using Input;
 using sernick.Ast;
 using sernick.Ast.Nodes;
@@ -16,7 +17,8 @@ public static class AstNodesExtensions
 
     private static readonly Range<ILocation> loc = new(new FakeLocation(), new FakeLocation());
 
-    public static Identifier Ident(string name) => new(name, loc);
+    public static Identifier Ident(string name) => Ident(name, out _);
+    public static Identifier Ident(string name, out Identifier result) => result = new(name, loc);
 
     #region Variable
 
@@ -49,6 +51,23 @@ public static class AstNodesExtensions
             IsConst: false,
             loc);
 
+    public static VariableDeclaration Var(string name, Type type) => Var(name, type, out _);
+    public static VariableDeclaration Var(string name, Type type, out VariableDeclaration result) =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: type,
+            InitValue: null,
+            IsConst: false,
+            loc);
+    public static VariableDeclaration Var(string name, Expression initValue) => Var(name, initValue, out _);
+    public static VariableDeclaration Var(string name, Expression initValue, out VariableDeclaration result) =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: null,
+            InitValue: initValue,
+            IsConst: false,
+            loc);
+
     public static VariableDeclaration Var<T>(string name, bool initValue) where T : Type, new() => Var<T>(name, initValue, out _);
 
     public static VariableDeclaration Var<T>(string name, bool initValue, out VariableDeclaration result) where T : Type, new() =>
@@ -74,6 +93,18 @@ public static class AstNodesExtensions
             InitValue: null,
             IsConst: false,
             loc);
+    
+    public static VariableDeclaration Const(string name, Type type, Expression initValue) => Const(name, type, initValue, out _);
+    public static VariableDeclaration Const(string name, Type type, Expression initValue, out VariableDeclaration result) =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: type,
+            InitValue: initValue,
+            IsConst: true,
+            loc);
+
+    public static VariableDeclaration Const(this VariableDeclaration variableDeclaration) =>
+        variableDeclaration with { IsConst = true };
 
     public static VariableDeclaration Const(string name) => Const(name, out _);
 
@@ -93,6 +124,17 @@ public static class AstNodesExtensions
             InitValue: Literal(initValue),
             IsConst: true,
             loc);
+    
+    public static VariableDeclaration Const(string name, Type type) => Const(name, type, out _);
+
+    public static VariableDeclaration Const(string name, Type type, out VariableDeclaration result) =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: type,
+            InitValue: null,
+            IsConst: true,
+            loc);
+
 
     public static VariableDeclaration Const(string name, bool initValue) => Const(name, initValue, out _);
 
@@ -214,7 +256,12 @@ public static class AstNodesExtensions
     public static Assignment Assign(this string name, Expression value) => name.Assign(value, out _);
 
     public static Assignment Assign(this string name, Expression value, out Assignment result) =>
-        result = new Assignment(Ident(name), value, loc);
+        result = new Assignment(Value(name), value, loc);
+
+    public static Assignment Assign(this Expression left, Expression value) => Assign(left, value, out _);
+
+    public static Assignment Assign(this Expression left, Expression value, out Assignment result) =>
+        result = new Assignment(left, value, loc);
 
     #endregion
 
@@ -248,8 +295,27 @@ public static class AstNodesExtensions
 
     #region Function Declaration
 
+    public static FunctionDefinition Fun(string name, Expression body, Type returnType) =>
+        Fun(name, body, returnType, out _);
+    public static FunctionDefinition Fun(string name, Expression body, Type returnType, out FunctionDefinition result) => result = new(
+        Ident(name),
+        ImmutableArray<FunctionParameterDeclaration>.Empty,
+        returnType,
+        new CodeBlock(body, loc),
+        loc);
+    public static FunctionDefinition Fun(string name, Type argumentType, Expression body) =>
+        Fun(name, argumentType, body, out _);
+    public static FunctionDefinition Fun(string name, Type argumentType, Expression body, out FunctionDefinition result) => result = new(
+        Ident(name),
+        new[] { new FunctionParameterDeclaration(Ident("a"), argumentType, null, loc) },
+        new UnitType(),
+        new CodeBlock(body, loc),
+        loc);
+
     public static FuncDeclarationBuilder Fun<ReturnType>(string name) where ReturnType : Type, new() =>
         new(Ident(name), new ReturnType());
+
+    public static FuncDeclarationBuilder Fun(string name, Type returnType) => new(Ident(name), returnType);
 
     public sealed class FuncDeclarationBuilder
     {
@@ -349,5 +415,86 @@ public static class AstNodesExtensions
 
     #region Loop
     public static LoopStatement Loop(CodeBlock codeBlock) => new LoopStatement(codeBlock, loc);
+    #endregion
+
+    #region Pointers
+    public static PointerType Pointer(Identifier type) => new(new StructType(type));
+    public static PointerType Pointer(Type type) => new(type);
+    public static FunctionCall Alloc(Expression arg) => Call("new").Argument(arg);
+    public static PointerDereference Deref(Expression pointer) => new PointerDereference(pointer, loc);
+    public static NullPointerLiteralValue Null => new(loc);
+    #endregion
+
+    #region Struct
+    public static StructDeclarationBuilder Struct(string name) => new(Ident(name));
+    public sealed class StructDeclarationBuilder
+    {
+        private readonly Identifier _identifier;
+        private readonly List<FieldDeclaration> _fields = new();
+
+        internal StructDeclarationBuilder(Identifier identifier) => _identifier = identifier;
+
+        public StructDeclarationBuilder Field(FieldDeclaration field)
+        {
+            _fields.Add(field);
+            return this;
+        }
+
+        public StructDeclarationBuilder Field(string name, Type type)
+        {
+            _fields.Add(new FieldDeclaration(Ident(name), type, loc));
+            return this;
+        }
+
+        public static implicit operator StructDeclaration(StructDeclarationBuilder builder) => new(
+            builder._identifier,
+            builder._fields,
+            loc
+        );
+
+        public StructDeclaration Get(out StructDeclaration result) => result = this;
+    }
+
+    public static StructValueBuilder StructValue(string name) => new(Ident(name));
+    public static StructValueBuilder StructValue(Identifier name) => new(name);
+    public sealed class StructValueBuilder
+    {
+        private readonly Identifier _identifier;
+        private readonly List<StructFieldInitializer> _fields = new();
+
+        internal StructValueBuilder(Identifier identifier) => _identifier = identifier;
+
+        public StructValueBuilder Field(StructFieldInitializer field)
+        {
+            _fields.Add(field);
+            return this;
+        }
+
+        public StructValueBuilder Field(string name, Expression value)
+        {
+            _fields.Add(new StructFieldInitializer(Ident(name), value, loc));
+            return this;
+        }
+
+        public static implicit operator StructValue(StructValueBuilder builder) => new(
+            builder._identifier,
+            builder._fields,
+            loc
+        );
+
+        public StructValue Get(out StructValue result) => result = this;
+    }
+
+    public static StructFieldAccess Field(this Expression left, string name) => new StructFieldAccess(left, Ident(name), loc);
+    #endregion
+
+    #region Types
+
+    public static StructType Type(this string name) => new(Ident(name));
+
+    public static PointerType Point(this Type type) => new(type);
+
+    public static readonly IntType Integer = new IntType();
+
     #endregion
 }

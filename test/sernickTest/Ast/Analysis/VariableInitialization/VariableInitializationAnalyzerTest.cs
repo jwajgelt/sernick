@@ -1,12 +1,15 @@
 namespace sernickTest.Ast.Analysis.VariableInitialization;
 
+using System.Collections.Immutable;
 using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis.CallGraph;
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Analysis.VariableAccess;
 using sernick.Ast.Analysis.VariableInitialization;
+using sernick.Ast.Nodes;
 using sernick.Diagnostics;
+using sernick.Utility;
 using static Helpers.AstNodesExtensions;
 using static sernick.Ast.Analysis.VariableInitialization.VariableInitializationAnalyzer;
 
@@ -183,8 +186,8 @@ public class VariableInitializationAnalyzerTest
     public void NoErrorInitializationInAllNestedIfBranches()
     {
         // fun foo(a: Bool, b: Bool): Bool {
-        //      const x: Bool;
-        //      const y: Bool;
+        //      var x: Bool;
+        //      var y: Bool;
         //      if(a) {
         //         x = b;
         //         if(x) {
@@ -204,8 +207,8 @@ public class VariableInitializationAnalyzerTest
         // }
         var tree = Program(
             Fun<BoolType>("foo").Parameter<BoolType>("a").Parameter<IntType>("b").Body(
-                Const<BoolType>("x"),
-                Const<BoolType>("y"),
+                Var<BoolType>("x"),
+                Var<BoolType>("y"),
                 If(Value("a")).Then(
                     "x".Assign(Value("b")),
                     If(Value("x")).Then("y".Assign(Literal(true))).Else("y".Assign(Literal(false)))
@@ -231,8 +234,8 @@ public class VariableInitializationAnalyzerTest
     public void ErrorInitializationInSomeNestedIfBranches()
     {
         // fun foo(a: Bool, b: Bool): Bool {
-        //      const x: Bool;
-        //      const y: Bool;
+        //      var x: Bool;
+        //      var y: Bool;
         //      if(a) {
         //         x = b;
         //         if(x) {
@@ -250,8 +253,8 @@ public class VariableInitializationAnalyzerTest
         // }
         var tree = Program(
             Fun<BoolType>("foo").Parameter<BoolType>("a").Parameter<IntType>("b").Body(
-                Const<BoolType>("x"),
-                Const<BoolType>("y"),
+                Var<BoolType>("x"),
+                Var<BoolType>("y"),
                 If(Value("a")).Then(
                     "x".Assign(Value("b")),
                     If(Value("x")).Then("y".Assign(Literal(true))).Else("y".Assign(Literal(false)))
@@ -386,6 +389,99 @@ public class VariableInitializationAnalyzerTest
         var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution, diagnostics.Object);
 
         VariableInitializationAnalyzer.Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+
+        diagnostics.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void ErrorReportedOnConstStructFieldAssignment()
+    {
+        // struct TestStruct {
+        //   field: Int
+        // }
+        // const testStruct = TestStruct { field: 1};
+        // testStruct.field = 2
+        var tree = Program(
+            Struct("TestStruct").Field("field", new IntType()),
+            Const("testStruct", new StructType(Ident("TestStruct")), StructValue("TestStruct").Field("field", Literal(2))),
+            Value("testStruct").Field("field").Assign(Literal(2))
+        );
+        
+        var diagnostics = new Mock<IDiagnostics>();
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+        var callGraph = CallGraphBuilder.Process(tree, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution, diagnostics.Object);
+
+        Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<ConstStructModifiedError>()));
+    }
+    
+    [Fact]
+    public void ErrorReportedOnUninitialisedStructFieldAssignment()
+    {
+        // struct TestStruct {
+        //   field: Int
+        // }
+        // const testStruct : TestStruct;
+        // testStruct.field = 2
+        var tree = Program(
+            Struct("TestStruct").Field("field", new IntType()),
+            Const("testStruct", new StructType(Ident("TestStruct"))),
+            Value("testStruct").Field("field").Assign(Literal(2))
+        );
+        
+        var diagnostics = new Mock<IDiagnostics>();
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+        var callGraph = CallGraphBuilder.Process(tree, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution, diagnostics.Object);
+
+        Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<UninitializedVariableUseError>()));
+    }
+    
+    [Fact]
+    public void ErrorReportedOnConstPointerAssignment()
+    {
+        // const a : *Int = 3; // using new is a huge problem in these tests, thankfully we don't do type checking
+        // a = 1; 
+        var tree = Program(
+            Const("a", Pointer(new IntType()), Literal(3), out var declaration),
+            Value("a").Assign(Literal(1))
+        );
+        Assert.NotNull(declaration);
+        
+        var diagnostics = new Mock<IDiagnostics>();
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+        var callGraph = CallGraphBuilder.Process(tree, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution, diagnostics.Object);
+
+        Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+
+        diagnostics.Verify(d => d.Report(It.IsAny<MultipleConstAssignmentError>()));
+    }
+    
+    [Fact]
+    public void NoErrorReportedOnConstPointerStructFieldAssignment()
+    {
+        // struct TestStruct {
+        //   field: Int
+        // }
+        // const testStruct = 3; // omit new in tests
+        // (*testStruct).field = 2
+        var tree = Program(
+            Struct("TestStruct").Field("field", new IntType()),
+            Const("testStruct", Pointer(Ident("TestStruct")), Literal(3)),
+            Deref(Value("testStruct")).Field("field").Assign(Literal(2))
+        );
+        
+        var diagnostics = new Mock<IDiagnostics>();
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+        var callGraph = CallGraphBuilder.Process(tree, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution, diagnostics.Object);
+
+        Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
 
         diagnostics.VerifyNoOtherCalls();
     }

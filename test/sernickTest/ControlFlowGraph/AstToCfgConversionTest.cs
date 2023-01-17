@@ -6,6 +6,7 @@ using sernick.Ast.Analysis.CallGraph;
 using sernick.Ast.Analysis.ControlFlowGraph;
 using sernick.Ast.Analysis.FunctionContextMap;
 using sernick.Ast.Analysis.NameResolution;
+using sernick.Ast.Analysis.StructProperties;
 using sernick.Ast.Analysis.TypeChecking;
 using sernick.Ast.Analysis.VariableAccess;
 using sernick.Ast.Nodes;
@@ -122,7 +123,7 @@ public class AstToCfgConversionTest
         var mainContext = funFactory.CreateFunction(null, Ident(""), null, new IFunctionParam[] { }, false);
         var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramN }, true);
 
-        fContext.AddLocal(paramN, false);
+        fContext.AddLocal(paramN);
         var fResult = Reg(new Register());
 
         var fCall = fContext.GenerateCall(new[] { new Constant(new RegisterValue(5)) });
@@ -221,8 +222,8 @@ public class AstToCfgConversionTest
         var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramX }, true);
         var gContext = funFactory.CreateFunction(fContext, Ident("g"), null, new IFunctionParam[] { paramY }, true);
 
-        fContext.AddLocal(paramX, false);
-        gContext.AddLocal(paramY, false);
+        fContext.AddLocal(paramX);
+        gContext.AddLocal(paramY);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
 
@@ -329,10 +330,10 @@ public class AstToCfgConversionTest
         var f3Context = funFactory.CreateFunction(f2Context, Ident("f3"), null, new IFunctionParam[] { paramP3 }, true);
         var f4Context = funFactory.CreateFunction(f3Context, Ident("f4"), null, new IFunctionParam[] { paramP4 }, true);
 
-        f1Context.AddLocal(paramP1, false);
-        f2Context.AddLocal(paramP2, false);
-        f3Context.AddLocal(paramP3, false);
-        f4Context.AddLocal(paramP4, false);
+        f1Context.AddLocal(paramP1);
+        f2Context.AddLocal(paramP2);
+        f3Context.AddLocal(paramP3);
+        f4Context.AddLocal(paramP4);
         f1Context.AddLocal(v1, true);
         f2Context.AddLocal(v2, true);
         f3Context.AddLocal(v3, true);
@@ -422,9 +423,9 @@ public class AstToCfgConversionTest
         var fContext = funFactory.CreateFunction(mainContext, Ident("f"), null, new IFunctionParam[] { paramX, paramY }, true);
         var gContext = funFactory.CreateFunction(fContext, Ident("g"), null, new IFunctionParam[] { paramZ }, true);
 
-        fContext.AddLocal(paramX, false);
-        fContext.AddLocal(paramY, false);
-        gContext.AddLocal(paramZ, false);
+        fContext.AddLocal(paramX);
+        fContext.AddLocal(paramY);
+        gContext.AddLocal(paramZ);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
 
@@ -660,7 +661,7 @@ public class AstToCfgConversionTest
         var hContext = funFactory.CreateFunction(fContext, Ident("h"), null, new IFunctionParam[] { }, false);
 
         mainContext.AddLocal(x, true);
-        fContext.AddLocal(paramV, false);
+        fContext.AddLocal(paramV);
 
         var fCallInMain = fContext.GenerateCall(new[] { new Constant(new RegisterValue(1)) });
         var fCallInG = fContext.GenerateCall(new[] { new Constant(new RegisterValue(0)) });
@@ -756,8 +757,8 @@ public class AstToCfgConversionTest
         var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramVg }, true);
 
         mainContext.AddLocal(x, true);
-        fContext.AddLocal(paramVf, false);
-        gContext.AddLocal(paramVg, false);
+        fContext.AddLocal(paramVf);
+        gContext.AddLocal(paramVg);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
 
@@ -854,8 +855,8 @@ public class AstToCfgConversionTest
         var gContext = funFactory.CreateFunction(mainContext, Ident("g"), null, new IFunctionParam[] { paramVg }, true);
 
         mainContext.AddLocal(x, true);
-        fContext.AddLocal(paramVf, false);
-        gContext.AddLocal(paramVg, false);
+        fContext.AddLocal(paramVf);
+        gContext.AddLocal(paramVg);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
 
@@ -960,9 +961,9 @@ public class AstToCfgConversionTest
         var hContext = funFactory.CreateFunction(mainContext, Ident("h"), null, new IFunctionParam[] { paramVh }, true);
 
         mainContext.AddLocal(x, true);
-        fContext.AddLocal(paramVf, false);
-        gContext.AddLocal(paramVg, false);
-        hContext.AddLocal(paramVh, false);
+        fContext.AddLocal(paramVf);
+        gContext.AddLocal(paramVg);
+        hContext.AddLocal(paramVh);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
         var hResult = Reg(new Register());
@@ -1278,8 +1279,8 @@ public class AstToCfgConversionTest
         var hContext = funFactory.CreateFunction(mainContext, Ident("h"), null, Array.Empty<IFunctionParam>(), true);
 
         mainContext.AddLocal(x, true);
-        fContext.AddLocal(paramA, false);
-        fContext.AddLocal(paramB, false);
+        fContext.AddLocal(paramA);
+        fContext.AddLocal(paramB);
         var fResult = Reg(new Register());
         var gResult = Reg(new Register());
         var hResult = Reg(new Register());
@@ -1331,12 +1332,14 @@ public class AstToCfgConversionTest
     {
         var diagnostics = new FakeDiagnostics();
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
-        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, _ => null, new FunctionFactory(LabelGenerator.Generate));
+        var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
+        var structProperties = StructPropertiesProcessor.Process(ast, nameResolution, diagnostics);
+        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, structProperties, _ => null, new FunctionFactory(LabelGenerator.Generate));
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
-        var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,
-            root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, SideEffectsAnalyzer.PullOutSideEffects));
+            // TODO: provide StructProperties here
+            root => ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, new StructProperties(), SideEffectsAnalyzer.PullOutSideEffects));
 
         foreach (var (fun, codeTree) in expected)
         {

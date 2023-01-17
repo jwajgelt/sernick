@@ -1,0 +1,6 @@
+﻿// assign value of pointers of different types
+
+var intPtr: *Int = new(5);
+var boolPtr: *Bool = new(true);
+
+*intPtr = *boolPtr;

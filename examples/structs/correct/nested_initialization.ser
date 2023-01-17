@@ -1,0 +1,19 @@
+﻿// correct initialization of struct with one of the fields being another struct
+
+struct InnerStruct {
+    field: Int
+};
+
+struct OuterStruct {
+    inner: InnerStruct,
+    anotherField: Int
+};
+
+var innerStruct = InnerStruct {
+    field: 1
+};
+
+var outerStruct = OuterStruct {
+    inner: innerStruct,
+    anotherField: 2
+};

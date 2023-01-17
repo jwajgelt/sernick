@@ -1,0 +1,25 @@
+﻿// proper usage of const
+
+struct TestStruct {
+    field1: Int,
+    field2: Bool,
+    field3: Int,
+    field4: Int
+};
+
+const testStruct: TestStruct;
+testStruct = TestStruct {
+    field1: 1,
+    field2: true,
+    field3: 3,
+    field4: 4
+};
+
+const val1 = testStruct.field1;
+const val2 = testStruct.field2;
+var val3 = testStruct.field3;
+var val4 = if (testStruct.field2) {
+                testStruct.field1;
+            } else {
+                testStruct.field3;
+            };

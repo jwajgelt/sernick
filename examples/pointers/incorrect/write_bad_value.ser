@@ -1,0 +1,4 @@
+﻿// write to pointer value of another type
+
+var intPtr = new(1);
+*intPtr = true;

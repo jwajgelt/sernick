@@ -13,6 +13,10 @@ public static class ValuesConversion
     /// </summary>
     public static LiteralValue ToLiteral(this IParseTree<Symbol> node) => node switch
     {
+        // Null Literal
+        { Symbol: Terminal { Category: LexicalGrammarCategory.Literals, Text: "null" } }
+            => new NullPointerLiteralValue(node.LocationRange),
+
         // Boolean Literals
         { Symbol: Terminal { Category: LexicalGrammarCategory.Literals, Text: "true" } } => new BoolLiteralValue(true,
             node.LocationRange),
@@ -25,7 +29,7 @@ public static class ValuesConversion
             => new IntLiteralValue(value, node.LocationRange),
 
         // LiteralValue
-        // 1. LiteralValue -> trueLiteral | falseLiteral | digitLiteral
+        // 1. LiteralValue -> trueLiteral | falseLiteral | digitLiteral | nullLiteral
         { Symbol: NonTerminal { Inner: NonTerminalSymbol.LiteralValue }, Children: var children }
             when children.Count == 1 => children[0].ToLiteral(),
 

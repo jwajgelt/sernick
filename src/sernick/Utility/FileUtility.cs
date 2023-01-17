@@ -15,6 +15,8 @@ public static class FileUtility
         return new FileInput.FileLocation(line - 1, character - 1);
     }
 
+    internal static FileLine Line(uint line) => new(line);
+
     private sealed class FileInput : IInput
     {
         internal FileInput(string[] lines)
@@ -97,4 +99,10 @@ public static class FileUtility
             }
         }
     }
+}
+
+internal record FileLine(uint LineNumber)
+{
+    internal Range<ILocation> Range(uint start, uint end) =>
+        (FileUtility.LocationAt(LineNumber, start), FileUtility.LocationAt(LineNumber, end));
 }

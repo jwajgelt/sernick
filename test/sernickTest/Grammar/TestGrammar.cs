@@ -6,19 +6,22 @@ using sernick.Grammar.Lexicon;
 
 public class TestGrammar
 {
-    private readonly string[] keywords = { "loop", "var", "const", "fun", "break", "continue", "return" };
-    private readonly string[] notKeywords = { "Loop", "Var", "CONST", "function", "breaking", "go", "ret" };
+    private static readonly string[] keywords = { "loop", "var", "const", "fun", "break", "continue", "return", "struct" };
+    private static readonly string[] notKeywords = { "Loop", "Var", "CONST", "function", "breaking", "go", "ret", "type", "class" };
 
-    private readonly string[] integerLiterals = { "123", "2", "137", "999000999" };
-    private readonly string[] notIntegerLiterals = { "123.45", "21.3", "7,99", "999,99$", "0.00", "0/0" };
+    private static readonly string[] integerLiterals = { "123", "2", "137", "999000999" };
+    private static readonly string[] notIntegerLiterals = { "123.45", "21.3", "7,99", "999,99$", "0.00", "0/0" };
 
-    private readonly string[] booleanLiterals = { "true", "false" };
-    private readonly string[] notBooleanLiterals = { "True", "False", "Truth", "Fals" };
+    private static readonly string[] booleanLiterals = { "true", "false" };
+    private static readonly string[] notBooleanLiterals = { "True", "False", "Truth", "Fals" };
 
-    private readonly string[] comments = { "// single-line comment", @"/* multi
+    private static readonly string[] nullLiterals = { "null" };
+    private static readonly string[] notNullLiterals = { "Null", "nullptr", "nil", "none", "None" };
+
+    private static readonly string[] comments = { "// single-line comment", @"/* multi
     line
     comment */", "/* multi-line comment in one line */" };
-    private readonly string[] notComments = { "/ missing second /",
+    private static readonly string[] notComments = { "/ missing second /",
      @"//* multi
        line with extra second/
        so invalid */",
@@ -27,20 +30,20 @@ public class TestGrammar
      "just random text",
      "        " };
 
-    private readonly string[] typeNames = { "Int", "Bool", "Unit", "CustomTypeName", "A", "B", "Z", "ABBA", "UJ" };
-    private readonly string[] variableNames = { "varia", "ble", "name", "tcs", "mess", "graphQL", };
+    private static readonly string[] typeNames = { "Int", "Bool", "Unit", "CustomTypeName", "A", "B", "Z", "ABBA", "UJ" };
+    private static readonly string[] variableNames = { "varia", "ble", "name", "tcs", "mess", "graphQL", };
 
-    private readonly string[] operators = { "+", "-", "||", "&&" };
+    private static readonly string[] operators = { "+", "-", "||", "&&", "*" };
     /// <summary> maybe some of these will be operators in the future, but not now </summary>
-    private readonly string[] notOperators = { "*", "/", "^", "//", "pow", "$", "(", ")", "{}" };
+    private static readonly string[] notOperators = { "/", "^", "//", "pow", "$", "(", ")", "{}" };
 
-    private readonly string[] whitespaces = { " ", "     ", "       ", "    ", };
-    private readonly string[] notWhitespaces = { "", "123", ";", "#" };
+    private static readonly string[] whitespaces = { " ", "     ", "       ", "    ", };
+    private static readonly string[] notWhitespaces = { "", "123", ";", "#" };
 
-    private readonly string[] colon = { ":", };
-    private readonly string[] semicolon = { ";" };
-    private readonly string[] bracesAndParentheses = { "{", "}", ")", "(" };
-    private readonly string[] notBracesNotParentheses = { "[", "]", @"\", "123", "/" };
+    private static readonly string[] colon = { ":", };
+    private static readonly string[] semicolon = { ";" };
+    private static readonly string[] bracesAndParentheses = { "{", "}", ")", "(" };
+    private static readonly string[] notBracesNotParentheses = { "[", "]", @"\", "123", "/" };
 
     private static void TestCategories(
         IEnumerable<LexicalGrammarCategory> categoriesWhichShouldAccept,
@@ -48,7 +51,7 @@ public class TestGrammar
         IEnumerable<string> badExamples
     )
     {
-        var grammar = new LexicalGrammar().GenerateGrammar();
+        var grammar = LexicalGrammar.GenerateGrammar();
 
         foreach (var grammarCategoryKey in categoriesWhichShouldAccept)
         {
@@ -70,8 +73,7 @@ public class TestGrammar
     [Fact]
     public void Grammar_categories_priorities_are_distinct()
     {
-        var grammar = new LexicalGrammar();
-        var priorities = grammar.GenerateGrammar().Values.ToList().ConvertAll(grammarEntry => grammarEntry.Category);
+        var priorities = LexicalGrammar.GenerateGrammar().Values.ToList().ConvertAll(grammarEntry => grammarEntry.Category);
         // hash set size == list size => no two list elements are equal
         Assert.True(priorities.Count == priorities.ToHashSet().Count);
     }
@@ -162,5 +164,13 @@ public class TestGrammar
         TestCategories(new[] { LexicalGrammarCategory.Literals },
          booleanLiterals,
          notBooleanLiterals);
+    }
+
+    [Fact]
+    public void Test_literals_category_null()
+    {
+        TestCategories(new[] { LexicalGrammarCategory.Literals },
+            nullLiterals,
+            notNullLiterals);
     }
 }

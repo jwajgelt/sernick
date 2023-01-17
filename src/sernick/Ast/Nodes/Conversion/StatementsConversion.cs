@@ -67,6 +67,23 @@ public static class StatementsConversion
 
     /// <summary>
     /// Requires that the top production is of type:
+    /// 1. openExpression -> variableDeclaration | breakKeyword | continueKeyword | returnExpression
+    /// 2. openExpression -> assignmentOperand [ = expression ]
+    /// </summary>
+    public static Expression ToOpenExpression(this IParseTree<Symbol> node) => node switch
+    {
+        { Symbol: NonTerminal { Inner: NonTerminalSymbol.OpenExpression }, Children: var children }
+            when children.Count == 1 => children[0].ToExpression(),
+
+        { Symbol: NonTerminal { Inner: NonTerminalSymbol.OpenExpression }, Children: var children }
+            when children.Count == 3
+            => new Assignment(children[0].ToExpression(), children[2].ToExpression(), node.LocationRange),
+
+        _ => throw new ArgumentException("Invalid ParseTree for OpenExpression")
+    };
+
+    /// <summary>
+    /// Requires that the top production is of type:
     /// 1. simpleExpression -> literalValue
     /// 2. simpleExpression -> parOpen * aliasExpression * parClose
     /// 3. simpleExpression -> identifier | functionCall
@@ -81,19 +98,6 @@ public static class StatementsConversion
         { Symbol: NonTerminal { Inner: NonTerminalSymbol.SimpleExpression }, Children: var children }
             when children.Count == 3 => children[1].ToExpression(),
         _ => throw new ArgumentException("Invalid ParseTree for SimpleExpression")
-    };
-
-    /// <summary>
-    /// Requires that the top production is of type:
-    /// 1. assignment -> identifier * assignOperator * aliasExpression
-    /// </summary>
-    public static Assignment ToAssigment(this IParseTree<Symbol> node) => node switch
-    {
-        { Symbol: NonTerminal { Inner: NonTerminalSymbol.Assignment }, Children: var children }
-            when children.Count == 3
-            => new Assignment(children[0].ToIdentifier(), children[2].ToExpression(), node.LocationRange),
-
-        _ => throw new ArgumentException("Invalid ParseTree for Assignment")
     };
 
     /// <summary>
@@ -116,9 +120,10 @@ public static class StatementsConversion
 
     /// <summary>
     /// Requires that the top production is of type:
-    /// 1. variableDeclaration -> modifier * (
-    ///         assignment
-    ///         | (identifier * typeSpec * (assignOperator * aliasExpression)?))
+    /// 1. variableDeclaration -> modifier * identifier * (
+    ///         | = expression
+    ///         | typeSpec
+    ///         | typeSpec = expression
     ///     )
     /// </summary>
     public static VariableDeclaration ToVariableDeclaration(this IParseTree<Symbol> node)
@@ -132,25 +137,23 @@ public static class StatementsConversion
 
         switch (children.Count)
         {
-            case 2:
+            case 4:
                 {
-                    // 1. variableDeclaration -> modifier * assignment
-                    var assignment = children[1];
-                    // assignment -> identifier * assignOperator * aliasExpression
-                    var name = assignment.Children[0].ToIdentifier();
-                    var expression = assignment.Children[2].ToExpression();
+                    // 1. variableDeclaration -> modifier identifier = expression
+                    var name = children[1].ToIdentifier();
+                    var expression = children[3].ToExpression();
                     return new VariableDeclaration(name, null, expression, isConst, node.LocationRange);
                 }
             case 3:
                 {
-                    // 2. variableDeclaration -> modifier * identifier * typeSpec
+                    // 2. variableDeclaration -> modifier identifier typeSpec
                     var name = children[1].ToIdentifier();
                     var type = children[2].ToType();
                     return new VariableDeclaration(name, type, null, isConst, node.LocationRange);
                 }
             case 5:
                 {
-                    // 3. variableDeclaration -> modifier * identifier * typeSpec * assignOperator * aliasExpression
+                    // 3. variableDeclaration -> modifier identifier typeSpec = expression
                     var name = children[1].ToIdentifier();
                     var type = children[2].ToType();
                     var expression = children[4].ToExpression();

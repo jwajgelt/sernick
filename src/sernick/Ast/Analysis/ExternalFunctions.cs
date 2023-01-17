@@ -12,6 +12,9 @@ public static class ExternalFunctionsInfo
 
     private static readonly Range<ILocation> placeholderRange = new Range<ILocation>(new StringLocation(0), new StringLocation(0));
 
+    // TODO: store ExternalFunctionsInfo.ExternalFunctions as a map, not a list
+    // since some usages require only accessing one element from this list, and
+    // using e.g. list[2] is very error-prone (for example, list can change)
     public static FunctionInfo[] ExternalFunctions = {
         new FunctionInfo(
             new FunctionDefinition(
@@ -46,5 +49,21 @@ public static class ExternalFunctionsInfo
                 ),
                 new WriteCaller()
         ),
+        new FunctionInfo(
+            new FunctionDefinition(
+                new Identifier("new", placeholderRange),
+                new List<FunctionParameterDeclaration>
+                {
+                    new FunctionParameterDeclaration(
+                        new Identifier("value", placeholderRange),
+                        new AnyType(),
+                        null,
+                        placeholderRange)
+                },
+                new PointerType(new AnyType()),
+                new CodeBlock( new EmptyExpression(placeholderRange), placeholderRange),
+                placeholderRange),
+            new AllocationCaller()
+            ),
     };
 }

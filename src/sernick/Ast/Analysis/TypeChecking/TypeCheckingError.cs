@@ -1,19 +1,28 @@
 namespace sernick.Ast.Analysis.TypeChecking;
-
-using Diagnostics;
-using Input;
 using sernick.Ast.Nodes;
+using sernick.Diagnostics;
+using sernick.Input;
+using sernick.Utility;
 
 public abstract record TypeCheckingErrorBase() : IDiagnosticItem
 {
     public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
 }
 
-public sealed record TypesMismatchError(Type Required, Type Provided, ILocation Location) : TypeCheckingErrorBase
+public sealed record TypesMismatchError(Type Required, Type Provided, ILocation Location)
+    : TypeCheckingErrorBase
 {
     public override string ToString()
     {
         return $"Type checking error: required \"{Required}\", provided \"{Provided}\" at {Location}";
+    }
+}
+
+public sealed record NotAStructTypeError(Type Provided, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"Type is not a struct type: \"{Provided}\" at {Location}";
     }
 }
 
@@ -79,6 +88,65 @@ public sealed record WrongFunctionArgumentError(Type Required, Type Provided, IL
     {
         return $"Wrong function argument type: expected \"{Required}\", provided \"{Provided}\" at {Location}";
     }
+}
+
+public sealed record FieldNotPresentInStructError(Type Struct, Identifier Field, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"Struct \"{Struct}\" does not contain field \"{Field.Name}\" provided at {Location}";
+    }
+}
+
+public sealed record MissingFieldInitialization(Type Struct, string Field, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString() => $"Struct \"{Struct}\" is missing field \"{Field}\" at {Location}";
+}
+
+public sealed record DuplicateFieldInitialization(string Field, Range<ILocation> First, Range<ILocation> Second) : TypeCheckingErrorBase
+{
+    public override string ToString() =>
+        $"Field \"{Field}\" at: {Second.Start}, {Second.End}, is initialized earlier at: {First.Start}, {First.End}.";
+}
+
+public sealed record CannotDereferenceExpressionError(Type InferredExpressionType, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"Attempted to dereference expression of type \"{InferredExpressionType}\" which is not of pointer type, at: {Location}";
+    }
+}
+
+public sealed record CannotAutoDereferenceNotAStructPointer(PointerType PointerType, ILocation Location) : TypeCheckingErrorBase
+{
+    public override string ToString()
+    {
+        return $"Pointer of type \"${PointerType}\" cannot be auto-dereferenced as it is not a struct pointer, at: {Location}";
+    }
+}
+
+public sealed record RecursiveStructDeclaration(FieldDeclaration Field) : TypeCheckingErrorBase
+{
+    public override string ToString() =>
+        $"Field \"{Field.Name.Name}\" can't have the same type \"{Field.Type}\" as the parent struct, at {Field.LocationRange.Start}, {Field.LocationRange.End}";
+}
+
+public sealed record DuplicateFieldDeclaration(FieldDeclaration First, FieldDeclaration Second) : TypeCheckingErrorBase
+{
+    public override string ToString() =>
+        $"Field with name \"{First.Name.Name}\" at: {Second.LocationRange.Start}, {Second.LocationRange.End}, is declared earlier at {First.LocationRange.Start}, {First.LocationRange.End}";
+}
+
+public sealed record InvalidAssigmentLeftValue(Range<ILocation> LocationRange) : TypeCheckingErrorBase
+{
+    public override string ToString() =>
+        $"Invalid expression for an assigment at: {LocationRange.Start}, {LocationRange.End}";
+}
+
+public sealed record AssigmentToConstStructField(Range<ILocation> LocationRange) : TypeCheckingErrorBase
+{
+    public override string ToString() =>
+        $"Assigment to an individual field of a const struct at: {LocationRange.Start}, {LocationRange.End}";
 }
 
 public sealed record UnhandledOperatorError(Infix.Op Operator, ILocation Location) : TypeCheckingErrorBase

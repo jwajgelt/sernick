@@ -70,14 +70,21 @@ public static class VariableAccessMapPreprocess
     public static VariableAccessMap Process(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
     {
         var visitor = new VariableAccessVisitor(nameResolution, diagnostics);
-        visitor.VisitAstTree(ast, null);
+        visitor.VisitAstTree(ast, new VisitorParam());
         return visitor.VariableAccess;
+    }
+
+    private sealed record VisitorParam(FunctionDefinition? CurrentFun, bool IsWrite)
+    {
+        public VisitorParam() : this(null, false)
+        {
+        }
     }
 
     /// <summary>
     ///     AST visitor class used to extract info about way in which functions access variables.
     /// </summary>
-    private sealed class VariableAccessVisitor : AstVisitor<Unit, FunctionDefinition?>
+    private sealed class VariableAccessVisitor : AstVisitor<Unit, VisitorParam>
     {
         private readonly NameResolutionResult _nameResolution;
         private readonly Dictionary<VariableDeclaration, FunctionDefinition> _variableDeclaringFunction;
@@ -93,59 +100,69 @@ public static class VariableAccessMapPreprocess
             _variableDeclaringFunction = new Dictionary<VariableDeclaration, FunctionDefinition>(ReferenceEqualityComparer.Instance);
         }
 
-        protected override Unit VisitAstNode(AstNode node, FunctionDefinition? currentFun)
+        protected override Unit VisitAstNode(AstNode node, VisitorParam param)
         {
             foreach (var child in node.Children)
             {
-                child.Accept(this, currentFun);
+                child.Accept(this, param);
             }
 
             return Unit.I;
         }
 
-        public override Unit VisitFunctionDefinition(FunctionDefinition funNode, FunctionDefinition? currentFun)
+        public override Unit VisitFunctionDefinition(FunctionDefinition funNode, VisitorParam param)
         {
             VariableAccess.AddFun(funNode);
-            funNode.Body.Accept(this, funNode);
+            funNode.Body.Accept(this, param with { CurrentFun = funNode });
             return Unit.I;
         }
 
-        public override Unit VisitVariableValue(VariableValue variableValue, FunctionDefinition? currentFun)
+        public override Unit VisitVariableValue(VariableValue variableValue, VisitorParam param)
         {
-            Debug.Assert(currentFun != null);
-            VariableAccess.AddVariableRead(currentFun, _nameResolution.UsedVariableDeclarations[variableValue]);
-            return Unit.I;
-        }
-
-        public override Unit VisitAssignment(Assignment assignment, FunctionDefinition? currentFun)
-        {
-            Debug.Assert(currentFun != null);
-            var declaration = _nameResolution.AssignedVariableDeclarations[assignment];
-
-            if (declaration.IsConst)
+            Debug.Assert(param.CurrentFun != null);
+            var declaration = _nameResolution.UsedVariableDeclarations[variableValue];
+            VariableAccess.AddVariableRead(param.CurrentFun, declaration);
+            if (param.IsWrite)
             {
-                var declaringFunction = _variableDeclaringFunction[declaration];
-                if (declaringFunction != currentFun)
+                if (declaration is VariableDeclaration variableDeclaration && variableDeclaration.IsConst)
                 {
-                    _diagnostics.Report(new InnerFunctionConstVariableWriteError(declaringFunction, declaration, currentFun, assignment));
+                    var declaringFunction = _variableDeclaringFunction[variableDeclaration];
+                    if (declaringFunction != param.CurrentFun)
+                    {
+                        _diagnostics.Report(new InnerFunctionConstVariableWriteError(declaringFunction, variableDeclaration, param.CurrentFun, variableValue));
+                    }
                 }
+                
+                VariableAccess.AddVariableWrite(param.CurrentFun, declaration);
             }
 
-            VariableAccess.AddVariableWrite(currentFun, declaration);
-            return assignment.Right.Accept(this, currentFun);
+            return Unit.I;
         }
 
-        public override Unit VisitVariableDeclaration(VariableDeclaration declaration, FunctionDefinition? currentFun)
+        public override Unit VisitAssignment(Assignment assignment, VisitorParam param)
         {
-            Debug.Assert(currentFun != null);
+            Debug.Assert(param.CurrentFun != null);
+            assignment.Left.Accept(this, param with { IsWrite = true });
+            return assignment.Right.Accept(this, param);
+        }
+
+        public override Unit VisitVariableDeclaration(VariableDeclaration declaration, VisitorParam param)
+        {
+            Debug.Assert(param.CurrentFun != null);
             if (declaration.InitValue != null)
             {
-                VariableAccess.AddVariableWrite(currentFun, declaration);
+                VariableAccess.AddVariableWrite(param.CurrentFun, declaration);
             }
 
-            _variableDeclaringFunction[declaration] = currentFun;
+            _variableDeclaringFunction[declaration] = param.CurrentFun;
 
-            return declaration.InitValue?.Accept(this, currentFun) ?? Unit.I;
+            return declaration.InitValue?.Accept(this, param) ?? Unit.I;
+        }
+
+        public override Unit VisitPointerDereference(PointerDereference deref, VisitorParam param)
+        {
+            Debug.Assert(param.CurrentFun != null);
+            return deref.Pointer.Accept(this, param with { IsWrite = false });
         }
     }
 }

@@ -3,11 +3,11 @@ namespace sernick.Compiler;
 using Ast.Analysis;
 using Ast.Analysis.CallGraph;
 using Ast.Analysis.NameResolution;
+using Ast.Analysis.StructProperties;
 using Ast.Analysis.TypeChecking;
 using Ast.Analysis.VariableAccess;
 using Ast.Analysis.VariableInitialization;
 using Ast.Nodes;
-using Ast.Nodes.Conversion;
 using Common.Dfa;
 using Common.Regex;
 using Diagnostics;
@@ -38,16 +38,7 @@ public static class CompilerFrontend
         var parseTree = parser.Process(parseLeaves, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
 
-        AstNode ast;
-        try
-        {
-            ast = AstNode.From(parseTree);
-        }
-        catch (UnknownTypeException e)
-        {
-            diagnostics.Report(new UnknownTypeError(e.Name, e.LocationRange));
-            throw new CompilationException();
-        }
+        var ast = AstNode.From(parseTree);
 
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
@@ -66,7 +57,9 @@ public static class CompilerFrontend
         VariableInitializationAnalyzer.Process(main, variableAccessMap, nameResolution, callGraph, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
 
-        return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, variableAccessMap);
+        var structProperties = StructPropertiesProcessor.Process(ast, nameResolution, diagnostics);
+
+        return new CompilerFrontendResult(ast, nameResolution, structProperties, typeCheckingResult, callGraph, variableAccessMap);
     }
 
     private static void InstallBuiltinFunctions(VariableAccessMap variableAccessMap)
@@ -80,8 +73,7 @@ public static class CompilerFrontend
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
     {
-        var grammar = new LexicalGrammar();
-        var grammarDict = grammar.GenerateGrammar();
+        var grammarDict = LexicalGrammar.GenerateGrammar();
         var categoryDfas =
             grammarDict.ToDictionary(
                 e => e.Key,

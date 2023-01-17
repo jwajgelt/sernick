@@ -228,4 +228,301 @@ public class ConversionTest
             DefaultValue: IntLiteralValue { Value: 1 }
         });
     }
+
+    [Fact]
+    public void StructDeclaration_Conversion()
+    {
+        // struct Struct { a: Int, b: Bool }
+        var input = Node(NonTerminalSymbol.StructDeclaration,
+            Leaf(LexicalGrammarCategory.Keywords, "struct"),
+            Leaf(LexicalGrammarCategory.TypeIdentifiers, "Struct"),
+            Leaf(LexicalGrammarCategory.BracesAndParentheses, "{"),
+            Node(NonTerminalSymbol.StructDeclarationFields,
+                Node(NonTerminalSymbol.StructFieldDeclaration,
+                    Leaf(LexicalGrammarCategory.VariableIdentifiers, "a"),
+                    Node(NonTerminalSymbol.TypeSpecification,
+                        Leaf(LexicalGrammarCategory.Colon, ":"),
+                        Leaf(LexicalGrammarCategory.TypeIdentifiers, "Int")
+                    )),
+                Leaf(LexicalGrammarCategory.Comma, ","),
+                Node(NonTerminalSymbol.StructFieldDeclaration,
+                    Leaf(LexicalGrammarCategory.VariableIdentifiers, "b"),
+                    Node(NonTerminalSymbol.TypeSpecification,
+                        Leaf(LexicalGrammarCategory.Colon, ":"),
+                        Leaf(LexicalGrammarCategory.TypeIdentifiers, "Bool")
+                    ))
+            ),
+            Leaf(LexicalGrammarCategory.BracesAndParentheses, "}")
+        ).Convert();
+        var astNode = AstNode.From(input);
+
+        Assert.True(astNode is StructDeclaration
+        {
+            Name.Name: "Struct",
+            Fields.Count: 2
+        });
+
+        var fields = ((StructDeclaration)astNode).Fields.ToList();
+        Assert.True(fields[0] is
+        {
+            Name.Name: "a",
+            Type: IntType
+        });
+        Assert.True(fields[1] is
+        {
+            Name.Name: "b",
+            Type: BoolType
+        });
+    }
+
+    [Fact]
+    public void StructValue_Conversion()
+    {
+        // Struct { a: 0, b: false }
+        var input = Node(NonTerminalSymbol.StructValue,
+            Leaf(LexicalGrammarCategory.TypeIdentifiers, "Struct"),
+            Leaf(LexicalGrammarCategory.BracesAndParentheses, "{"),
+            Node(NonTerminalSymbol.StructValueFields,
+                Node(NonTerminalSymbol.StructFieldInitializer,
+                    Leaf(LexicalGrammarCategory.VariableIdentifiers, "a"),
+                    Leaf(LexicalGrammarCategory.Colon, ":"),
+                    Node(NonTerminalSymbol.OpenExpression,
+                        Node(NonTerminalSymbol.LogicalOperand,
+                            Node(NonTerminalSymbol.ComparisonOperand,
+                                Node(NonTerminalSymbol.ArithmeticOperand,
+                                    Node(NonTerminalSymbol.SimpleExpression,
+                                        Node(NonTerminalSymbol.LiteralValue,
+                                            Leaf(LexicalGrammarCategory.Literals, "0")))))))),
+                Leaf(LexicalGrammarCategory.Comma, ","),
+                Node(NonTerminalSymbol.StructFieldInitializer,
+                    Leaf(LexicalGrammarCategory.VariableIdentifiers, "b"),
+                    Leaf(LexicalGrammarCategory.Colon, ":"),
+                    Node(NonTerminalSymbol.OpenExpression,
+                        Node(NonTerminalSymbol.LogicalOperand,
+                            Node(NonTerminalSymbol.ComparisonOperand,
+                                Node(NonTerminalSymbol.ArithmeticOperand,
+                                    Node(NonTerminalSymbol.SimpleExpression,
+                                        Node(NonTerminalSymbol.LiteralValue,
+                                            Leaf(LexicalGrammarCategory.Literals, "false"))))))))),
+            Leaf(LexicalGrammarCategory.BracesAndParentheses, "}")
+        ).Convert();
+        var astNode = AstNode.From(input);
+
+        Assert.True(astNode is StructValue
+        {
+            StructName.Name: "Struct",
+            Fields.Count: 2
+        });
+
+        var fields = ((StructValue)astNode).Fields.ToList();
+        Assert.True(fields[0] is
+        {
+            FieldName.Name: "a",
+            Value: IntLiteralValue { Value: 0 }
+        });
+        Assert.True(fields[1] is
+        {
+            FieldName.Name: "b",
+            Value: BoolLiteralValue { Value: false }
+        });
+    }
+
+    [Fact]
+    public void PointerType_Conversion()
+    {
+        // var x: **Struct;
+        var input = Node(NonTerminalSymbol.VariableDeclaration,
+            Node(NonTerminalSymbol.Modifier,
+                Leaf(LexicalGrammarCategory.Keywords, "var")),
+            Leaf(LexicalGrammarCategory.VariableIdentifiers, "x"),
+            Node(NonTerminalSymbol.TypeSpecification,
+                Leaf(LexicalGrammarCategory.Semicolon, ":"),
+                Node(NonTerminalSymbol.Type,
+                    Leaf(LexicalGrammarCategory.Operators, "*"),
+                    Node(NonTerminalSymbol.Type,
+                        Leaf(LexicalGrammarCategory.Operators, "*"),
+                        Node(NonTerminalSymbol.Type,
+                            Leaf(LexicalGrammarCategory.TypeIdentifiers, "Struct")))
+                ))
+        ).Convert();
+
+        Assert.True(AstNode.From(input) is VariableDeclaration
+        {
+            Name.Name: "x",
+            Type: PointerType
+            {
+                Type: PointerType
+                {
+                    Type: StructType
+                    {
+                        Struct.Name: "Struct"
+                    }
+                }
+            }
+        });
+    }
+
+    [Fact]
+    public void PointerDereference_Conversion()
+    {
+        // *(**y + 2)
+        var input = Node(NonTerminalSymbol.OpenExpression,
+            Node(NonTerminalSymbol.LogicalOperand,
+                Node(NonTerminalSymbol.ComparisonOperand,
+                    Node(NonTerminalSymbol.ArithmeticOperand,
+                        Leaf(LexicalGrammarCategory.Operators, "*"),
+                        Node(NonTerminalSymbol.PointerOperand,
+                            Node(NonTerminalSymbol.SimpleExpression,
+                                Leaf(LexicalGrammarCategory.BracesAndParentheses, "("),
+                                Node(NonTerminalSymbol.OpenExpression,
+                                    Node(NonTerminalSymbol.LogicalOperand,
+                                        Node(NonTerminalSymbol.ComparisonOperand,
+                                            Node(NonTerminalSymbol.ArithmeticOperand,
+                                                Leaf(LexicalGrammarCategory.Operators, "*"),
+                                                Leaf(LexicalGrammarCategory.Operators, "*"),
+                                                Node(NonTerminalSymbol.PointerOperand,
+                                                    Node(NonTerminalSymbol.SimpleExpression,
+                                                        Leaf(LexicalGrammarCategory.VariableIdentifiers, "y")))),
+                                            Leaf(LexicalGrammarCategory.Operators, "+"),
+                                            Node(NonTerminalSymbol.ArithmeticOperand,
+                                                Node(NonTerminalSymbol.PointerOperand,
+                                                    Node(NonTerminalSymbol.SimpleExpression,
+                                                        Node(NonTerminalSymbol.LiteralValue,
+                                                            Leaf(LexicalGrammarCategory.Literals, "2")))))))),
+                                Leaf(LexicalGrammarCategory.BracesAndParentheses, ")"))))))
+        ).Convert();
+
+        Assert.True(AstNode.From(input) is PointerDereference
+        {
+            Pointer: Infix
+            {
+                Left: PointerDereference
+                {
+                    Pointer: PointerDereference
+                    {
+                        Pointer: VariableValue
+                        {
+                            Identifier.Name: "y"
+                        }
+                    }
+                },
+                Operator: Infix.Op.Plus,
+                Right: IntLiteralValue
+                {
+                    Value: 2
+                }
+            }
+        });
+    }
+
+    [Fact]
+    public void FieldAccess_Conversion()
+    {
+        // *x.field
+        var input = Node(NonTerminalSymbol.OpenExpression,
+            Node(NonTerminalSymbol.LogicalOperand,
+                Node(NonTerminalSymbol.ComparisonOperand,
+                    Node(NonTerminalSymbol.ArithmeticOperand,
+                        Leaf(LexicalGrammarCategory.Operators, "*"),
+                        Node(NonTerminalSymbol.PointerOperand,
+                            Node(NonTerminalSymbol.SimpleExpression,
+                                Leaf(LexicalGrammarCategory.VariableIdentifiers, "x")),
+                            Leaf(LexicalGrammarCategory.Operators, "."),
+                            Leaf(LexicalGrammarCategory.VariableIdentifiers, "field")))))
+        ).Convert();
+
+        Assert.True(AstNode.From(input) is PointerDereference
+        {
+            Pointer: StructFieldAccess
+            {
+                FieldName.Name: "field",
+                Left: VariableValue
+                {
+                    Identifier.Name: "x"
+                }
+            }
+        });
+    }
+
+    [Fact]
+    public void AssignmentPointer_Conversion()
+    {
+        // *x = 5
+        var input = Node(NonTerminalSymbol.OpenExpression,
+            Node(NonTerminalSymbol.AssignmentOperand,
+                Node(NonTerminalSymbol.LogicalOperand,
+                    Node(NonTerminalSymbol.ComparisonOperand,
+                        Node(NonTerminalSymbol.ArithmeticOperand,
+                            Leaf(LexicalGrammarCategory.Operators, "*"),
+                            Node(NonTerminalSymbol.PointerOperand,
+                                Node(NonTerminalSymbol.SimpleExpression,
+                                    Leaf(LexicalGrammarCategory.VariableIdentifiers, "x"))))))),
+            Leaf(LexicalGrammarCategory.Operators, "="),
+            Node(NonTerminalSymbol.AssignmentOperand,
+                Node(NonTerminalSymbol.LogicalOperand,
+                    Node(NonTerminalSymbol.ComparisonOperand,
+                        Node(NonTerminalSymbol.ArithmeticOperand,
+                            Node(NonTerminalSymbol.PointerOperand,
+                                Node(NonTerminalSymbol.SimpleExpression,
+                                    Node(NonTerminalSymbol.LiteralValue,
+                                        Leaf(LexicalGrammarCategory.Literals, "5"))))))))
+        ).Convert();
+
+        Assert.True(AstNode.From(input) is Assignment
+        {
+            Left: PointerDereference
+            {
+                Pointer: VariableValue
+                {
+                    Identifier.Name: "x"
+                }
+            },
+            Right: IntLiteralValue
+            {
+                Value: 5
+            }
+        });
+    }
+
+    [Fact]
+    public void AssignmentField_Conversion()
+    {
+        // x.field = 5
+        var input = Node(NonTerminalSymbol.OpenExpression,
+            Node(NonTerminalSymbol.AssignmentOperand,
+                Node(NonTerminalSymbol.LogicalOperand,
+                    Node(NonTerminalSymbol.ComparisonOperand,
+                        Node(NonTerminalSymbol.ArithmeticOperand,
+                            Node(NonTerminalSymbol.PointerOperand,
+                                Node(NonTerminalSymbol.SimpleExpression,
+                                    Leaf(LexicalGrammarCategory.VariableIdentifiers, "x")),
+                                Leaf(LexicalGrammarCategory.Operators, "."),
+                                Leaf(LexicalGrammarCategory.VariableIdentifiers, "field")))))),
+            Leaf(LexicalGrammarCategory.Operators, "="),
+            Node(NonTerminalSymbol.AssignmentOperand,
+                Node(NonTerminalSymbol.LogicalOperand,
+                    Node(NonTerminalSymbol.ComparisonOperand,
+                        Node(NonTerminalSymbol.ArithmeticOperand,
+                            Node(NonTerminalSymbol.PointerOperand,
+                                Node(NonTerminalSymbol.SimpleExpression,
+                                    Node(NonTerminalSymbol.LiteralValue,
+                                        Leaf(LexicalGrammarCategory.Literals, "5"))))))))
+        ).Convert();
+
+        Assert.True(AstNode.From(input) is Assignment
+        {
+            Left: StructFieldAccess
+            {
+                Left: VariableValue
+                {
+                    Identifier.Name: "x"
+                },
+                FieldName.Name: "field"
+            },
+            Right: IntLiteralValue
+            {
+                Value: 5
+            }
+        });
+    }
 }
