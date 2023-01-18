@@ -391,31 +391,6 @@ public class VariableInitializationAnalyzerTest
     }
 
     [Fact]
-    public void ErrorReportedOnConstStructFieldAssignment()
-    {
-        // struct TestStruct {
-        //   field: Int
-        // }
-        // const testStruct = TestStruct { field: 1};
-        // testStruct.field = 2
-        var tree = Program(
-            Struct("TestStruct").Field("field", new IntType()),
-            Const("testStruct", new StructType(Ident("TestStruct")),
-                StructValue("TestStruct").Field("field", Literal(2))),
-            Value("testStruct").Field("field").Assign(Literal(2))
-        );
-
-        var diagnostics = new Mock<IDiagnostics>();
-        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
-        var callGraph = CallGraphBuilder.Process(tree, nameResolution);
-        var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution, diagnostics.Object);
-
-        Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
-
-        diagnostics.Verify(d => d.Report(It.IsAny<ConstStructModifiedError>()));
-    }
-
-    [Fact]
     public void ErrorReportedOnUninitialisedStructFieldAssignment()
     {
         // struct TestStruct {

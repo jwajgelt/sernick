@@ -93,18 +93,6 @@ public static class VariableInitializationAnalyzer
         private readonly FunctionDefinition _functionDefinition;
     }
 
-    public class ConstStructModifiedError : VariableInitializationAnalysisError
-    {
-        public ConstStructModifiedError(VariableValue variable)
-        {
-            _variable = variable;
-        }
-
-        public override string ToString() => $"Const struct field modified {_variable.Identifier}";
-
-        private readonly VariableValue _variable;
-    }
-
     public sealed class MultipleConstAssignmentError : VariableInitializationAnalysisError
     {
         public MultipleConstAssignmentError(Identifier identifier, Assignment? assignment = null)
@@ -356,11 +344,6 @@ public static class VariableInitializationAnalyzer
                 if (!param.InitializedVariables.Contains(definition))
                 {
                     throw new VariableInitializationVisitorException(new UninitializedVariableUseError(node));
-                }
-
-                if (definition.IsConst)
-                {
-                    throw new VariableInitializationVisitorException(new ConstStructModifiedError(node));
                 }
 
                 return new VariableInitializationVisitorResult();
