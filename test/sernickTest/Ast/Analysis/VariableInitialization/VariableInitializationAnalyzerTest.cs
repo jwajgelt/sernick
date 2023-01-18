@@ -1,15 +1,12 @@
 namespace sernickTest.Ast.Analysis.VariableInitialization;
 
-using System.Collections.Immutable;
 using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis.CallGraph;
 using sernick.Ast.Analysis.NameResolution;
 using sernick.Ast.Analysis.VariableAccess;
 using sernick.Ast.Analysis.VariableInitialization;
-using sernick.Ast.Nodes;
 using sernick.Diagnostics;
-using sernick.Utility;
 using static Helpers.AstNodesExtensions;
 using static sernick.Ast.Analysis.VariableInitialization.VariableInitializationAnalyzer;
 
@@ -506,7 +503,7 @@ public class VariableInitializationAnalyzerTest
             )),
             Var("d", Value("a").ScOr(Value("b").ScOr(Value("c"))))
         );
-        
+
         var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
@@ -516,5 +513,4 @@ public class VariableInitializationAnalyzerTest
 
         diagnostics.VerifyNoOtherCalls();
     }
-
 }

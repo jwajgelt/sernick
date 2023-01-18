@@ -33,7 +33,7 @@ public static class CompilerFrontend
         var lexer = lazyLexer.Value;
         var tokens = lexer.Process(input, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        
+
         var parseLeaves = tokens.ProcessIntoLeaves();
         var parser = lazyParser.Value;
         var parseTree = parser.Process(parseLeaves, diagnostics);
@@ -42,19 +42,20 @@ public static class CompilerFrontend
         var ast = AstNode.From(parseTree);
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        
+
         var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        
+
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        
+
         InstallBuiltinFunctions(variableAccessMap);
         if (ast is not FunctionDefinition main)
         {
             throw new CompilationException("Program should parse to a `main` function definition");
         }
+
         VariableInitializationAnalyzer.Process(main, variableAccessMap, nameResolution, callGraph, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
 

@@ -93,7 +93,7 @@ public static class AstNodesExtensions
             InitValue: null,
             IsConst: false,
             loc);
-    
+
     public static VariableDeclaration Const(string name, Type type, Expression initValue) => Const(name, type, initValue, out _);
     public static VariableDeclaration Const(string name, Type type, Expression initValue, out VariableDeclaration result) =>
         result = new VariableDeclaration(
@@ -124,7 +124,7 @@ public static class AstNodesExtensions
             InitValue: Literal(initValue),
             IsConst: true,
             loc);
-    
+
     public static VariableDeclaration Const(string name, Type type) => Const(name, type, out _);
 
     public static VariableDeclaration Const(string name, Type type, out VariableDeclaration result) =>
@@ -134,7 +134,6 @@ public static class AstNodesExtensions
             InitValue: null,
             IsConst: true,
             loc);
-
 
     public static VariableDeclaration Const(string name, bool initValue) => Const(name, initValue, out _);
 

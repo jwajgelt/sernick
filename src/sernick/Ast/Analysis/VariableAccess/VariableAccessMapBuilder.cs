@@ -132,7 +132,7 @@ public static class VariableAccessMapPreprocess
                         _diagnostics.Report(new InnerFunctionConstVariableWriteError(declaringFunction, variableDeclaration, param.CurrentFun, variableValue));
                     }
                 }
-                
+
                 VariableAccess.AddVariableWrite(param.CurrentFun, declaration);
             }
 

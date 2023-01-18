@@ -87,7 +87,7 @@ public sealed class FunctionContext : IFunctionContext
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
     {
         var operations = new List<CodeTreeNode>();
-        
+
         // Caller-saved registers
         var callerSavedMap = new Dictionary<HardwareRegister, Register>(ReferenceEqualityComparer.Instance);
         foreach (var reg in CallerToSave)

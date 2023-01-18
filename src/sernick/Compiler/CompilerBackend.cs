@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Reflection;
 using Ast.Analysis.ControlFlowGraph;
 using Ast.Analysis.FunctionContextMap;
-using Ast.Analysis.StructProperties;
 using Ast.Nodes;
 using CodeGeneration;
 using CodeGeneration.LivenessAnalysis;

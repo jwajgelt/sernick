@@ -92,7 +92,7 @@ public static class VariableInitializationAnalyzer
         private readonly VariableDeclaration _variable;
         private readonly FunctionDefinition _functionDefinition;
     }
-    
+
     public class ConstStructModifiedError : VariableInitializationAnalysisError
     {
         public ConstStructModifiedError(VariableValue variable)
@@ -135,7 +135,6 @@ public static class VariableInitializationAnalyzer
     {
         public VariableInitializationVisitorParam() : this(ImmutableHashSet<VariableDeclaration>.Empty, ImmutableHashSet<VariableDeclaration>.Empty, null) { }
     }
-    
 
     private sealed record VariableInitializationVisitorResult(
         ImmutableHashSet<VariableDeclaration> InitializedVariables, ImmutableHashSet<VariableDeclaration> MaybeInitializedVariables, bool BreaksLoop = false, bool Returns = false)
@@ -187,7 +186,7 @@ public static class VariableInitializationAnalyzer
                     this,
                     new VariableInitializationVisitorParam(
                         param.InitializedVariables.Union(initializedVariables),
-                        param.MaybeInitializedVariables.Union(maybeInitializedVariables), 
+                        param.MaybeInitializedVariables.Union(maybeInitializedVariables),
                         param.CurrentlyAssignedIn));
                 if (!returns && !breaksLoop)
                 {
@@ -206,7 +205,7 @@ public static class VariableInitializationAnalyzer
 
             return new VariableInitializationVisitorResult(initializedVariables, maybeInitializedVariables, breaksLoop, returns);
         }
-        
+
         protected override VariableInitializationVisitorResult VisitLiteralValue(LiteralValue node, VariableInitializationVisitorParam param)
         {
             return new VariableInitializationVisitorResult();
@@ -328,7 +327,7 @@ public static class VariableInitializationAnalyzer
             {
                 var assignedVariable = _nameResolution.UsedVariableDeclarations[value] as VariableDeclaration;
                 Debug.Assert(assignedVariable is not null);
-                
+
                 if (assignedVariable.IsConst && param.MaybeInitializedVariables.Contains(assignedVariable))
                 {
                     // check if there's multiple assignments to const
@@ -358,14 +357,15 @@ public static class VariableInitializationAnalyzer
                 {
                     throw new VariableInitializationVisitorException(new UninitializedVariableUseError(node));
                 }
-            
+
                 if (definition.IsConst)
                 {
                     throw new VariableInitializationVisitorException(new ConstStructModifiedError(node));
                 }
-            
+
                 return new VariableInitializationVisitorResult();
             }
+
             if (_nameResolution.UsedVariableDeclarations[node] is VariableDeclaration variableDeclaration
                 && _localVariables.Contains(variableDeclaration)
                 && !param.InitializedVariables.Contains(variableDeclaration))

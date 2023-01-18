@@ -4,9 +4,9 @@ using Compiler.Function.Helpers;
 using Moq;
 using sernick.Ast;
 using sernick.Ast.Analysis.FunctionContextMap;
+using sernick.Ast.Analysis.StructProperties;
 using sernick.Ast.Nodes;
 using sernick.Compiler.Function;
-using sernick.Ast.Analysis.StructProperties;
 using static Helpers.AstNodesExtensions;
 using static Helpers.NameResolutionResultBuilder;
 
