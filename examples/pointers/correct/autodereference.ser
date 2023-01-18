@@ -1,0 +1,11 @@
+﻿// automatically dereference pointers
+
+struct TestStruct {
+    field: Int
+};
+
+var testPtr: *TestStruct = new( TestStruct {
+    field: 1
+});
+
+var x: Int = testPtr.field;

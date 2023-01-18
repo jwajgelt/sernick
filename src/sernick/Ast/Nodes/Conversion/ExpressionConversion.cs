@@ -52,17 +52,20 @@ public static class ExpressionConversion
                         return node.ToReturnStatement();
 
                     case NonTerminalSymbol.OpenExpression:
+                        return node.ToOpenExpression();
+                    case NonTerminalSymbol.AssignmentOperand:
                     case NonTerminalSymbol.LogicalOperand:
                     case NonTerminalSymbol.ComparisonOperand:
-                    case NonTerminalSymbol.ArithmeticOperand:
                         return node.ToInfix();
+                    case NonTerminalSymbol.ArithmeticOperand:
+                        return node.ToPointerDereference();
+                    case NonTerminalSymbol.PointerOperand:
+                        return node.ToFieldAccess();
 
                     case NonTerminalSymbol.SimpleExpression:
                         return node.ToSimpleExpression();
                     case NonTerminalSymbol.LiteralValue:
                         return node.ToLiteral();
-                    case NonTerminalSymbol.Assignment:
-                        return node.ToAssigment();
 
                     // Control Flow Statements
                     case NonTerminalSymbol.CodeBlock:
@@ -87,6 +90,18 @@ public static class ExpressionConversion
                     case NonTerminalSymbol.FunctionParameter:
                     case NonTerminalSymbol.FunctionParameterWithDefaultValue:
                         return node.ToFunctionParameterDeclaration();
+
+                    // Struct Expressions
+                    case NonTerminalSymbol.StructDeclaration:
+                        return node.ToStructDeclaration();
+                    case NonTerminalSymbol.StructDeclarationFields:
+                    case NonTerminalSymbol.StructFieldDeclaration:
+                        throw new ArgumentException($"Unexpected symbol: {nonTerminal}");
+                    case NonTerminalSymbol.StructValue:
+                        return node.ToStructValue();
+                    case NonTerminalSymbol.StructValueFields:
+                    case NonTerminalSymbol.StructFieldInitializer:
+                        throw new ArgumentException($"Unexpected symbol: {nonTerminal}");
 
                     // Following expression can't be converted to AST node without more context
                     case NonTerminalSymbol.Start:

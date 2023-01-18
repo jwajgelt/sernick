@@ -1,0 +1,13 @@
+﻿// correct struct with one field declaration
+
+struct TestStruct {
+    field: Int
+};
+
+var testStruct = TestStruct {
+    field: 5
+};
+
+testStruct = TestStruct {
+    field: 10
+};

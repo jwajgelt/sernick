@@ -1,0 +1,4 @@
+﻿// reassign value to const pointer
+
+const intPtr = new(1);
+intPtr = new(2);

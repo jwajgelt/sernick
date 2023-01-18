@@ -22,6 +22,8 @@ public static class SernickGrammar
         var codeBlock = Atom(Symbol.Of(NonTerminalSymbol.CodeBlock)); // {}
         var codeGroup = Atom(Symbol.Of(NonTerminalSymbol.CodeGroup)); // ()
         var returnExpression = Atom(Symbol.Of(NonTerminalSymbol.ReturnExpression));
+        var assignmentOperand = Atom(Symbol.Of(NonTerminalSymbol.AssignmentOperand));
+        var pointerOperand = Atom(Symbol.Of(NonTerminalSymbol.PointerOperand));
         var logicalOperand = Atom(Symbol.Of(NonTerminalSymbol.LogicalOperand));
         var logicalOperator = Atom(Symbol.Of(NonTerminalSymbol.LogicalOperator));
         var comparisonOperand = Atom(Symbol.Of(NonTerminalSymbol.ComparisonOperand));
@@ -32,17 +34,23 @@ public static class SernickGrammar
         var literalValue = Atom(Symbol.Of(NonTerminalSymbol.LiteralValue));
         var functionCall = Atom(Symbol.Of(NonTerminalSymbol.FunctionCall));
         var functionArguments = Atom(Symbol.Of(NonTerminalSymbol.FunctionArguments));
-        var assignment = Atom(Symbol.Of(NonTerminalSymbol.Assignment));
         var ifCondition = Atom(Symbol.Of(NonTerminalSymbol.IfCondition));
         var ifExpression = Atom(Symbol.Of(NonTerminalSymbol.IfExpression));
         var loopExpression = Atom(Symbol.Of(NonTerminalSymbol.LoopExpression));
+        var structValue = Atom(Symbol.Of(NonTerminalSymbol.StructValue)); // StructName { ... }
+        var structValueFields = Atom(Symbol.Of(NonTerminalSymbol.StructValueFields));
+        var structFieldInitializer = Atom(Symbol.Of(NonTerminalSymbol.StructFieldInitializer)); // name: expr
         var modifier = Atom(Symbol.Of(NonTerminalSymbol.Modifier)); // var or const
+        var type = Atom(Symbol.Of(NonTerminalSymbol.Type)); // typeIdentifier | *type
         var typeSpec = Atom(Symbol.Of(NonTerminalSymbol.TypeSpecification)); // ": Type"
         var variableDeclaration = Atom(Symbol.Of(NonTerminalSymbol.VariableDeclaration));
         var functionDeclaration = Atom(Symbol.Of(NonTerminalSymbol.FunctionDeclaration));
         var functionParameters = Atom(Symbol.Of(NonTerminalSymbol.FunctionParameters));
         var functionParameterDeclaration = Atom(Symbol.Of(NonTerminalSymbol.FunctionParameter));
         var functionParameterDeclarationDefVal = Atom(Symbol.Of(NonTerminalSymbol.FunctionParameterWithDefaultValue));
+        var structDeclaration = Atom(Symbol.Of(NonTerminalSymbol.StructDeclaration));
+        var structDeclFields = Atom(Symbol.Of(NonTerminalSymbol.StructDeclarationFields));
+        var structFieldDeclaration = Atom(Symbol.Of(NonTerminalSymbol.StructFieldDeclaration));
 
         // Terminal
         var semicolon = Atom(Symbol.Of(LexicalCategory.Semicolon));
@@ -59,6 +67,7 @@ public static class SernickGrammar
         var trueLiteral = Atom(Symbol.Of(LexicalCategory.Literals, "true"));
         var falseLiteral = Atom(Symbol.Of(LexicalCategory.Literals, "false"));
         var digitLiteral = Atom(Symbol.Of(LexicalCategory.Literals));
+        var nullLiteral = Atom(Symbol.Of(LexicalCategory.Literals, "null"));
 
         var ifKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "if"));
         var elseKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "else"));
@@ -69,6 +78,7 @@ public static class SernickGrammar
         var varKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "var"));
         var constKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "const"));
         var funKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "fun"));
+        var structKeyword = Atom(Symbol.Of(LexicalCategory.Keywords, "struct"));
 
         var scAndOperator = Atom(Symbol.Of(LexicalCategory.Operators, "&&"));
         var scOrOperator = Atom(Symbol.Of(LexicalCategory.Operators, "||"));
@@ -81,9 +91,13 @@ public static class SernickGrammar
         var plusOperator = Atom(Symbol.Of(LexicalCategory.Operators, "+"));
         var minusOperator = Atom(Symbol.Of(LexicalCategory.Operators, "-"));
         var assignOperator = Atom(Symbol.Of(LexicalCategory.Operators, "="));
+        var starOperator = Atom(Symbol.Of(LexicalCategory.Operators, "*"));
+        var dotOperator = Atom(Symbol.Of(LexicalCategory.Operators, "."));
 
         // Aliases
-        var aliasBlockExpression = Union(codeBlock, codeGroup, ifExpression, loopExpression, functionDeclaration);
+        var aliasBlockExpression = Union(
+            codeBlock, codeGroup, ifExpression, loopExpression, structValue,
+            functionDeclaration, structDeclaration);
         var aliasClosedExpression =
             Union(Concat(openExpression, semicolon), Concat(aliasBlockExpression, Optional(semicolon)));
         var aliasExpression = Union(openExpression, aliasBlockExpression);
@@ -103,10 +117,15 @@ public static class SernickGrammar
 
             // Expression
             .Add(openExpression,
-                Union(variableDeclaration, assignment, breakKeyword, continueKeyword, returnExpression))
+                Union(variableDeclaration, breakKeyword, continueKeyword, returnExpression))
+            .Add(openExpression, Union(
+                    assignmentOperand, // anything but a block-expression
+                    Concat(
+                        Union(assignmentOperand, aliasBlockExpression), assignOperator,
+                        Union(assignmentOperand, aliasBlockExpression))))
             .Add(returnExpression, Concat(returnKeyword, Optional(aliasExpression)))
 
-            .Add(openExpression, Union(
+            .Add(assignmentOperand, Union(
                 logicalOperand, // anything but a block-expression
                 Concat(
                     Star(Union(logicalOperand, aliasBlockExpression), logicalOperator),
@@ -128,11 +147,14 @@ public static class SernickGrammar
                     Union(arithmeticOperand, aliasBlockExpression), arithmeticOperator,
                     Union(arithmeticOperand, aliasBlockExpression))))
             .Add(arithmeticOperator, Union(plusOperator, minusOperator))
-            .Add(arithmeticOperand, simpleExpression)
+            .Add(arithmeticOperand, Union(
+                pointerOperand, // anything but a block-expression
+                Concat(starOperator, Star(starOperator), Union(pointerOperand, aliasBlockExpression))))
+            .Add(pointerOperand, Concat(simpleExpression, Star(dotOperator, identifier))) // expr[.name]^
 
             // Simple expression
             .Add(simpleExpression, literalValue)
-            .Add(literalValue, Union(trueLiteral, falseLiteral, digitLiteral))
+            .Add(literalValue, Union(trueLiteral, falseLiteral, digitLiteral, nullLiteral))
             .Add(simpleExpression, Concat(parOpen, aliasExpression, parClose)) // (E) or ({})
             .Add(simpleExpression, Union(identifier, functionCall)) // x or f()
             .Add(functionCall, Concat(identifier, parOpen, functionArguments, parClose))
@@ -145,18 +167,23 @@ public static class SernickGrammar
                 Optional(Concat(elseKeyword, codeBlock))))
             .Add(ifCondition, Union(
                 codeGroup, // (E;E;E)
-                Concat(parOpen, aliasExpression, parClose)))// (E) or ({})
+                Concat(parOpen, aliasExpression, parClose))) // (E) or ({})
             .Add(loopExpression, Concat(loopKeyword, codeBlock))
-
-            // Assignment
-            .Add(assignment,
-                Concat(identifier, assignOperator, aliasExpression))
+            .Add(structValue, Concat(typeIdentifier, braceOpen, structValueFields, braceClose))
+            .Add(structValueFields, Optional(Concat(structFieldInitializer, Star(comma, structFieldInitializer))))
+            .Add(structFieldInitializer, Concat(identifier, colon, aliasExpression)) // name: expr
 
             // Declarations
             .Add(modifier, Union(varKeyword, constKeyword))
-            .Add(typeSpec, Concat(colon, typeIdentifier))
+            .Add(type, Union(typeIdentifier, Concat(starOperator, type)))
+            .Add(typeSpec, Concat(colon, type))
             .Add(variableDeclaration,
-                Concat(modifier, Union(assignment, Concat(identifier, typeSpec, Optional(Concat(assignOperator, aliasExpression))))))
+                Concat(modifier, identifier,
+                    Union(
+                        Concat(assignOperator, aliasExpression),                // var x = expr
+                        typeSpec,                                               // var x: Type
+                        Concat(typeSpec, assignOperator, aliasExpression))))    // var x: Type = expr
+
             .Add(functionDeclaration,
                 Concat(funKeyword, identifier, parOpen, functionParameters, parClose, Optional(typeSpec), codeBlock))
             .Add(functionParameters, Optional(Union(
@@ -165,7 +192,11 @@ public static class SernickGrammar
                     Optional(Concat(comma, functionParameterDeclarationDefVal, Star(comma, functionParameterDeclarationDefVal)))) // only suffix with default values
                 )))
             .Add(functionParameterDeclaration, Concat(identifier, typeSpec))
-            .Add(functionParameterDeclarationDefVal, Concat(identifier, typeSpec, assignOperator, literalValue));
+            .Add(functionParameterDeclarationDefVal, Concat(identifier, typeSpec, assignOperator, literalValue))
+
+            .Add(structDeclaration, Concat(structKeyword, typeIdentifier, braceOpen, structDeclFields, braceClose))
+            .Add(structDeclFields, Optional(Concat(structFieldDeclaration, Star(comma, structFieldDeclaration))))
+            .Add(structFieldDeclaration, Concat(identifier, typeSpec));
 
         return new Grammar<Symbol>(program, productions);
     }

@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Reflection;
 using Ast.Analysis.ControlFlowGraph;
 using Ast.Analysis.FunctionContextMap;
+using Ast.Nodes;
 using CodeGeneration;
 using CodeGeneration.LivenessAnalysis;
 using CodeGeneration.RegisterAllocation;
@@ -25,14 +26,23 @@ public static class CompilerBackend
     /// <exception cref="CompilationException"></exception>
     public static string Process(string filename, CompilerFrontendResult programInfo)
     {
-        var (astRoot, nameResolution, typeCheckingResult, callGraph, variableAccessMap) = programInfo;
+        var (astRoot, nameResolution, structProperties, typeCheckingResult, callGraph, variableAccessMap) = programInfo;
 
-        var functionContextMap = FunctionContextMapProcessor.Process(astRoot, nameResolution,
+        var functionContextMap = FunctionContextMapProcessor.Process(astRoot, nameResolution, structProperties,
             FunctionDistinctionNumberProcessor.Process(astRoot), new FunctionFactory(LabelGenerator.Generate));
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(astRoot,
             root =>
-                ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, SideEffectsAnalyzer.PullOutSideEffects));
+                ControlFlowAnalyzer.UnravelControlFlow(root, nameResolution, functionContextMap, callGraph, variableAccessMap, typeCheckingResult, structProperties, SideEffectsAnalyzer.PullOutSideEffects));
 
+        var asm = GenerateAsmCode(functionContextMap, functionCodeTreeMap);
+
+        var outFilename = AssembleAndLink(filename, asm);
+
+        return outFilename;
+    }
+
+    private static IEnumerable<string> GenerateAsmCode(FunctionContextMap functionContextMap, IReadOnlyDictionary<FunctionDefinition, CodeTreeRoot> functionCodeTreeMap)
+    {
         var instructionCovering = new InstructionCovering(SernickInstructionSet.Rules);
         var linearizator = new Linearizator(instructionCovering);
         var regAllocator = new RegisterAllocator(allRegisters);
@@ -72,7 +82,11 @@ public static class CompilerBackend
                         .Select(asmable => asmable.ToAsm(completeRegAllocation));
                 }))
             .Append(displayTable.ToAsm(ImmutableDictionary<Register, HardwareRegister>.Empty));
+        return asm;
+    }
 
+    private static string AssembleAndLink(string filename, IEnumerable<string> asm)
+    {
         var asmFilename = Path.ChangeExtension(filename, ".asm");
         File.WriteAllText(asmFilename, string.Join(Environment.NewLine, asm));
 

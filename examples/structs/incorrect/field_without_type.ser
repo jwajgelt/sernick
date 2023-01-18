@@ -1,0 +1,6 @@
+﻿// struct field has no type
+
+struct TestStruct {
+    field1,
+    filed2: Int
+};

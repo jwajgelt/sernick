@@ -1,0 +1,11 @@
+﻿// assign value to const pointer field
+
+struct TestStruct {
+    field: Int
+};
+
+const testStruct = new( TestStruct {
+    field: 1
+});
+
+(*testStruct).field = 2;

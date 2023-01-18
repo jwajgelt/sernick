@@ -2,9 +2,7 @@ namespace sernick.Ast.Nodes.Conversion;
 
 using Grammar.Lexicon;
 using Grammar.Syntax;
-using Input;
 using Parser.ParseTree;
-using Utility;
 
 public static class TypeConversion
 {
@@ -21,25 +19,25 @@ public static class TypeConversion
             { Symbol: Terminal { Text: "Int", Category: LexicalGrammarCategory.TypeIdentifiers } } => new IntType(),
             { Symbol: Terminal { Text: "Bool", Category: LexicalGrammarCategory.TypeIdentifiers } } => new BoolType(),
             { Symbol: Terminal { Text: "Unit", Category: LexicalGrammarCategory.TypeIdentifiers } } => new UnitType(),
-            { Symbol: Terminal { Text: var name, Category: LexicalGrammarCategory.TypeIdentifiers } } =>
-                throw new UnknownTypeException(name, node.LocationRange),
+            { Symbol: Terminal { Category: LexicalGrammarCategory.TypeIdentifiers } } => new StructType(node.ToIdentifier()),
+
+            // Type
+            // type -> typeIdentifier
+            {
+                Symbol: NonTerminal { Inner: NonTerminalSymbol.Type }, Children: var children
+            } when children.Count == 1 => children[0].ToType(),
+            // type -> *type
+            {
+                Symbol: NonTerminal { Inner: NonTerminalSymbol.Type }, Children: var children
+            } when children.Count == 2 => new PointerType(children[1].ToType()),
 
             // TypeSpecification
-            // typeSpec -> colon * typeIdentifier
+            // typeSpec -> colon * type
             {
                 Symbol: NonTerminal { Inner: NonTerminalSymbol.TypeSpecification }, Children: var children
-            } when children.Count == 2 => ToType(children[1]),
+            } when children.Count == 2 => children[1].ToType(),
 
             _ => throw new ArgumentException("Invalid ParseTree for Type")
         };
     }
-}
-
-public sealed class UnknownTypeException : Exception
-{
-    public string Name { get; }
-    public Range<ILocation> LocationRange { get; }
-
-    public UnknownTypeException(string name, Range<ILocation> locationRange) : base($"Unknown type name: {name}") =>
-        (Name, LocationRange) = (name, locationRange);
 }

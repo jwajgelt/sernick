@@ -1,0 +1,21 @@
+﻿// trying to overshadowed struct from nested scope
+
+struct TestStruct {
+    field: Int
+};
+
+{
+    struct TestStruct {
+        otherField: Int
+    };
+}
+
+// this should be fine
+var testStruct = TestStruct {
+    field: 1
+};
+
+// this shouldn't compile
+var otherTestStruct = TestStruct {
+    otherField: 1
+};

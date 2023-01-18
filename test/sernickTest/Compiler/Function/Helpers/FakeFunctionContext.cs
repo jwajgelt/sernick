@@ -2,6 +2,7 @@ namespace sernickTest.Compiler.Function.Helpers;
 
 using Castle.Core;
 using sernick.CodeGeneration;
+using sernick.Compiler;
 using sernick.Compiler.Function;
 using sernick.ControlFlowGraph.CodeTree;
 
@@ -15,8 +16,16 @@ public sealed class FakeFunctionContext : IFunctionContext
 
     public int Depth => 0;
     public bool ValueIsReturned => false;
+    public IReadOnlyDictionary<IFunctionVariable, int> LocalVariableSize => new Dictionary<IFunctionVariable, int>();
 
-    public void AddLocal(IFunctionVariable variable, bool usedElsewhere) => _locals[variable] = usedElsewhere;
+    public IReadOnlyDictionary<IFunctionVariable, bool> LocalVariableIsStruct =>
+        new Dictionary<IFunctionVariable, bool>();
+
+    public void AddLocal(IFunctionVariable variable, bool usedElsewhere = false, bool isStruct = false, int size = PlatformConstants.POINTER_SIZE)
+    {
+        _locals[variable] = usedElsewhere;
+    }
+
     public IReadOnlyList<SingleExitNode> GeneratePrologue()
     {
         throw new NotImplementedException();
@@ -52,6 +61,12 @@ public sealed class FakeFunctionContext : IFunctionContext
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
     {
         throw new NotImplementedException();
+    }
+
+    bool IFunctionContext.IsVariableStruct(IFunctionVariable variable)
+    {
+        // for now
+        return false;
     }
 }
 

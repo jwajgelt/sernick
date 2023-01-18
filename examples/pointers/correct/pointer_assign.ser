@@ -1,0 +1,15 @@
+﻿// proper assign of values to pointers
+
+var intPtr: *Int;
+intPtr = new(5);
+intPtr = new(6);
+
+const boolPtr = new( 1 > 2 );
+
+struct TestStruct {
+    field: Int
+};
+
+var testPtr: *TestStruct = new( TestStruct {
+    field: 1
+});

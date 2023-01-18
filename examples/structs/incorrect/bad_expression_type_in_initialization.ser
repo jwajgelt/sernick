@@ -1,0 +1,9 @@
+﻿// expression returns bool, but field has Int type
+
+struct TestStruct {
+    field: Int
+};
+
+var testStruct = TestStruct {
+    field: (1 < 2)
+};

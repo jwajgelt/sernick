@@ -23,3 +23,9 @@ public sealed record IntLiteralValue(int Value, Range<ILocation> LocationRange) 
     public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
         visitor.VisitIntLiteralValue(this, param);
 }
+
+public sealed record NullPointerLiteralValue(Range<ILocation> LocationRange) : LiteralValue(LocationRange)
+{
+    public override TResult Accept<TResult, TParam>(AstVisitor<TResult, TParam> visitor, TParam param) =>
+        visitor.VisitNullPointerLiteralValue(this, param);
+}

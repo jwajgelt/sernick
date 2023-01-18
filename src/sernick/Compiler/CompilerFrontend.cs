@@ -3,11 +3,11 @@ namespace sernick.Compiler;
 using Ast.Analysis;
 using Ast.Analysis.CallGraph;
 using Ast.Analysis.NameResolution;
+using Ast.Analysis.StructProperties;
 using Ast.Analysis.TypeChecking;
 using Ast.Analysis.VariableAccess;
 using Ast.Analysis.VariableInitialization;
 using Ast.Nodes;
-using Ast.Nodes.Conversion;
 using Common.Dfa;
 using Common.Regex;
 using Diagnostics;
@@ -18,7 +18,6 @@ using Parser;
 using Parser.ParseTree;
 using Tokenizer;
 using Tokenizer.Lexer;
-using Utility;
 
 public static class CompilerFrontend
 {
@@ -33,31 +32,24 @@ public static class CompilerFrontend
         var lexer = lazyLexer.Value;
         var tokens = lexer.Process(input, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
+
         var parseLeaves = tokens.ProcessIntoLeaves();
         var parser = lazyParser.Value;
         var parseTree = parser.Process(parseLeaves, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
 
-        AstNode ast;
-        try
-        {
-            ast = AstNode.From(parseTree);
-        }
-        catch (UnknownTypeException e)
-        {
-            diagnostics.Report(new UnknownTypeError(e.Name, e.LocationRange));
-            throw new CompilationException();
-        }
-
+        var ast = AstNode.From(parseTree);
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
+
         var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
+
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
-        InstallBuiltinFunctions(variableAccessMap);
 
+        InstallBuiltinFunctions(variableAccessMap);
         if (ast is not FunctionDefinition main)
         {
             throw new CompilationException("Program should parse to a `main` function definition");
@@ -66,7 +58,10 @@ public static class CompilerFrontend
         VariableInitializationAnalyzer.Process(main, variableAccessMap, nameResolution, callGraph, diagnostics);
         ThrowIfErrorsOccurred(diagnostics);
 
-        return new CompilerFrontendResult(ast, nameResolution, typeCheckingResult, callGraph, variableAccessMap);
+        var structProperties = StructPropertiesProcessor.Process(ast, nameResolution, diagnostics);
+        ThrowIfErrorsOccurred(diagnostics);
+
+        return new CompilerFrontendResult(ast, nameResolution, structProperties, typeCheckingResult, callGraph, variableAccessMap);
     }
 
     private static void InstallBuiltinFunctions(VariableAccessMap variableAccessMap)
@@ -80,8 +75,7 @@ public static class CompilerFrontend
 
     private static readonly Lazy<ILexer<LexicalGrammarCategory>> lazyLexer = new(() =>
     {
-        var grammar = new LexicalGrammar();
-        var grammarDict = grammar.GenerateGrammar();
+        var grammarDict = LexicalGrammar.GenerateGrammar();
         var categoryDfas =
             grammarDict.ToDictionary(
                 e => e.Key,
@@ -113,14 +107,4 @@ public static class CompilerFrontend
             .Select(token =>
                 new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.LocationRange));
     }
-}
-
-public sealed record UnknownTypeError(string Name, Range<ILocation> LocationRange) : IDiagnosticItem
-{
-    public override string ToString()
-    {
-        return $"Unknown type name \"{Name}\" at ${LocationRange.Start}";
-    }
-
-    public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
 }

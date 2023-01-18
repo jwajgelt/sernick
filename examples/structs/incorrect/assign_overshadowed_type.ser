@@ -1,0 +1,18 @@
+﻿// trying to assign type with the same name but overshadowed in nested scope
+
+struct TestStruct {
+    field: Int
+};
+
+var testStruct: TestStruct;
+
+{
+    struct TestStruct {
+        field: Bool
+    };
+    
+    // this is other type than the outer TestStruct
+    testStruct = TestStruct {
+        field: true
+    };
+}

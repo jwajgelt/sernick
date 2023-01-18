@@ -3,31 +3,40 @@ namespace sernick.Compiler.Function;
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
+using static ControlFlowGraph.CodeTree.StructHelper;
 using static Convention;
 using static Helpers;
 using static PlatformConstants;
+using FunctionCall = ControlFlowGraph.CodeTree.FunctionCall;
 
 public sealed class FunctionContext : IFunctionContext
 {
+    private readonly IFunctionContext? _parentContext;
     private readonly IReadOnlyList<IFunctionParam> _functionParameters;
 
     // Maps accesses to registers/memory
     private readonly Dictionary<IFunctionVariable, VariableLocation> _localVariableLocation;
+    private readonly Dictionary<IFunctionVariable, int> _localVariableSize;
+    private readonly Dictionary<IFunctionVariable, bool> _localVariableIsStruct;
     private readonly RegisterValue _localsOffset;
     private readonly CodeTreeValueNode _displayEntry;
     private readonly Register _oldDisplayValReg;
+    private readonly int? _returnedStructSize;
     private readonly Dictionary<HardwareRegister, Register> _registerToTemporaryMap;
 
     public IFunctionContext? ParentContext { get; }
     public Label Label { get; }
     public int Depth { get; }
     public bool ValueIsReturned { get; }
+    public IReadOnlyDictionary<IFunctionVariable, int> LocalVariableSize => _localVariableSize;
+    public IReadOnlyDictionary<IFunctionVariable, bool> LocalVariableIsStruct => _localVariableIsStruct;
 
     public FunctionContext(
         IFunctionContext? parent,
         IReadOnlyList<IFunctionParam> parameters,
         bool returnsValue,
-        Label label
+        Label label,
+        int? returnedStructSize = null
     )
     {
         Label = label;
@@ -36,39 +45,57 @@ public sealed class FunctionContext : IFunctionContext
         ValueIsReturned = returnsValue;
 
         _localVariableLocation = new Dictionary<IFunctionVariable, VariableLocation>(ReferenceEqualityComparer.Instance);
+        _localVariableSize = new Dictionary<IFunctionVariable, int>(ReferenceEqualityComparer.Instance);
+        _localVariableIsStruct = new Dictionary<IFunctionVariable, bool>(ReferenceEqualityComparer.Instance);
+        _parentContext = parent;
         _functionParameters = parameters;
         _registerToTemporaryMap = CalleeToSave.ToDictionary<HardwareRegister, HardwareRegister, Register>(reg => reg, _ => new Register(), ReferenceEqualityComparer.Instance);
         _localsOffset = new RegisterValue(0, false);
         _displayEntry = new GlobalAddress(DisplayTable.DISPLAY_TABLE_SYMBOL) + POINTER_SIZE * Depth;
         _oldDisplayValReg = new Register();
+        _returnedStructSize = returnedStructSize;
 
         var fistArgOffset = POINTER_SIZE * (2 + _functionParameters.Count - REG_ARGS_COUNT);
         var argNum = 0;
         for (var i = REG_ARGS_COUNT; i < _functionParameters.Count; i++)
         {
             _localVariableLocation.Add(_functionParameters[i], new MemoryLocation(-(fistArgOffset - POINTER_SIZE * argNum)));
+            _localVariableSize.Add(_functionParameters[i], POINTER_SIZE);
+            _localVariableIsStruct.Add(_functionParameters[i], false);
             argNum += 1;
         }
     }
 
-    public void AddLocal(IFunctionVariable variable, bool usedElsewhere)
+    public void AddLocal(IFunctionVariable variable, bool usedElsewhere = false, bool isStruct = false, int size = POINTER_SIZE)
     {
-        if (usedElsewhere)
+        if (isStruct || usedElsewhere)
         {
-            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset.Value + POINTER_SIZE)))
+            if (_localVariableLocation.TryAdd(variable, new MemoryLocation(_localsOffset.Value + size)))
             {
-                _localsOffset.Value += POINTER_SIZE;
+                _localsOffset.Value += size;
             }
         }
         else
         {
             _localVariableLocation.TryAdd(variable, new RegisterLocation());
         }
+
+        _localVariableSize.TryAdd(variable, size);
+        _localVariableIsStruct.TryAdd(variable, isStruct);
     }
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
     {
         var operations = new List<CodeTreeNode>();
+
+        // Caller-saved registers
+        var callerSavedMap = new Dictionary<HardwareRegister, Register>(ReferenceEqualityComparer.Instance);
+        foreach (var reg in CallerToSave)
+        {
+            var tempReg = new Register();
+            callerSavedMap[reg] = tempReg;
+            operations.Add(Reg(tempReg).Write(Reg(reg).Read()));
+        }
 
         Register rsp = HardwareRegister.RSP;
         Register rax = HardwareRegister.RAX;
@@ -123,10 +150,28 @@ public sealed class FunctionContext : IFunctionContext
         }
 
         // If value is returned, then put it from RAX to virtual register
-        var returnValueRegister = new Register();
-        var raxRead = Reg(rax).Read();
-        operations.Add(Reg(returnValueRegister).Write(raxRead));
-        CodeTreeValueNode returnValueLocation = Reg(returnValueRegister).Read();
+        CodeTreeValueNode? returnValueLocation = null;
+        if (_returnedStructSize is not null)
+        {
+            var raxRead = Reg(rax).Read();
+            operations.AddRange(GenerateStructCopy(GenerateVariableRead(_functionParameters[0]), raxRead, _returnedStructSize.GetValueOrDefault()));
+        }
+
+        else if (ValueIsReturned)
+        {
+            var returnValueRegister = new Register();
+            var raxRead = Reg(rax).Read();
+            operations.Add(Reg(returnValueRegister).Write(raxRead));
+            returnValueLocation = Reg(returnValueRegister).Read();
+        }
+
+        // Retrieve values of caller-saved registers
+        foreach (var reg in CallerToSave)
+        {
+            var tempReg = callerSavedMap[reg];
+            var tempVal = Reg(tempReg).Read();
+            operations.Add(Reg(reg).Write(tempVal));
+        }
 
         return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations), returnValueLocation);
     }
@@ -216,15 +261,41 @@ public sealed class FunctionContext : IFunctionContext
         return CodeTreeListToSingleExitList(operations);
     }
 
-    public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable) =>
-        _localVariableLocation.TryGetValue(variable, out var location)
-            ? location.GenerateRead()
-            : new MemoryRead(GetParentsIndirectVariableLocation(variable));
+    public bool IsVariableStruct(IFunctionVariable variable) =>
+        LocalVariableIsStruct.TryGetValue(variable, out var isStruct)
+            ? isStruct
+            : _parentContext?.IsVariableStruct(variable)
+                ?? throw new ArgumentException("Variable is undefined");
 
-    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value) =>
-        _localVariableLocation.TryGetValue(variable, out var location)
+    public CodeTreeValueNode GenerateVariableRead(IFunctionVariable variable)
+    {
+        var isStruct = IsVariableStruct(variable);
+        if (_localVariableLocation.TryGetValue(variable, out var location))
+        {
+            return isStruct
+                ? ((IFunctionContext)this).GetIndirectVariableLocation(variable)
+                : location.GenerateRead();
+        }
+        else
+        {
+            var indirectLocation = GetParentsIndirectVariableLocation(variable);
+            return isStruct
+                ? indirectLocation
+                : new MemoryRead(indirectLocation);
+        }
+    }
+
+    public CodeTreeNode GenerateVariableWrite(IFunctionVariable variable, CodeTreeValueNode value)
+    {
+        if (IsVariableStruct(variable))
+        {
+            throw new ArgumentException("Variable cannot be a struct");
+        }
+
+        return _localVariableLocation.TryGetValue(variable, out var location)
             ? location.GenerateWrite(value)
             : new MemoryWrite(GetParentsIndirectVariableLocation(variable), value);
+    }
 
     CodeTreeValueNode IFunctionContext.GetIndirectVariableLocation(IFunctionVariable variable)
     {
@@ -238,7 +309,7 @@ public sealed class FunctionContext : IFunctionContext
         if (local is not MemoryLocation localMemory)
         {
             throw new ArgumentException(
-                "Variable was added with usedElsewhere=false and can't be accessed indirectly",
+                "Variable is not a struct and was added with usedElsewhere=false, so it can't be accessed indirectly",
                 nameof(variable));
         }
 

@@ -1,0 +1,50 @@
+﻿// correct set values of struct after initialization
+
+struct TestStruct {
+    field1: Int,
+    field2: Bool,
+    field3: Int,
+    field4: Int
+};
+
+var testStruct = TestStruct {
+    field1: 1,
+    field2: true,
+    field3: 3,
+    field4: 4
+};
+
+testStruct.field1 = 10;
+testStruct.field2 = (testStruct.field3 > testStruct.field1);
+testStruct.field3 = testStruct.field4;
+testStruct.field4 = if(testStruct.field2) {
+                        11
+                    } else {
+                        12
+                    };
+
+struct InnerStruct {
+    field: Int
+};
+
+struct OuterStruct {
+    inner: InnerStruct,
+    anotherField: Int
+};
+
+var outerStruct = OuterStruct {
+    inner: InnerStruct {
+        field: 1
+    },
+    anotherField: 2
+};
+
+var innerStruct = outerStruct.inner;
+
+innerStruct.field = 3;
+outerStruct.inner.field = 5;
+outerStruct.inner = InnerStruct {
+    field: 10                   
+};
+innerStruct = outerStruct.inner;
+innerStruct.field = 0;

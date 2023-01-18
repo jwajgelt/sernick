@@ -1,0 +1,5 @@
+﻿// initialization of struct which hasn't been declared
+
+var testStruct = TestStruct {
+    field: 1
+}

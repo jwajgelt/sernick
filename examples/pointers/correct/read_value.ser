@@ -1,0 +1,15 @@
+﻿// proper assign of values to pointers
+
+struct TestStruct {
+    field: Int
+};
+
+var intPtr = new(5);
+const boolPtr = new(false);
+var testPtr = new( TestStruct {
+    field: 1
+});
+
+var intVal: Int = *intPtr;
+var boolVal: Bool = *boolPtr;
+var testVal: TestStruct = *testPtr;

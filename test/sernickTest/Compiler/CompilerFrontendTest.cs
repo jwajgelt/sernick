@@ -1,5 +1,6 @@
 namespace sernickTest.Compiler;
 
+using System.Diagnostics;
 using Helpers;
 using Input;
 using Moq;
@@ -48,6 +49,11 @@ public class CompilerFrontendTest
     public void TestCorrectExamples(string group, string fileName)
     {
         var diagnostics = $"examples/{group}/correct/{fileName}.ser".CompileFile();
+
+        foreach (var item in diagnostics.DiagnosticItems)
+        {
+            Debug.WriteLine(item.ToString());
+        }
 
         Assert.False(diagnostics.DidErrorOccur);
     }
@@ -111,6 +117,11 @@ public class CompilerFrontendTest
     [InlineData("var x: Int = 5 + 5")]
     [InlineData("(var x: Int;);")]
     [InlineData("(fun f() {};);")]
+    [InlineData("struct Struct { a: Int, b : Bool }")]
+    [InlineData("var x = Struct { a: 0, b: false }")]
+    [InlineData("var x: **Struct = null")]
+    [InlineData("*(**y + 2)")]
+    [InlineData("*(*x.field + 2).field")]
     public void TestCorrectLexerAndParser(string program)
     {
         var diagnostics = program.CompileText();
@@ -282,7 +293,6 @@ public class CompilerFrontendTest
                         (FileUtility.LocationAt(2, 9), FileUtility.LocationAt(2, 16))
                     )
                 ),
-                new LexicalError(FileUtility.LocationAt(2, 17), FileUtility.LocationAt(2, 18)),
                 new LexicalError(FileUtility.LocationAt(2, 18), FileUtility.LocationAt(3, 1))
             }),
             // ("comments-and-separators", "double_end_of_comment", new IDiagnosticItem[]
@@ -297,8 +307,8 @@ public class CompilerFrontendTest
                 (
                     new ParseTreeLeaf<Symbol>
                     (
-                        new Terminal(LexicalGrammarCategory.TypeIdentifiers, "This"),
-                        (FileUtility.LocationAt(1, 3), FileUtility.LocationAt(1, 7))
+                        new Terminal(LexicalGrammarCategory.VariableIdentifiers, "is"),
+                        (FileUtility.LocationAt(1, 8), FileUtility.LocationAt(1, 10))
                     )
                 ),
                 new LexicalError(FileUtility.LocationAt(2, 1), FileUtility.LocationAt(2, 3))
@@ -349,11 +359,10 @@ public class CompilerFrontendTest
                 (
                     new ParseTreeLeaf<Symbol>
                     (
-                        new Terminal(LexicalGrammarCategory.TypeIdentifiers, "This"),
-                        (FileUtility.LocationAt(1, 1), FileUtility.LocationAt(1, 5))
+                        new Terminal(LexicalGrammarCategory.VariableIdentifiers, "comment"),
+                        (FileUtility.LocationAt(1, 6), FileUtility.LocationAt(1, 13))
                     )
                 ),
-                new LexicalError(FileUtility.LocationAt(1, 29), FileUtility.LocationAt(1, 30)),
                 new LexicalError(FileUtility.LocationAt(1, 30), FileUtility.LocationAt(2, 1))
             }),
             
@@ -431,11 +440,11 @@ public class CompilerFrontendTest
             {
                 new TypesMismatchError(new IntType(), new BoolType(), FileUtility.LocationAt(3, 53))
             }),
-
+            
             //function_naming_readonly_arguments
             ("function_naming_readonly_arguments", "argument_modified", new IDiagnosticItem[]
             {
-                // modifying a parameter, detected by name resolution
+                // modifying a parameter, detected by type-checking
                 new NotAVariableError(new Identifier("argument", new Range<ILocation>(FileUtility.LocationAt(3, 2), FileUtility.LocationAt(3, 10))))
             }),
             ("function_naming_readonly_arguments", "const_argument", new IDiagnosticItem[]
@@ -482,9 +491,8 @@ public class CompilerFrontendTest
                         new UnitType(),
                         ignoredCodeBlock,
                         (FileUtility.LocationAt(4, 2), FileUtility.LocationAt(8, 3))),
-                    new Assignment(
+                    new VariableValue(
                         new Identifier("globalScoped", (FileUtility.LocationAt(6, 3), FileUtility.LocationAt(6, 15))),
-                        ignoredExpression,
                         (FileUtility.LocationAt(6, 3), FileUtility.LocationAt(6, 19)))
                     )
             }),
@@ -510,9 +518,8 @@ public class CompilerFrontendTest
                         new UnitType(),
                         ignoredCodeBlock,
                         (FileUtility.LocationAt(4, 2), FileUtility.LocationAt(8, 3))),
-                    new Assignment(
+                    new VariableValue(
                         new Identifier("outerScoped", (FileUtility.LocationAt(6, 3), FileUtility.LocationAt(6, 14))),
-                        ignoredExpression,
                         (FileUtility.LocationAt(6, 3), FileUtility.LocationAt(6, 18)))
                 )
             }),
@@ -538,36 +545,403 @@ public class CompilerFrontendTest
                     )
                 )
             }),
-
+            
             //loops
             ("loops", "commented_break", new IDiagnosticItem[]
             {
+                // TODO: separate analysis for break-statements
                 // no break in loop, not detected yet
             }),
             ("loops", "nested_break", new IDiagnosticItem[]
             {
+                // TODO: separate analysis for break-statements
                 // no break in loop, not detected yet
             }),
             ("loops", "nested_no_break", new IDiagnosticItem[]
             {
+                // TODO: separate analysis for break-statements
                 // no break in loop, not detected yet
             }),
             ("loops", "no_break_or_return", new IDiagnosticItem[]
             {
+                // TODO: separate analysis for break-statements
                 // no break in loop, not detected yet
             }),
             ("loops", "uppercase", new IDiagnosticItem[]
+            {
+                // Since `Loop` is uppercase it is recognized as a struct-value expression.
+                // Break keyword is illegal in a struct-value expression
+                new SyntaxError<Symbol>
+                (
+                    new ParseTreeLeaf<Symbol>
+                    (
+                        new Terminal(LexicalGrammarCategory.Keywords, "break"),
+                        (FileUtility.LocationAt(2, 5), FileUtility.LocationAt(2, 10))
+                    )
+                )
+            }),
+            
+            // pointers
+            ("pointers", "assign_ptr_to_type", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new IntType(),
+                    new PointerType(new IntType()),
+                    FileUtility.LocationAt(6, 9)
+                )
+            }),
+            ("pointers", "assign_to_const_pointer", new IDiagnosticItem[]
+            {
+                new VariableInitializationAnalyzer.MultipleConstAssignmentError(
+                    new Identifier(
+                        "intPtr",
+                        new Range<ILocation>(FileUtility.LocationAt(4, 1), FileUtility.LocationAt(4, 7))
+                    )
+                )
+            }),
+            ("pointers", "assign_two_nulls", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new PointerType(new BoolType()),
+                    new PointerType(new IntType()),
+                    FileUtility.LocationAt(4, 22)
+                )
+            }),
+            ("pointers", "assign_type_to_ptr", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new PointerType(new IntType()),
+                    new IntType(),
+                    FileUtility.LocationAt(6, 10)
+                )
+            }),
+            ("pointers", "different_pointer_types_assign", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new PointerType(new IntType()),
+                    new PointerType(new BoolType()),
+                    FileUtility.LocationAt(6, 10)
+                )
+            }),
+            ("pointers", "different_pointer_types_values_assign", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new IntType(),
+                    new BoolType(),
+                    FileUtility.LocationAt(6, 11)
+                )
+            }),
+            ("pointers", "null_to_type", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new IntType(),
+                    new NullPointerType(),
+                    FileUtility.LocationAt(4, 10)
+                )
+            }),
+            ("pointers", "typeless_null", new IDiagnosticItem[]
+            {
+               new TypeOrInitialValueShouldBePresentError(FileUtility.LocationAt(3, 1))
+            }),
+            ("pointers", "write_bad_value", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new IntType(),
+                    new BoolType(),
+                    FileUtility.LocationAt(4, 11)
+                )
+            }),
+            ("pointers", "write_to_bad_type", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new BoolType(),
+                    new IntType(),
+                    FileUtility.LocationAt(4, 23)
+                )
+            }),
+            
+            // structs
+            ("structs", "assign_overshadowed_type", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new StructType( new Identifier("TestStruct", FileUtility.Line(7).Range(17, 27))),
+                    new StructType( new Identifier("TestStruct", FileUtility.Line(15).Range(18, 28))),
+                    FileUtility.LocationAt(15, 18)
+                )
+            }),
+            ("structs", "assign_to_const_field", new IDiagnosticItem[]
+            {
+                new AssigmentToConstStructField(FileUtility.Line(11).Range(1, 17))
+            }),
+            ("structs", "assign_to_const_struct", new IDiagnosticItem[]
+            {
+                new VariableInitializationAnalyzer.MultipleConstAssignmentError(
+                    new Identifier(
+                        "testStruct",
+                        new Range<ILocation>(FileUtility.LocationAt(11, 1), FileUtility.LocationAt(11, 11))
+                    )
+                )
+            }),
+            ("structs", "assign_to_nested_const_struct", new IDiagnosticItem[]
+            {
+                new AssigmentToConstStructField(FileUtility.Line(19).Range(1, 24))
+            }),
+            ("structs", "bad_expression_type_in_initialization", new IDiagnosticItem[]
+            {
+                new TypesMismatchError(new IntType(), new BoolType(), FileUtility.LocationAt(8, 13))
+            }),
+            ("structs", "bad_field_name_initialization", new IDiagnosticItem[]
+            {
+                new FieldNotPresentInStructError(
+                    new StructType(new Identifier("TestStruct", (FileUtility.LocationAt(7, 18), FileUtility.LocationAt(7, 28)))),
+                    new Identifier("differentFieldName", (FileUtility.LocationAt(8, 5), FileUtility.LocationAt(8, 23))),
+                    FileUtility.LocationAt(8, 5)
+                    ),
+                new MissingFieldInitialization(
+                    new StructType(new Identifier("TestStruct", (FileUtility.LocationAt(7, 18), FileUtility.LocationAt(7, 28)))),
+                    "field",
+                    FileUtility.LocationAt(9, 2)
+                    )
+            }),
+            ("structs", "bad_struct_name_initialization", new IDiagnosticItem[]
+            {
+                new NotATypeError
+                (
+                    new Identifier("TestStructButWithSomeWeirdStuff", (FileUtility.LocationAt(7, 18), FileUtility.LocationAt(7, 49)))
+                )
+            }),
+            ("structs", "bad_type_initialization", new IDiagnosticItem[]
+            {
+                new TypesMismatchError(new IntType(), new BoolType(), FileUtility.LocationAt(8, 12))
+            }),
+            ("structs", "field_without_type", new IDiagnosticItem[]
             {
                 new SyntaxError<Symbol>
                 (
                     new ParseTreeLeaf<Symbol>
                     (
-                        new Terminal(LexicalGrammarCategory.TypeIdentifiers, "Loop"),
-                        (FileUtility.LocationAt(1, 1), FileUtility.LocationAt(1, 5))
+                        new Terminal(LexicalGrammarCategory.Comma, ","),
+                        (FileUtility.LocationAt(4, 11), FileUtility.LocationAt(4, 12))
                     )
                 )
             }),
-
+            ("structs", "grouping_struct_redeclaration", new IDiagnosticItem[]
+            {
+                new MultipleDeclarationsError
+                (
+                    new StructDeclaration
+                    (
+                        new Identifier("TestStruct", (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 18))),
+                        new []
+                        {
+                            new FieldDeclaration
+                            (
+                                new Identifier("field", (FileUtility.LocationAt(4, 5), FileUtility.LocationAt(4, 10))),
+                                new IntType(),
+                                (FileUtility.LocationAt(4, 5), FileUtility.LocationAt(4, 15))
+                            )
+                        },
+                        (FileUtility.LocationAt(3, 1), FileUtility.LocationAt(5, 2))
+                    ),
+                    new StructDeclaration
+                    (
+                        new Identifier("TestStruct", (FileUtility.LocationAt(8, 12), FileUtility.LocationAt(8, 22))),
+                        new []
+                        {
+                            new FieldDeclaration
+                            (
+                                new Identifier("field", (FileUtility.LocationAt(9, 9), FileUtility.LocationAt(9, 14))),
+                                new BoolType(),
+                                (FileUtility.LocationAt(9, 9), FileUtility.LocationAt(9, 20))
+                            )
+                        },
+                        (FileUtility.LocationAt(8, 5), FileUtility.LocationAt(10, 6))
+                    )
+                )
+            }),
+            ("structs", "incorrect_brackets_in_declaration", new IDiagnosticItem[]
+            {
+                new SyntaxError<Symbol>
+                (
+                    new ParseTreeLeaf<Symbol>
+                    (
+                        new Terminal(LexicalGrammarCategory.BracesAndParentheses, "("),
+                        (FileUtility.LocationAt(3, 19), FileUtility.LocationAt(3, 20))
+                    )
+                )
+            }),
+            ("structs", "incorrect_struct_set", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new StructType( new Identifier("TestStruct1", FileUtility.Line(11).Range(19, 30))),
+                    new StructType( new Identifier("TestStruct2", FileUtility.Line(15).Range(15, 26))),
+                    FileUtility.LocationAt(15, 15)
+                )
+            }),
+            ("structs", "incorrect_type_set", new IDiagnosticItem[]
+            {
+                new TypesMismatchError(new IntType(), new BoolType(), FileUtility.LocationAt(17, 21)),
+                new TypesMismatchError(new BoolType(), new IntType(), FileUtility.LocationAt(18, 21)),
+                new TypesMismatchError(new IntType(), new BoolType(), FileUtility.LocationAt(19, 21)),
+                new TypesMismatchError
+                (
+                    new IntType(),
+                    new StructType( new Identifier("TestStruct", FileUtility.Line(10).Range(18, 28))),
+                    FileUtility.LocationAt(20, 21)
+                )
+            }),
+            ("structs", "incorrect_type_usage", new IDiagnosticItem[]
+            {
+                new TypesMismatchError
+                (
+                    new StructType( new Identifier("AnotherStruct", FileUtility.Line(23).Range(12, 25))),
+                    new StructType( new Identifier("InnerStruct", FileUtility.Line(12).Range(12, 23))),
+                    FileUtility.LocationAt(23, 28)
+                )
+            }),
+            ("structs", "initialize_additional_field", new IDiagnosticItem[]
+            {
+                new FieldNotPresentInStructError
+                (
+                    new StructType(
+                        new Identifier("TestStruct", FileUtility.Line(7).Range(18, 28))
+                        ),
+                    new Identifier("additionalField", FileUtility.Line(9).Range(5, 20)),
+                    FileUtility.LocationAt(9, 5)
+                )
+            }),
+            ("structs", "initialize_not_all_fields", new IDiagnosticItem[]
+            {
+                new MissingFieldInitialization(
+                    new StructType(new Identifier("TestStruct", FileUtility.Line(10).Range(18, 28))),
+                    "field4",
+                    FileUtility.LocationAt(14, 2))
+            }),
+            ("structs", "nonexistent_field_read", new IDiagnosticItem[]
+            {
+                new FieldNotPresentInStructError
+                (
+                    new StructType( new Identifier("TestStruct", FileUtility.Line(7).Range(20, 30))),
+                    new Identifier("anotherField", FileUtility.Line(11).Range(24, 36)),
+                    FileUtility.LocationAt(11, 24)
+                )
+            }),
+            ("structs", "nonexistent_field_write", new IDiagnosticItem[]
+            {
+                new FieldNotPresentInStructError
+                (
+                    new StructType( new Identifier("TestStruct", FileUtility.Line(7).Range(18, 28))),
+                    new Identifier("anotherField", FileUtility.Line(11).Range(12, 24)),
+                    FileUtility.LocationAt(11, 12)
+                )
+            }),
+            ("structs", "nonexistent_struct_initialization", new IDiagnosticItem[]
+            {
+                new NotATypeError
+                (
+                    new Identifier("TestStruct", (FileUtility.LocationAt(3, 18), FileUtility.LocationAt(3, 28)))
+                )
+            }),
+            ("structs", "nonexistent_type_in_declaration", new IDiagnosticItem[]
+            {
+                new NotATypeError
+                (
+                    new Identifier("NonExistentType", (FileUtility.LocationAt(4, 12), FileUtility.LocationAt(4, 27)))
+                )
+            }),
+            ("structs", "overshadowed_struct_in_nested_scope", new IDiagnosticItem[]
+            {
+                new FieldNotPresentInStructError
+                (
+                    new StructType(new Identifier("TestStruct", FileUtility.Line(19).Range(23, 33))),
+                    new Identifier("otherField", FileUtility.Line(20).Range(5, 15)),
+                    FileUtility.LocationAt(20, 5)
+                ),
+                new MissingFieldInitialization(
+                    new StructType(new Identifier("TestStruct", FileUtility.Line(19).Range(23, 33))),
+                    "field",
+                    FileUtility.LocationAt(21, 2)
+                    )
+            }),
+            ("structs", "recursive_type", new IDiagnosticItem[]
+            {
+                new RecursiveStructDeclaration(
+                    new FieldDeclaration(
+                        Name: new Identifier("another", FileUtility.Line(7).Range(5, 12)),
+                        Type: new StructType(new Identifier("RecStruct", FileUtility.Line(7).Range(14, 23))),
+                        LocationRange: FileUtility.Line(7).Range(5, 23)
+                        )
+                )
+            }),
+            ("structs", "repeat_fields_in_initialization", new IDiagnosticItem[]
+            {
+                new DuplicateFieldInitialization("field1",
+                    First: FileUtility.Line(11).Range(5, 14),
+                    Second: FileUtility.Line(12).Range(5, 14))
+            }),
+            ("structs", "struct_in_different_scope", new IDiagnosticItem[]
+            {
+                new NotATypeError
+                (
+                    new Identifier("TestStruct", (FileUtility.LocationAt(9, 18), FileUtility.LocationAt(9, 28)))
+                )
+            }),
+            ("structs", "struct_redeclaration", new IDiagnosticItem[]
+            {
+                new MultipleDeclarationsError
+                (
+                    new StructDeclaration
+                    (
+                        new Identifier("TestStruct", (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 18))),
+                        new []
+                        {
+                            new FieldDeclaration
+                            (
+                                new Identifier("field", (FileUtility.LocationAt(4, 5), FileUtility.LocationAt(4, 10))),
+                                new IntType(),
+                                (FileUtility.LocationAt(4, 5), FileUtility.LocationAt(4, 15))
+                            )
+                        },
+                        (FileUtility.LocationAt(3, 1), FileUtility.LocationAt(5, 2))
+                    ),
+                    new StructDeclaration
+                    (
+                        new Identifier("TestStruct", (FileUtility.LocationAt(7, 8), FileUtility.LocationAt(7, 18))),
+                        new []
+                        {
+                            new FieldDeclaration
+                            (
+                                new Identifier("field", (FileUtility.LocationAt(8, 5), FileUtility.LocationAt(8, 10))),
+                                new BoolType(),
+                                (FileUtility.LocationAt(8, 5), FileUtility.LocationAt(4, 16))
+                            )
+                        },
+                        (FileUtility.LocationAt(7, 1), FileUtility.LocationAt(9, 2))
+                    )
+                )
+            }),
+            ("structs", "value_in_declaration", new IDiagnosticItem[]
+            {
+                new SyntaxError<Symbol>
+                (
+                    new ParseTreeLeaf<Symbol>
+                    (
+                        new Terminal(LexicalGrammarCategory.Operators, "="),
+                        (FileUtility.LocationAt(4, 16), FileUtility.LocationAt(4, 17))
+                    )
+                )
+            }),
+            
             //types-and-naming
             ("types-and-naming", "incorrect-function-argument-name", new IDiagnosticItem[]
             {
@@ -615,10 +989,10 @@ public class CompilerFrontendTest
             }),
             ("types-and-naming", "nonexistent-type", new IDiagnosticItem[]
             {
-                new UnknownTypeError("String",
-                    (FileUtility.LocationAt(3, 8), FileUtility.LocationAt(3, 14)))
+                new NotATypeError(
+                    new Identifier("String", FileUtility.Line(3).Range(8, 14)))
             }),
-
+            
             //variable-declaration-initialization
             ("variable-declaration-initialization", "const_bad_type_separator", new IDiagnosticItem[]
             {
@@ -636,7 +1010,7 @@ public class CompilerFrontendTest
                 new VariableInitializationAnalyzer.MultipleConstAssignmentError(
                     new Identifier(
                         "x",
-                        new Range<ILocation>(FileUtility.LocationAt(1, 7), FileUtility.LocationAt(1, 8))
+                        new Range<ILocation>(FileUtility.LocationAt(2, 1), FileUtility.LocationAt(2, 2))
                     )
                 )
             }),
@@ -661,7 +1035,7 @@ public class CompilerFrontendTest
                 new VariableInitializationAnalyzer.MultipleConstAssignmentError(
                     new Identifier(
                         "x",
-                        new Range<ILocation>(FileUtility.LocationAt(2, 7), FileUtility.LocationAt(2, 8))
+                        new Range<ILocation>(FileUtility.LocationAt(4, 1), FileUtility.LocationAt(4, 2))
                     )
                 )
             }),

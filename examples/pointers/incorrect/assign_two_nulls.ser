@@ -1,0 +1,4 @@
+﻿// assign null but other type
+
+var intPtr: *Int = null;
+var boolPtr: *Bool = intPtr;

@@ -1,6 +1,7 @@
 namespace sernick.Ast.Analysis.VariableInitialization;
 
 using System.Collections.Immutable;
+using System.Diagnostics;
 using CallGraph;
 using Diagnostics;
 using NameResolution;
@@ -111,16 +112,16 @@ public static class VariableInitializationAnalyzer
         }
 
         public override string ToString() => $"Multiple assignment of const variable {_identifier.Name}" +
-                                             (_assignment != null ? $" at {_assignment.LocationRange}" : "");
+                                             (_assignment != null ? $" at {_identifier.LocationRange}" : "");
 
         private readonly Assignment? _assignment;
         private readonly Identifier _identifier;
     }
 
     private sealed record VariableInitializationVisitorParam
-        (ImmutableHashSet<VariableDeclaration> InitializedVariables, ImmutableHashSet<VariableDeclaration> MaybeInitializedVariables)
+        (ImmutableHashSet<VariableDeclaration> InitializedVariables, ImmutableHashSet<VariableDeclaration> MaybeInitializedVariables, Assignment? CurrentlyAssignedIn)
     {
-        public VariableInitializationVisitorParam() : this(ImmutableHashSet<VariableDeclaration>.Empty, ImmutableHashSet<VariableDeclaration>.Empty) { }
+        public VariableInitializationVisitorParam() : this(ImmutableHashSet<VariableDeclaration>.Empty, ImmutableHashSet<VariableDeclaration>.Empty, null) { }
     }
 
     private sealed record VariableInitializationVisitorResult(
@@ -173,7 +174,8 @@ public static class VariableInitializationAnalyzer
                     this,
                     new VariableInitializationVisitorParam(
                         param.InitializedVariables.Union(initializedVariables),
-                        param.MaybeInitializedVariables.Union(maybeInitializedVariables)));
+                        param.MaybeInitializedVariables.Union(maybeInitializedVariables),
+                        param.CurrentlyAssignedIn));
                 if (!returns && !breaksLoop)
                 {
                     initializedVariables = initializedVariables.Union(childResult.InitializedVariables);
@@ -190,18 +192,6 @@ public static class VariableInitializationAnalyzer
             }
 
             return new VariableInitializationVisitorResult(initializedVariables, maybeInitializedVariables, breaksLoop, returns);
-        }
-
-        protected override VariableInitializationVisitorResult VisitDeclaration(Declaration node, VariableInitializationVisitorParam param)
-        {
-            // this should be unreachable
-            throw new NotSupportedException();
-        }
-
-        protected override VariableInitializationVisitorResult VisitSimpleValue(SimpleValue node, VariableInitializationVisitorParam param)
-        {
-            // this should be unreachable
-            throw new NotSupportedException();
         }
 
         protected override VariableInitializationVisitorResult VisitLiteralValue(LiteralValue node, VariableInitializationVisitorParam param)
@@ -274,7 +264,8 @@ public static class VariableInitializationAnalyzer
 
             var innerBlockParam = new VariableInitializationVisitorParam(
                 param.InitializedVariables.Union(conditionResult.InitializedVariables),
-                param.MaybeInitializedVariables.Union(conditionResult.MaybeInitializedVariables).Union(conditionResult.InitializedVariables));
+                param.MaybeInitializedVariables.Union(conditionResult.MaybeInitializedVariables).Union(conditionResult.InitializedVariables),
+                param.CurrentlyAssignedIn);
 
             var ifBranchResult = node.IfBlock.Accept(this, innerBlockParam);
             var elseBranchResult = (node.ElseBlock ?? new EmptyExpression(node.LocationRange) as AstNode).Accept(this, innerBlockParam);
@@ -320,19 +311,44 @@ public static class VariableInitializationAnalyzer
 
         public override VariableInitializationVisitorResult VisitAssignment(Assignment node, VariableInitializationVisitorParam param)
         {
-            var assignedVariable = _nameResolution.AssignedVariableDeclarations[node];
-
-            if (assignedVariable.IsConst && param.MaybeInitializedVariables.Contains(assignedVariable))
+            if (node.Left is VariableValue value)
             {
-                // check if there's multiple assignments to const
-                throw new VariableInitializationVisitorException(new MultipleConstAssignmentError(assignedVariable.Name, node));
+                var assignedVariable = _nameResolution.UsedVariableDeclarations[value] as VariableDeclaration;
+                Debug.Assert(assignedVariable is not null);
+
+                if (assignedVariable.IsConst && param.MaybeInitializedVariables.Contains(assignedVariable))
+                {
+                    // check if there's multiple assignments to const
+                    throw new VariableInitializationVisitorException(
+                        new MultipleConstAssignmentError(value.Identifier, node));
+                }
+
+                return new VariableInitializationVisitorResult(assignedVariable);
             }
 
-            return new VariableInitializationVisitorResult(assignedVariable);
+            var rightResult = VisitAstNode(node.Right, param);
+            return VisitAstNode(node.Left, new VariableInitializationVisitorParam(
+                param.InitializedVariables.Union(rightResult.InitializedVariables),
+                param.MaybeInitializedVariables.Union(rightResult.MaybeInitializedVariables).Union(rightResult.InitializedVariables),
+                node));
         }
 
         public override VariableInitializationVisitorResult VisitVariableValue(VariableValue node, VariableInitializationVisitorParam param)
         {
+            if (param.CurrentlyAssignedIn is not null)
+            {
+                // bold assumption. We cannot be a simple assignment, because simple assignment is handled in VisitAssignment
+                // therefore we are a struct of which field is being accessed
+                var definition = _nameResolution.UsedVariableDeclarations[node] as VariableDeclaration;
+                Debug.Assert(definition is not null);
+                if (!param.InitializedVariables.Contains(definition))
+                {
+                    throw new VariableInitializationVisitorException(new UninitializedVariableUseError(node));
+                }
+
+                return new VariableInitializationVisitorResult();
+            }
+
             if (_nameResolution.UsedVariableDeclarations[node] is VariableDeclaration variableDeclaration
                 && _localVariables.Contains(variableDeclaration)
                 && !param.InitializedVariables.Contains(variableDeclaration))
@@ -341,6 +357,12 @@ public static class VariableInitializationAnalyzer
             }
 
             return new VariableInitializationVisitorResult();
+        }
+
+        public override VariableInitializationVisitorResult VisitPointerDereference(PointerDereference node,
+            VariableInitializationVisitorParam param)
+        {
+            return base.VisitPointerDereference(node, param with { CurrentlyAssignedIn = null });
         }
 
         public override VariableInitializationVisitorResult

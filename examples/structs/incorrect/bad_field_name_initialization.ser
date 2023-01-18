@@ -1,0 +1,9 @@
+﻿// initialize nonexistent field in struct
+
+struct TestStruct {
+    field: Int
+};
+
+var testStruct = TestStruct {
+    differentFieldName: 5
+}
