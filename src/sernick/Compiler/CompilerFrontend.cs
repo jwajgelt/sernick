@@ -18,7 +18,6 @@ using Parser;
 using Parser.ParseTree;
 using Tokenizer;
 using Tokenizer.Lexer;
-using Utility;
 
 public static class CompilerFrontend
 {
@@ -108,14 +107,4 @@ public static class CompilerFrontend
             .Select(token =>
                 new ParseTreeLeaf<Symbol>(new Terminal(token.Category, token.Text), token.LocationRange));
     }
-}
-
-public sealed record UnknownTypeError(string Name, Range<ILocation> LocationRange) : IDiagnosticItem
-{
-    public override string ToString()
-    {
-        return $"Unknown type name \"{Name}\" at ${LocationRange.Start}";
-    }
-
-    public DiagnosticItemSeverity Severity => DiagnosticItemSeverity.Error;
 }
