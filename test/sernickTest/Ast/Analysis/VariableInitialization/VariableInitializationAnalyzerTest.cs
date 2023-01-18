@@ -403,10 +403,11 @@ public class VariableInitializationAnalyzerTest
         // testStruct.field = 2
         var tree = Program(
             Struct("TestStruct").Field("field", new IntType()),
-            Const("testStruct", new StructType(Ident("TestStruct")), StructValue("TestStruct").Field("field", Literal(2))),
+            Const("testStruct", new StructType(Ident("TestStruct")),
+                StructValue("TestStruct").Field("field", Literal(2))),
             Value("testStruct").Field("field").Assign(Literal(2))
         );
-        
+
         var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
@@ -416,7 +417,7 @@ public class VariableInitializationAnalyzerTest
 
         diagnostics.Verify(d => d.Report(It.IsAny<ConstStructModifiedError>()));
     }
-    
+
     [Fact]
     public void ErrorReportedOnUninitialisedStructFieldAssignment()
     {
@@ -430,7 +431,7 @@ public class VariableInitializationAnalyzerTest
             Const("testStruct", new StructType(Ident("TestStruct"))),
             Value("testStruct").Field("field").Assign(Literal(2))
         );
-        
+
         var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
@@ -440,7 +441,7 @@ public class VariableInitializationAnalyzerTest
 
         diagnostics.Verify(d => d.Report(It.IsAny<UninitializedVariableUseError>()));
     }
-    
+
     [Fact]
     public void ErrorReportedOnConstPointerAssignment()
     {
@@ -451,7 +452,7 @@ public class VariableInitializationAnalyzerTest
             Value("a").Assign(Literal(1))
         );
         Assert.NotNull(declaration);
-        
+
         var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
         var callGraph = CallGraphBuilder.Process(tree, nameResolution);
@@ -461,7 +462,7 @@ public class VariableInitializationAnalyzerTest
 
         diagnostics.Verify(d => d.Report(It.IsAny<MultipleConstAssignmentError>()));
     }
-    
+
     [Fact]
     public void NoErrorReportedOnConstPointerStructFieldAssignment()
     {
@@ -475,6 +476,36 @@ public class VariableInitializationAnalyzerTest
             Const("testStruct", Pointer(Ident("TestStruct")), Literal(3)),
             Deref(Value("testStruct")).Field("field").Assign(Literal(2))
         );
+
+        var diagnostics = new Mock<IDiagnostics>();
+        var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
+        var callGraph = CallGraphBuilder.Process(tree, nameResolution);
+        var variableAccessMap = VariableAccessMapPreprocess.Process(tree, nameResolution, diagnostics.Object);
+
+        Process(tree, variableAccessMap, nameResolution, callGraph, diagnostics.Object);
+
+        diagnostics.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void ExpressionsInAssignmentsHandledCorrectly()
+    {
+        // var a : Bool;
+        // var b : Bool;
+        // var c = (a = (b = false; b); a);
+        // var d = a || b || c;
+        var tree = Program(
+            Var<BoolType>("a"),
+            Var<BoolType>("b"),
+            Var("c", Block(
+                Var("a", Block(
+                    Value("b").Assign(Literal(false)),
+                    Value("b")
+                )),
+                Value("a")
+            )),
+            Var("d", Value("a").ScOr(Value("b").ScOr(Value("c"))))
+        );
         
         var diagnostics = new Mock<IDiagnostics>();
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics.Object);
@@ -485,4 +516,5 @@ public class VariableInitializationAnalyzerTest
 
         diagnostics.VerifyNoOtherCalls();
     }
+
 }
