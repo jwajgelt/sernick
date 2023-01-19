@@ -37,11 +37,9 @@ public static class StructPropertiesProcessor
     {
         var visitor = new StructPropertiesVisitor(nameResolution.StructDeclarations, diagnostics);
         var result = visitor.VisitAstTree(ast, new());
-        var structSizes = new Dictionary<Identifier, int>(ReferenceEqualityComparer.Instance);
-        foreach (var entry in nameResolution.StructDeclarations)
-        {
-            structSizes[entry.Key] = result.StructSizesDeclarations[entry.Value];
-        }
+        var structSizes = nameResolution.StructDeclarations
+            .ToDictionary(kv => kv.Key, kv => result.StructSizesDeclarations[kv.Value],
+                ReferenceEqualityComparer.Instance);
 
         return new StructProperties(result.StructSizesDeclarations, structSizes, result.FieldOffsets, result.FieldSizes);
     }
