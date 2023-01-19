@@ -95,7 +95,16 @@ public static class FunctionContextMapProcessor
             foreach (var (localVariable, referencingFunctions) in _locals[node])
             {
                 var usedElsewhere = referencingFunctions.Count() > 1;
-                functionContext.AddLocal(localVariable, usedElsewhere);
+                if (_nameResolution.StructDeclarations.TryGetValue(localVariable.Name, out var structDecl))
+                {
+                    functionContext.AddLocal(localVariable, usedElsewhere, true, _structProperties.StructSizes[structDecl]);
+                }
+
+                else
+                {
+                    functionContext.AddLocal(localVariable, usedElsewhere);
+                }
+
                 _locals.DiscardLocal(localVariable);
             }
 
