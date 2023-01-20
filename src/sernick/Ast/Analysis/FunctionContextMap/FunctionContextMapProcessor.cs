@@ -67,7 +67,7 @@ public static class FunctionContextMapProcessor
                     null,
                     node.LocationRange
                     )).ToList();
-                retStructSize = _structProperties.StructSizes[_nameResolution.StructDeclarations[retType.Struct]];
+                retStructSize = _structProperties.StructSizes[retType.Struct];
             }
 
             var functionContext = _contextFactory.CreateFunction(

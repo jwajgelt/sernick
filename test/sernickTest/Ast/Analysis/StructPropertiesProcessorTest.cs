@@ -35,7 +35,7 @@ public class StructPropertiesProcessorTest
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics);
         var result = StructPropertiesProcessor.Process(tree, nameResolution, diagnostics);
 
-        Assert.Equal(16, result.StructSizes[listDeclaration]);
+        Assert.Equal(16, result.StructSizesDeclarations[listDeclaration]);
         Assert.Equal(0, result.FieldOffsets[listDeclaration.Fields.ElementAt(0)]);
         Assert.Equal(8, result.FieldOffsets[listDeclaration.Fields.ElementAt(1)]);
     }
@@ -54,15 +54,15 @@ public class StructPropertiesProcessorTest
         var nameResolution = NameResolutionAlgorithm.Process(tree, diagnostics);
         var result = StructPropertiesProcessor.Process(tree, nameResolution, diagnostics);
 
-        Assert.Equal(16, result.StructSizes[listDeclaration]);
+        Assert.Equal(16, result.StructSizesDeclarations[listDeclaration]);
         Assert.Equal(0, result.FieldOffsets[listDeclaration.Fields.ElementAt(0)]);
         Assert.Equal(8, result.FieldOffsets[listDeclaration.Fields.ElementAt(1)]);
 
-        Assert.Equal(16, result.StructSizes[tupleDeclaration]);
+        Assert.Equal(16, result.StructSizesDeclarations[tupleDeclaration]);
         Assert.Equal(0, result.FieldOffsets[tupleDeclaration.Fields.ElementAt(0)]);
         Assert.Equal(8, result.FieldOffsets[tupleDeclaration.Fields.ElementAt(1)]);
 
-        Assert.Equal(48, result.StructSizes[combinedDeclaration]);
+        Assert.Equal(48, result.StructSizesDeclarations[combinedDeclaration]);
         Assert.Equal(0, result.FieldOffsets[combinedDeclaration.Fields.ElementAt(0)]);  // list
         Assert.Equal(16, result.FieldOffsets[combinedDeclaration.Fields.ElementAt(1)]); // int
         Assert.Equal(24, result.FieldOffsets[combinedDeclaration.Fields.ElementAt(2)]); // tuple

@@ -420,7 +420,7 @@ public static class ControlFlowAnalyzer
 
                         var accessedVariable = _nameResolution.UsedVariableDeclarations[(VariableValue)structFieldAccessNode];
                         IStructValueLocation variableLocation =
-                            new StructValueLocation(_currentFunctionContext, accessedVariable, _structProperties.StructSizes[_nameResolution.StructDeclarations[structType.Struct]]);
+                            new StructValueLocation(_currentFunctionContext, accessedVariable, _structProperties.StructSizes[structType.Struct]);
 
                         var isLhsPrimitiveType = _typeChecking[node.Left] is not StructType;
                         IValueLocation resultLocation;
