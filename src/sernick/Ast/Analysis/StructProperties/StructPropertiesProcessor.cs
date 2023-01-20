@@ -39,9 +39,9 @@ public static class StructPropertiesProcessor
         var result = visitor.VisitAstTree(ast, new());
         var structSizes = nameResolution.StructDeclarations
             .ToDictionary(kv => kv.Key, kv => result.StructSizesDeclarations[kv.Value],
-                ReferenceEqualityComparer.Instance);
+                ReferenceEqualityComparer.Instance as IEqualityComparer<Identifier>);
 
-        return new StructProperties(result.StructSizesDeclarations, structSizes, result.FieldOffsets, result.FieldSizes);
+        return result with { StructSizes = structSizes };
     }
 
     private sealed class StructPropertiesVisitor : AstVisitor<StructProperties, StructProperties>
