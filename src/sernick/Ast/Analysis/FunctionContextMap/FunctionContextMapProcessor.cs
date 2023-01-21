@@ -94,8 +94,24 @@ public static class FunctionContextMapProcessor
             // At this point, all local variables have been gathered
             foreach (var (localVariable, referencingFunctions) in _locals[node])
             {
+                var varType = localVariable switch
+                {
+                    VariableDeclaration varDecl => varDecl.Type,
+                    FunctionParameterDeclaration paramDecl => paramDecl.Type,
+                    _ => throw new Exception("Local must be const/variable or function parameter."),
+                };
+
                 var usedElsewhere = referencingFunctions.Count() > 1;
-                functionContext.AddLocal(localVariable, usedElsewhere);
+                if (varType is StructType structType)
+                {
+                    functionContext.AddLocal(localVariable, usedElsewhere, true, _structProperties.StructSizes[structType.Struct]);
+                }
+
+                else
+                {
+                    functionContext.AddLocal(localVariable, usedElsewhere);
+                }
+
                 _locals.DiscardLocal(localVariable);
             }
 

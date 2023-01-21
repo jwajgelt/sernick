@@ -22,6 +22,16 @@ public static class AstNodesExtensions
 
     #region Variable
 
+    public static VariableDeclaration StructVar(string name, StructType type, out VariableDeclaration result) =>
+        result = new VariableDeclaration(
+            Ident(name),
+            Type: type,
+            InitValue: null,
+            IsConst: false,
+            loc
+        );
+
+    public static VariableDeclaration StructVar(string name, StructType type) => Var(name, type, out _);
     public static VariableDeclaration Var(string name) => Var(name, out _);
 
     public static VariableDeclaration Var(string name, out VariableDeclaration result) => result = new VariableDeclaration(
