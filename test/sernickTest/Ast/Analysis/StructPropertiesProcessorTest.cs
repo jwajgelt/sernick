@@ -28,7 +28,8 @@ public class StructPropertiesProcessorTest
     {
         var listDeclaration = DeclareStructList();
         var tree = Block(
-            listDeclaration
+            listDeclaration,
+            Var("x", new StructType(Ident("List")), out var xDecl)
         );
 
         var diagnostics = new FakeDiagnostics();
@@ -36,6 +37,7 @@ public class StructPropertiesProcessorTest
         var result = StructPropertiesProcessor.Process(tree, nameResolution, diagnostics);
 
         Assert.Equal(16, result.StructSizesDeclarations[listDeclaration]);
+        Assert.Equal(16, result.StructSizes[(xDecl.Type as StructType).Struct]);
         Assert.Equal(0, result.FieldOffsets[listDeclaration.Fields.ElementAt(0)]);
         Assert.Equal(8, result.FieldOffsets[listDeclaration.Fields.ElementAt(1)]);
     }
@@ -47,7 +49,9 @@ public class StructPropertiesProcessorTest
         var tupleDeclaration = DeclareStructTuple();
         var combinedDeclaration = DeclareStructCombined();
         var tree = Block(
-            listDeclaration, tupleDeclaration, combinedDeclaration
+            listDeclaration, tupleDeclaration, combinedDeclaration,
+            Var("x", new StructType(Ident("Tuple")), out var xDecl),
+            Var("y", new StructType(Ident("Combined")), out var yDecl)
         );
 
         var diagnostics = new FakeDiagnostics();
@@ -55,6 +59,7 @@ public class StructPropertiesProcessorTest
         var result = StructPropertiesProcessor.Process(tree, nameResolution, diagnostics);
 
         Assert.Equal(16, result.StructSizesDeclarations[listDeclaration]);
+        Assert.Equal(16, result.StructSizes[(xDecl.Type as StructType).Struct]);
         Assert.Equal(0, result.FieldOffsets[listDeclaration.Fields.ElementAt(0)]);
         Assert.Equal(8, result.FieldOffsets[listDeclaration.Fields.ElementAt(1)]);
 
@@ -63,6 +68,7 @@ public class StructPropertiesProcessorTest
         Assert.Equal(8, result.FieldOffsets[tupleDeclaration.Fields.ElementAt(1)]);
 
         Assert.Equal(48, result.StructSizesDeclarations[combinedDeclaration]);
+        Assert.Equal(48, result.StructSizes[(yDecl.Type as StructType).Struct]);
         Assert.Equal(0, result.FieldOffsets[combinedDeclaration.Fields.ElementAt(0)]);  // list
         Assert.Equal(16, result.FieldOffsets[combinedDeclaration.Fields.ElementAt(1)]); // int
         Assert.Equal(24, result.FieldOffsets[combinedDeclaration.Fields.ElementAt(2)]); // tuple
