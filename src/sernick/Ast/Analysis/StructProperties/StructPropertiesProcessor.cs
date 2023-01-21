@@ -7,12 +7,14 @@ using Utility;
 using static Compiler.PlatformConstants;
 
 public record struct StructProperties(
-    IReadOnlyDictionary<StructDeclaration, int> StructSizes,
+    IReadOnlyDictionary<StructDeclaration, int> StructSizesDeclarations,
+    IReadOnlyDictionary<Identifier, int> StructSizes,
     IReadOnlyDictionary<FieldDeclaration, int> FieldOffsets,
     IReadOnlyDictionary<FieldDeclaration, int> FieldSizes)
 {
     public StructProperties() : this(
         new Dictionary<StructDeclaration, int>(ReferenceEqualityComparer.Instance),
+        new Dictionary<Identifier, int>(ReferenceEqualityComparer.Instance),
         new Dictionary<FieldDeclaration, int>(ReferenceEqualityComparer.Instance),
         new Dictionary<FieldDeclaration, int>(ReferenceEqualityComparer.Instance)
     )
@@ -21,6 +23,7 @@ public record struct StructProperties(
     public StructProperties JoinWith(StructProperties other)
     {
         return new StructProperties(
+            StructSizesDeclarations.JoinWith(other.StructSizesDeclarations, ReferenceEqualityComparer.Instance),
             StructSizes.JoinWith(other.StructSizes, ReferenceEqualityComparer.Instance),
             FieldOffsets.JoinWith(other.FieldOffsets, ReferenceEqualityComparer.Instance),
             FieldSizes.JoinWith(other.FieldSizes, ReferenceEqualityComparer.Instance)
@@ -33,7 +36,12 @@ public static class StructPropertiesProcessor
     public static StructProperties Process(AstNode ast, NameResolutionResult nameResolution, IDiagnostics diagnostics)
     {
         var visitor = new StructPropertiesVisitor(nameResolution.StructDeclarations, diagnostics);
-        return visitor.VisitAstTree(ast, new());
+        var result = visitor.VisitAstTree(ast, new());
+        var structSizes = nameResolution.StructDeclarations
+            .ToDictionary(kv => kv.Key, kv => result.StructSizesDeclarations[kv.Value],
+                ReferenceEqualityComparer.Instance as IEqualityComparer<Identifier>);
+
+        return result with { StructSizes = structSizes };
     }
 
     private sealed class StructPropertiesVisitor : AstVisitor<StructProperties, StructProperties>
@@ -61,6 +69,7 @@ public static class StructPropertiesProcessor
 
         public override StructProperties VisitStructDeclaration(StructDeclaration node, StructProperties currentResult)
         {
+            var structSizes = new Dictionary<Identifier, int>(ReferenceEqualityComparer.Instance);
             var fieldOffsets = new Dictionary<FieldDeclaration, int>(ReferenceEqualityComparer.Instance);
             var fieldSizes = new Dictionary<FieldDeclaration, int>(ReferenceEqualityComparer.Instance);
 
@@ -71,7 +80,7 @@ public static class StructPropertiesProcessor
                 if (field.Type is StructType type)
                 {
                     var fieldTypeDeclaration = _structDeclarations[type.Struct];
-                    if (!currentResult.StructSizes.TryGetValue(fieldTypeDeclaration, out var structSize))
+                    if (!currentResult.StructSizesDeclarations.TryGetValue(fieldTypeDeclaration, out var structSize))
                     {
                         _diagnostics.Report(new StructPropertiesProcessorError(field.Name.Name, type));
                     }
@@ -86,7 +95,7 @@ public static class StructPropertiesProcessor
                 }
             }
 
-            return new(new Dictionary<StructDeclaration, int> { { node, offset } }, fieldOffsets, fieldSizes);
+            return new(new Dictionary<StructDeclaration, int> { { node, offset } }, structSizes, fieldOffsets, fieldSizes);
         }
     }
 }

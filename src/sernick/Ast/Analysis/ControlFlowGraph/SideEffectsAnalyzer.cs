@@ -190,7 +190,7 @@ public static class SideEffectsAnalyzer
                 var paramIndex = (definition.ReturnType is StructType ? i + 1 : i);
                 if (parameterList[paramIndex].Type is StructType argType)
                 {
-                    var structSize = _structProperties.StructSizes[_nameResolution.StructDeclarations[argType.Struct]];
+                    var structSize = _structProperties.StructSizes[argType.Struct];
                     var copyLocation = GenerateStructTemporary(_nameResolution.StructDeclarations[argType.Struct], parameterList[paramIndex]);
                     var structAddress = argsValues[i];
                     var copyOps = GenerateStructCopy(copyLocation, structAddress, structSize);
@@ -541,7 +541,7 @@ public static class SideEffectsAnalyzer
 
         private CodeTreeValueNode GenerateStructTemporary(StructDeclaration type, AstNode node)
         {
-            var structSize = _structProperties.StructSizes[type];
+            var structSize = _structProperties.StructSizesDeclarations[type];
             var tempVariable = new VariableDeclaration(
                 new Identifier($"Temp{type.Name}Var@{node.GetHashCode()}", node.LocationRange),
                 new StructType(type.Name),

@@ -62,8 +62,7 @@ public class StructHelper
 
     public int GetStructTypeSize(StructType type)
     {
-        var structDeclaration = _nameResolution.StructDeclarations[type.Struct];
-        return _properties.StructSizes[structDeclaration];
+        return _properties.StructSizes[type.Struct];
     }
 
     public FieldDeclaration GetStructFieldDeclaration(StructType type, Identifier fieldName)
