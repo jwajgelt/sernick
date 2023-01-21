@@ -102,9 +102,9 @@ public static class FunctionContextMapProcessor
                 };
 
                 var usedElsewhere = referencingFunctions.Count() > 1;
-                if (varType is StructType structType && _nameResolution.StructDeclarations.TryGetValue(structType.Struct, out var structDecl))
+                if (varType is StructType structType)
                 {
-                    functionContext.AddLocal(localVariable, usedElsewhere, true, _structProperties.StructSizes[structDecl]);
+                    functionContext.AddLocal(localVariable, usedElsewhere, true, _structProperties.StructSizes[structType.Struct]);
                 }
 
                 else
