@@ -49,5 +49,22 @@ public static class ExternalFunctionsInfo
                 ),
                 new WriteCaller()
         ),
+        // "New" function is being handled differently, this entry is only left for NameResolution
+        new FunctionInfo(
+            new FunctionDefinition(
+                new Identifier("new", placeholderRange),
+                new List<FunctionParameterDeclaration>
+                {
+                    new FunctionParameterDeclaration(
+                        new Identifier("value", placeholderRange),
+                        new AnyType(),
+                        null,
+                        placeholderRange)
+                },
+                new PointerType(new AnyType()),
+                new CodeBlock( new EmptyExpression(placeholderRange), placeholderRange),
+                placeholderRange),
+            new MemcpyCaller(0) // this doesn't matter, we won't use MemCpyCaller from here
+            ),
     };
 }
