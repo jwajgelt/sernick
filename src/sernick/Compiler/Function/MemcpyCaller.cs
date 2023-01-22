@@ -10,10 +10,10 @@ public sealed class MemcpyCaller : IFunctionCaller
     // void *memcpy(void *dest, const void * src, size_t n)
     public Label Label { get; } = "memcpy";
 
-    private readonly int MemoryToAllocBytes;
+    private readonly int _memoryToAllocBytes;
     public MemcpyCaller(int memoryToAllocBytes)
     {
-        MemoryToAllocBytes = memoryToAllocBytes;
+        _memoryToAllocBytes = memoryToAllocBytes;
     }
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
@@ -27,14 +27,14 @@ public sealed class MemcpyCaller : IFunctionCaller
 
         Register rsp = HardwareRegister.RSP;
         var rspRead = Reg(rsp).Read();
-        _ = Reg(rsp).Write(rspRead - POINTER_SIZE);
+        var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
+
+        operations.Add(pushRsp);
 
         // call malloc first, then call memcpy
-        var mallocCallOperations = new MallocCaller().GetOperations(new CodeTreeValueNode[] { MemoryToAllocBytes });
-        operations.Concat(mallocCallOperations);
-
-        // after calling malloc, the result will be in RAX
-        var ptrToMemoryAllocatedByMalloc = Reg(HardwareRegister.RAX).Read();
+        var (mallocCallOperations, ptrToMemoryAllocatedByMalloc) =
+            new MallocCaller().GenerateCall(new CodeTreeValueNode[] { _memoryToAllocBytes });
+        operations.AddRange(mallocCallOperations.SelectMany(node => node.Operations));
 
         // Arguments:
         // void *dest
@@ -44,7 +44,7 @@ public sealed class MemcpyCaller : IFunctionCaller
         // size_t n -- struct size
         operations.Add(Reg(HardwareRegister.RDX).Write(new
             sernick.ControlFlowGraph.CodeTree.Constant(
-            new RegisterValue(MemoryToAllocBytes)
+            new RegisterValue(_memoryToAllocBytes)
            )
         ));
 

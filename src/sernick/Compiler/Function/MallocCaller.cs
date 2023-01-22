@@ -12,16 +12,11 @@ public sealed class MallocCaller : IFunctionCaller
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
     {
-        return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(GetOperations(arguments)), null);
-    }
-
-    public List<CodeTreeNode> GetOperations(IReadOnlyList<CodeTreeValueNode> arguments)
-    {
         var operations = new List<CodeTreeNode>();
 
         Register rsp = HardwareRegister.RSP;
         var rspRead = Reg(rsp).Read();
-        _ = Reg(rsp).Write(rspRead - POINTER_SIZE);
+        var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
 
         // Arguments (one):
         // size_t size
@@ -38,6 +33,8 @@ public sealed class MallocCaller : IFunctionCaller
         // Restore stack pointer
         operations.Add(Reg(rsp).Write(tmpRsp.Read()));
 
-        return operations;
+        CodeTreeValueNode returnValueLocation = Reg(HardwareRegister.RAX).Read();
+        return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations), returnValueLocation);
     }
+
 }

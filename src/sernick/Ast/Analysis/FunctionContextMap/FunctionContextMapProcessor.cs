@@ -133,19 +133,12 @@ public static class FunctionContextMapProcessor
             if (functionDeclaration.Name.Name == "new")
             {
                 var argument = node.Arguments.First();
-                var argumentSizeBytes = 0;
-                switch (argument)
+                var argumentSizeBytes = argument switch
                 {
-                    case StructValue structValue:
-                        argumentSizeBytes = _structProperties.StructSizes[structValue.StructName];
-                        break;
-                    case IntLiteralValue intLiteralValue:
-                        argumentSizeBytes = 8;
-                        break;
-                    case BoolLiteralValue boolLiteralValue:
-                        argumentSizeBytes = 8;
-                        break;
-                }
+                    StructValue structValue => _structProperties.StructSizes[structValue.StructName],
+                    IntLiteralValue or BoolLiteralValue => 8,
+                    _ => throw new Exception($"Encountered a \"new\" call with an unsupported operand, at: {node.LocationRange.Start}"),
+                };
 
                 ContextMap[node] = NewCallerFactory.GetMemcpyCaller(argumentSizeBytes);
             }
