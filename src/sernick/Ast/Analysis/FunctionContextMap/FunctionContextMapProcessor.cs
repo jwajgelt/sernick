@@ -132,12 +132,23 @@ public static class FunctionContextMapProcessor
             // "new" function is treated differently from others
             if (functionDeclaration.Name.Name == "new")
             {
-                var argument = node.Arguments.First() as StructValue;
-                if (argument == null) { return Unit.I; } // this should not happen
-
-                var structDeclaration = _nameResolution.StructDeclarations[argument.StructName];
-                var structSize = _structProperties.StructSizes[structDeclaration];
-                ContextMap[node] = NewCallerFactory.GetMemcpyCaller(structSize);
+                var argument = node.Arguments.First();
+                var argumentSizeBytes = 0;
+                switch (argument)
+                {
+                    case StructValue structValue:
+                        var structDeclaration = _nameResolution.StructDeclarations[structValue.StructName];
+                        argumentSizeBytes = _structProperties.StructSizes[structDeclaration];
+                        break;
+                    case IntLiteralValue intLiteralValue:
+                        argumentSizeBytes = 8;
+                        break;
+                    case BoolLiteralValue boolLiteralValue:
+                        argumentSizeBytes = 8;
+                        break;
+                }
+               
+                ContextMap[node] = NewCallerFactory.GetMemcpyCaller(argumentSizeBytes);
             }
             else
             {
