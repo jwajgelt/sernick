@@ -16,7 +16,7 @@ public sealed class MallocCaller : IFunctionCaller
 
         Register rsp = HardwareRegister.RSP;
         var rspRead = Reg(rsp).Read();
-        var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
+        _ = Reg(rsp).Write(rspRead - POINTER_SIZE);
 
         // Arguments (one):
         // size_t size
@@ -36,5 +36,4 @@ public sealed class MallocCaller : IFunctionCaller
         CodeTreeValueNode returnValueLocation = Reg(HardwareRegister.RAX).Read();
         return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations), returnValueLocation);
     }
-
 }
