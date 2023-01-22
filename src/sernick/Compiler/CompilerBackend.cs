@@ -56,6 +56,7 @@ public static class CompilerBackend
             .Append("extern scanf")
             .Append("extern printf")
             .Append("extern memcpy")
+            .Append("extern malloc")
             .Append("global main")
             .Concat(functionCodeTreeMap
                 .SelectMany((funcDef, codeTree) =>
