@@ -56,7 +56,7 @@ public sealed class FunctionContext : IFunctionContext
         _oldDisplayValReg = new Register();
         _returnedStructSize = returnedStructSize;
 
-        var fistArgOffset = POINTER_SIZE * (2 + _functionParameters.Count - REG_ARGS_COUNT);
+        var fistArgOffset = POINTER_SIZE * (1 + _functionParameters.Count - REG_ARGS_COUNT);
         var argNum = 0;
         for (var i = REG_ARGS_COUNT; i < _functionParameters.Count; i++)
         {
