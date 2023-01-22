@@ -40,7 +40,7 @@ public sealed class MemcpyCaller : IFunctionCaller
 
         // Arguments:
         // void *dest -- TODO, where do we copy?
-        operations.Add(Reg(HardwareRegister.RDI).Write(0);
+        operations.Add(Reg(HardwareRegister.RDI).Write(0));
         // const void* src -- TODO, from where do we copy?, is the below right?
         operations.Add(Reg(HardwareRegister.RSI).Write(arguments.Single()));
         // size_t n -- struct size
