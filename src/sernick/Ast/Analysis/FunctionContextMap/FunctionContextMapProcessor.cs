@@ -128,12 +128,25 @@ public static class FunctionContextMapProcessor
             }
 
             var functionDeclaration = _nameResolution.CalledFunctionDeclarations[node];
-            ContextMap[node] = ExternalFunctions
-                .Where(external => ReferenceEquals(functionDeclaration, external.Definition))
-                .Select(external => external.Caller)
-                .FirstOrDefault()
-                               ?? ContextMap[functionDeclaration];
 
+            // "new" function is treated differently from others
+            if (functionDeclaration.Name.Name == "new")
+            {
+                var argument = node.Arguments.First() as StructValue;
+                if (argument == null) { return Unit.I; } // this should not happen
+
+                var structDeclaration = _nameResolution.StructDeclarations[argument.StructName];
+                var structSize = _structProperties.StructSizes[structDeclaration];
+                ContextMap[node] = NewCallerFactory.GetMemcpyCaller(structSize);
+            }
+            else
+            {
+                ContextMap[node] = ExternalFunctions
+                    .Where(external => ReferenceEquals(functionDeclaration, external.Definition))
+                    .Select(external => external.Caller)
+                    .FirstOrDefault()
+                                   ?? ContextMap[functionDeclaration];
+            }
             return Unit.I;
         }
 

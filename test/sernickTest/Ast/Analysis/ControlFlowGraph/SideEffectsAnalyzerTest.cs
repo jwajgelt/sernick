@@ -256,4 +256,5 @@ public class SideEffectsAnalyzerTest
 
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
+
 }

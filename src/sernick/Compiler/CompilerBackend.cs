@@ -55,6 +55,7 @@ public static class CompilerBackend
         var asm = "section .text".Enumerate()
             .Append("extern scanf")
             .Append("extern printf")
+            .Append("extern memcpy")
             .Append("global main")
             .Concat(functionCodeTreeMap
                 .SelectMany((funcDef, codeTree) =>
