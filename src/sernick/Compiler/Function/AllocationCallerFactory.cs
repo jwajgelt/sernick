@@ -1,11 +1,9 @@
-using System;
-namespace sernick.Compiler.Function
+namespace sernick.Compiler.Function;
+
+public class AllocationCallerFactory
 {
-    public class AllocationCallerFactory
+    public AllocationCallerFactory()
     {
-        public AllocationCallerFactory()
-        {
-        }
     }
 }
 

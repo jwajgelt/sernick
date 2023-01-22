@@ -146,7 +146,7 @@ public static class FunctionContextMapProcessor
                         argumentSizeBytes = 8;
                         break;
                 }
-               
+
                 ContextMap[node] = NewCallerFactory.GetMemcpyCaller(argumentSizeBytes);
             }
             else
@@ -157,6 +157,7 @@ public static class FunctionContextMapProcessor
                     .FirstOrDefault()
                                    ?? ContextMap[functionDeclaration];
             }
+
             return Unit.I;
         }
 

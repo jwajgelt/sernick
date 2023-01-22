@@ -1,13 +1,9 @@
 namespace sernick.Compiler.Function;
-
-using System.Reflection.Metadata;
-using System.Security.Cryptography;
 using sernick.CodeGeneration;
 using sernick.ControlFlowGraph.CodeTree;
 using static Compiler.PlatformConstants;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static Helpers;
-
 
 public sealed class MallocCaller : IFunctionCaller
 {
@@ -16,7 +12,7 @@ public sealed class MallocCaller : IFunctionCaller
 
     public IFunctionCaller.GenerateCallResult GenerateCall(IReadOnlyList<CodeTreeValueNode> arguments)
     {
-        return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(this.GetOperations(arguments)), null);
+        return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(GetOperations(arguments)), null);
     }
 
     public List<CodeTreeNode> GetOperations(IReadOnlyList<CodeTreeValueNode> arguments)
@@ -25,7 +21,7 @@ public sealed class MallocCaller : IFunctionCaller
 
         Register rsp = HardwareRegister.RSP;
         var rspRead = Reg(rsp).Read();
-        var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
+        _ = Reg(rsp).Write(rspRead - POINTER_SIZE);
 
         // Arguments (one):
         // size_t size
