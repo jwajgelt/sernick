@@ -9,10 +9,6 @@ using static Helpers;
 
 public sealed class NewCallerFactory
 {
-    public NewCallerFactory()
-    {
-    }
-
     public static MemcpyCaller GetMemcpyCaller(int StructSize)
     {
         return new MemcpyCaller(StructSize);

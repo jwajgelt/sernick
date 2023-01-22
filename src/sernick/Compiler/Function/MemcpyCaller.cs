@@ -1,6 +1,7 @@
 namespace sernick.Compiler.Function;
 
 using System.Reflection.Metadata;
+using System.Security.Cryptography;
 using sernick.CodeGeneration;
 using sernick.ControlFlowGraph.CodeTree;
 using static Compiler.PlatformConstants;
@@ -28,6 +29,10 @@ public sealed class MemcpyCaller : IFunctionCaller
 
         var operations = new List<CodeTreeNode>();
 
+        Register rsp = HardwareRegister.RSP;
+        var rspRead = Reg(rsp).Read();
+        var pushRsp = Reg(rsp).Write(rspRead - POINTER_SIZE);
+
         // call malloc first, then call memcpy
         var mallocCallOperations = new MallocCaller().GetOperations(new CodeTreeValueNode[] { this.MemoryToAllocBytes });
         operations.Concat(mallocCallOperations);
@@ -47,9 +52,16 @@ public sealed class MemcpyCaller : IFunctionCaller
            )
         ));
 
+        // Align the stack
+        var tmpRsp = Reg(new Register());
+        operations.Add(tmpRsp.Write(rspRead));
+        operations.Add(Reg(rsp).Write(rspRead & -2 * POINTER_SIZE));
 
         // Performing actual call (puts return address on stack and jumps)
         operations.Add(new FunctionCall(this));
+
+        // Restore stack pointer
+        operations.Add(Reg(rsp).Write(tmpRsp.Read()));
 
         return new IFunctionCaller.GenerateCallResult(CodeTreeListToSingleExitList(operations), null);
     }
