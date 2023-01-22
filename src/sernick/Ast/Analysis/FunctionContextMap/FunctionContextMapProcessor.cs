@@ -137,8 +137,7 @@ public static class FunctionContextMapProcessor
                 switch (argument)
                 {
                     case StructValue structValue:
-                        var structDeclaration = _nameResolution.StructDeclarations[structValue.StructName];
-                        argumentSizeBytes = _structProperties.StructSizes[structDeclaration];
+                        argumentSizeBytes = _structProperties.StructSizes[structValue.StructName];
                         break;
                     case IntLiteralValue intLiteralValue:
                         argumentSizeBytes = 8;
