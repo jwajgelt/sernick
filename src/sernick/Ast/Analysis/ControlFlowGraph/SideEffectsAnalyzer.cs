@@ -186,8 +186,7 @@ public static class SideEffectsAnalyzer
             {
                 var currentArgValue = argsEvals[i].Last();
 
-                // If struct is returned, then first param will hold return value location
-                var paramIndex = (definition.ReturnType is StructType ? i + 1 : i);
+                var paramIndex = i;
                 if (parameterList[paramIndex].Type is StructType argType)
                 {
                     var structSize = _structProperties.StructSizes[argType.Struct];

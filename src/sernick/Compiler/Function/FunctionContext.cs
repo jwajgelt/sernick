@@ -2,6 +2,7 @@ namespace sernick.Compiler.Function;
 
 using CodeGeneration;
 using ControlFlowGraph.CodeTree;
+using Utility;
 using static ControlFlowGraph.CodeTree.CodeTreeExtensions;
 using static ControlFlowGraph.CodeTree.StructHelper;
 using static Convention;
@@ -207,7 +208,10 @@ public sealed class FunctionContext : IFunctionContext
         var paramNum = _functionParameters.Count;
         var regParamsNum = Math.Min(paramNum, REG_ARGS_COUNT);
         operations.AddRange(_functionParameters.Zip(ArgumentRegisters).Take(regParamsNum)
-            .Select(p => GenerateVariableWrite(p.First, Reg(p.Second).Read())));
+            .SelectMany(p => IsVariableStruct(p.First) ?
+                GenerateStructCopy(GenerateVariableRead(p.First), Reg(p.Second).Read(), _localVariableSize[p.First])
+                :
+                GenerateVariableWrite(p.First, Reg(p.Second).Read()).Enumerate()));
 
         // Callee-saved registers
         foreach (var reg in CalleeToSave)
