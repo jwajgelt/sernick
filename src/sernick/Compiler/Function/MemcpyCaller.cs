@@ -38,7 +38,7 @@ public sealed class MemcpyCaller : IFunctionCaller
 
         // Arguments:
         // void *dest
-        operations.Add(Reg(HardwareRegister.RDI).Write(ptrToMemoryAllocatedByMalloc));
+        operations.Add(Reg(HardwareRegister.RDI).Write(ptrToMemoryAllocatedByMalloc!));
         // const void* src
         operations.Add(Reg(HardwareRegister.RSI).Write(arguments.Single()));
         // size_t n -- struct size
