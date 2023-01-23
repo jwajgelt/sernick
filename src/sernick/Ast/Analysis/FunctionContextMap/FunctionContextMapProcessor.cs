@@ -1,6 +1,7 @@
 namespace sernick.Ast.Analysis.FunctionContextMap;
 
 using System.Diagnostics;
+using Ast.Analysis.TypeChecking;
 using Compiler.Function;
 using NameResolution;
 using Nodes;
@@ -15,10 +16,10 @@ using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.Distinction
 /// </summary>
 public static class FunctionContextMapProcessor
 {
-    public static FunctionContextMap Process(AstNode ast, NameResolutionResult nameResolution, StructProperties structProperties,
+    public static FunctionContextMap Process(AstNode ast, NameResolutionResult nameResolution, TypeCheckingResult typeChecking, StructProperties structProperties,
         DistinctionNumberProvider provider, IFunctionFactory contextFactory)
     {
-        var visitor = new FunctionContextProcessVisitor(nameResolution, structProperties, provider, contextFactory);
+        var visitor = new FunctionContextProcessVisitor(nameResolution, typeChecking, structProperties, provider, contextFactory);
         visitor.VisitAstTree(ast, new AstNodeContext());
         return visitor.ContextMap;
     }
@@ -36,14 +37,15 @@ public static class FunctionContextMapProcessor
         public readonly FunctionContextMap ContextMap = new();
 
         private readonly NameResolutionResult _nameResolution;
+        private readonly TypeCheckingResult _typeChecking;
         private readonly StructProperties _structProperties;
         private readonly DistinctionNumberProvider _provider;
         private readonly IFunctionFactory _contextFactory;
 
         private readonly FunctionLocalVariables _locals = new();
 
-        public FunctionContextProcessVisitor(NameResolutionResult nameResolution, StructProperties structProperties, DistinctionNumberProvider provider, IFunctionFactory contextFactory) =>
-            (_nameResolution, _structProperties, _provider, _contextFactory) = (nameResolution, structProperties, provider, contextFactory);
+        public FunctionContextProcessVisitor(NameResolutionResult nameResolution, TypeCheckingResult typeChecking, StructProperties structProperties, DistinctionNumberProvider provider, IFunctionFactory contextFactory) =>
+            (_nameResolution, _typeChecking, _structProperties, _provider, _contextFactory) = (nameResolution, typeChecking, structProperties, provider, contextFactory);
 
         protected override Unit VisitAstNode(AstNode node, AstNodeContext param)
         {
@@ -128,11 +130,24 @@ public static class FunctionContextMapProcessor
             }
 
             var functionDeclaration = _nameResolution.CalledFunctionDeclarations[node];
-            ContextMap[node] = ExternalFunctions
-                .Where(external => ReferenceEquals(functionDeclaration, external.Definition))
-                .Select(external => external.Caller)
-                .FirstOrDefault()
-                               ?? ContextMap[functionDeclaration];
+
+            // "new" function is treated differently from others
+            if (functionDeclaration.Name.Name == "new")
+            {
+                var argument = node.Arguments.First();
+                var argumentType = _typeChecking[argument];
+                var argumentSizeBytes = getTypeSizeBytes(argumentType, node);
+
+                ContextMap[node] = NewCallerFactory.GetMemcpyCaller(argumentSizeBytes);
+            }
+            else
+            {
+                ContextMap[node] = ExternalFunctions
+                    .Where(external => ReferenceEquals(functionDeclaration, external.Definition))
+                    .Select(external => external.Caller)
+                    .FirstOrDefault()
+                                   ?? ContextMap[functionDeclaration];
+            }
 
             return Unit.I;
         }
@@ -182,6 +197,16 @@ public static class FunctionContextMapProcessor
             _locals.UseLocal(variableDeclaration, astContext.EnclosingFunction);
 
             return Unit.I;
+        }
+
+        private int getTypeSizeBytes(Type type, AstNode node)
+        {
+            return type switch
+            {
+                IntType or BoolType or PointerType => 8,
+                StructType => _structProperties.StructSizes[(node as StructValue)!.StructName],
+                _ => throw new Exception($"Encountered unsupported operand type for \"new\", at: {node.LocationRange.Start}")
+            };
         }
     }
 }

@@ -28,7 +28,7 @@ public static class CompilerBackend
     {
         var (astRoot, nameResolution, structProperties, typeCheckingResult, callGraph, variableAccessMap) = programInfo;
 
-        var functionContextMap = FunctionContextMapProcessor.Process(astRoot, nameResolution, structProperties,
+        var functionContextMap = FunctionContextMapProcessor.Process(astRoot, nameResolution, typeCheckingResult, structProperties,
             FunctionDistinctionNumberProcessor.Process(astRoot), new FunctionFactory(LabelGenerator.Generate));
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(astRoot,
             root =>
@@ -55,6 +55,8 @@ public static class CompilerBackend
         var asm = "section .text".Enumerate()
             .Append("extern scanf")
             .Append("extern printf")
+            .Append("extern memcpy")
+            .Append("extern malloc")
             .Append("global main")
             .Concat(functionCodeTreeMap
                 .SelectMany((funcDef, codeTree) =>
