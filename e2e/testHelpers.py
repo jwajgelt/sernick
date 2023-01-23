@@ -33,11 +33,12 @@ def drop_extension(path: str)->str:
 def join_path(dir: str, file_path: str)->str:
     return os.path.join(dir,file_path)
 
-def compile_sernick_files(dir: str, compiler_path: str = None)-> List[str]:    
+def compile_sernick_files(dir: str, compiler_path: str = None)-> (List[str], bool):    
     sernick_files = [join_path(dir, f) for f in os.listdir(dir) if is_sernick_file(join_path(dir,f))]
     logging.debug("Found following sernick files: {}".format(sernick_files))
     
     compiled_files = []
+    should_fail_tests = False
 
     for file_path in sernick_files:
         try:
@@ -45,11 +46,11 @@ def compile_sernick_files(dir: str, compiler_path: str = None)-> List[str]:
             completed_process.check_returncode() # this raises an exception
             compiled_files.append(drop_extension(file_path) + ".out")
         except Exception as e:
+            should_fail_tests = True
             logging.error("Could not compile {} ❌".format(file_path), exc_info=e)
-            raise e
 
     logging.info('Compiled the following files: {}'.format(compiled_files))
-    return compiled_files
+    return compiled_files, should_fail_tests
 
 def get_files(directory: str) -> List[str]:
     return [os.path.join(directory, f) for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
