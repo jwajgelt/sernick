@@ -36,7 +36,7 @@ public class FunctionContextMapProcessorTest
         var structProperties = new StructProperties();
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         var typeCheckingResult = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
-        var contextMap = FunctionContextMapProcessor.Process(tree, nameResolution,typeCheckingResult, structProperties, _ => null, contextFactory.Object);
+        var contextMap = FunctionContextMapProcessor.Process(tree, nameResolution, typeCheckingResult, structProperties, _ => null, contextFactory.Object);
 
         Assert.Same(fContext, contextMap.Implementations[declaration]);
         Assert.Same(fContext, contextMap.Callers[call]);
@@ -141,7 +141,7 @@ public class FunctionContextMapProcessorTest
         var structProperties = new StructProperties();
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         var typeCheckingResult = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
-        FunctionContextMapProcessor.Process(tree, nameResolution,typeCheckingResult, structProperties, _ => null, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, typeCheckingResult, structProperties, _ => null, contextFactory.Object);
 
         Assert.True(fContext.Locals[paramA]);
         Assert.True(fContext.Locals[declY]);
@@ -189,7 +189,7 @@ public class FunctionContextMapProcessorTest
         var structProperties = new StructProperties();
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         var typeCheckingResult = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
-        FunctionContextMapProcessor.Process(tree, nameResolution,typeCheckingResult, structProperties, _ => null, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, typeCheckingResult, structProperties, _ => null, contextFactory.Object);
 
         Assert.False(functionContext.Locals[paramA]);
         Assert.False(functionContext.Locals[declX]);
@@ -241,7 +241,7 @@ public class FunctionContextMapProcessorTest
         var structProperties = new StructProperties();
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         var typeCheckingResult = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
-        FunctionContextMapProcessor.Process(tree, nameResolution,typeCheckingResult, structProperties, _ => null, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, typeCheckingResult, structProperties, _ => null, contextFactory.Object);
 
         Assert.False(gContext.Locals[declXinG]);
         Assert.Single(gContext.Locals);
@@ -288,7 +288,7 @@ public class FunctionContextMapProcessorTest
         var structProperties = new StructProperties();
         var diagnostics = new Mock<IDiagnostics>(MockBehavior.Strict);
         var typeCheckingResult = TypeChecking.CheckTypes(tree, nameResolution, diagnostics.Object);
-        FunctionContextMapProcessor.Process(tree, nameResolution,typeCheckingResult, structProperties, _ => null, contextFactory.Object);
+        FunctionContextMapProcessor.Process(tree, nameResolution, typeCheckingResult, structProperties, _ => null, contextFactory.Object);
 
         Assert.True(fContext.Locals[declX]);
         Assert.Single(fContext.Locals);

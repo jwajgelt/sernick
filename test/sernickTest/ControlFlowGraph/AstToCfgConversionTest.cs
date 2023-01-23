@@ -1334,7 +1334,7 @@ public class AstToCfgConversionTest
         var nameResolution = NameResolutionAlgorithm.Process(ast, diagnostics);
         var typeCheckingResult = TypeChecking.CheckTypes(ast, nameResolution, diagnostics);
         var structProperties = StructPropertiesProcessor.Process(ast, nameResolution, diagnostics);
-        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution,typeCheckingResult, structProperties, _ => null, new FunctionFactory(LabelGenerator.Generate));
+        var functionContextMap = FunctionContextMapProcessor.Process(ast, nameResolution, typeCheckingResult, structProperties, _ => null, new FunctionFactory(LabelGenerator.Generate));
         var callGraph = CallGraphBuilder.Process(ast, nameResolution);
         var variableAccessMap = VariableAccessMapPreprocess.Process(ast, nameResolution, diagnostics);
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(ast,

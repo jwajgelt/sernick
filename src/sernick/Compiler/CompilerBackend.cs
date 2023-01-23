@@ -28,7 +28,7 @@ public static class CompilerBackend
     {
         var (astRoot, nameResolution, structProperties, typeCheckingResult, callGraph, variableAccessMap) = programInfo;
 
-        var functionContextMap = FunctionContextMapProcessor.Process(astRoot, nameResolution,typeCheckingResult, structProperties,
+        var functionContextMap = FunctionContextMapProcessor.Process(astRoot, nameResolution, typeCheckingResult, structProperties,
             FunctionDistinctionNumberProcessor.Process(astRoot), new FunctionFactory(LabelGenerator.Generate));
         var functionCodeTreeMap = FunctionCodeTreeMapGenerator.Process(astRoot,
             root =>

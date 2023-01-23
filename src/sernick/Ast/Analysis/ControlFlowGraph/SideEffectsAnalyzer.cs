@@ -91,7 +91,6 @@ public static class SideEffectsAnalyzer
         // czy struktury sa blednie wspoldzielone?
         // kazde miejsce w ast gdzie nastepuje odczyt struktury z pod wskaznika, 
 
-
     }
 
     private record TreeWithEffects

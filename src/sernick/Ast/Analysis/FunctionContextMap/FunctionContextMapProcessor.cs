@@ -1,12 +1,12 @@
 namespace sernick.Ast.Analysis.FunctionContextMap;
 
 using System.Diagnostics;
+using Ast.Analysis.TypeChecking;
 using Compiler.Function;
 using NameResolution;
 using Nodes;
 using StructProperties;
 using Utility;
-using Ast.Analysis.TypeChecking;
 using static ExternalFunctionsInfo;
 using DistinctionNumberProvider = FunctionDistinctionNumberProcessor.DistinctionNumberProvider;
 
@@ -45,7 +45,7 @@ public static class FunctionContextMapProcessor
         private readonly FunctionLocalVariables _locals = new();
 
         public FunctionContextProcessVisitor(NameResolutionResult nameResolution, TypeCheckingResult typeChecking, StructProperties structProperties, DistinctionNumberProvider provider, IFunctionFactory contextFactory) =>
-            (_nameResolution,_typeChecking, _structProperties, _provider, _contextFactory) = (nameResolution, typeChecking, structProperties, provider, contextFactory);
+            (_nameResolution, _typeChecking, _structProperties, _provider, _contextFactory) = (nameResolution, typeChecking, structProperties, provider, contextFactory);
 
         protected override Unit VisitAstNode(AstNode node, AstNodeContext param)
         {
@@ -204,7 +204,7 @@ public static class FunctionContextMapProcessor
             return type switch
             {
                 IntType or BoolType => 8,
-                StructType structType => _structProperties.StructSizes[(node as StructValue)!.StructName],
+                StructType => _structProperties.StructSizes[(node as StructValue)!.StructName],
                 _ => throw new Exception($"Encountered unsupported operand type for \"new\", at: {node.LocationRange.Start}")
             };
         }
