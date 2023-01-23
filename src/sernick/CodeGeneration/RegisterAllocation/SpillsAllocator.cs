@@ -58,10 +58,10 @@ public sealed class SpillsAllocator
 
             if (tree is not null)
             {
-                var covering = _instructionCovering.Cover(tree);
-                if (covering.Count() == 1)
+                var covering = _instructionCovering.Cover(tree).ToList();
+                if (covering.Count == 1)
                 {
-                    return _instructionCovering.Cover(tree);
+                    return covering;
                 }
             }
 

@@ -186,11 +186,10 @@ public static class SideEffectsAnalyzer
             {
                 var currentArgValue = argsEvals[i].Last();
 
-                var paramIndex = i;
-                if (parameterList[paramIndex].Type is StructType argType)
+                if (parameterList[i].Type is StructType argType)
                 {
                     var structSize = _structProperties.StructSizes[argType.Struct];
-                    var copyLocation = GenerateStructTemporary(_nameResolution.StructDeclarations[argType.Struct], parameterList[paramIndex]);
+                    var copyLocation = GenerateStructTemporary(_nameResolution.StructDeclarations[argType.Struct], parameterList[i]);
                     var structAddress = argsValues[i];
                     var copyOps = GenerateStructCopy(copyLocation, structAddress, structSize);
                     var copyOpsWithEffects = copyOps.Select(x => new TreeWithEffects(x, false));
