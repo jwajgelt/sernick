@@ -74,23 +74,6 @@ public static class SideEffectsAnalyzer
         }
 
         return result;
-
-        // 1. wskaznik do typu podstawowego (mieszczacy sie w pojedynczym rejestrze wirtualnym)
-        // to wtedy wynikiem tego drzewka bedzie zywcem wartosc
-        // wystarczy polaczyc je w jedno drzewko pt. "wpisz to pod ten adres"
-        // 2. wskaznik do struktury
-        // wtedy to co zwroci drzewko to jest wskaznik na jej poczatek
-        // czyli sa dwa wskazniki -- docelowy oraz zrodlowy
-        // wiec trzeba napisac jakis kod
-        //
-        // problem z funkcjami
-        // czy funkcja zawsze dostanie skopiowaną strukturę?
-        // bo jeśli nie, to jest problem, bo moge sie spodziewac ze pisze po kopii a sie okaze
-        // ze piszemy po oryginale
-        //
-        // czy struktury sa blednie wspoldzielone?
-        // kazde miejsce w ast gdzie nastepuje odczyt struktury z pod wskaznika, 
-
     }
 
     private record TreeWithEffects
@@ -472,7 +455,13 @@ public static class SideEffectsAnalyzer
             return result;
         }
 
-        private List<TreeWithEffects> GenerateVariableAssignmentTree(VariableDeclaration variable, AstNode value, SideEffectsVisitorParam param)
+        //public override List<TreeWithEffects> VisitPointerDereference(PointerDereference node, Unit param)
+        //{
+
+        //}
+
+        private List<TreeWithEffects> GenerateVariableAssignmentTree(VariableDeclaration variable, AstNode value,
+            SideEffectsVisitorParam param)
         {
             var result = value.Accept(this, param);
             if (result.Count == 0)
