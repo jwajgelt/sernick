@@ -22,9 +22,9 @@ var parent = Parent {
         value: read()
     },
     value: read()
-}
+};
 
-write(parent.child.grandchild.first)
-write(parent.child.grandchild.second)
-write(parent.child.value)
-write(parent.value)
+write(parent.child.grandchild.first);
+write(parent.child.grandchild.second);
+write(parent.child.value);
+write(parent.value);

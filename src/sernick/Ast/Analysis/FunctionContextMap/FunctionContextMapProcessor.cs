@@ -86,7 +86,7 @@ public static class FunctionContextMapProcessor
 
             var newAstContext = new AstNodeContext(EnclosingFunction: node);
 
-            foreach (var parameter in node.Parameters)
+            foreach (var parameter in parameters)
             {
                 parameter.Accept(this, newAstContext);
             }

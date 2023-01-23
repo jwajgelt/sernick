@@ -23,5 +23,5 @@ fun printPair(pair: Pair){
 var first = read();
 var second = read();
 
-printPair(swapPair(newPair(first, second)))
-write(sumPair(Pair{first: first, second: second}))
+printPair(swapPair(newPair(first, second)));
+write(sumPair(Pair{first: first, second: second}));

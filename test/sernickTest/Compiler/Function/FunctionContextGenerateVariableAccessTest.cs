@@ -63,7 +63,7 @@ public class FunctionContextGenerateVariableAccessTest
 
         var readCodeTree = context.GenerateVariableRead(arg);
 
-        var expectedTree = Mem(Reg(HardwareRegister.RBP).Read() - (-24)).Read();
+        var expectedTree = Mem(Reg(HardwareRegister.RBP).Read() - (-16)).Read();
         Assert.Equal(expectedTree, readCodeTree);
     }
 

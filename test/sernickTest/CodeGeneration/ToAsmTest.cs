@@ -214,7 +214,7 @@ public class ToAsmTest
 
         var asm = setNo.ToAsm(dict);
 
-        Assert.Equal("\tsetno\tal", asm);
+        Assert.Equal("\tmov\trax, 0\n\tsetno\tal", asm);
     }
 
     private static IInstructionOperand PrepareOperand(string toAsm)
