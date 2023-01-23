@@ -54,7 +54,6 @@ public sealed class SpillsAllocator
                 return asmable.Enumerate();
             }
 
-            // TODO: fix this 
             var tree = instruction.HandleSpillSpecialCases(spillsLocation);
 
             if (tree is not null)
