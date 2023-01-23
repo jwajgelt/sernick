@@ -455,7 +455,13 @@ public static class SideEffectsAnalyzer
             return result;
         }
 
-        private List<TreeWithEffects> GenerateVariableAssignmentTree(VariableDeclaration variable, AstNode value, SideEffectsVisitorParam param)
+        //public override List<TreeWithEffects> VisitPointerDereference(PointerDereference node, Unit param)
+        //{
+
+        //}
+
+        private List<TreeWithEffects> GenerateVariableAssignmentTree(VariableDeclaration variable, AstNode value,
+            SideEffectsVisitorParam param)
         {
             var result = value.Accept(this, param);
             if (result.Count == 0)

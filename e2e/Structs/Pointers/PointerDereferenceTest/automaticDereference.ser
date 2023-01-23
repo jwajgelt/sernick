@@ -5,7 +5,7 @@
 struct Pair {
     first: Int,
     second: Int
-}
+};
 
 var a = read();
 var b = read();
