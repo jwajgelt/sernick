@@ -203,7 +203,7 @@ public static class FunctionContextMapProcessor
         {
             return type switch
             {
-                IntType or BoolType => 8,
+                IntType or BoolType or PointerType => 8,
                 StructType => _structProperties.StructSizes[(node as StructValue)!.StructName],
                 _ => throw new Exception($"Encountered unsupported operand type for \"new\", at: {node.LocationRange.Start}")
             };
