@@ -102,7 +102,9 @@ def test(use_mock_data: bool, compiler_path: str = None, test_directories: List[
             if use_mock_data:
                 compiled_files = test_get_compiled_files(test_directory=test_directory) # just for testing TODO uncomment for the line below
             else:
-                compiled_files = compile_sernick_files(test_directory, compiler_path) 
+                compiled_files, should_fail_tests = compile_sernick_files(test_directory, compiler_path) 
+                if should_fail_tests:
+                    test_failed = True
 
             if testing_level == TestingLevel.ONLY_COMPILE:
                 logging.info("Compilation executed, not running further (no test input)")
