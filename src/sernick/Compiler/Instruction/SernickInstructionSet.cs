@@ -155,23 +155,6 @@ public static class SernickInstructionSet
                             .WithOutput(null));
             }
 
-            // mov [$reg + $displacement], $const
-            {
-                yield return new CodeTreeNodePatternRule(
-                    Pat.MemoryWrite(Pat.BinaryOperationNode(IsAnyOf(BinaryOperation.Add, BinaryOperation.Sub),
-                            out var op,
-                            Pat.RegisterRead(Any<Register>(), out var reg),
-                            Pat.Constant(Any<RegisterValue>(), out var imm1)),
-                        Pat.Constant(Any<RegisterValue>(), out var imm2)),
-                    (_, values) =>
-                        Mov
-                            .ToMem(values.Get<Register>(reg),
-                                (isNegative: values.Get<BinaryOperation>(op) == BinaryOperation.Sub, values.Get<RegisterValue>(imm1)))
-                            .FromImm(values.Get<RegisterValue>(imm2))
-                            .Enumerate()
-                            .WithOutput(null));
-            }
-
             // mov [*], $const
             {
                 yield return new CodeTreeNodePatternRule(
