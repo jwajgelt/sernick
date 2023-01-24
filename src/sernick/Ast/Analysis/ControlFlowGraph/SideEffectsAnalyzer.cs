@@ -347,7 +347,9 @@ public static class SideEffectsAnalyzer
                     {
                         return GenerateVariableAssignmentTree(variableDeclaration, node.Right, param);
                     }
-
+                    break;
+                case PointerDereference pointerDereference:
+                    
                     break;
             }
 
@@ -460,6 +462,13 @@ public static class SideEffectsAnalyzer
             {
                 case PointerType { Type: StructType structType }:
                 {
+                    var field = _structHelper.GetStructFieldDeclaration(structType, node.FieldName);
+                    if (result[^1].CodeTree is not CodeTreeValueNode value)
+                    {
+                        throw new NotSupportedException("Internal error");
+                    }
+                    
+                    // TODO: Access pointer field
                     break;
                 }
                 case StructType structType:

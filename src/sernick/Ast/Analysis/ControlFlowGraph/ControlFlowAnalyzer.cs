@@ -432,7 +432,7 @@ public static class ControlFlowAnalyzer
                         };
                         
                         IStructValueLocation variableLocation =
-                            new StructValueLocation(structLocation, _structProperties.StructSizes[_nameResolution.StructDeclarations[structType.Struct]]);
+                            new StructValueLocation(structLocation, _structProperties.StructSizes[structType.Struct]);
 
                         var isLhsPrimitiveType = _typeChecking[node.Left] is not StructType;
                         IValueLocation resultLocation;
