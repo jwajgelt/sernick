@@ -1,3 +1,5 @@
+using sernick.Input.String;
+
 namespace sernick.Ast.Analysis.VariableAccess;
 
 using System.Diagnostics;
@@ -27,11 +29,26 @@ public sealed class VariableAccessMap
     /// </summary>
     public bool HasExclusiveWriteAccess(FunctionDefinition fun, VariableDeclaration variable) =>
         _exclusiveWriteAccess.TryGetValue(variable, out var exclusiveFun) && ReferenceEquals(exclusiveFun, fun);
+    
+    /// <summary>
+    ///     Fake variable which we identify with accessing the heap memory.
+    /// </summary>
+    public static readonly VariableDeclaration HeapMemoryVariable = new (
+        new Identifier("heapMemory", (new StringLocation(0), new StringLocation(0))),
+        Type: null,
+        InitValue: null,
+        IsConst: false,
+        (new StringLocation(0), new StringLocation(0))
+    );
 
     internal void AddFun(FunctionDefinition fun)
     {
         _variableAccessDictionary[fun] = new Dictionary<Declaration, VariableAccessMode>(
-            ReferenceEqualityComparer.Instance);
+            ReferenceEqualityComparer.Instance)
+        {
+            // We assume for now that every function writes and reads from heap
+            {HeapMemoryVariable, VariableAccessMode.WriteAndRead}
+        };
     }
 
     internal void AddVariableRead(FunctionDefinition fun, Declaration variable)

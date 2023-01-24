@@ -165,7 +165,7 @@ public static class ControlFlowAnalyzer
         {
             var temp = new TemporaryVariable();
             _functionContext.AddLocal(temp, isStruct: true, size: size);
-            return new StructValueLocation(_functionContext, temp, size);
+            return new StructValueLocation(new VariableValueLocation(_functionContext, temp), size);
         }
     }
 
@@ -367,7 +367,7 @@ public static class ControlFlowAnalyzer
             }
 
             return node.InitValue.Accept(this,
-                param with { ResultVariable = new StructValueLocation(_currentFunctionContext, node, _structHelper.GetStructTypeSize(structType)) });
+                param with { ResultVariable = new StructValueLocation(new VariableValueLocation(_currentFunctionContext, node), _structHelper.GetStructTypeSize(structType)) });
         }
 
         public override CodeTreeRoot VisitAssignment(Assignment node, ControlFlowVisitorParam param)
@@ -377,7 +377,7 @@ public static class ControlFlowAnalyzer
                 return _pullOutSideEffects(node, param.Next, param.ResultVariable);
             }
 
-            // there are two cases of lvalues:
+            // there are tree cases of lvalues:
             switch (node.Left)
             {
                 case VariableValue variableAccess:
@@ -386,6 +386,14 @@ public static class ControlFlowAnalyzer
                         var variable = _nameResolution.UsedVariableDeclarations[variableAccess];
                         return node.Right.Accept(this,
                             param with { ResultVariable = new VariableValueLocation(_currentFunctionContext, variable) });
+                    }
+                case PointerDereference dereference:
+                    {
+                        // assigment to a de-referenced location
+                        var pointerLocation = _variableFactory.NewPrimitiveVariable();
+                        var dereferencedLocation = new DereferencedLocation(pointerLocation);
+                        var assigment = node.Right.Accept(this, param with { ResultVariable = dereferencedLocation });
+                        return dereference.Accept(this, param with { Next = assigment, ResultVariable = pointerLocation });
                     }
                 case StructFieldAccess fieldAccess:
                     {
@@ -401,26 +409,30 @@ public static class ControlFlowAnalyzer
 
                         // adds the rhs of field access to `fieldPath`,
                         // and continues inspecting the lhs.
-                        while (structFieldAccessNode is not VariableValue)
+                        while (structFieldAccessNode is StructFieldAccess access)
                         {
-                            // we only accept accesses of kind `variable.field.field.(...).field`
-                            if (structFieldAccessNode is not StructFieldAccess access)
+                            var lhsType = _typeChecking[access.Left] switch
                             {
-                                break;
-                            }
-
-                            // NOTE: in the future, support a case `[pointer-typed expr].field.(...).field`
-
-                            var lhsType = (StructType)_typeChecking[access.Left];
+                                StructType lhsStruct => lhsStruct,
+                                PointerType { Type: StructType lhsStruct } => lhsStruct, // we support automatic dereference
+                                _ => throw new NotSupportedException($"Invalid lvalue in assignment {node}")
+                            };
                             fieldPath.Add(_structHelper.GetStructFieldDeclaration(lhsType, access.FieldName));
                             structFieldAccessNode = access.Left;
                         }
 
                         fieldPath.Reverse();
 
-                        var accessedVariable = _nameResolution.UsedVariableDeclarations[(VariableValue)structFieldAccessNode];
+                        IValueLocation structLocation = structFieldAccessNode switch
+                        {
+                            PointerDereference => _variableFactory.NewPrimitiveVariable(),
+                            VariableValue variableValue => new VariableValueLocation(_currentFunctionContext,
+                                _nameResolution.UsedVariableDeclarations[variableValue]),
+                            _ => throw new NotSupportedException()
+                        };
+                        
                         IStructValueLocation variableLocation =
-                            new StructValueLocation(_currentFunctionContext, accessedVariable, _structProperties.StructSizes[structType.Struct]);
+                            new StructValueLocation(structLocation, _structProperties.StructSizes[_nameResolution.StructDeclarations[structType.Struct]]);
 
                         var isLhsPrimitiveType = _typeChecking[node.Left] is not StructType;
                         IValueLocation resultLocation;
@@ -444,9 +456,15 @@ public static class ControlFlowAnalyzer
                                     );
                         }
 
-                        return node.Right.Accept(this, param with { ResultVariable = resultLocation });
+                        var assigment = node.Right.Accept(this, param with { ResultVariable = resultLocation });
+                        if (structFieldAccessNode is PointerDereference pointerDereference)
+                        {
+                            // If structFieldAccessNode is a pointer dereference then we first need to calculate the struct location.
+                            return pointerDereference.Accept(this,
+                                param with { ResultVariable = structLocation, Next = assigment });
+                        }
+                        return assigment;
                     }
-                    // NOTE: in the future, add pointer dereference cases here
             }
 
             throw new NotSupportedException($"Invalid lvalue in assignment {node}");
@@ -495,8 +513,43 @@ public static class ControlFlowAnalyzer
                 return _pullOutSideEffects(node, param.Next, param.ResultVariable);
             }
 
-            // NOTE: this won't be true, once any (pointer-to-struct) expression can be on the left
-            throw new NotSupportedException("StructFieldAccess cannot contain control flow");
+            var (leftVariable, leftVariableValueNode) = GenerateTemporaryAst(node.Left);
+            var fieldAccess = node with { Left = leftVariableValueNode };
+
+            // Not sure if this is correct but for sure this doesn't generate an efficient code.
+            IValueLocation leftVariableLocation = _typeChecking[node.Left] switch
+            {
+                PointerType => new VariableValueLocation(_currentFunctionContext, leftVariable),
+                StructType structType => new StructValueLocation(
+                    new VariableValueLocation(_currentFunctionContext, leftVariable),
+                    _structHelper.GetStructTypeSize(structType)),
+                _ => throw new NotSupportedException()
+            };
+
+            return node.Left.Accept(this,
+                param with
+                {
+                    Next = _pullOutSideEffects(fieldAccess, param.Next, param.ResultVariable),
+                    ResultVariable = leftVariableLocation,
+                }
+            );
+        }
+
+        public override CodeTreeRoot VisitPointerDereference(PointerDereference node, ControlFlowVisitorParam param)
+        {
+            if (!_nodesWithControlFlow.Contains(node))
+            {
+                return _pullOutSideEffects(node, param.Next, param.ResultVariable);
+            }
+
+            var (pointerVariable, pointerNode) = GenerateTemporaryAst(node.Pointer);
+            var dereference = node with { Pointer = pointerNode };
+            return node.Pointer.Accept(this,
+                param with
+                {
+                    Next = _pullOutSideEffects(dereference, param.Next, param.ResultVariable),
+                    ResultVariable = new VariableValueLocation(_currentFunctionContext, pointerVariable)
+                });
         }
 
         public override CodeTreeRoot VisitIdentifier(Identifier node, ControlFlowVisitorParam param)

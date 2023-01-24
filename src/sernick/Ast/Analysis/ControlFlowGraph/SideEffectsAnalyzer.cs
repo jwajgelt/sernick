@@ -397,6 +397,18 @@ public static class SideEffectsAnalyzer
                 )
             };
         }
+        
+        public override List<TreeWithEffects> VisitNullPointerLiteralValue(NullPointerLiteralValue node, Unit param)
+        {
+            return new List<TreeWithEffects>
+            {
+                new (
+                    new HashSet<VariableDeclaration>(),
+                    new HashSet<VariableDeclaration>(),
+                    new Constant(new RegisterValue(0))
+                )
+            };
+        }
 
         public override List<TreeWithEffects> VisitEmptyExpression(EmptyExpression node, SideEffectsVisitorParam param)
         {
@@ -441,15 +453,29 @@ public static class SideEffectsAnalyzer
         public override List<TreeWithEffects> VisitStructFieldAccess(StructFieldAccess node, Unit param)
         {
             var result = node.Left.Accept(this, param);
-            // NOTE: for pointer types, add derefs here
-            var structType = (StructType)_typeChecking.ExpressionsTypes[node.Left];
-            var field = _structHelper.GetStructFieldDeclaration(structType, node.FieldName);
-            if (result[^1].CodeTree is not CodeTreeValueNode value)
+
+            var leftType = _typeChecking[node.Left];
+
+            switch (leftType)
             {
-                throw new NotSupportedException("Internal error");
+                case PointerType { Type: StructType structType }:
+                {
+                    break;
+                }
+                case StructType structType:
+                {
+                    var field = _structHelper.GetStructFieldDeclaration(structType, node.FieldName);
+                    if (result[^1].CodeTree is not CodeTreeValueNode value)
+                    {
+                        throw new NotSupportedException("Internal error");
+                    }
+
+                    result[^1] = result[^1] with { CodeTree = _structHelper.GenerateStructFieldRead(value, field) };
+                    break;
+                }
+                default: throw new NotSupportedException("Invalid type for StructFieldAccess.");
             }
 
-            result[^1] = result[^1] with { CodeTree = _structHelper.GenerateStructFieldRead(value, field) };
             return result;
         }
 
