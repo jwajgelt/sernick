@@ -102,7 +102,7 @@ public class SideEffectsAnalyzerTest
         Assert.Equal(expected, result, new CodeTreeNodeComparer());
     }
 
-    [Theory(Skip = "Waiting for isomorphisms")]
+    [Theory]
     [InlineData(Infix.Op.Plus, BinaryOperation.Add)]
     [InlineData(Infix.Op.Minus, BinaryOperation.Sub)]
     [InlineData(Infix.Op.Equals, BinaryOperation.Equal)]

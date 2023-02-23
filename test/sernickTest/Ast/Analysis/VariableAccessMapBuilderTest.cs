@@ -183,9 +183,11 @@ public class VariableAccessMapBuilderTest
         Assert.True(variableAccessMap.HasExclusiveWriteAccess(foo, xDeclare));
         Assert.True(variableAccessMap.HasExclusiveWriteAccess(foo, yDeclare));
 
-        Assert.Equal(2, variableAccessMap[foo].Count());
+        Assert.Equal(3, variableAccessMap[foo].Count());
         Assert.Contains((xDeclare, VariableAccessMode.WriteAndRead), variableAccessMap[foo]);
         Assert.Contains((yDeclare, VariableAccessMode.WriteAndRead), variableAccessMap[foo]);
+        Assert.Contains((VariableAccessMap.HeapMemoryVariable, VariableAccessMode.WriteAndRead),
+            variableAccessMap[foo]);
     }
 
     [Fact]

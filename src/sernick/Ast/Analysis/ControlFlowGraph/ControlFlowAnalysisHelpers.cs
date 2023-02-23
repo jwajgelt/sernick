@@ -19,6 +19,38 @@ public static class ControlFlowAnalysisHelpers
         public IValueLocation GetPrimitiveField(int fieldOffset);
         public IStructValueLocation GetField(int fieldOffset, int fieldSize);
     }
+    
+    public class DereferencedLocation : IValueLocation
+    {
+        private readonly IValueLocation _location;
+
+        public DereferencedLocation(IValueLocation location)
+        {
+            _location = location;
+        }
+
+        public IEnumerable<CodeTreeNode> GenerateValueWrite(CodeTreeValueNode value)
+        {
+            // StructValueLocation is a pointer to the first field in a struct.
+            // No need to do a dereference in this case.
+            if (_location is StructValueLocation)
+            {
+                return _location.GenerateValueWrite(value);
+            }
+            return new MemoryWrite(_location.GenerateValueRead(), value).Enumerate();
+        }
+
+        public CodeTreeValueNode GenerateValueRead()
+        {
+            // StructValueLocation is a pointer to the first field in a struct.
+            // No need to do a dereference in this case.
+            if (_location is StructValueLocation)
+            {
+                return _location.GenerateValueRead();
+            }
+            return new MemoryRead(_location.GenerateValueRead());
+        }
+    }
 
     public class VariableValueLocation : IValueLocation
     {
@@ -44,14 +76,12 @@ public static class ControlFlowAnalysisHelpers
         private class PrimitiveFieldLocation : IValueLocation
         {
             private readonly int _offset;
-            private readonly IFunctionContext _functionContext;
-            private readonly IFunctionVariable _temp;
+            private readonly IValueLocation _location;
 
-            public PrimitiveFieldLocation(IFunctionContext functionContext, IFunctionVariable temp, int offset)
+            public PrimitiveFieldLocation(IValueLocation location, int offset)
             {
                 _offset = offset;
-                _functionContext = functionContext;
-                _temp = temp;
+                _location = location;
             }
 
             public IEnumerable<CodeTreeNode> GenerateValueWrite(CodeTreeValueNode value)
@@ -64,26 +94,23 @@ public static class ControlFlowAnalysisHelpers
                 return CodeTreeExtensions.Mem(StackLocationAddress).Read();
             }
 
-            private CodeTreeValueNode StackLocationAddress => _functionContext.GenerateVariableRead(_temp) + _offset;
+            private CodeTreeValueNode StackLocationAddress => _location.GenerateValueRead() + _offset;
         }
 
-        private readonly IFunctionContext _functionContext;
         private readonly int _size;
         private readonly int _offset;
-        private readonly IFunctionVariable _temp;
+        private readonly IValueLocation _location;
 
-        public StructValueLocation(IFunctionContext functionContext, IFunctionVariable temp, int size)
+        public StructValueLocation(IValueLocation location, int size)
         {
-            _functionContext = functionContext;
+            _location = location;
             _size = size;
             _offset = 0;
-            _temp = temp;
         }
 
-        private StructValueLocation(IFunctionContext functionContext, IFunctionVariable temp, int size, int offset)
+        private StructValueLocation(IValueLocation location, int size, int offset)
         {
-            _functionContext = functionContext;
-            _temp = temp;
+            _location = location;
             _size = size;
             _offset = offset;
         }
@@ -95,7 +122,7 @@ public static class ControlFlowAnalysisHelpers
                 throw new NotSupportedException();
             }
 
-            return new PrimitiveFieldLocation(_functionContext, _temp, _offset + fieldOffset);
+            return new PrimitiveFieldLocation(_location, _offset + fieldOffset);
         }
 
         public IStructValueLocation GetField(int fieldOffset, int fieldSize)
@@ -105,7 +132,7 @@ public static class ControlFlowAnalysisHelpers
                 throw new NotSupportedException();
             }
 
-            return new StructValueLocation(_functionContext, _temp, fieldSize, _offset + fieldOffset);
+            return new StructValueLocation(_location, fieldSize, _offset + fieldOffset);
         }
 
         public IEnumerable<CodeTreeNode> GenerateValueWrite(CodeTreeValueNode value)
@@ -118,6 +145,6 @@ public static class ControlFlowAnalysisHelpers
             return StackLocationAddress;
         }
 
-        private CodeTreeValueNode StackLocationAddress => _functionContext.GenerateVariableRead(_temp) + _offset;
+        private CodeTreeValueNode StackLocationAddress => _location.GenerateValueRead() + _offset;
     }
 }
